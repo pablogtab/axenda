@@ -5,6 +5,7 @@ import { validateConfig } from '../config/app.config'
 import { PrismaModule } from '../prisma/prisma.module'
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter'
 import { ResponseInterceptor } from '../common/interceptors/response.interceptor'
+import { AuthModule } from '../auth/auth.module'
 
 @Module({
   imports: [
@@ -17,6 +18,9 @@ import { ResponseInterceptor } from '../common/interceptors/response.interceptor
 
     // ─── Database ───────────────────────────────────────────────────────
     PrismaModule,
+
+    // ─── Auth ────────────────────────────────────────────────────────────
+    AuthModule,
   ],
 
   providers: [

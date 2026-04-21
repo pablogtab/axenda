@@ -22,7 +22,11 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     this.logger.log('✅ PrismaService initialized with pg adapter')
   }
 
+  private poolClosed = false
+
   async onModuleDestroy() {
+    if (this.poolClosed) return
+    this.poolClosed = true
     // Prisma 7 removed $disconnect(). Close the pg pool directly.
     await this.pool.end()
     this.logger.log('Database pool closed')
