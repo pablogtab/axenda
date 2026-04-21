@@ -3,9 +3,9 @@ import { config } from 'dotenv'
 import { resolve } from 'node:path'
 
 // Prisma CLI commands run from apps/api/, so ../../.env resolves to workspace root.
-// datasource.url here is only for Prisma Migrate (CLI operations).
-// At runtime, PrismaClient uses @prisma/adapter-pg (configured in NestJS PrismaService).
-config({ path: resolve('../../.env') })
+// override: true ensures dotenv strips quotes from values, even if Prisma's own
+// env injection has already set them with surrounding quotes included.
+config({ path: resolve('../../.env'), override: true })
 
 export default defineConfig({
   schema: './prisma/schema',
