@@ -1,0 +1,29 @@
+// ─── Availability (horarios semanales recurrentes) ─────
+
+model Availability {
+  id             String       @id @default(uuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  branchId       String?
+  dayOfWeek      Int          // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  startTime      String       // "09:00"
+  endTime        String       // "18:00"
+
+  @@map("availability")
+}
+
+// ─── AvailabilityException (vacaciones, bloqueos) ──────
+
+model AvailabilityException {
+  id             String        @id @default(uuid())
+  professionalId String
+  professional   Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  type           ExceptionType
+  date           DateTime      @db.Date
+  startTime      String?       // null = todo el día
+  endTime        String?       // null = todo el día
+  reason         String?
+  createdAt      DateTime      @default(now())
+
+  @@map("availability_exceptions")
+}

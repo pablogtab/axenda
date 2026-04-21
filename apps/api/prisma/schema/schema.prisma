@@ -1,0 +1,52 @@
+// ─── Datasource ────────────────────────────────────────
+// En Prisma 7, la conexión se configura via adapter en prisma.config.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Generator ─────────────────────────────────────────
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+// ─── Enums globales ────────────────────────────────────
+
+enum TenantMode {
+  GENERIC
+  BARBERSHOP
+  MEDICAL
+  LEGAL
+  FITNESS
+  EDUCATION
+  TECHNICAL
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  RECEPTIONIST
+  PROFESSIONAL
+}
+
+enum ExceptionType {
+  UNAVAILABLE
+  BLOCKED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum BookingSource {
+  PANEL
+  PUBLIC_LINK
+  WIDGET
+  QR
+}
