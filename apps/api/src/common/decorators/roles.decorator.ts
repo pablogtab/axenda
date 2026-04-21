@@ -1,12 +1,8 @@
 import { SetMetadata } from '@nestjs/common'
+import { UserRole } from '@prisma/client'
 
-export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'ADMIN',
-  MANAGER = 'MANAGER',
-  RECEPTIONIST = 'RECEPTIONIST',
-  PROFESSIONAL = 'PROFESSIONAL',
-}
+// Re-export so importers can get UserRole from either @prisma/client or here
+export { UserRole }
 
 export const ROLES_KEY = 'roles'
 

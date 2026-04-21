@@ -28,6 +28,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token inválido o usuario inactivo')
     }
 
-    return user
+    // Attach fresh values from DB onto the JWT payload structure
+    return {
+      ...payload,
+      sub: user.id,
+      tenantId: user.tenantId,
+      role: user.role,
+    }
   }
 }
