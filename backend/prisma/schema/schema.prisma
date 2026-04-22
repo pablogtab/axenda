@@ -30,8 +30,10 @@ enum UserRole {
 }
 
 enum ExceptionType {
-  UNAVAILABLE
-  BLOCKED
+  BLOCK
+  HOLIDAY
+  LEAVE
+  OTHER
 }
 
 enum AppointmentStatus {

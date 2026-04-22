@@ -31,7 +31,12 @@ export class ProfessionalsService {
         services: { include: { service: true } },
         availability: true,
         exceptions: {
-          where: { date: { gte: new Date() } },
+          where: {
+            OR: [
+              { date: { gte: new Date() } },
+              { endDate: { gte: new Date() } }
+            ]
+          },
           orderBy: { date: 'asc' },
         },
       },
@@ -196,6 +201,7 @@ export class ProfessionalsService {
         professionalId: id,
         type: dto.type,
         date: new Date(dto.date),
+        endDate: dto.endDate ? new Date(dto.endDate) : null,
         startTime: dto.startTime,
         endTime: dto.endTime,
         reason: dto.reason,

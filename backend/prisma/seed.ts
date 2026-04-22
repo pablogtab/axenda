@@ -1,4 +1,4 @@
-import { PrismaClient, TenantMode, UserRole } from '@prisma/client'
+import { PrismaClient, TenantMode, UserRole, ExceptionType } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import * as bcrypt from 'bcrypt'
@@ -144,6 +144,18 @@ async function main() {
           endTime: '18:00',
           branchId: palermoBranch.id
         }))
+      },
+
+      // Excepción de prueba (rango)
+      exceptions: {
+        create: [
+          {
+            type: ExceptionType.HOLIDAY,
+            date: new Date(new Date().setDate(new Date().getDate() + 10)),
+            endDate: new Date(new Date().setDate(new Date().getDate() + 15)),
+            reason: 'Vacaciones de invierno'
+          }
+        ]
       }
     }
   })

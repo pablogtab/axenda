@@ -25,7 +25,14 @@ export class AvailabilityEngineService {
     if (isNaN(targetDate.getTime())) {
       throw new BadRequestException('Formato de fecha inválido')
     }
-    // Asumimos timezone UTC/local estándar (getUTCDay para evitar saltos por zona de máquina)
+    
+    // Normalizar fechas para comparación (solo fecha, sin hora)
+    const startOfDay = new Date(targetDate)
+    startOfDay.setUTCHours(0, 0, 0, 0)
+    
+    const endOfDay = new Date(targetDate)
+    endOfDay.setUTCHours(23, 59, 59, 999)
+
     const dayOfWeek = targetDate.getUTCDay()
 
     // 3. Buscar disponibilidad del profesional (horarios fijos de la semana)
@@ -41,35 +48,42 @@ export class AvailabilityEngineService {
       return [] // No trabaja este día en esta sucursal
     }
 
-    // 4. Buscar excepciones (vacaciones o bloqueos parciales) para ese día
-    // Consideramos la fecha exacta (rango de 24hs)
-    const startOfDay = new Date(targetDate)
-    startOfDay.setUTCHours(0, 0, 0, 0)
-    
-    const endOfDay = new Date(targetDate)
-    endOfDay.setUTCHours(23, 59, 59, 999)
-
+    // 4. Buscar excepciones (vacaciones o bloqueos parciales) que afecten este día
+    // Ahora soportamos rangos (endDate)
     const exceptions = await this.prisma.availabilityException.findMany({
       where: {
         professionalId,
-        date: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        OR: [
+          // Caso A: La excepción empieza hoy (con o sin fin)
+          { date: { gte: startOfDay, lte: endOfDay } },
+          // Caso B: El día de hoy está "atrapado" entre date y endDate
+          {
+            AND: [
+              { date: { lte: startOfDay } },
+              { endDate: { gte: startOfDay } }
+            ]
+          }
+        ]
       },
     })
 
-    // Si hay una excepción de día completo (tipo UNAVAILABLE sin startTime), devolvemos vacío
-    const fullDayException = exceptions.find((e) => e.type === 'UNAVAILABLE' && !e.startTime)
-    if (fullDayException) return []
+    // Si hay una excepción de día completo, devolvemos vacío
+    // Los tipos HOLIDAY y LEAVE se consideran de día completo por defecto.
+    // BLOCK puede ser parcial si tiene startTime.
+    const fullDayTypes = ['HOLIDAY', 'LEAVE']
+    const isFullDayBlocked = exceptions.some(e => 
+      fullDayTypes.includes(e.type) || (e.type === 'BLOCK' && !e.startTime)
+    )
+    
+    if (isFullDayBlocked) return []
 
-    // 5. Buscar turnos (Appointments) ya agendados para ese profesional ese día
+    // 5. Buscar turnos (Appointments) ya agendados
     const appointments = await this.prisma.appointment.findMany({
       where: {
         professionalId,
         tenantId,
         status: {
-          notIn: ['CANCELLED', 'NO_SHOW'], // Turnos cancelados no ocupan lugar
+          notIn: ['CANCELLED', 'NO_SHOW'],
         },
         startTime: {
           gte: startOfDay,
@@ -80,15 +94,14 @@ export class AvailabilityEngineService {
     })
 
     // 6. Calcular slots
-    // Convertimos turnos y bloqueos a minutos desde las 00:00 para facilitar matemática
     const bookedRanges = appointments.map((app) => ({
       start: app.startTime.getUTCHours() * 60 + app.startTime.getUTCMinutes(),
       end: app.endTime.getUTCHours() * 60 + app.endTime.getUTCMinutes(),
     }))
 
-    // Agregar bloqueos parciales (excepciones BLOCKED con horas)
+    // Agregar bloqueos parciales (excepciones BLOCK con horas)
     exceptions.forEach((ex) => {
-      if (ex.startTime && ex.endTime) {
+      if (ex.type === 'BLOCK' && ex.startTime && ex.endTime) {
         bookedRanges.push({
           start: this.timeToMins(ex.startTime),
           end: this.timeToMins(ex.endTime),
@@ -96,30 +109,20 @@ export class AvailabilityEngineService {
       }
     })
 
-    // Ordenar rangos ocupados
     bookedRanges.sort((a, b) => a.start - b.start)
 
     const freeSlots: string[] = []
 
-    // Por cada bloque de disponibilidad, buscar huecos
-    // Ejemplo: trabaja de 09:00 a 13:00 y de 14:00 a 18:00
     for (const block of availabilities) {
       let currentMins = this.timeToMins(block.startTime)
       const endMins = this.timeToMins(block.endTime)
-
-      // Iterar cada X minutos (ej. generamos slots cada 15 o 30 mins)
-      // Para mayor exactitud, iteramos por el intervalo mínimo (ej 15 mins),
-      // o directamente por la duración del servicio. Haremos pasos de 15 mins.
       const step = 15 
 
       while (currentMins + durationMins <= endMins) {
         const slotEnd = currentMins + durationMins
-        
-        // Chequear choque con ocupaciones
         let hasConflict = false
+        
         for (const b of bookedRanges) {
-          // Si el turno propuesto se solapa con algo agendado:
-          // A.start < B.end AND A.end > B.start
           if (currentMins < b.end && slotEnd > b.start) {
             hasConflict = true
             break
@@ -134,10 +137,8 @@ export class AvailabilityEngineService {
       }
     }
 
-    return [...new Set(freeSlots)] // Remover duplicados si los hubiera
+    return [...new Set(freeSlots)]
   }
-
-  // ─── Helpers Matemáticos ───────────────────────────────────────────────────
 
   private timeToMins(time: string): number {
     const [h, m] = time.split(':').map(Number)

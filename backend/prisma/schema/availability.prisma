@@ -20,6 +20,7 @@ model AvailabilityException {
   professional   Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   type           ExceptionType
   date           DateTime      @db.Date
+  endDate        DateTime?     @db.Date      // null = un solo día
   startTime      String?       // null = todo el día
   endTime        String?       // null = todo el día
   reason         String?

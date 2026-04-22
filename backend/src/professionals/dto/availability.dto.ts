@@ -29,13 +29,18 @@ export class CreateAvailabilityDto {
 }
 
 export class CreateExceptionDto {
-  @ApiProperty({ enum: ExceptionType, example: ExceptionType.UNAVAILABLE })
+  @ApiProperty({ enum: ExceptionType, example: ExceptionType.HOLIDAY })
   @IsEnum(ExceptionType)
   type: ExceptionType
 
-  @ApiProperty({ example: '2026-12-25T00:00:00Z', description: 'Día de la excepción en formato ISO' })
+  @ApiProperty({ example: '2026-12-25', description: 'Día de inicio de la excepción en formato ISO' })
   @IsISO8601()
   date: string
+
+  @ApiPropertyOptional({ example: '2026-12-31', description: 'Opcional: Día de fin si es un rango' })
+  @IsOptional()
+  @IsISO8601()
+  endDate?: string
 
   @ApiPropertyOptional({ example: '09:00', description: 'Opcional: Si es nulo, aplica todo el día. Debe ser formato HH:mm' })
   @ValidateIf((o) => o.startTime !== undefined && o.startTime !== null)

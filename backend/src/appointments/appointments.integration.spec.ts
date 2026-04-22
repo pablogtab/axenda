@@ -152,6 +152,86 @@ describe('Appointments — Integration', () => {
       // 09:00 to 12:00 step 15m => 09:00, 09:15, 09:30, 09:45, 10:00, 10:15, 10:30, 10:45, 11:00, 11:15, 11:30 (11 slots)
       expect(slots.length).toBe(11)
     })
+
+    it('should block all slots if a HOLIDAY exception exists for the day', async () => {
+      // Add a holiday for next Monday
+      await request(app.getHttpServer())
+        .post(`/api/professionals/${professionalId}/exceptions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          type: 'HOLIDAY',
+          date: nextMonday.toISOString(),
+          reason: 'Día libre',
+        })
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data).toHaveLength(0) // No slots available
+    })
+
+    it('should block slots if the day falls within a date range exception (LEAVE)', async () => {
+      // Clear previous exception first (to be clean)
+      await prisma.availabilityException.deleteMany({ where: { professionalId } })
+
+      // Create a range exception that covers next Monday
+      const start = new Date(nextMonday)
+      start.setDate(start.getDate() - 2)
+      const end = new Date(nextMonday)
+      end.setDate(end.getDate() + 2)
+
+      await request(app.getHttpServer())
+        .post(`/api/professionals/${professionalId}/exceptions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          type: 'LEAVE',
+          date: start.toISOString(),
+          endDate: end.toISOString(),
+          reason: 'Vacaciones largas',
+        })
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data).toHaveLength(0) // Monday is inside the range
+    })
+
+    it('should only block specific time if a partial BLOCK exception exists', async () => {
+      await prisma.availabilityException.deleteMany({ where: { professionalId } })
+
+      // Block 10:00 to 11:00
+      await request(app.getHttpServer())
+        .post(`/api/professionals/${professionalId}/exceptions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          type: 'BLOCK',
+          date: nextMonday.toISOString(),
+          startTime: '10:00',
+          endTime: '11:00',
+          reason: 'Pausa almuerzo',
+        })
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      const slots = res.body.data as string[]
+      expect(slots).toContain('09:00')
+      expect(slots).not.toContain('10:00')
+      expect(slots).not.toContain('10:30')
+      expect(slots).toContain('11:00')
+    })
   })
 
   // ── Appointments Tests ─────────────────────────────────────────────────────

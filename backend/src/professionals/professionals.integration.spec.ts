@@ -213,14 +213,14 @@ describe('Professionals — Integration', () => {
         .post(`/api/professionals/${createdProfId}/availability`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ dayOfWeek: 2, startTime: '18:00', endTime: '09:00' })
-        .expect(400)
+      expect(400)
     })
   })
 
   // ── POST /api/professionals/:id/exceptions ─────────────────────────────────
 
   describe('POST /api/professionals/:id/exceptions', () => {
-    it('should add an exception (vacation day)', async () => {
+    it('should add an exception (holiday day)', async () => {
       const nextWeek = new Date()
       nextWeek.setDate(nextWeek.getDate() + 7)
 
@@ -228,17 +228,17 @@ describe('Professionals — Integration', () => {
         .post(`/api/professionals/${createdProfId}/exceptions`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          type: 'UNAVAILABLE',
+          type: 'HOLIDAY',
           date: nextWeek.toISOString(),
           reason: 'Vacaciones',
         })
         .expect(201)
 
-      expect(res.body.data.type).toBe('UNAVAILABLE')
+      expect(res.body.data.type).toBe('HOLIDAY')
       createdExceptionId = res.body.data.id
     })
 
-    it('should add a partial day block with time validation', async () => {
+    it('should add a partial day block (BLOCK type)', async () => {
       const nextWeek = new Date()
       nextWeek.setDate(nextWeek.getDate() + 8)
 
@@ -246,13 +246,33 @@ describe('Professionals — Integration', () => {
         .post(`/api/professionals/${createdProfId}/exceptions`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          type: 'BLOCKED',
+          type: 'BLOCK',
           date: nextWeek.toISOString(),
           startTime: '14:00',
           endTime: '16:00',
           reason: 'Turno médico personal',
         })
         .expect(201)
+    })
+
+    it('should add a date range exception', async () => {
+      const start = new Date()
+      start.setDate(start.getDate() + 20)
+      const end = new Date()
+      end.setDate(end.getDate() + 25)
+
+      const res = await request(app.getHttpServer())
+        .post(`/api/professionals/${createdProfId}/exceptions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          type: 'LEAVE',
+          date: start.toISOString(),
+          endDate: end.toISOString(),
+          reason: 'Licencia por viaje',
+        })
+        .expect(201)
+      
+      expect(res.body.data.endDate).toBeDefined()
     })
   })
 
@@ -268,7 +288,7 @@ describe('Professionals — Integration', () => {
       expect(res.body.data.id).toBe(createdProfId)
       expect(res.body.data.branches).toHaveLength(1)
       expect(res.body.data.availability).toHaveLength(1)
-      expect(res.body.data.exceptions.length).toBeGreaterThanOrEqual(2)
+      expect(res.body.data.exceptions.length).toBeGreaterThanOrEqual(3)
     })
   })
 
@@ -289,13 +309,17 @@ describe('Professionals — Integration', () => {
         .expect(200)
     })
 
-    it('should deactivate the professional (soft delete)', async () => {
-      const res = await request(app.getHttpServer())
+    it('should physically delete the professional', async () => {
+      await request(app.getHttpServer())
         .delete(`/api/professionals/${createdProfId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      expect(res.body.data.active).toBe(false)
+      // Verify it's gone
+      await request(app.getHttpServer())
+        .get(`/api/professionals/${createdProfId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(404)
     })
   })
 })

@@ -11,6 +11,16 @@ export interface Availability {
   branchId?: string;
 }
 
+export interface AvailabilityException {
+  id: string;
+  type: 'HOLIDAY' | 'LEAVE' | 'BLOCK' | 'OTHER';
+  date: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  reason?: string;
+}
+
 export interface Professional {
   id: string;
   firstName: string;
@@ -22,6 +32,7 @@ export interface Professional {
   services?: { service: { id: string, name: string, active: boolean } }[];
   branches?: { branch: { id: string, name: string, active: boolean } }[];
   availability?: Availability[];
+  exceptions?: AvailabilityException[];
 }
 
 @Injectable({
@@ -65,5 +76,14 @@ export class ProfessionalsService {
 
   removeAvailability(professionalId: string, availabilityId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${professionalId}/availability/${availabilityId}`);
+  }
+
+  // Excepciones
+  addException(professionalId: string, data: any): Observable<AvailabilityException> {
+    return this.http.post<AvailabilityException>(`${this.apiUrl}/${professionalId}/exceptions`, data);
+  }
+
+  removeException(professionalId: string, exceptionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${professionalId}/exceptions/${exceptionId}`);
   }
 }

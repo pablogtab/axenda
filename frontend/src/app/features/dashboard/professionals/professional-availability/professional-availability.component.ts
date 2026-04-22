@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProfessionalsService, Professional, Availability } from '@services/professionals.service';
+import { ProfessionalsService, Professional, Availability, AvailabilityException } from '@services/professionals.service';
 import { SnackbarService } from '@services/snackbar.service';
 
 @Component({
@@ -20,7 +20,10 @@ export class ProfessionalAvailabilityComponent implements OnInit {
 
   professional = signal<Professional | null>(null);
   availability = signal<Availability[]>([]);
+  exceptions = signal<AvailabilityException[]>([]);
+  
   addForm: FormGroup;
+  exceptionForm: FormGroup;
   isLoading = signal(true);
 
   days = [
@@ -33,11 +36,26 @@ export class ProfessionalAvailabilityComponent implements OnInit {
     { value: 0, label: 'Domingo' }
   ];
 
+  exceptionTypes = [
+    { value: 'BLOCK', label: 'Bloqueo Puntual' },
+    { value: 'HOLIDAY', label: 'Feriado / Vacaciones' },
+    { value: 'LEAVE', label: 'Licencia' },
+    { value: 'OTHER', label: 'Otro' }
+  ];
+
   constructor() {
     this.addForm = this.fb.group({
       dayOfWeek: [1, [Validators.required]],
       startTime: ['09:00', [Validators.required]],
       endTime: ['18:00', [Validators.required]]
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    this.exceptionForm = this.fb.group({
+      date: [today, [Validators.required]],
+      endDate: [null],
+      type: ['BLOCK', [Validators.required]],
+      reason: ['']
     });
   }
 
@@ -56,6 +74,7 @@ export class ProfessionalAvailabilityComponent implements OnInit {
       next: (prof) => {
         this.professional.set(prof);
         this.availability.set(prof.availability || []);
+        this.exceptions.set(prof.exceptions || []);
         this.isLoading.set(false);
       },
       error: () => {
@@ -85,7 +104,7 @@ export class ProfessionalAvailabilityComponent implements OnInit {
       next: (newSlot) => {
         this.availability.set([...this.availability(), newSlot]);
         this.snackbar.success('Horario añadido');
-        this.addForm.patchValue({ startTime: '09:00', endTime: '18:00' }); // Reset parcial
+        this.addForm.patchValue({ startTime: '09:00', endTime: '18:00' });
       },
       error: (err) => this.snackbar.error(err.error?.message || 'Error al añadir horario')
     });
@@ -101,6 +120,38 @@ export class ProfessionalAvailabilityComponent implements OnInit {
         this.snackbar.success('Horario eliminado');
       },
       error: () => this.snackbar.error('Error al eliminar horario')
+    });
+  }
+
+  addException(): void {
+    const prof = this.professional();
+    if (this.exceptionForm.invalid || !prof) return;
+
+    this.professionalsService.addException(prof.id, this.exceptionForm.value).subscribe({
+      next: (newEx) => {
+        this.exceptions.set([...this.exceptions(), newEx]);
+        this.snackbar.success('Excepción añadida');
+        this.exceptionForm.reset({
+          date: new Date().toISOString().split('T')[0],
+          endDate: null,
+          type: 'BLOCK',
+          reason: ''
+        });
+      },
+      error: (err) => this.snackbar.error(err.error?.message || 'Error al añadir excepción')
+    });
+  }
+
+  removeException(id: string): void {
+    const prof = this.professional();
+    if (!prof) return;
+
+    this.professionalsService.removeException(prof.id, id).subscribe({
+      next: () => {
+        this.exceptions.set(this.exceptions().filter(e => e.id !== id));
+        this.snackbar.success('Excepción eliminada');
+      },
+      error: () => this.snackbar.error('Error al eliminar excepción')
     });
   }
 
