@@ -9,25 +9,21 @@
     </div>
   </header>
 
-  <div class="list-controls card glass">
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input 
-        type="text" 
-        [value]="searchTerm()"
-        (input)="onSearchChange(search.value)"
-        #search
-        placeholder="Buscar servicio..."
-      >
-    </div>
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input
+      type="text"
+      [value]="searchTerm()"
+      (input)="onSearchChange(search.value)"
+      #search
+      placeholder="Buscar servicio...">
   </div>
 
   <div class="table-container card glass">
-    <app-data-table 
-      [data]="filteredServices()" 
+    <app-data-table
+      [data]="filteredServices()"
       [columns]="['service', 'duration', 'price', 'active', 'actions']"
-      [headers]="['Servicio', 'Duración', 'Precio', 'Estado', 'Acciones']"
-    >
+      [headers]="['Servicio', 'Duración', 'Precio', 'Estado', 'Acciones']">
       <ng-template appTableCell="service" let-service>
         <div class="service-info">
           <div class="row-icon-circle" [style.background-color]="service.color || '#6366f1'">
@@ -36,7 +32,7 @@
           <div class="name-details">
             <span class="service-name">{{ service.name }}</span>
             @if (service.category) {
-              <span class="category">{{ service.category.name }}</span>
+            <span class="category">{{ service.category.name }}</span>
             }
           </div>
         </div>
@@ -67,7 +63,7 @@
     </app-data-table>
 
     @if (filteredServices().length === 0 && !isLoading()) {
-      <div class="empty-state">No hay servicios registrados.</div>
+    <div class="empty-state">No hay servicios registrados.</div>
     }
   </div>
 </div>

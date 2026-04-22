@@ -1,0 +1,40 @@
+<div class="form-card glass">
+  <header class="form-header">
+    <h2>{{ isEditing ? 'Editar Sucursal' : 'Nueva Sucursal' }}</h2>
+    <button class="btn-close" (click)="onCancel()">×</button>
+  </header>
+
+  <form [formGroup]="branchForm" (ngSubmit)="onSubmit()" class="branch-form">
+    <div class="form-group">
+      <label for="name">Nombre de la Sucursal *</label>
+      <input id="name" type="text" formControlName="name" placeholder="Ej: Sucursal Centro">
+      @if (branchForm.get('name')?.touched && branchForm.get('name')?.invalid) {
+        <span class="error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label for="address">Dirección</label>
+      <input id="address" type="text" formControlName="address" placeholder="Ej: Av. Corrientes 1234, CABA">
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Teléfono de Contacto</label>
+      <input id="phone" type="text" formControlName="phone" placeholder="Ej: +54 11 ...">
+    </div>
+
+    <div class="form-group checkbox">
+      <label>
+        <input type="checkbox" formControlName="active">
+        Sucursal activa
+      </label>
+    </div>
+
+    <footer class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Sucursal') }}
+      </button>
+    </footer>
+  </form>
+</div>

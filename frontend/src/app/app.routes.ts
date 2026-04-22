@@ -28,6 +28,10 @@ export const appRoutes: Routes = [
       { 
         path: 'services', 
         loadComponent: () => import('./features/dashboard/services/services-list/services-list.component').then(m => m.ServicesListComponent) 
+      },
+      { 
+        path: 'branches', 
+        loadComponent: () => import('./features/dashboard/branches/branches-list/branches-list.component').then(m => m.BranchesListComponent) 
       }
     ]
   }

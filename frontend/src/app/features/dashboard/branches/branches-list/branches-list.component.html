@@ -1,0 +1,67 @@
+<div class="branches-container">
+  <header class="page-header">
+    <div class="header-info">
+      <h1 class="text-gradient">Sucursales</h1>
+      <p>Administra las diferentes sedes de tu organización.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateForm()">+ Nueva Sucursal</button>
+    </div>
+  </header>
+
+  <div class="list-controls card glass">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input 
+        type="text" 
+        [value]="searchTerm()"
+        (input)="onSearchChange(search.value)"
+        #search
+        placeholder="Buscar por nombre o dirección..."
+      >
+    </div>
+  </div>
+
+  <div class="table-container card glass">
+    <app-data-table 
+      [data]="filteredBranches()" 
+      [columns]="['branch', 'contact', 'active', 'actions']"
+      [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']"
+    >
+      <ng-template appTableCell="branch" let-branch>
+        <div class="branch-info">
+          <div class="row-icon-circle" [style.background]="'linear-gradient(135deg, #4f46e5, #6366f1)'">
+            🏢
+          </div>
+          <div class="name-details">
+            <span class="branch-name">{{ branch.name }}</span>
+            @if (branch.address) {
+              <span class="address">{{ branch.address }}</span>
+            }
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template appTableCell="contact" let-branch>
+        <span class="phone-text">{{ branch.phone || 'Sin teléfono' }}</span>
+      </ng-template>
+
+      <ng-template appTableCell="active" let-branch>
+        <span class="status-indicator" [class.active]="branch.active">
+          {{ branch.active ? 'Activo' : 'Inactivo' }}
+        </span>
+      </ng-template>
+
+      <ng-template appTableCell="actions" let-branch>
+        <div class="row-actions">
+          <button class="btn-icon-small" title="Editar" (click)="openEditForm(branch)">✏️</button>
+          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteBranch(branch.id)">🗑️</button>
+        </div>
+      </ng-template>
+    </app-data-table>
+
+    @if (filteredBranches().length === 0 && !isLoading()) {
+      <div class="empty-state">No se encontraron sucursales.</div>
+    }
+  </div>
+</div>
