@@ -1,189 +1,59 @@
-.agenda-container {
-  padding: 2rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.agenda-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.date-navigator {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.date-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.date-info h2 {
-  font-size: 1.5rem;
-  text-transform: capitalize;
-}
-
-.btn-link {
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  border: none;
-  color: var(--primary);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.2rem;
-  transition: var(--transition);
 }
 
-.btn-link:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
-.btn-icon {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 0.5rem 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.btn-icon:hover {
-  background: var(--surface-hover);
+.bg-stripe-pattern {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
 }
 
-/* Calendar Layout */
-.calendar-wrapper {
-  flex: 1;
-  display: flex;
-  background: var(--bg-secondary);
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  position: relative;
-  min-height: 800px;
+.transition-all {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.time-axis {
-  width: 80px;
-  padding-top: 0;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border);
-  background: var(--bg-secondary);
-  z-index: 5;
+/* Efecto Hover en Turnos */
+.group\/appt:hover {
+  filter: brightness(1.1);
+  z-index: 30;
 }
 
-.hour-label {
-  height: 90px; /* 60 mins * 1.5px */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  font-weight: 500;
+/* Agenda Grid Styles */
+.grid {
+  display: grid;
+  /* Grid lines for debugging or visual structure */
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.grid-content {
-  flex: 1;
-  position: relative;
-  background-image: linear-gradient(var(--border) 1px, transparent 1px);
-  background-size: 100% 90px; /* Una línea por hora */
+/* Sticky behavior for Grid items */
+.sticky {
+  position: sticky;
 }
 
-.grid-line {
-  height: 90px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-/* Appointment Cards */
-.appointment-card {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--primary);
-  border-radius: 12px;
-  padding: 0.8rem;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: var(--transition);
-  z-index: 10;
-}
-
-.appointment-card:hover {
-  transform: scale(1.01);
-  z-index: 20;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-}
-
-.card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.05;
-  pointer-events: none;
-}
-
-.card-content {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.app-time {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.app-client {
-  font-size: 0.95rem;
-  margin: 0.2rem 0;
-}
-
-.app-service {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.app-footer {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.75rem;
-}
-
-.app-prof {
-  color: var(--text-dim);
-}
-
-.app-status {
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.app-status[data-status="CONFIRMED"] { color: var(--success); background: rgba(16, 185, 129, 0.1); }
-.app-status[data-status="PENDING"] { color: var(--warning); background: rgba(245, 158, 11, 0.1); }
-.app-status[data-status="CANCELLED"] { color: var(--error); background: rgba(239, 68, 68, 0.1); }
+.z-50 { z-index: 50; }
+.z-40 { z-index: 40; }
+.z-30 { z-index: 30; }
+.z-20 { z-index: 20; }
+.z-10 { z-index: 10; }

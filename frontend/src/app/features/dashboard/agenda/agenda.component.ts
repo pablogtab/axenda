@@ -6,14 +6,15 @@ import { ProfessionalsService, Professional } from '@services/professionals.serv
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { forkJoin } from 'rxjs';
-import { format, addDays, startOfDay, eachHourOfInterval, setHours, setMinutes } from 'date-fns';
+import { format, addDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 @Component({
   selector: 'app-agenda',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './agenda.component.html'
+  templateUrl: './agenda.component.html',
+  styleUrls: ['./agenda.component.css']
 })
 export class AgendaComponent implements OnInit {
   private appointmentsService = inject(AppointmentsService);
@@ -21,7 +22,6 @@ export class AgendaComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private modal = inject(ModalService);
 
-  // Estado
   selectedDate = signal<Date>(startOfDay(new Date()));
   selectedBranchId = signal<string | null>(null);
   
@@ -30,7 +30,6 @@ export class AgendaComponent implements OnInit {
   branches = signal<Branch[]>([]);
   isLoading = signal(true);
 
-  // Configuración de la cuadrícula
   timeSlots = signal<string[]>([]);
   startHour = 8;
   endHour = 21;
@@ -47,9 +46,11 @@ export class AgendaComponent implements OnInit {
 
   generateTimeSlots(): void {
     const slots: string[] = [];
+    // Slots cada 15 minutos para mayor precisión en el Grid
     for (let hour = this.startHour; hour < this.endHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+      for (let min of ['00', '15', '30', '45']) {
+        slots.push(`${hour.toString().padStart(2, '0')}:${min}`);
+      }
     }
     this.timeSlots.set(slots);
   }
@@ -100,25 +101,50 @@ export class AgendaComponent implements OnInit {
     this.loadAppointments();
   }
 
-  // Lógica para posicionar turnos
-  getAppointmentStyle(app: Appointment) {
+  // ─── Lógica de Grid ────────────────────────────────────────────────────────
+
+  isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
+    const dayOfWeek = this.selectedDate().getDay();
+    
+    // 1. Full day check
+    const isOut = prof.exceptions?.some(ex => {
+      const start = startOfDay(new Date(ex.date));
+      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      const current = startOfDay(this.selectedDate());
+      return current >= start && current <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE' || (ex.type === 'BLOCK' && !ex.startTime));
+    });
+    if (isOut) return false;
+
+    // 2. Schedule check
+    const blocks = prof.availability?.filter(a => a.dayOfWeek === dayOfWeek) || [];
+    return blocks.some(b => slot >= b.startTime && slot < b.endTime);
+  }
+
+  isProfessionalBlockedAt(prof: Professional, slot: string): boolean {
+    const current = startOfDay(this.selectedDate());
+    return (prof.exceptions || []).some(ex => {
+      const start = startOfDay(new Date(ex.date));
+      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      return current >= start && current <= end && ex.type === 'BLOCK' && ex.startTime && ex.endTime && slot >= ex.startTime && slot < ex.endTime;
+    });
+  }
+
+  getAppointmentGridRange(app: Appointment): string {
     const start = new Date(app.startTime);
     const end = new Date(app.endTime);
     
-    const startMinutes = (start.getHours() - this.startHour) * 60 + start.getMinutes();
-    const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+    const startStr = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`;
+    const endStr = `${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
     
-    // Cada slot de 30 min mide 60px en mi diseño
-    const top = (startMinutes / 30) * 60;
-    const height = (durationMinutes / 30) * 60;
+    const startIndex = this.timeSlots().findIndex(s => s === startStr);
+    const endIndex = this.timeSlots().findIndex(s => s === endStr);
 
-    return {
-      'top': `${top}px`,
-      'height': `${height}px`,
-      'background-color': `${app.service.color}20`,
-      'border-left': `4px solid ${app.service.color}`,
-      'color': app.service.color
-    };
+    // Grid Row 1 is header. So row index starts at 2.
+    // If not found (out of range), default to 1.
+    const rowStart = startIndex !== -1 ? startIndex + 2 : 2;
+    const rowEnd = endIndex !== -1 ? endIndex + 2 : rowStart + 1;
+
+    return `${rowStart} / ${rowEnd}`;
   }
 
   getAppointmentsForProfessional(profId: string): Appointment[] {
@@ -126,7 +152,6 @@ export class AgendaComponent implements OnInit {
   }
 
   openAppointmentForm(professional?: Professional, time?: string): void {
-    // TODO: Abrir modal de creación de turno
     console.log('Abrir formulario para:', professional?.firstName, time);
   }
 }
