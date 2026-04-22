@@ -1,0 +1,52 @@
+<div class="agenda-container">
+  <header class="agenda-header">
+    <div class="date-navigator">
+      <button class="btn-icon" (click)="prevDay()">◀</button>
+      <div class="date-info">
+        <h2>{{ currentDate | date:'EEEE, d MMMM' }}</h2>
+        <button class="btn-link" (click)="setToday()">Hoy</button>
+      </div>
+      <button class="btn-icon" (click)="nextDay()">▶</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary">+ Nuevo Turno</button>
+    </div>
+  </header>
+
+  <div class="calendar-wrapper">
+    <!-- Eje de horas -->
+    <div class="time-axis">
+      <div *ngFor="let hour of hours" class="hour-label">
+        {{ formatTime(hour) }}
+      </div>
+    </div>
+
+    <!-- Grid de contenido -->
+    <div class="grid-content">
+      <!-- Líneas de fondo -->
+      <div *ngFor="let hour of hours" class="grid-line"></div>
+
+      <!-- Tarjetas de turnos -->
+      <div 
+        *ngFor="let app of filteredAppointments" 
+        class="appointment-card"
+        [style.top]="getTopPosition(app.startTime)"
+        [style.height]="getHeight(app.startTime, app.endTime)"
+        [style.border-left-color]="app.service.color"
+      >
+        <div class="card-glow" [style.background-color]="app.service.color"></div>
+        <div class="card-content">
+          <span class="app-time">
+            {{ app.startTime | date:'HH:mm':'UTC' }} - {{ app.endTime | date:'HH:mm':'UTC' }}
+          </span>
+          <h4 class="app-client">{{ app.client.firstName }} {{ app.client.lastName }}</h4>
+          <span class="app-service">{{ app.service.name }}</span>
+          <div class="app-footer">
+            <span class="app-prof">👤 {{ app.professional.firstName }}</span>
+            <span class="app-status" [attr.data-status]="app.status">{{ app.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

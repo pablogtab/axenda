@@ -1,0 +1,47 @@
+<div class="layout-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar glass">
+    <div class="sidebar-header">
+      <h2 class="text-gradient">Axenda</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/dashboard/agenda" routerLinkActive="active" class="nav-item">
+        <span class="icon">📅</span>
+        Agenda
+      </a>
+      <a routerLink="/dashboard/clients" routerLinkActive="active" class="nav-item">
+        <span class="icon">👥</span>
+        Clientes
+      </a>
+      <a href="#" class="nav-item">
+        <span class="icon">✂️</span>
+        Servicios
+      </a>
+      <a href="#" class="nav-item">
+        <span class="icon">🏢</span>
+        Sucursales
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button (click)="logout()" class="btn-logout">
+        <span>🚪</span> Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <header class="topbar">
+      <div class="user-info">
+        <div class="avatar">A</div>
+        <span>Administrador</span>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
