@@ -30,7 +30,7 @@ export class TenantsService {
 
   async findBranches(tenantId: string) {
     return this.prisma.branch.findMany({
-      where: { tenantId, active: true },
+      where: { tenantId },
       orderBy: { name: 'asc' },
     })
   }

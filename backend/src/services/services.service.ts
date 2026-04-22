@@ -11,7 +11,7 @@ export class ServicesService {
 
   async findAllCategories(tenantId: string) {
     return this.prisma.serviceCategory.findMany({
-      where: { tenantId, active: true },
+      where: { tenantId },
       orderBy: { name: 'asc' },
     })
   }
@@ -53,7 +53,7 @@ export class ServicesService {
 
   async findAll(tenantId: string) {
     return this.prisma.service.findMany({
-      where: { tenantId, active: true },
+      where: { tenantId },
       include: {
         category: { select: { name: true } },
       },
