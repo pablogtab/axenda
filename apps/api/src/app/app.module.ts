@@ -9,6 +9,7 @@ import { AuthModule } from '../auth/auth.module'
 import { UsersModule } from '../users/users.module'
 import { TenantsModule } from '../tenants/tenants.module'
 import { ProfessionalsModule } from '../professionals/professionals.module'
+import { ServicesModule } from '../services/services.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ProfessionalsModule } from '../professionals/professionals.module'
     UsersModule,
     TenantsModule,
     ProfessionalsModule,
+    ServicesModule,
   ],
 
   providers: [
