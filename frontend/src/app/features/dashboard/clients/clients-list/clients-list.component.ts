@@ -10,7 +10,7 @@ import { ModalService } from '@services/modal.service';
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [FormsModule, DataTableComponent, TableCellDirective, ClientFormComponent],
+  imports: [FormsModule, DataTableComponent, TableCellDirective],
   templateUrl: './clients-list.component.html',
   styleUrl: './clients-list.component.css'
 })
