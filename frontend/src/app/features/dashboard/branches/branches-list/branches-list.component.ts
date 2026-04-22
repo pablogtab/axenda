@@ -5,7 +5,8 @@ import { BranchesService, Branch } from '@services/branches.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
-import { DataTableComponent, TableCellDirective } from 'shared-ui';
+import { DataTableComponent } from '@shared/components/data-table/data-table.component';
+import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { BranchFormComponent } from '../branch-form/branch-form.component';
 
 @Component({

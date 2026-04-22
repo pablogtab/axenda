@@ -1,15 +1,7 @@
-import { Component, input, contentChildren, TemplateRef, Directive } from '@angular/core';
+import { Component, input, contentChildren, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkTableModule } from '@angular/cdk/table';
-
-@Directive({
-  selector: '[appTableCell]',
-  standalone: true
-})
-export class TableCellDirective {
-  column = input.required<string>({ alias: 'appTableCell' });
-  constructor(public template: TemplateRef<any>) {}
-}
+import { TableCellDirective } from './table-cell.directive';
 
 @Component({
   selector: 'app-data-table',

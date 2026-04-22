@@ -16,7 +16,6 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
-      "shared-ui": ["shared-ui/src/index.ts"],
       "@core/*": ["src/app/core/*"],
       "@services/*": ["src/app/core/services/*"],
       "@shared/*": ["src/app/shared/*"],

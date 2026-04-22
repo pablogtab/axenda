@@ -5,9 +5,11 @@ import { ProfessionalsService, Professional } from '@services/professionals.serv
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
-import { DataTableComponent, TableCellDirective } from 'shared-ui';
+import { DataTableComponent } from '@shared/components/data-table/data-table.component';
+import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { ProfessionalFormComponent } from '@features/dashboard/professionals/professional-form/professional-form.component';
 
+// Componente principal para el listado de profesionales
 @Component({
   selector: 'app-professionals-list',
   standalone: true,
@@ -64,7 +66,6 @@ export class ProfessionalsListComponent implements OnInit {
   }
 
   async deleteProfessional(id: string): Promise<void> {
-    // Confirmación de borrado permanente
     const confirmed = await this.dialog.confirm({
       title: '¿Remover profesional?',
       message: 'Esta acción eliminará definitivamente al profesional',

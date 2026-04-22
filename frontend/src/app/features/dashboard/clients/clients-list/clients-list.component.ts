@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ClientsService, Client } from '@services/clients.service';
-import { DataTableComponent, TableCellDirective } from 'shared-ui';
+import { DataTableComponent } from '@shared/components/data-table/data-table.component';
+import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { ClientFormComponent } from '../client-form/client-form.component';
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
