@@ -8,6 +8,7 @@ import { ResponseInterceptor } from '../common/interceptors/response.interceptor
 import { AuthModule } from '../auth/auth.module'
 import { UsersModule } from '../users/users.module'
 import { TenantsModule } from '../tenants/tenants.module'
+import { ProfessionalsModule } from '../professionals/professionals.module'
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TenantsModule } from '../tenants/tenants.module'
     // ─── Domain Modules ──────────────────────────────────────────────────
     UsersModule,
     TenantsModule,
+    ProfessionalsModule,
   ],
 
   providers: [
