@@ -1,0 +1,18 @@
+<table cdk-table [dataSource]="data()" class="axenda-table">
+  
+  <ng-container *ngFor="let column of columns(); let i = index" [cdkColumnDef]="column">
+    <th cdk-header-cell *cdkHeaderCellDef>{{ headers()[i] }}</th>
+    <td cdk-cell *cdkCellDef="let row">
+      <!-- Si hay una plantilla para esta columna, la usamos. Si no, mostramos el valor por defecto. -->
+      <ng-container *ngIf="getTemplateForColumn(column) as template; else defaultCell">
+        <ng-container *ngTemplateOutlet="template; context: { $implicit: row }"></ng-container>
+      </ng-container>
+      <ng-template #defaultCell>
+        {{ row[column] }}
+      </ng-template>
+    </td>
+  </ng-container>
+
+  <tr cdk-header-row *cdkHeaderRowDef="columns()"></tr>
+  <tr cdk-row *cdkRowDef="let row; columns: columns()" class="axenda-row"></tr>
+</table>

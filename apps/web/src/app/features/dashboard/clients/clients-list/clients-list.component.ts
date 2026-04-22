@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientsService, Client } from '../../../../core/services/clients.service';
+import { DataTableComponent, TableCellDirective } from 'shared-ui';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective],
   templateUrl: './clients-list.component.html',
   styleUrl: './clients-list.component.css'
 })

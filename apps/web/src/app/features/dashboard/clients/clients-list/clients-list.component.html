@@ -23,73 +23,70 @@
   </div>
 
   <div class="table-container card glass">
-    <table class="clients-table">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Contacto</th>
-          <th>Etiquetas</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let client of filteredClients()" class="client-row">
-          <td>
-            <div class="client-profile">
-              <div class="avatar-circle">
-                {{ getInitials(client) }}
-              </div>
-              <div class="name-info">
-                <span class="full-name">{{ client.firstName }} {{ client.lastName }}</span>
-                <span class="notes" *ngIf="client.notes">{{ client.notes }}</span>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="contact-info">
-              <span class="email">{{ client.email || 'Sin email' }}</span>
-              <span class="phone">{{ client.phone || 'Sin teléfono' }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="tags-list">
-              <span 
-                *ngFor="let tag of client.tags" 
-                class="tag-badge"
-                [style.background-color]="tag.color + '22'"
-                [style.color]="tag.color"
-                [style.border-color]="tag.color"
-              >
-                {{ tag.name }}
-              </span>
-            </div>
-          </td>
-          <td>
-            <span class="status-indicator" [class.active]="client.active">
-              {{ client.active ? 'Activo' : 'Inactivo' }}
-            </span>
-          </td>
-          <td>
-            <div class="row-actions">
-              <button class="btn-icon-small" title="Ver Turnos">📅</button>
-              <button class="btn-icon-small" title="Editar">✏️</button>
-            </div>
-          </td>
-        </tr>
+    <app-data-table 
+      [data]="filteredClients()" 
+      [columns]="['client', 'contact', 'tags', 'active', 'actions']"
+      [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']"
+    >
+      <!-- Plantilla para la columna de Cliente -->
+      <ng-template appTableCell="client" let-client>
+        <div class="client-profile">
+          <div class="avatar-circle">
+            {{ getInitials(client) }}
+          </div>
+          <div class="name-info">
+            <span class="full-name">{{ client.firstName }} {{ client.lastName }}</span>
+            <span class="notes" *ngIf="client.notes">{{ client.notes }}</span>
+          </div>
+        </div>
+      </ng-template>
 
-        <tr *ngIf="filteredClients().length === 0 && !isLoading()">
-          <td colspan="5" class="empty-state">
-            No se encontraron clientes.
-          </td>
-        </tr>
+      <!-- Plantilla para la columna de Contacto -->
+      <ng-template appTableCell="contact" let-client>
+        <div class="contact-info">
+          <span class="email">{{ client.email || 'Sin email' }}</span>
+          <span class="phone">{{ client.phone || 'Sin teléfono' }}</span>
+        </div>
+      </ng-template>
 
-        <tr *ngIf="isLoading()">
-          <td colspan="5" class="empty-state">
-            Cargando clientes...
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <!-- Plantilla para la columna de Etiquetas -->
+      <ng-template appTableCell="tags" let-client>
+        <div class="tags-list">
+          <span 
+            *ngFor="let tag of client.tags" 
+            class="tag-badge"
+            [style.background-color]="tag.color + '22'"
+            [style.color]="tag.color"
+            [style.border-color]="tag.color"
+          >
+            {{ tag.name }}
+          </span>
+        </div>
+      </ng-template>
+
+      <!-- Plantilla para la columna de Estado -->
+      <ng-template appTableCell="active" let-client>
+        <span class="status-indicator" [class.active]="client.active">
+          {{ client.active ? 'Activo' : 'Inactivo' }}
+        </span>
+      </ng-template>
+
+      <!-- Plantilla para la columna de Acciones -->
+      <ng-template appTableCell="actions" let-client>
+        <div class="row-actions">
+          <button class="btn-icon-small" title="Ver Turnos">📅</button>
+          <button class="btn-icon-small" title="Editar">✏️</button>
+        </div>
+      </ng-template>
+
+    </app-data-table>
+
+    <div *ngIf="filteredClients().length === 0 && !isLoading()" class="empty-state">
+      No se encontraron clientes.
+    </div>
+
+    <div *ngIf="isLoading()" class="empty-state">
+      Cargando clientes...
+    </div>
   </div>
 </div>
