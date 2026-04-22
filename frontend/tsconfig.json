@@ -16,7 +16,12 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
-      "shared-ui": ["shared-ui/src/index.ts"]
+      "shared-ui": ["shared-ui/src/index.ts"],
+      "@core/*": ["src/app/core/*"],
+      "@services/*": ["src/app/core/services/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@features/*": ["src/app/features/*"],
+      "@env/*": ["src/environments/*"]
     }
   },
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/vite.config.mts", "**/test-setup.ts"],

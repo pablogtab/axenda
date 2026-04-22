@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SnackbarService, SnackbarMessage } from '../../../core/services/snackbar.service';
+import { SnackbarService, SnackbarMessage } from '@services/snackbar.service';
 
 @Component({
   selector: 'app-snackbar',

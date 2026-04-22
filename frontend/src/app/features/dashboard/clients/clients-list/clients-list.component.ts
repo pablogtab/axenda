@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ClientsService, Client } from '../../../../core/services/clients.service';
+import { ClientsService, Client } from '@services/clients.service';
 import { DataTableComponent, TableCellDirective } from 'shared-ui';
 import { ClientFormComponent } from '../client-form/client-form.component';
-import { SnackbarService } from '../../../../core/services/snackbar.service';
-import { DialogService } from '../../../../core/services/dialog.service';
-import { ModalService } from '../../../../core/services/modal.service';
+import { SnackbarService } from '@services/snackbar.service';
+import { DialogService } from '@services/dialog.service';
+import { ModalService } from '@services/modal.service';
 
 @Component({
   selector: 'app-clients-list',

@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { Client, ClientsService } from '../../../../core/services/clients.service';
-import { SnackbarService } from '../../../../core/services/snackbar.service';
+import { Client, ClientsService } from '@services/clients.service';
+import { SnackbarService } from '@services/snackbar.service';
 
 @Component({
   selector: 'app-client-form',
