@@ -12,4 +12,7 @@ export default defineConfig({
   datasource: {
     url: process.env['DATABASE_URL'],
   },
+  migrations: {
+    seed: 'node -r @swc-node/register ./prisma/seed.ts',
+  },
 })
