@@ -164,7 +164,14 @@
   border-color: var(--primary);
 }
 
+.btn-icon-small.btn-delete:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
 .empty-state {
+
   text-align: center;
   padding: 4rem !important;
   color: var(--text-dim);

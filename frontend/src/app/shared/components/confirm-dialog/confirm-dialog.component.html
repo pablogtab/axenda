@@ -1,0 +1,22 @@
+@if (state()) {
+  <div class="dialog-overlay" (click)="onCancel()">
+    <div class="dialog-card glass" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <h2 [class]="state()?.type">{{ state()?.title }}</h2>
+      </header>
+      
+      <div class="dialog-body">
+        <p>{{ state()?.message }}</p>
+      </div>
+
+      <footer class="dialog-actions">
+        <button class="btn btn-secondary" (click)="onCancel()">
+          {{ state()?.cancelText }}
+        </button>
+        <button class="btn" [class]="'btn-' + state()?.type" (click)="onConfirm()">
+          {{ state()?.confirmText }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

@@ -1,23 +1,29 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientsService, Client } from '../../../../core/services/clients.service';
 import { DataTableComponent, TableCellDirective } from 'shared-ui';
+import { ClientFormComponent } from '../client-form/client-form.component';
+import { SnackbarService } from '../../../../core/services/snackbar.service';
+import { DialogService } from '../../../../core/services/dialog.service';
+import { ModalService } from '../../../../core/services/modal.service';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective],
+  imports: [FormsModule, DataTableComponent, TableCellDirective, ClientFormComponent],
   templateUrl: './clients-list.component.html',
   styleUrl: './clients-list.component.css'
 })
 export class ClientsListComponent implements OnInit {
   private clientsService = inject(ClientsService);
+  private snackbar = inject(SnackbarService);
+  private dialog = inject(DialogService);
+  private modal = inject(ModalService);
 
   clients = signal<Client[]>([]);
   searchTerm = signal('');
   isLoading = signal(true);
-
+  
   filteredClients = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const allClients = this.clients();
@@ -48,6 +54,48 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
+  openCreateForm(): void {
+    const dialogRef = this.modal.open(ClientFormComponent);
+    
+    dialogRef.closed.subscribe(result => {
+      if (result) this.loadClients();
+    });
+  }
+
+  openEditForm(client: Client): void {
+    const dialogRef = this.modal.open(ClientFormComponent, {
+      data: client
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) this.loadClients();
+    });
+  }
+
+
+  async deleteClient(id: string): Promise<void> {
+    const confirmed = await this.dialog.confirm({
+      title: '¿Eliminar cliente?',
+      message: 'Esta acción eliminará permanentemente al cliente y todo su historial. ¿Estás seguro?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this.clientsService.delete(id).subscribe({
+        next: () => {
+          this.snackbar.success('Cliente eliminado correctamente');
+          this.loadClients();
+        },
+        error: (err) => {
+          this.snackbar.error('No se pudo eliminar el cliente');
+          console.error('Error deleting client', err);
+        }
+      });
+    }
+  }
+
   onSearchChange(value: string): void {
     this.searchTerm.set(value);
   }
@@ -56,3 +104,4 @@ export class ClientsListComponent implements OnInit {
     return `${client.firstName[0]}${client.lastName[0]}`.toUpperCase();
   }
 }
+

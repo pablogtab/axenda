@@ -15,8 +15,12 @@ export interface Client {
   lastName: string;
   email?: string;
   phone?: string;
+  document?: string;
   notes?: string;
+  photoUrl?: string;
   active: boolean;
+  createdAt: string;
+  updatedAt: string;
   tags: ClientTag[];
   _count?: {
     appointments: number;
@@ -42,5 +46,20 @@ export class ClientsService {
     );
   }
 
-  // Futuro: create, update, delete
+  create(client: Partial<Client>): Observable<Client> {
+    return this.http.post<{ data: Client }>(this.apiUrl, client).pipe(
+      map(response => response.data)
+    );
+  }
+
+  update(id: string, client: Partial<Client>): Observable<Client> {
+    return this.http.patch<{ data: Client }>(`${this.apiUrl}/${id}`, client).pipe(
+      map(response => response.data)
+    );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
+

@@ -5,9 +5,10 @@
       <p>Gestiona tu base de datos de clientes y su historial.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary">+ Nuevo Cliente</button>
+      <button class="btn btn-primary" (click)="openCreateForm()">+ Nuevo Cliente</button>
     </div>
   </header>
+
 
   <div class="list-controls card glass">
     <div class="search-box">
@@ -36,7 +37,9 @@
           </div>
           <div class="name-info">
             <span class="full-name">{{ client.firstName }} {{ client.lastName }}</span>
-            <span class="notes" *ngIf="client.notes">{{ client.notes }}</span>
+            @if (client.notes) {
+              <span class="notes">{{ client.notes }}</span>
+            }
           </div>
         </div>
       </ng-template>
@@ -52,15 +55,16 @@
       <!-- Plantilla para la columna de Etiquetas -->
       <ng-template appTableCell="tags" let-client>
         <div class="tags-list">
-          <span 
-            *ngFor="let tag of client.tags" 
-            class="tag-badge"
-            [style.background-color]="tag.color + '22'"
-            [style.color]="tag.color"
-            [style.border-color]="tag.color"
-          >
-            {{ tag.name }}
-          </span>
+          @for (tag of client.tags; track tag.id) {
+            <span 
+              class="tag-badge"
+              [style.background-color]="tag.color + '22'"
+              [style.color]="tag.color"
+              [style.border-color]="tag.color"
+            >
+              {{ tag.name }}
+            </span>
+          }
         </div>
       </ng-template>
 
@@ -75,18 +79,25 @@
       <ng-template appTableCell="actions" let-client>
         <div class="row-actions">
           <button class="btn-icon-small" title="Ver Turnos">📅</button>
-          <button class="btn-icon-small" title="Editar">✏️</button>
+          <button class="btn-icon-small" title="Editar" (click)="openEditForm(client)">✏️</button>
+          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteClient(client.id)">🗑️</button>
         </div>
       </ng-template>
 
     </app-data-table>
 
-    <div *ngIf="filteredClients().length === 0 && !isLoading()" class="empty-state">
-      No se encontraron clientes.
-    </div>
+    @if (filteredClients().length === 0 && !isLoading()) {
+      <div class="empty-state">
+        No se encontraron clientes.
+      </div>
+    }
 
-    <div *ngIf="isLoading()" class="empty-state">
-      Cargando clientes...
-    </div>
+    @if (isLoading()) {
+      <div class="empty-state">
+        Cargando clientes...
+      </div>
+    }
   </div>
 </div>
+
+
