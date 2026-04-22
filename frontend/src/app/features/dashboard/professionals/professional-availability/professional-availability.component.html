@@ -1,0 +1,91 @@
+<div class="flex flex-col h-full bg-bg-primary">
+  <!-- Header de Navegación -->
+  <header class="p-6 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <button (click)="goBack()" class="p-2 hover:bg-white/10 rounded-xl text-text-dim hover:text-text-main transition-all">
+        ← Volver
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-text-main">Disponibilidad Horaria</h1>
+        <p class="text-sm text-text-dim" *ngIf="professional()">
+          {{ professional()?.firstName }} {{ professional()?.lastName }}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+    <div class="max-w-4xl mx-auto space-y-8">
+      
+      <!-- Formulario de Agregado Rápido -->
+      <section class="card-glass p-8">
+        <h2 class="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm">+</span>
+          Añadir Bloque Horario
+        </h2>
+        
+        <form [formGroup]="addForm" (ngSubmit)="addSlot()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div>
+            <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Día de la semana</label>
+            <select formControlName="dayOfWeek" class="input-field">
+              @for (day of days; track day.value) {
+                <option [value]="day.value">{{ day.label }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Hora Inicio</label>
+            <input type="time" formControlName="startTime" class="input-field">
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Hora Fin</label>
+            <input type="time" formControlName="endTime" class="input-field">
+          </div>
+          <button type="submit" class="btn-primary h-[50px]" [disabled]="addForm.invalid">
+            Añadir Horario
+          </button>
+        </form>
+      </section>
+
+      <!-- Lista de Días -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        @for (day of days; track day.value) {
+          <div class="card-glass p-6 hover:border-primary/30 transition-all group">
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+                <div class="w-2 h-8 rounded-full bg-primary/20 group-hover:bg-primary transition-all"></div>
+                <h3 class="font-bold text-text-main text-lg">{{ day.label }}</h3>
+              </div>
+              @if (getAvailabilityForDay(day.value).length === 0) {
+                <span class="px-3 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider">
+                  No laborable
+                </span>
+              }
+            </div>
+
+            <div class="flex flex-col gap-3">
+              @for (slot of getAvailabilityForDay(day.value); track slot.id) {
+                <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all animate-in fade-in slide-in-from-right-4">
+                  <div class="flex items-center gap-4">
+                    <span class="text-xl">🕒</span>
+                    <span class="font-bold text-primary tracking-tight">
+                      {{ slot.startTime }} — {{ slot.endTime }}
+                    </span>
+                  </div>
+                  <button 
+                    (click)="removeSlot(slot.id)" 
+                    class="p-2 text-text-dim hover:text-error hover:bg-error/10 rounded-lg transition-all"
+                    title="Eliminar este horario">
+                    🗑️
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </main>
+</div>

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 
 export interface Branch {
@@ -15,25 +15,19 @@ export interface Branch {
   providedIn: 'root'
 })
 export class BranchesService {
-  private http: HttpClient = inject(HttpClient);
+  private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/tenants/me/branches`;
 
   findAll(): Observable<Branch[]> {
-    return this.http.get<{ data: Branch[] }>(this.apiUrl).pipe(
-      map(response => response.data)
-    );
+    return this.http.get<Branch[]>(this.apiUrl);
   }
 
-  create(branch: Partial<Branch>): Observable<Branch> {
-    return this.http.post<{ data: Branch }>(this.apiUrl, branch).pipe(
-      map(response => response.data)
-    );
+  create(branch: any): Observable<Branch> {
+    return this.http.post<Branch>(this.apiUrl, branch);
   }
 
-  update(id: string, branch: Partial<Branch>): Observable<Branch> {
-    return this.http.patch<{ data: Branch }>(`${this.apiUrl}/${id}`, branch).pipe(
-      map(response => response.data)
-    );
+  update(id: string, branch: any): Observable<Branch> {
+    return this.http.patch<Branch>(`${this.apiUrl}/${id}`, branch);
   }
 
   delete(id: string): Observable<void> {

@@ -1,13 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-
-export interface ClientTag {
-  id: string;
-  name: string;
-  color: string;
-}
 
 export interface Client {
   id: string;
@@ -16,50 +10,35 @@ export interface Client {
   email?: string;
   phone?: string;
   document?: string;
+  birthDate?: string;
   notes?: string;
-  photoUrl?: string;
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  tags: ClientTag[];
-  _count?: {
-    appointments: number;
-  };
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClientsService {
-  private http: HttpClient = inject(HttpClient);
+  private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/clients`;
 
   findAll(): Observable<Client[]> {
-    return this.http.get<{ data: Client[] }>(this.apiUrl).pipe(
-      map(response => response.data)
-    );
+    return this.http.get<Client[]>(this.apiUrl);
   }
 
-  findById(id: string): Observable<Client> {
-    return this.http.get<{ data: Client }>(`${this.apiUrl}/${id}`).pipe(
-      map(response => response.data)
-    );
+  findOne(id: string): Observable<Client> {
+    return this.http.get<Client>(`${this.apiUrl}/${id}`);
   }
 
-  create(client: Partial<Client>): Observable<Client> {
-    return this.http.post<{ data: Client }>(this.apiUrl, client).pipe(
-      map(response => response.data)
-    );
+  create(client: any): Observable<Client> {
+    return this.http.post<Client>(this.apiUrl, client);
   }
 
-  update(id: string, client: Partial<Client>): Observable<Client> {
-    return this.http.patch<{ data: Client }>(`${this.apiUrl}/${id}`, client).pipe(
-      map(response => response.data)
-    );
+  update(id: string, client: any): Observable<Client> {
+    return this.http.patch<Client>(`${this.apiUrl}/${id}`, client);
   }
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
-

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 
 export enum AppointmentStatus {
@@ -63,21 +63,19 @@ export class AppointmentsService {
     if (filters?.professionalId) params = params.set('professionalId', filters.professionalId);
     if (filters?.branchId) params = params.set('branchId', filters.branchId);
 
-    return this.http.get<{ data: Appointment[] }>(this.apiUrl, { params }).pipe(
-      map(response => response.data)
-    );
+    return this.http.get<Appointment[]>(this.apiUrl, { params });
+  }
+
+  findOne(id: string): Observable<Appointment> {
+    return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
 
   create(appointment: any): Observable<Appointment> {
-    return this.http.post<{ data: Appointment }>(this.apiUrl, appointment).pipe(
-      map(response => response.data)
-    );
+    return this.http.post<Appointment>(this.apiUrl, appointment);
   }
 
   updateStatus(id: string, status: AppointmentStatus): Observable<Appointment> {
-    return this.http.patch<{ data: Appointment }>(`${this.apiUrl}/${id}/status`, { status }).pipe(
-      map(response => response.data)
-    );
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   cancel(id: string): Observable<void> {
@@ -94,8 +92,6 @@ export class AppointmentsService {
       .set('professionalId', params.professionalId)
       .set('serviceId', params.serviceId);
 
-    return this.http.get<{ data: string[] }>(`${this.apiUrl}/availability`, { params: httpParams }).pipe(
-      map(response => response.data)
-    );
+    return this.http.get<string[]>(`${this.apiUrl}/availability`, { params: httpParams });
   }
 }

@@ -89,6 +89,7 @@
         <!-- Acciones -->
         <ng-template appTableCell="actions" let-item>
           <div class="row-actions">
+            <button (click)="openAvailabilityModal(item)" class="btn-icon-small" title="Gestionar Horarios">📅</button>
             <button (click)="openEditForm(item)" class="btn-icon-small" title="Editar">✏️</button>
             <button (click)="deleteProfessional(item.id)" class="btn-icon-small btn-icon-delete" title="Eliminar permanentemente">🗑️</button>
           </div>

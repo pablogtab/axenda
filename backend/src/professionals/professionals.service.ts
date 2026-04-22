@@ -16,6 +16,7 @@ export class ProfessionalsService {
       include: {
         branches: { include: { branch: true } },
         services: { include: { service: true } },
+        availability: true,
         user: { select: { email: true } },
       },
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],

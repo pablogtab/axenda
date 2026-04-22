@@ -36,6 +36,10 @@ export const appRoutes: Routes = [
       {
         path: 'professionals',
         loadComponent: () => import('./features/dashboard/professionals/professionals-list/professionals-list.component').then(m => m.ProfessionalsListComponent)
+      },
+      {
+        path: 'professionals/:id/availability',
+        loadComponent: () => import('./features/dashboard/professionals/professional-availability/professional-availability.component').then(m => m.ProfessionalAvailabilityComponent)
       }
     ]
   }

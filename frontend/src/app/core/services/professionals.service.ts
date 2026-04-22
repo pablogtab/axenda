@@ -1,7 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+
+export interface Availability {
+  id: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  branchId?: string;
+}
 
 export interface Professional {
   id: string;
@@ -13,6 +21,7 @@ export interface Professional {
   active: boolean;
   services?: { service: { id: string, name: string, active: boolean } }[];
   branches?: { branch: { id: string, name: string, active: boolean } }[];
+  availability?: Availability[];
 }
 
 @Injectable({
@@ -23,27 +32,19 @@ export class ProfessionalsService {
   private apiUrl = `${environment.apiUrl}/professionals`;
 
   findAll(): Observable<Professional[]> {
-    return this.http.get<{ data: Professional[] }>(this.apiUrl).pipe(
-      map(response => response.data)
-    );
+    return this.http.get<Professional[]>(this.apiUrl);
   }
 
-  findById(id: string): Observable<Professional> {
-    return this.http.get<{ data: Professional }>(`${this.apiUrl}/${id}`).pipe(
-      map(response => response.data)
-    );
+  findOne(id: string): Observable<Professional> {
+    return this.http.get<Professional>(`${this.apiUrl}/${id}`);
   }
 
-  create(professional: Partial<Professional>): Observable<Professional> {
-    return this.http.post<{ data: Professional }>(this.apiUrl, professional).pipe(
-      map(response => response.data)
-    );
+  create(professional: any): Observable<Professional> {
+    return this.http.post<Professional>(this.apiUrl, professional);
   }
 
-  update(id: string, professional: Partial<Professional>): Observable<Professional> {
-    return this.http.patch<{ data: Professional }>(`${this.apiUrl}/${id}`, professional).pipe(
-      map(response => response.data)
-    );
+  update(id: string, professional: any): Observable<Professional> {
+    return this.http.patch<Professional>(`${this.apiUrl}/${id}`, professional);
   }
 
   delete(id: string): Observable<void> {
@@ -56,5 +57,13 @@ export class ProfessionalsService {
 
   setServices(id: string, serviceIds: string[]): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${id}/services`, { ids: serviceIds });
+  }
+
+  addAvailability(professionalId: string, data: any): Observable<Availability> {
+    return this.http.post<Availability>(`${this.apiUrl}/${professionalId}/availability`, data);
+  }
+
+  removeAvailability(professionalId: string, availabilityId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${professionalId}/availability/${availabilityId}`);
   }
 }

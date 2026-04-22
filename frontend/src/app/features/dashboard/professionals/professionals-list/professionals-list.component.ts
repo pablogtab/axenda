@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
@@ -8,6 +9,7 @@ import { ModalService } from '@services/modal.service';
 import { DataTableComponent } from '@shared/components/data-table/data-table.component';
 import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { ProfessionalFormComponent } from '@features/dashboard/professionals/professional-form/professional-form.component';
+import { ProfessionalAvailabilityComponent } from '../professional-availability/professional-availability.component';
 
 // Componente principal para el listado de profesionales
 @Component({
@@ -21,6 +23,7 @@ export class ProfessionalsListComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private dialog = inject(DialogService);
   private modal = inject(ModalService);
+  private router = inject(Router);
 
   professionals = signal<Professional[]>([]);
   searchTerm = signal('');
@@ -63,6 +66,10 @@ export class ProfessionalsListComponent implements OnInit {
     ref.closed.subscribe(result => {
       if (result) this.loadProfessionals();
     });
+  }
+
+  openAvailabilityModal(professional: Professional): void {
+    this.router.navigate(['/dashboard/professionals', professional.id, 'availability']);
   }
 
   async deleteProfessional(id: string): Promise<void> {
