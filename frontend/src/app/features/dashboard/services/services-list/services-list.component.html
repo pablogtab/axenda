@@ -1,51 +1,55 @@
-<div class="services-container">
-  <header class="page-header">
+<div class="p-8 flex flex-col gap-6">
+  <header class="flex justify-between items-center">
     <div class="header-info">
-      <h1 class="text-gradient">Servicios</h1>
-      <p>Configura los servicios que ofreces y sus precios.</p>
+      <h1 class="text-4xl font-bold mb-1 text-gradient">Servicios</h1>
+      <p class="text-text-muted">Configura los servicios que ofreces y sus precios.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" (click)="openCreateForm()">+ Nuevo Servicio</button>
+      <button class="btn-primary" (click)="openCreateForm()">+ Nuevo Servicio</button>
     </div>
   </header>
 
-  <div class="search-box">
-    <span class="icon">🔍</span>
+  <div class="search-box-container max-w-md">
+    <span class="text-lg opacity-70">🔍</span>
     <input
       type="text"
       [value]="searchTerm()"
       (input)="onSearchChange(search.value)"
       #search
+      class="search-box-input"
       placeholder="Buscar servicio...">
   </div>
 
-  <div class="table-container card glass">
+  <div class="card-glass !p-0 overflow-hidden">
     <app-data-table
       [data]="filteredServices()"
       [columns]="['service', 'duration', 'price', 'active', 'actions']"
       [headers]="['Servicio', 'Duración', 'Precio', 'Estado', 'Acciones']">
+      
       <ng-template appTableCell="service" let-service>
-        <div class="service-info">
+        <div class="flex items-center gap-4 py-2">
           <div class="row-icon-circle" [style.background-color]="service.color || '#6366f1'">
             ✂️
           </div>
-          <div class="name-details">
-            <span class="service-name">{{ service.name }}</span>
+          <div class="flex flex-col">
+            <span class="font-semibold text-text-main">{{ service.name }}</span>
             @if (service.category) {
-            <span class="category">{{ service.category.name }}</span>
+              <span class="text-xs text-text-dim">{{ service.category.name }}</span>
             }
           </div>
         </div>
       </ng-template>
 
-
-
       <ng-template appTableCell="duration" let-service>
-        <span class="duration-badge">{{ service.duration }} min</span>
+        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+          {{ service.duration }} min
+        </span>
       </ng-template>
 
       <ng-template appTableCell="price" let-service>
-        <span class="price-text">{{ service.price ? (service.price | currency:'ARS':'$':'1.0-0') : 'Gratis' }}</span>
+        <span class="font-bold text-success">
+          {{ service.price ? (service.price | currency:'ARS':'$':'1.0-0') : 'Gratis' }}
+        </span>
       </ng-template>
 
       <ng-template appTableCell="active" let-service>
@@ -57,13 +61,16 @@
       <ng-template appTableCell="actions" let-service>
         <div class="row-actions">
           <button class="btn-icon-small" title="Editar" (click)="openEditForm(service)">✏️</button>
-          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteService(service.id)">🗑️</button>
+          <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteService(service.id)">🗑️</button>
         </div>
       </ng-template>
     </app-data-table>
 
     @if (filteredServices().length === 0 && !isLoading()) {
-    <div class="empty-state">No hay servicios registrados.</div>
+      <div class="empty-state">
+        <span class="text-4xl mb-4 opacity-20">📂</span>
+        <p>No hay servicios registrados.</p>
+      </div>
     }
   </div>
 </div>

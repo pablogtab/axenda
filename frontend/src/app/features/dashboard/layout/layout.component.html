@@ -1,46 +1,62 @@
-<div class="layout-wrapper">
+<div class="flex h-screen bg-bg-primary overflow-hidden">
   <!-- Sidebar -->
-  <aside class="sidebar glass">
-    <div class="sidebar-header">
-      <h2 class="text-gradient">Axenda</h2>
+  <aside class="w-[280px] flex flex-col p-8 border-r border-border glass relative z-10">
+    <div class="mb-12 px-2">
+      <h2 class="text-3xl font-bold tracking-tight text-gradient">Axenda</h2>
     </div>
 
-    <nav class="sidebar-nav">
-      <a routerLink="/dashboard/agenda" routerLinkActive="active" class="nav-item">
-        <span class="icon">📅</span>
+    <nav class="flex-1 flex flex-col gap-2">
+      <a routerLink="/dashboard/agenda" 
+         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
+        <span class="text-xl transition-transform group-hover:scale-110">📅</span>
         Agenda
       </a>
-      <a routerLink="/dashboard/clients" routerLinkActive="active" class="nav-item">
-        <span class="icon">👥</span>
+      
+      <a routerLink="/dashboard/clients" 
+         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
+        <span class="text-xl transition-transform group-hover:scale-110">👥</span>
         Clientes
       </a>
-      <a routerLink="/dashboard/services" routerLinkActive="active" class="nav-item">
-        <span class="icon">✂️</span>
+
+      <a routerLink="/dashboard/services" 
+         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
+        <span class="text-xl transition-transform group-hover:scale-110">✂️</span>
         Servicios
       </a>
-      <a routerLink="/dashboard/branches" routerLinkActive="active" class="nav-item">
-        <span class="icon">🏢</span>
+
+      <a routerLink="/dashboard/branches" 
+         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
+        <span class="text-xl transition-transform group-hover:scale-110">🏢</span>
         Sucursales
       </a>
     </nav>
 
-    <div class="sidebar-footer">
-      <button (click)="logout()" class="btn-logout">
+    <div class="mt-auto pt-8">
+      <button (click)="logout()" 
+              class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/10 text-red-400 font-medium transition-all hover:bg-red-500/10 hover:border-red-500/30">
         <span>🚪</span> Cerrar Sesión
       </button>
     </div>
   </aside>
 
   <!-- Main Content -->
-  <main class="main-container">
-    <header class="topbar">
-      <div class="user-info">
-        <div class="avatar">A</div>
-        <span>Administrador</span>
+  <main class="flex-1 flex flex-col min-w-0 relative">
+    <!-- Topbar -->
+    <header class="h-[80px] flex items-center justify-end px-10 border-b border-border bg-bg-primary/50 backdrop-blur-sm">
+      <div class="flex items-center gap-3 font-medium">
+        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 font-bold">
+          A
+        </div>
+        <span class="text-text-main">Administrador</span>
       </div>
     </header>
 
-    <div class="content-area">
+    <!-- Content Area -->
+    <div class="flex-1 overflow-y-auto">
       <router-outlet></router-outlet>
     </div>
   </main>

@@ -1,18 +1,26 @@
-<table cdk-table [dataSource]="data()" class="axenda-table">
-  
-  <ng-container *ngFor="let column of columns(); let i = index" [cdkColumnDef]="column">
-    <th cdk-header-cell *cdkHeaderCellDef>{{ headers()[i] }}</th>
-    <td cdk-cell *cdkCellDef="let row">
-      <!-- Si hay una plantilla para esta columna, la usamos. Si no, mostramos el valor por defecto. -->
-      <ng-container *ngIf="getTemplateForColumn(column) as template; else defaultCell">
-        <ng-container *ngTemplateOutlet="template; context: { $implicit: row }"></ng-container>
-      </ng-container>
-      <ng-template #defaultCell>
-        {{ row[column] }}
-      </ng-template>
-    </td>
-  </ng-container>
-
-  <tr cdk-header-row *cdkHeaderRowDef="columns()"></tr>
-  <tr cdk-row *cdkRowDef="let row; columns: columns()" class="axenda-row"></tr>
+<table class="w-full border-collapse text-left bg-transparent">
+  <thead>
+    <tr class="bg-white/[0.02] border-b border-white/10">
+      @for (header of headers(); track $index) {
+        <th class="px-6 py-4 text-[0.75rem] font-bold text-text-dim uppercase tracking-widest">
+          {{ header }}
+        </th>
+      }
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-white/[0.05]">
+    @for (item of data(); track $index) {
+      <tr class="transition-colors hover:bg-white/[0.03] group">
+        @for (column of columns(); track column) {
+          <td class="px-6 py-4 align-middle text-text-main">
+            @if (getTemplateForColumn(column)) {
+              <ng-container [ngTemplateOutlet]="getTemplateForColumn(column)!" [ngTemplateOutletContext]="{ $implicit: item }"></ng-container>
+            } @else {
+              {{ item[column] }}
+            }
+          </td>
+        }
+      </tr>
+    }
+  </tbody>
 </table>

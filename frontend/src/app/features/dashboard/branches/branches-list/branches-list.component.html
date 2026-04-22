@@ -1,45 +1,47 @@
-<div class="branches-container">
-  <header class="page-header">
+<div class="p-8 flex flex-col gap-6">
+  <header class="flex justify-between items-center">
     <div class="header-info">
-      <h1 class="text-gradient">Sucursales</h1>
-      <p>Administra las diferentes sedes de tu organización.</p>
+      <h1 class="text-4xl font-bold mb-1 text-gradient">Sucursales</h1>
+      <p class="text-text-muted">Administra las diferentes sedes de tu organización.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" (click)="openCreateForm()">+ Nueva Sucursal</button>
+      <button class="btn-primary" (click)="openCreateForm()">+ Nueva Sucursal</button>
     </div>
   </header>
 
-  <div class="search-box">
-    <span class="icon">🔍</span>
+  <div class="search-box-container max-w-md">
+    <span class="text-lg opacity-70">🔍</span>
     <input
       type="text"
       [value]="searchTerm()"
       (input)="onSearchChange(search.value)"
       #search
+      class="search-box-input"
       placeholder="Buscar por nombre o dirección...">
   </div>
 
-  <div class="table-container card glass">
+  <div class="card-glass !p-0 overflow-hidden">
     <app-data-table
       [data]="filteredBranches()"
       [columns]="['branch', 'contact', 'active', 'actions']"
       [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']">
+      
       <ng-template appTableCell="branch" let-branch>
-        <div class="branch-info">
-          <div class="row-icon-circle" [style.background]="'linear-gradient(135deg, #4f46e5, #6366f1)'">
+        <div class="flex items-center gap-4 py-2">
+          <div class="row-icon-circle bg-gradient-to-br from-indigo-600 to-primary text-white">
             🏢
           </div>
-          <div class="name-details">
-            <span class="branch-name">{{ branch.name }}</span>
+          <div class="flex flex-col">
+            <span class="font-semibold text-text-main">{{ branch.name }}</span>
             @if (branch.address) {
-            <span class="address">{{ branch.address }}</span>
+              <span class="text-xs text-text-dim">{{ branch.address }}</span>
             }
           </div>
         </div>
       </ng-template>
 
       <ng-template appTableCell="contact" let-branch>
-        <span class="phone-text">{{ branch.phone || 'Sin teléfono' }}</span>
+        <span class="text-sm text-text-muted">{{ branch.phone || 'Sin teléfono' }}</span>
       </ng-template>
 
       <ng-template appTableCell="active" let-branch>
@@ -51,13 +53,16 @@
       <ng-template appTableCell="actions" let-branch>
         <div class="row-actions">
           <button class="btn-icon-small" title="Editar" (click)="openEditForm(branch)">✏️</button>
-          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteBranch(branch.id)">🗑️</button>
+          <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteBranch(branch.id)">🗑️</button>
         </div>
       </ng-template>
     </app-data-table>
 
     @if (filteredBranches().length === 0 && !isLoading()) {
-    <div class="empty-state">No se encontraron sucursales.</div>
+      <div class="empty-state">
+        <span class="text-4xl mb-4 opacity-20">🏢</span>
+        <p>No se encontraron sucursales.</p>
+      </div>
     }
   </div>
 </div>

@@ -1,65 +1,63 @@
-<div class="clients-container">
-  <header class="page-header">
+<div class="p-8 flex flex-col gap-6">
+  <header class="flex justify-between items-center">
     <div class="header-info">
-      <h1 class="text-gradient">Clientes</h1>
-      <p>Gestiona tu base de datos de clientes y su historial.</p>
+      <h1 class="text-4xl font-bold mb-1 text-gradient">Clientes</h1>
+      <p class="text-text-muted">Gestiona tu base de datos de clientes y su historial.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" (click)="openCreateForm()">+ Nuevo Cliente</button>
+      <button class="btn-primary" (click)="openCreateForm()">+ Nuevo Cliente</button>
     </div>
   </header>
 
+  <div class="search-box-container max-w-md">
+    <span class="text-lg opacity-70">🔍</span>
+    <input
+      type="text"
+      [value]="searchTerm()"
+      (input)="onSearchChange(search.value)"
+      #search
+      class="search-box-input"
+      placeholder="Buscar por nombre o email...">
+  </div>
 
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input 
-        type="text" 
-        [value]="searchTerm()"
-        (input)="onSearchChange(search.value)"
-        #search
-        placeholder="Buscar por nombre o email..."
-      >
-    </div>
-
-  <div class="table-container card glass">
-    <app-data-table 
-      [data]="filteredClients()" 
+  <div class="card-glass !p-0 overflow-hidden">
+    <app-data-table
+      [data]="filteredClients()"
       [columns]="['client', 'contact', 'tags', 'active', 'actions']"
-      [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']"
-    >
+      [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']">
+      
       <!-- Plantilla para la columna de Cliente -->
       <ng-template appTableCell="client" let-client>
-        <div class="client-profile">
-          <div class="row-icon-circle" [style.background]="'linear-gradient(135deg, var(--primary), var(--accent))'">
+        <div class="flex items-center gap-4 py-2">
+          <div class="row-icon-circle bg-gradient-to-br from-primary to-accent text-white">
             {{ getInitials(client) }}
           </div>
-          <div class="name-info">
-            <span class="full-name">{{ client.firstName }} {{ client.lastName }}</span>
+          <div class="flex flex-col">
+            <span class="font-semibold text-text-main">{{ client.firstName }} {{ client.lastName }}</span>
             @if (client.notes) {
-              <span class="notes">{{ client.notes }}</span>
+              <span class="text-xs text-text-dim max-w-[200px] truncate">{{ client.notes }}</span>
             }
           </div>
         </div>
       </ng-template>
 
-
       <!-- Plantilla para la columna de Contacto -->
       <ng-template appTableCell="contact" let-client>
-        <div class="contact-info">
-          <span class="email">{{ client.email || 'Sin email' }}</span>
-          <span class="phone">{{ client.phone || 'Sin teléfono' }}</span>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-sm text-text-muted">{{ client.email || 'Sin email' }}</span>
+          <span class="text-xs text-text-dim">{{ client.phone || 'Sin teléfono' }}</span>
         </div>
       </ng-template>
 
       <!-- Plantilla para la columna de Etiquetas -->
       <ng-template appTableCell="tags" let-client>
-        <div class="tags-list">
+        <div class="flex flex-wrap gap-1.5">
           @for (tag of client.tags; track tag.id) {
             <span 
-              class="tag-badge"
-              [style.background-color]="tag.color + '22'"
+              class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+              [style.background-color]="tag.color + '15'"
               [style.color]="tag.color"
-              [style.border-color]="tag.color"
+              [style.border-color]="tag.color + '30'"
             >
               {{ tag.name }}
             </span>
@@ -79,7 +77,7 @@
         <div class="row-actions">
           <button class="btn-icon-small" title="Ver Turnos">📅</button>
           <button class="btn-icon-small" title="Editar" (click)="openEditForm(client)">✏️</button>
-          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteClient(client.id)">🗑️</button>
+          <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteClient(client.id)">🗑️</button>
         </div>
       </ng-template>
 
@@ -87,16 +85,16 @@
 
     @if (filteredClients().length === 0 && !isLoading()) {
       <div class="empty-state">
-        No se encontraron clientes.
+        <span class="text-4xl mb-4 opacity-20">👥</span>
+        <p>No se encontraron clientes.</p>
       </div>
     }
 
     @if (isLoading()) {
       <div class="empty-state">
-        Cargando clientes...
+        <div class="animate-spin text-2xl mb-4">⌛</div>
+        <p>Cargando clientes...</p>
       </div>
     }
   </div>
 </div>
-
-

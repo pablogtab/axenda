@@ -1,303 +1,97 @@
-/* apps/web/src/styles.css */
+@import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-:root {
-  /* Colors - Modern Deep Indigo & Violet Palette */
-  --bg-primary: #0a0b14;
-  --bg-secondary: #121421;
-  --surface: #1e2030;
-  --surface-hover: #2a2d42;
-
-  --primary: #6366f1;
-    /* Indigo */
-  --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.3);
-
-  --accent: #a855f7;
-    /* Purple */
-  --success: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
-
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-
-  --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(99, 102, 241, 0.5);
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 20px var(--primary-glow);
-
-  /* Transitions */
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-a:hover {
-  color: var(--primary-hover);
-}
-
-/* Base Components Styles */
-button,
-.btn {
-  font-family: inherit;
-  font-weight: 500;
-  padding: 0.6rem 1.2rem;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-1px);
-}
-
-.input-group {
-  margin-bottom: 1.5rem;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 1rem;
-  transition: var(--transition);
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-/* Utility Classes */
-.card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-md);
-}
-
-.glass {
-  background: rgba(30, 32, 48, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* CDK Dialog Styles */
-.modal-backdrop {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
-.modal-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-}
-
-/* Global Table Row & Action Styles */
-.status-indicator {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-dim);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.status-indicator::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-dim);
-}
-
-.status-indicator.active {
-  color: var(--success);
-}
-
-.status-indicator.active::before {
-  background: var(--success);
-  box-shadow: 0 0 8px var(--success);
-}
-
-.row-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-icon-small {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 0.4rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
-  line-height: 1;
-}
-
-.btn-icon-small:hover {
-  background: var(--surface-hover);
-  border-color: var(--primary);
-}
-
-.btn-icon-small.btn-delete:hover {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem;
-  color: var(--text-dim);
-}
-
-.table-container {
-  padding: 0 !important;
-  overflow: hidden;
-}
-
-
-/* Global Filter / Search Styles */
-.list-controls {
-  padding: 1.5rem 0;
-    /* Alineado con el borde de la tabla */
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-    padding: 0.8rem 1.2rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  width: 100%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.search-box:focus-within {
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 20px -5px var(--primary-glow);
-    /* Brillo suave, no anillo duro */
-    transform: translateY(-1px);
-    /* Micro-interacción */
-}
-
-
-.search-box input {
-  background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    /* Esto debería matar la línea interna */
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  color: var(--text-main);
-  font-size: 0.95rem;
-  appearance: none;
-    /* Elimina estilos nativos de algunos navegadores */
-  }
+@theme {
+  --color-bg-primary: #0a0b14;
+  --color-bg-secondary: #121421;
+  --color-surface: #1e2030;
+  --color-surface-hover: #2a2d42;
   
-  .search-box input:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-glow: rgba(99, 102, 241, 0.3);
+  
+  --color-accent: #a855f7;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #64748b;
+  
+  --color-border: rgba(255, 255, 255, 0.08);
 }
 
-/* Iconos de Fila (Avatares/Servicios) */
-.row-icon-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-    /* Círculo perfecto siempre */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-weight: 600;
-  font-size: 0.9rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-main antialiased overflow-x-hidden;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Definición de utilidades personalizadas (v4 syntax) */
+@utility glass {
+  @apply backdrop-blur-md border border-white/10;
+  background-color: rgba(30, 32, 48, 0.7);
+}
+
+@utility text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+@utility card-glass {
+  @apply glass rounded-2xl p-6 shadow-xl;
+}
+
+@utility btn-primary {
+  @apply bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/40 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0;
+}
+
+@utility btn-secondary {
+  @apply bg-white/5 text-text-muted px-6 py-3 rounded-xl font-semibold transition-all hover:bg-white/10 hover:text-text-main;
+}
+
+@utility input-field {
+  @apply w-full px-4 py-3 bg-bg-secondary border border-border rounded-xl text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-text-dim;
+}
+
+@utility search-box-container {
+  @apply flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl transition-all focus-within:border-primary/50 focus-within:bg-white/10 focus-within:shadow-lg focus-within:shadow-primary/5 focus-within:-translate-y-0.5;
+}
+
+@utility search-box-input {
+  @apply bg-transparent border-none outline-none w-full text-text-main placeholder:text-text-dim text-sm;
+}
+
+@utility row-icon-circle {
+  @apply w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm shadow-lg border border-white/10;
+}
+
+@utility status-indicator {
+  @apply flex items-center gap-2 text-xs font-medium text-text-dim;
+  &::before {
+    @apply content-[''] w-2 h-2 rounded-full bg-text-dim;
+  }
+  &.active {
+    @apply text-success;
+    &::before {
+      @apply bg-success shadow-[0_0_8px_var(--color-success)];
+    }
+  }
+}
+
+@utility row-actions {
+  @apply flex items-center gap-2;
+}
+
+@utility btn-icon-small {
+  @apply p-2 rounded-lg bg-white/5 border border-white/10 text-text-main transition-all hover:bg-white/10 hover:border-primary/50;
+}
+
+@utility btn-icon-delete {
+  @apply hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400;
+}
+
+@utility empty-state {
+  @apply flex flex-col items-center justify-center py-16 text-text-dim;
 }
