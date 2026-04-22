@@ -9,25 +9,21 @@
     </div>
   </header>
 
-  <div class="list-controls card glass">
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input 
-        type="text" 
-        [value]="searchTerm()"
-        (input)="onSearchChange(search.value)"
-        #search
-        placeholder="Buscar por nombre o dirección..."
-      >
-    </div>
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input
+      type="text"
+      [value]="searchTerm()"
+      (input)="onSearchChange(search.value)"
+      #search
+      placeholder="Buscar por nombre o dirección...">
   </div>
 
   <div class="table-container card glass">
-    <app-data-table 
-      [data]="filteredBranches()" 
+    <app-data-table
+      [data]="filteredBranches()"
       [columns]="['branch', 'contact', 'active', 'actions']"
-      [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']"
-    >
+      [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']">
       <ng-template appTableCell="branch" let-branch>
         <div class="branch-info">
           <div class="row-icon-circle" [style.background]="'linear-gradient(135deg, #4f46e5, #6366f1)'">
@@ -36,7 +32,7 @@
           <div class="name-details">
             <span class="branch-name">{{ branch.name }}</span>
             @if (branch.address) {
-              <span class="address">{{ branch.address }}</span>
+            <span class="address">{{ branch.address }}</span>
             }
           </div>
         </div>
@@ -61,7 +57,7 @@
     </app-data-table>
 
     @if (filteredBranches().length === 0 && !isLoading()) {
-      <div class="empty-state">No se encontraron sucursales.</div>
+    <div class="empty-state">No se encontraron sucursales.</div>
     }
   </div>
 </div>
