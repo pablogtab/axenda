@@ -1,49 +1,62 @@
-<div class="login-container">
-  <div class="login-card glass">
-    <div class="login-header">
-      <h1 class="text-gradient">Axenda</h1>
-      <p>Gestión profesional de turnos</p>
+<div class="relative min-h-screen flex items-center justify-center bg-bg-primary overflow-hidden">
+  <!-- Fondo Decorativo (Glows) -->
+  <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[60%] bg-[radial-gradient(circle,var(--color-primary-glow)_0%,transparent_70%)] blur-[80px] z-0"></div>
+  <div class="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[radial-gradient(circle,rgba(168,85,247,0.15)_0%,transparent_70%)] blur-[80px] z-0"></div>
+
+  <!-- Card de Login -->
+  <div class="card-glass w-full max-w-[420px] !p-12 z-10 relative">
+    <div class="text-center mb-10">
+      <h1 class="text-5xl font-extrabold tracking-tighter text-gradient mb-2">Axenda</h1>
+      <p class="text-text-muted">Gestión profesional de turnos</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="input-group">
-        <label for="email">Correo Electrónico</label>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+      <div class="flex flex-col gap-2">
+        <label for="email" class="text-sm font-semibold text-text-muted">Correo Electrónico</label>
         <input 
           type="email" 
           id="email" 
           formControlName="email" 
           placeholder="admin@axenda.com"
-          [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          class="input-field"
+          [class.!border-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
         >
       </div>
 
-      <div class="input-group">
-        <label for="password">Contraseña</label>
+      <div class="flex flex-col gap-2">
+        <label for="password" class="text-sm font-semibold text-text-muted">Contraseña</label>
         <input 
           type="password" 
           id="password" 
           formControlName="password" 
           placeholder="••••••••"
-          [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          class="input-field"
+          [class.!border-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
         >
       </div>
 
-      <div *ngIf="errorMessage" class="error-alert">
-        {{ errorMessage }}
-      </div>
+      @if (errorMessage) {
+        <div class="bg-error/10 border border-error text-red-300 p-3 rounded-xl text-sm text-center">
+          {{ errorMessage }}
+        </div>
+      }
 
-      <button type="submit" class="btn btn-primary w-full" [disabled]="loginForm.invalid || isLoading">
-        <span *ngIf="!isLoading">Iniciar Sesión</span>
-        <span *ngIf="isLoading" class="loader"></span>
+      <button type="submit" class="btn-primary w-full mt-2 group" [disabled]="loginForm.invalid || isLoading">
+        @if (!isLoading) {
+          <span class="flex items-center justify-center gap-2">
+            Iniciar Sesión
+            <span class="transition-transform group-hover:translate-x-1">→</span>
+          </span>
+        } @else {
+          <div class="flex justify-center">
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
+        }
       </button>
     </form>
 
-    <div class="login-footer">
-      <p>¿No tienes cuenta? <a href="#">Contáctanos</a></p>
+    <div class="mt-10 text-center text-sm text-text-dim">
+      <p>¿No tienes cuenta? <a href="#" class="text-primary hover:underline">Contáctanos</a></p>
     </div>
   </div>
-
-  <!-- Decoración de fondo -->
-  <div class="bg-glow-1"></div>
-  <div class="bg-glow-2"></div>
 </div>
