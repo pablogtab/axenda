@@ -17,9 +17,9 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 
 ## 🟡 Fase 3: Motor de Reservas y Clientes (En Progreso)
 - [x] **Módulo de Clientes (CRM Básico)**: Gestión de los clientes finales que consumen los servicios, historial de citas, notas y datos de contacto.
-- [ ] **Módulo de Turnos (Appointments)**: Creación de reservas, vinculando Cliente, Profesional, Servicio, y Sucursal.
-- [ ] **Motor de Disponibilidad**: Lógica inteligente (endpoints) para calcular "slots" de tiempo libres cruzando la agenda del profesional, la duración de los servicios y las excepciones.
-- [ ] **Estados y Flujo del Turno**: Cambios de estado (Pendiente, Confirmado, En curso, Completado, Ausente, Cancelado).
+- [x] **Módulo de Turnos (Appointments)**: Creación de reservas, vinculando Cliente, Profesional, Servicio, y Sucursal.
+- [x] **Motor de Disponibilidad**: Lógica inteligente (endpoints) para calcular "slots" de tiempo libres cruzando la agenda del profesional, la duración de los servicios y las excepciones.
+- [x] **Estados y Flujo del Turno**: Cambios de estado (Pendiente, Confirmado, En curso, Completado, Ausente, Cancelado).
 
 ## 🔴 Fase 4: Frontend (Panel Administrativo)
 - [ ] Setup de proyecto Frontend (Angular)
@@ -42,3 +42,4 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 ## 📝 Backlog / Ideas Anotadas (Futuro)
 - [ ] **Generación Automática de Servicios**: Al registrar un nuevo Tenant (por ej. una barbería), que se creen automáticamente servicios por defecto (Corte, Barba, etc.) para que el usuario no tenga que empezar desde cero.
 - [ ] **Turnos Genéricos**: Permitir crear Turnos (Appointments) en el sistema donde no sea estrictamente obligatorio asignar un "Servicio", dando más flexibilidad a recepcionistas para bloqueos de agenda rápidos.
+- [ ] **Sobreturnos (Overbooking manual)**: Capacidad para que un administrador o recepcionista pueda forzar un turno en un horario que ya está ocupado, solapando citas intencionalmente.

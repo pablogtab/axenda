@@ -11,6 +11,7 @@ import { TenantsModule } from '../tenants/tenants.module'
 import { ProfessionalsModule } from '../professionals/professionals.module'
 import { ServicesModule } from '../services/services.module'
 import { ClientsModule } from '../clients/clients.module'
+import { AppointmentsModule } from '../appointments/appointments.module'
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ClientsModule } from '../clients/clients.module'
     ProfessionalsModule,
     ServicesModule,
     ClientsModule,
+    AppointmentsModule,
   ],
 
   providers: [
