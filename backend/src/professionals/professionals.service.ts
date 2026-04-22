@@ -12,9 +12,10 @@ export class ProfessionalsService {
 
   async findAll(tenantId: string) {
     return this.prisma.professional.findMany({
-      where: { tenantId, active: true },
+      where: { tenantId },
       include: {
         branches: { include: { branch: true } },
+        services: { include: { service: true } },
         user: { select: { email: true } },
       },
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
@@ -51,6 +52,7 @@ export class ProfessionalsService {
         photoUrl: dto.photoUrl,
         color: dto.color,
         userId: dto.userId,
+        active: dto.active,
       },
     })
   }
@@ -63,11 +65,10 @@ export class ProfessionalsService {
     })
   }
 
-  async deactivate(tenantId: string, id: string) {
+  async delete(tenantId: string, id: string) {
     await this.findOrFail(tenantId, id)
-    return this.prisma.professional.update({
+    return this.prisma.professional.delete({
       where: { id },
-      data: { active: false },
     })
   }
 
@@ -81,7 +82,6 @@ export class ProfessionalsService {
       where: {
         id: { in: branchIds },
         tenantId,
-        active: true,
       },
     })
 
@@ -118,7 +118,6 @@ export class ProfessionalsService {
       where: {
         id: { in: serviceIds },
         tenantId,
-        active: true,
       },
     })
 

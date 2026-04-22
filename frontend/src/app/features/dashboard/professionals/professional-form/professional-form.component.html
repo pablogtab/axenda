@@ -1,0 +1,91 @@
+<div class="card-glass w-[700px] max-w-full !p-10">
+  <header class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold text-text-main">{{ isEditing ? 'Editar Profesional' : 'Nuevo Profesional' }}</h2>
+    <button class="text-3xl leading-none text-text-dim hover:text-red-500 transition-colors" (click)="onCancel()">×</button>
+  </header>
+
+  <form [formGroup]="professionalForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+    <!-- Datos Básicos -->
+    <div class="grid grid-cols-2 gap-6">
+      <div class="flex flex-col gap-2">
+        <label for="firstName" class="text-sm font-semibold text-text-muted">Nombre *</label>
+        <input id="firstName" type="text" formControlName="firstName" class="input-field" placeholder="Ej: Juan">
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="lastName" class="text-sm font-semibold text-text-muted">Apellido *</label>
+        <input id="lastName" type="text" formControlName="lastName" class="input-field" placeholder="Ej: Pérez">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6 items-end">
+      <div class="flex flex-col gap-2">
+        <label for="bio" class="text-sm font-semibold text-text-muted">Biografía corta</label>
+        <input id="bio" type="text" formControlName="bio" class="input-field" placeholder="Ej: Especialista en color">
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="color" class="text-sm font-semibold text-text-muted">Color en Agenda</label>
+        <div class="flex items-center gap-4 bg-bg-secondary p-2 rounded-xl border border-border h-[50px]">
+          <input id="color" type="color" formControlName="color" class="w-10 h-full bg-transparent border-none cursor-pointer">
+          <span class="font-mono text-sm font-bold text-text-muted">{{ professionalForm.get('color')?.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selección de Sucursales y Servicios -->
+    <div class="grid grid-cols-2 gap-8 mt-4">
+      <!-- Sucursales -->
+      <div class="flex flex-col gap-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-primary">Sucursales Asignadas</h3>
+        <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+          @for (branch of allBranches(); track branch.id) {
+            <label class="flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer"
+              [class.bg-primary/10]="selectedBranches().includes(branch.id)"
+              [class.border-primary/50]="selectedBranches().includes(branch.id)"
+              [class.border-white/5]="!selectedBranches().includes(branch.id)"
+              [class.bg-white/5]="!selectedBranches().includes(branch.id)">
+              <input type="checkbox" [checked]="selectedBranches().includes(branch.id)" (change)="toggleBranch(branch.id)" class="hidden">
+              <span class="text-sm font-medium" [class.text-primary]="selectedBranches().includes(branch.id)">
+                {{ branch.name }}
+              </span>
+            </label>
+          } @empty {
+            <p class="text-xs text-text-dim italic">No hay sucursales disponibles</p>
+          }
+        </div>
+      </div>
+
+      <!-- Servicios -->
+      <div class="flex flex-col gap-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-accent">Especialidades (Servicios)</h3>
+        <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+          @for (service of allServices(); track service.id) {
+            <label class="flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer"
+              [class.bg-accent/10]="selectedServices().includes(service.id)"
+              [class.border-accent/50]="selectedServices().includes(service.id)"
+              [class.border-white/5]="!selectedServices().includes(service.id)"
+              [class.bg-white/5]="!selectedServices().includes(service.id)">
+              <input type="checkbox" [checked]="selectedServices().includes(service.id)" (change)="toggleService(service.id)" class="hidden">
+              <span class="text-sm font-medium" [class.text-accent]="selectedServices().includes(service.id)">
+                {{ service.name }}
+              </span>
+            </label>
+          } @empty {
+            <p class="text-xs text-text-dim italic">No hay servicios disponibles</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 py-2">
+      <input id="active" type="checkbox" formControlName="active" class="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20">
+      <label for="active" class="text-sm font-medium text-text-muted cursor-pointer">Profesional activo</label>
+    </div>
+
+    <footer class="flex justify-end gap-4 mt-4">
+      <button type="button" class="btn-secondary flex-1" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn-primary flex-1" [disabled]="isSubmitting || professionalForm.invalid">
+        {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Profesional') }}
+      </button>
+    </footer>
+  </form>
+</div>

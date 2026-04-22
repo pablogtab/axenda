@@ -58,9 +58,9 @@ export class ProfessionalsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Desactivar profesional (soft delete)' })
-  deactivate(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.professionalsService.deactivate(user.tenantId, id)
+  @ApiOperation({ summary: 'Eliminar profesional permanentemente' })
+  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.professionalsService.delete(user.tenantId, id)
   }
 
   // ─── Relaciones (Sucursales y Servicios) ───────────────────────────────────

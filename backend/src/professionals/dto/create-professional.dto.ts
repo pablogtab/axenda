@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsOptional, IsString, IsUUID, Matches } from 'class-validator'
+import { IsOptional, IsString, IsUUID, Matches, IsBoolean } from 'class-validator'
 
 export class CreateProfessionalDto {
   @ApiProperty({ example: 'Juan' })
@@ -26,8 +26,12 @@ export class CreateProfessionalDto {
   @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'El color debe ser un código HEX válido (ej: #4CAF50)' })
   color?: string
 
-  @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID of an existing User to link' })
   @IsOptional()
   @IsUUID()
   userId?: string
+
+  @ApiPropertyOptional({ example: true, default: true })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean
 }
