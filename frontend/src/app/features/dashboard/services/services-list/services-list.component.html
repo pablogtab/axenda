@@ -1,0 +1,73 @@
+<div class="services-container">
+  <header class="page-header">
+    <div class="header-info">
+      <h1 class="text-gradient">Servicios</h1>
+      <p>Configura los servicios que ofreces y sus precios.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateForm()">+ Nuevo Servicio</button>
+    </div>
+  </header>
+
+  <div class="list-controls card glass">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input 
+        type="text" 
+        [value]="searchTerm()"
+        (input)="onSearchChange(search.value)"
+        #search
+        placeholder="Buscar servicio..."
+      >
+    </div>
+  </div>
+
+  <div class="table-container card glass">
+    <app-data-table 
+      [data]="filteredServices()" 
+      [columns]="['service', 'duration', 'price', 'active', 'actions']"
+      [headers]="['Servicio', 'Duración', 'Precio', 'Estado', 'Acciones']"
+    >
+      <ng-template appTableCell="service" let-service>
+        <div class="service-info">
+          <div class="row-icon-circle" [style.background-color]="service.color || '#6366f1'">
+            ✂️
+          </div>
+          <div class="name-details">
+            <span class="service-name">{{ service.name }}</span>
+            @if (service.category) {
+              <span class="category">{{ service.category.name }}</span>
+            }
+          </div>
+        </div>
+      </ng-template>
+
+
+
+      <ng-template appTableCell="duration" let-service>
+        <span class="duration-badge">{{ service.duration }} min</span>
+      </ng-template>
+
+      <ng-template appTableCell="price" let-service>
+        <span class="price-text">{{ service.price ? (service.price | currency:'ARS':'$':'1.0-0') : 'Gratis' }}</span>
+      </ng-template>
+
+      <ng-template appTableCell="active" let-service>
+        <span class="status-indicator" [class.active]="service.active">
+          {{ service.active ? 'Activo' : 'Inactivo' }}
+        </span>
+      </ng-template>
+
+      <ng-template appTableCell="actions" let-service>
+        <div class="row-actions">
+          <button class="btn-icon-small" title="Editar" (click)="openEditForm(service)">✏️</button>
+          <button class="btn-icon-small btn-delete" title="Eliminar" (click)="deleteService(service.id)">🗑️</button>
+        </div>
+      </ng-template>
+    </app-data-table>
+
+    @if (filteredServices().length === 0 && !isLoading()) {
+      <div class="empty-state">No hay servicios registrados.</div>
+    }
+  </div>
+</div>

@@ -1,0 +1,68 @@
+<div class="form-card glass">
+  <header class="form-header">
+    <h2>{{ isEditing ? 'Editar Servicio' : 'Nuevo Servicio' }}</h2>
+    <button class="btn-close" (click)="onCancel()">×</button>
+  </header>
+
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="service-form">
+    <div class="form-group">
+      <label for="name">Nombre del Servicio *</label>
+      <input id="name" type="text" formControlName="name" placeholder="Ej: Corte de Cabello">
+      @if (serviceForm.get('name')?.touched && serviceForm.get('name')?.invalid) {
+        <span class="error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="duration">Duración (minutos) *</label>
+        <input id="duration" type="number" formControlName="duration" step="5">
+        @if (serviceForm.get('duration')?.touched && serviceForm.get('duration')?.invalid) {
+          <span class="error">Mínimo 5 min</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="price">Precio ($) *</label>
+        <input id="price" type="number" formControlName="price">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="categoryId">Categoría</label>
+        <select id="categoryId" formControlName="categoryId">
+          <option value="">Sin categoría</option>
+          @for (cat of categories(); track cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="color">Color en Agenda</label>
+        <div class="color-picker-wrapper">
+          <input id="color" type="color" formControlName="color">
+          <span class="color-hex">{{ serviceForm.get('color')?.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Descripción</label>
+      <textarea id="description" formControlName="description" rows="2" placeholder="Breve descripción del servicio..."></textarea>
+    </div>
+
+    <div class="form-group checkbox">
+      <label>
+        <input type="checkbox" formControlName="active">
+        Servicio activo
+      </label>
+    </div>
+
+    <footer class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Servicio') }}
+      </button>
+    </footer>
+  </form>
+</div>

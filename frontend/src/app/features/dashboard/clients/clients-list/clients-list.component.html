@@ -32,7 +32,7 @@
       <!-- Plantilla para la columna de Cliente -->
       <ng-template appTableCell="client" let-client>
         <div class="client-profile">
-          <div class="avatar-circle">
+          <div class="row-icon-circle" [style.background]="'linear-gradient(135deg, var(--primary), var(--accent))'">
             {{ getInitials(client) }}
           </div>
           <div class="name-info">
@@ -43,6 +43,7 @@
           </div>
         </div>
       </ng-template>
+
 
       <!-- Plantilla para la columna de Contacto -->
       <ng-template appTableCell="contact" let-client>
