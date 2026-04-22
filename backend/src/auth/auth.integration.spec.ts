@@ -11,7 +11,7 @@ import * as dotenv from 'dotenv'
 import * as path from 'path'
 
 // Load .env BEFORE any NestJS module is imported so ConfigModule picks it up
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env'), override: true })
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true })
 process.env['NODE_ENV'] = 'test'
 
 import request from 'supertest'

@@ -18,7 +18,7 @@ import { AppointmentsModule } from '../appointments/appointments.module'
     // ─── Config ─────────────────────────────────────────────────────────
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../../.env',
+      envFilePath: '.env',
       validate: validateConfig,
     }),
 
