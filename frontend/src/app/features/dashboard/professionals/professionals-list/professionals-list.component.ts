@@ -6,7 +6,7 @@ import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
 import { DataTableComponent, TableCellDirective } from 'shared-ui';
-import { ProfessionalFormComponent } from '../professional-form/professional-form.component';
+import { ProfessionalFormComponent } from '@features/dashboard/professionals/professional-form/professional-form.component';
 
 @Component({
   selector: 'app-professionals-list',

@@ -17,9 +17,9 @@ export const appRoutes: Routes = [
         path: 'home', 
         loadComponent: () => import('./features/dashboard/home/home.component').then(m => m.HomeComponent) 
       },
-      { 
-        path: 'agenda', 
-        loadComponent: () => import('./features/dashboard/agenda/agenda.component').then(m => m.AgendaComponent) 
+      {
+        path: 'agenda',
+        loadComponent: () => import('./features/dashboard/agenda/agenda.component').then(m => m.AgendaComponent)
       },
       { 
         path: 'clients', 

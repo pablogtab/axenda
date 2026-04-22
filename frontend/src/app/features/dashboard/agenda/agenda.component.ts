@@ -1,69 +1,132 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppointmentsService, Appointment } from '../../../core/services/appointments.service';
+import { FormsModule } from '@angular/forms';
+import { AppointmentsService, Appointment } from '@services/appointments.service';
+import { ProfessionalsService, Professional } from '@services/professionals.service';
+import { BranchesService, Branch } from '@services/branches.service';
+import { ModalService } from '@services/modal.service';
+import { forkJoin } from 'rxjs';
+import { format, addDays, startOfDay, eachHourOfInterval, setHours, setMinutes } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './agenda.component.html',
-  styleUrl: './agenda.component.css'
+  imports: [CommonModule, FormsModule],
+  templateUrl: './agenda.component.html'
 })
 export class AgendaComponent implements OnInit {
   private appointmentsService = inject(AppointmentsService);
+  private professionalsService = inject(ProfessionalsService);
+  private branchesService = inject(BranchesService);
+  private modal = inject(ModalService);
+
+  // Estado
+  selectedDate = signal<Date>(startOfDay(new Date()));
+  selectedBranchId = signal<string | null>(null);
   
-  appointments: Appointment[] = [];
-  hours = Array.from({ length: 14 }, (_, i) => i + 8); // 08:00 to 21:00
-  currentDate = new Date();
+  professionals = signal<Professional[]>([]);
+  appointments = signal<Appointment[]>([]);
+  branches = signal<Branch[]>([]);
+  isLoading = signal(true);
+
+  // Configuración de la cuadrícula
+  timeSlots = signal<string[]>([]);
+  startHour = 8;
+  endHour = 21;
+
+  formattedDate = computed(() => {
+    const date = this.selectedDate();
+    return format(date, "EEEE d 'de' MMMM", { locale: es });
+  });
 
   ngOnInit(): void {
-    this.loadAppointments();
+    this.generateTimeSlots();
+    this.loadInitialData();
   }
 
-  get filteredAppointments(): Appointment[] {
-    return this.appointments.filter(app => {
-      const appDate = new Date(app.startTime);
-      return appDate.getUTCDate() === this.currentDate.getUTCDate() &&
-             appDate.getUTCMonth() === this.currentDate.getUTCMonth() &&
-             appDate.getUTCFullYear() === this.currentDate.getUTCFullYear();
+  generateTimeSlots(): void {
+    const slots: string[] = [];
+    for (let hour = this.startHour; hour < this.endHour; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    this.timeSlots.set(slots);
+  }
+
+  loadInitialData(): void {
+    this.isLoading.set(true);
+    forkJoin({
+      branches: this.branchesService.findAll(),
+      professionals: this.professionalsService.findAll()
+    }).subscribe({
+      next: (res) => {
+        this.branches.set(res.branches.filter(b => b.active));
+        this.professionals.set(res.professionals.filter(p => p.active));
+        if (this.branches().length > 0 && !this.selectedBranchId()) {
+          this.selectedBranchId.set(this.branches()[0].id);
+        }
+        this.loadAppointments();
+      }
     });
   }
 
   loadAppointments(): void {
-    this.appointmentsService.findAll().subscribe(data => {
-      this.appointments = data;
+    const dateStr = format(this.selectedDate(), 'yyyy-MM-dd');
+    this.appointmentsService.findAll({ 
+      startDate: dateStr, 
+      endDate: dateStr,
+      branchId: this.selectedBranchId() || undefined
+    }).subscribe({
+      next: (data) => {
+        this.appointments.set(data);
+        this.isLoading.set(false);
+      },
+      error: () => this.isLoading.set(false)
     });
   }
 
-  nextDay(): void {
-    this.currentDate = new Date(this.currentDate.setDate(this.currentDate.getDate() + 1));
+  today(): Date {
+    return startOfDay(new Date());
   }
 
-  prevDay(): void {
-    this.currentDate = new Date(this.currentDate.setDate(this.currentDate.getDate() - 1));
+  changeDate(days: number): void {
+    this.selectedDate.set(addDays(this.selectedDate(), days));
+    this.loadAppointments();
   }
 
-  setToday(): void {
-    this.currentDate = new Date();
+  onBranchChange(id: string): void {
+    this.selectedBranchId.set(id);
+    this.loadAppointments();
   }
 
-  // Calcula la posición vertical (top) basada en la hora de inicio
-  getTopPosition(startTime: string): string {
-    const date = new Date(startTime);
-    const startHour = 8; // El grid empieza a las 8
-    const minutesFromStart = (date.getUTCHours() - startHour) * 60 + date.getUTCMinutes();
-    return `${minutesFromStart * 1.5}px`; // 1.5px por minuto
+  // Lógica para posicionar turnos
+  getAppointmentStyle(app: Appointment) {
+    const start = new Date(app.startTime);
+    const end = new Date(app.endTime);
+    
+    const startMinutes = (start.getHours() - this.startHour) * 60 + start.getMinutes();
+    const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+    
+    // Cada slot de 30 min mide 60px en mi diseño
+    const top = (startMinutes / 30) * 60;
+    const height = (durationMinutes / 30) * 60;
+
+    return {
+      'top': `${top}px`,
+      'height': `${height}px`,
+      'background-color': `${app.service.color}20`,
+      'border-left': `4px solid ${app.service.color}`,
+      'color': app.service.color
+    };
   }
 
-  // Calcula la altura basada en la duración (usando startTime y endTime)
-  getHeight(startTime: string, endTime: string): string {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const durationMinutes = (end.getTime() - start.getTime()) / 60000;
-    return `${durationMinutes * 1.5}px`;
+  getAppointmentsForProfessional(profId: string): Appointment[] {
+    return this.appointments().filter(a => a.professional.id === profId);
   }
 
-  formatTime(hour: number): string {
-    return `${hour.toString().padStart(2, '0')}:00`;
+  openAppointmentForm(professional?: Professional, time?: string): void {
+    // TODO: Abrir modal de creación de turno
+    console.log('Abrir formulario para:', professional?.firstName, time);
   }
 }

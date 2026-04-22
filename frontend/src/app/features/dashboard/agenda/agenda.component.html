@@ -1,52 +1,88 @@
-<div class="agenda-container">
-  <header class="agenda-header">
-    <div class="date-navigator">
-      <button class="btn-icon" (click)="prevDay()">◀</button>
-      <div class="date-info">
-        <h2>{{ currentDate | date:'EEEE, d MMMM' }}</h2>
-        <button class="btn-link" (click)="setToday()">Hoy</button>
+<div class="flex flex-col h-full bg-bg-primary overflow-hidden">
+  <!-- Top Bar: Navegación y Filtros -->
+  <header class="p-6 flex justify-between items-center border-b border-border bg-white/5 backdrop-blur-md z-30">
+    <div class="flex items-center gap-6">
+      <h1 class="text-2xl font-bold capitalize text-text-main w-[250px]">{{ formattedDate() }}</h1>
+      
+      <div class="flex bg-white/5 p-1 rounded-xl border border-white/10">
+        <button (click)="changeDate(-1)" class="p-2 hover:bg-white/10 rounded-lg transition-all">◀</button>
+        <button (click)="selectedDate.set(today()); loadAppointments()" class="px-4 py-2 hover:bg-white/10 rounded-lg text-sm font-medium">Hoy</button>
+        <button (click)="changeDate(1)" class="p-2 hover:bg-white/10 rounded-lg transition-all">▶</button>
       </div>
-      <button class="btn-icon" (click)="nextDay()">▶</button>
+
+      <select 
+        [ngModel]="selectedBranchId()" 
+        (ngModelChange)="onBranchChange($event)"
+        class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50">
+        @for (branch of branches(); track branch.id) {
+          <option [value]="branch.id">{{ branch.name }}</option>
+        }
+      </select>
     </div>
-    <div class="actions">
-      <button class="btn btn-primary">+ Nuevo Turno</button>
-    </div>
+
+    <button (click)="openAppointmentForm()" class="btn-primary">
+      + Agendar Turno
+    </button>
   </header>
 
-  <div class="calendar-wrapper">
-    <!-- Eje de horas -->
-    <div class="time-axis">
-      <div *ngFor="let hour of hours" class="hour-label">
-        {{ formatTime(hour) }}
+  <!-- Agenda Grid -->
+  <div class="flex-1 overflow-auto custom-scrollbar relative bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+    <div class="inline-flex min-w-full px-6">
+      
+      <!-- Columna de Horas -->
+      <div class="w-20 flex-shrink-0 border-r border-border sticky left-0 bg-bg-primary z-20">
+        <div class="h-16 border-b border-border flex items-center justify-center text-[10px] uppercase tracking-wider text-text-dim font-bold">Hora</div>
+        @for (slot of timeSlots(); track slot) {
+          <div class="h-[60px] flex items-start justify-center pt-2 text-[11px] text-text-dim border-b border-white/5">
+            {{ slot }}
+          </div>
+        }
       </div>
-    </div>
 
-    <!-- Grid de contenido -->
-    <div class="grid-content">
-      <!-- Líneas de fondo -->
-      <div *ngFor="let hour of hours" class="grid-line"></div>
+      <!-- Columnas de Profesionales -->
+      @for (prof of professionals(); track prof.id) {
+        <div class="min-w-[250px] flex-1 border-r border-border/50 relative group">
+          <!-- Cabecera de Profesional -->
+          <div class="h-16 border-b border-border sticky top-0 bg-bg-primary/90 backdrop-blur-md z-10 p-4 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg" [style.background-color]="prof.color || '#6366f1'">
+              {{ prof.firstName[0] }}{{ prof.lastName[0] }}
+            </div>
+            <span class="font-bold text-sm text-text-main">{{ prof.firstName }} {{ prof.lastName }}</span>
+          </div>
 
-      <!-- Tarjetas de turnos -->
-      <div 
-        *ngFor="let app of filteredAppointments" 
-        class="appointment-card"
-        [style.top]="getTopPosition(app.startTime)"
-        [style.height]="getHeight(app.startTime, app.endTime)"
-        [style.border-left-color]="app.service.color"
-      >
-        <div class="card-glow" [style.background-color]="app.service.color"></div>
-        <div class="card-content">
-          <span class="app-time">
-            {{ app.startTime | date:'HH:mm':'UTC' }} - {{ app.endTime | date:'HH:mm':'UTC' }}
-          </span>
-          <h4 class="app-client">{{ app.client.firstName }} {{ app.client.lastName }}</h4>
-          <span class="app-service">{{ app.service.name }}</span>
-          <div class="app-footer">
-            <span class="app-prof">👤 {{ app.professional.firstName }}</span>
-            <span class="app-status" [attr.data-status]="app.status">{{ app.status }}</span>
+          <!-- Slots Interactivos y Turnos -->
+          <div class="relative">
+            <!-- Grid Background Slots -->
+            @for (slot of timeSlots(); track slot) {
+              <div 
+                (click)="openAppointmentForm(prof, slot)"
+                class="h-[60px] border-b border-white/5 hover:bg-primary/5 transition-colors cursor-pointer">
+              </div>
+            }
+
+            <!-- Turnos (Absolute Positioned) -->
+            @for (app of getAppointmentsForProfessional(prof.id); track app.id) {
+              <div 
+                class="absolute left-1 right-1 rounded-xl p-3 shadow-xl backdrop-blur-md border-l-4 overflow-hidden group/item cursor-pointer transition-all hover:scale-[1.02] hover:z-40"
+                [ngStyle]="getAppointmentStyle(app)">
+                <div class="flex flex-col h-full">
+                  <div class="text-[10px] font-bold uppercase opacity-80 flex justify-between">
+                    <span>{{ app.service.name }}</span>
+                    <span>{{ app.status }}</span>
+                  </div>
+                  <div class="font-bold text-xs mt-1 truncate">{{ app.client.firstName }} {{ app.client.lastName }}</div>
+                  <div class="mt-auto flex justify-between items-center">
+                    <span class="text-[9px] font-medium opacity-70">
+                      {{ app.startTime | date:'HH:mm' }} - {{ app.endTime | date:'HH:mm' }}
+                    </span>
+                    <span class="text-[10px] font-bold">$ {{ app.service.price }}</span>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </div>
