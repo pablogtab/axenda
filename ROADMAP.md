@@ -16,7 +16,7 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] Catálogo de Categorías y Servicios, con vinculación a profesionales.
 
 ## 🟡 Fase 3: Motor de Reservas y Clientes (En Progreso)
-- [ ] **Módulo de Clientes (CRM Básico)**: Gestión de los clientes finales que consumen los servicios, historial de citas, notas y datos de contacto.
+- [x] **Módulo de Clientes (CRM Básico)**: Gestión de los clientes finales que consumen los servicios, historial de citas, notas y datos de contacto.
 - [ ] **Módulo de Turnos (Appointments)**: Creación de reservas, vinculando Cliente, Profesional, Servicio, y Sucursal.
 - [ ] **Motor de Disponibilidad**: Lógica inteligente (endpoints) para calcular "slots" de tiempo libres cruzando la agenda del profesional, la duración de los servicios y las excepciones.
 - [ ] **Estados y Flujo del Turno**: Cambios de estado (Pendiente, Confirmado, En curso, Completado, Ausente, Cancelado).

@@ -10,6 +10,7 @@ import { UsersModule } from '../users/users.module'
 import { TenantsModule } from '../tenants/tenants.module'
 import { ProfessionalsModule } from '../professionals/professionals.module'
 import { ServicesModule } from '../services/services.module'
+import { ClientsModule } from '../clients/clients.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ServicesModule } from '../services/services.module'
     TenantsModule,
     ProfessionalsModule,
     ServicesModule,
+    ClientsModule,
   ],
 
   providers: [
