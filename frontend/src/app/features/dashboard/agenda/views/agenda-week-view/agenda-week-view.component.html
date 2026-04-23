@@ -30,7 +30,7 @@
       <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"></div>
 
       <!-- Headers de Días (Sticky Top) -->
-      @for (day of weekDays(); track day; let i = $index) {
+      @for (day of weekDaysSignal(); track day.toISOString(); let i = $index) {
         <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex flex-col items-center justify-center z-30"
              [style.grid-column]="i + 2">
           <span class="text-[10px] uppercase tracking-widest text-text-dim leading-none">{{ day | date:'EEEE':'': 'es' }}</span>
@@ -49,7 +49,7 @@
             <div [style.grid-column]="1" [style.grid-row]="'1 / -1'"></div>
             
             @for (slot of timeSlots(); track slot; let rowIndex = $index) {
-              @for (day of weekDays(); track day; let dayIndex = $index) {
+              @for (day of weekDaysSignal(); track day.toISOString(); let dayIndex = $index) {
                 <div class="pointer-events-auto"
                      [style.grid-row]="rowIndex + 2"
                      [style.grid-column]="dayIndex + 2"
@@ -79,7 +79,7 @@
         </div>
 
         <!-- Celdas de Fondo Estáticas -->
-        @for (day of weekDays(); track day; let dayIndex = $index) {
+        @for (day of weekDaysSignal(); track day.toISOString(); let dayIndex = $index) {
           <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
                [style.grid-row]="rowIndex + 2"
                [style.grid-column]="dayIndex + 2"
@@ -102,7 +102,7 @@
       }
 
       <!-- Capas de Arrastre -->
-      @for (day of weekDays(); track day; let dayIndex = $index) {
+      @for (day of weekDaysSignal(); track day.toISOString(); let dayIndex = $index) {
         <div class="relative"
              [class.pointer-events-none]="!isDragging()"
              [class.pointer-events-auto]="isDragging()"

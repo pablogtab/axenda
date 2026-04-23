@@ -81,7 +81,7 @@
       }
       @case ('week') {
         <app-agenda-week-view
-          [date]="selectedDate()"
+          [weekDays]="weekDays()"
           [branchId]="selectedBranchId()"
           [professionals]="activeProfessionals()"
           (addAppointment)="onAddAppointment($event)"

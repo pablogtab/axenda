@@ -36,7 +36,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
 
-  @Input({ required: true }) date!: Date;
+  @Input({ required: true }) weekDays: Date[] = [];
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
@@ -46,25 +46,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   rawAppointments = signal<Appointment[]>([]);
   professionalsSignal = signal<Professional[]>([]);
-  
+
   private zoomLevel = this.userConfig.agendaZoom;
   private startHour = this.userConfig.agendaStartHour;
   private endHour = this.userConfig.agendaEndHour;
-  
-  constructor() {
-    effect(() => {
-      console.log('[AgendaWeek] Profesionales activos:', this.professionalsSignal());
-      console.log('[AgendaWeek] Profesional seleccionado:', this.selectedProfessional());
-    });
-  }
 
-  weekDays = computed(() => {
-    // Para que sea reactivo al cambio de date, necesitamos que date sea una señal o 
-    // forzar la reevaluación. Por ahora usamos la señal de profesionales como disparador
-    // o simplemente confiamos en ngOnChanges para las tareas pesadas.
-    const start = startOfWeek(this.date, { weekStartsOn: 1 });
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  });
+  constructor() { }
+
+  weekDaysSignal = signal<Date[]>([]);
 
   timeSlots = computed(() => {
     const start = this.startHour();
@@ -106,7 +95,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   appointments = computed(() => {
     const height = this.slotHeight();
     const slots = this.timeSlots();
-    const days = this.weekDays();
+    const days = this.weekDaysSignal();
     const prof = this.selectedProfessional();
 
     if (!prof) return [];
@@ -118,7 +107,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         const startStr = format(appDate, 'HH:mm');
         const startIndex = slots.findIndex(s => s === startStr);
         const duration = (new Date(app.endTime).getTime() - appDate.getTime()) / (1000 * 60);
-        
+
         const dayStr = toLocalDateStr(appDate);
         const dayIndex = days.findIndex(d => toLocalDateStr(d) === dayStr);
 
@@ -162,10 +151,12 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['professionals']) {
-      console.log('[AgendaWeek] Input professionals cambió:', this.professionals);
       this.professionalsSignal.set(this.professionals);
     }
-    if (changes['date'] || changes['branchId'] || changes['professionals']) {
+    if (changes['weekDays']) {
+      this.weekDaysSignal.set(this.weekDays);
+    }
+    if (changes['weekDays'] || changes['branchId'] || changes['professionals']) {
       this.loadAppointments();
       this.computeGridStatus();
     }
@@ -178,7 +169,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const avail: Record<string, boolean> = {};
     const block: Record<string, boolean> = {};
 
-    this.weekDays().forEach((day, dayIndex) => {
+    this.weekDaysSignal().forEach((day, dayIndex) => {
       this.timeSlots().forEach(slot => {
         const key = `${dayIndex}-${slot}`;
         avail[key] = this.isProfessionalAvailableAt(prof, day, slot);
@@ -192,14 +183,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   loadAppointments(): void {
     if (!this.branchId) return;
-    
-    this.isLoading.set(true);
-    
-    const startDate = startOfLocalDate(this.weekDays()[0]).toISOString();
-    const endDate = endOfLocalDate(this.weekDays()[6]).toISOString();
 
-    this.appointmentsService.findAll({ 
-      startDate, 
+    this.isLoading.set(true);
+
+    const startDate = startOfLocalDate(this.weekDaysSignal()[0]).toISOString();
+    const endDate = endOfLocalDate(this.weekDaysSignal()[6]).toISOString();
+
+    this.appointmentsService.findAll({
+      startDate,
       endDate,
       branchId: this.branchId
     }).subscribe({
@@ -244,7 +235,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   onDragStarted(app: AppointmentUI): void {
     this.isDragging.set(true);
     this.draggedApp.set(app);
-    this.originalDate = new Date(this.date);
+    this.originalDate = new Date(this.weekDays[0]);
   }
 
   onDragEnded(): void {
@@ -260,7 +251,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   onCellHover(dayIndex: number, slot: string): void {
     if (!this.isDragging() || !this.draggedApp()) return;
-    
+
     const startIndex = this.timeSlots().findIndex(s => s === slot);
     if (startIndex === -1) return;
 
@@ -278,7 +269,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   onDrop(event: CdkDragDrop<any[]>, dropListDayIndex: number): void {
     const app = event.item.data;
     const preview = this.dropPreview();
-    
+
     if (!preview) {
       this.handleFailedDrop(app);
       this.finishDrag();
@@ -288,7 +279,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     // Usamos el dayIndex de la previsualización, que es el más preciso
     const targetDayIndex = preview.dayIndex;
     const newTimeStr = this.timeSlots()[Math.round(preview.top / this.slotHeight())];
-    const newDate = this.weekDays()[targetDayIndex];
+    const newDate = this.weekDaysSignal()[targetDayIndex];
 
     if (!this.availabilityMap()[`${targetDayIndex}-${newTimeStr}`]) {
       this.handleFailedDrop(app);
@@ -301,9 +292,9 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
     // Actualización optimista local
-    this.rawAppointments.update(apps => apps.map(a => 
-      a.id === app.id ? { 
-        ...a, 
+    this.rawAppointments.update(apps => apps.map(a =>
+      a.id === app.id ? {
+        ...a,
         startTime: newStartTime.toISOString(),
         endTime: newEndTime.toISOString()
       } : a
@@ -329,7 +320,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   private handleFailedDrop(app: Appointment): void {
     this.snackbarService.warning('El profesional no está disponible en este horario.');
-    if (this.originalDate && this.originalDate.getTime() !== this.date.getTime()) {
+    if (this.originalDate && this.originalDate.getTime() !== this.weekDays[0]?.getTime()) {
       this.dateChange.emit(this.originalDate);
     }
     this.refreshUI(app);
@@ -351,11 +342,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.dayChangeTimeout = setTimeout(() => {
       if (!this.isDragging()) return;
 
-      const newDate = new Date(this.date);
+      const newDate = new Date(this.weekDays[0]);
       // Cambiamos por semana (7 días)
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
       this.dateChange.emit(newDate);
-      
+
       this.startDayChangeTimer(direction);
     }, 1000); // Un poco más de delay para la semana
   }

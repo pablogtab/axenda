@@ -5,7 +5,7 @@ import { ProfessionalsService, Professional } from '@services/professionals.serv
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
-import { format, addDays, startOfDay } from 'date-fns';
+import { format, addDays, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
@@ -56,8 +56,30 @@ export class AgendaComponent implements OnInit {
     return all.filter(p => p.id === id);
   });
 
+  weekRange = computed(() => {
+    const date = this.selectedDate();
+    const start = startOfWeek(date, { weekStartsOn: 1 });
+    const end = addDays(start, 6);
+    return { start, end };
+  });
+
+  weekDays = computed(() => {
+    const { start } = this.weekRange();
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  });
+
   formattedDate = computed(() => {
-    return format(this.selectedDate(), "EEEE d 'de' MMMM", { locale: es });
+    const date = this.selectedDate();
+    if (this.selectedView() === 'day') {
+      return format(date, "EEEE d 'de' MMMM", { locale: es });
+    } else {
+      const { start, end } = this.weekRange();
+      if (start.getMonth() === end.getMonth()) {
+        return `${format(start, 'd')} - ${format(end, "d 'de' MMMM", { locale: es })}`;
+      } else {
+        return `${format(start, "d 'de' MMM", { locale: es })} - ${format(end, "d 'de' MMM", { locale: es })}`;
+      }
+    }
   });
 
   ngOnInit(): void {
@@ -99,7 +121,8 @@ export class AgendaComponent implements OnInit {
   }
 
   changeDate(days: number): void {
-    this.selectedDate.set(addDays(this.selectedDate(), days));
+    const step = this.selectedView() === 'week' ? days * 7 : days;
+    this.selectedDate.set(addDays(this.selectedDate(), step));
   }
 
   today(): void {
