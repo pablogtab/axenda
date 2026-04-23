@@ -15,7 +15,15 @@ interface AppointmentUI extends Appointment {
   standalone: true,
   imports: [CommonModule, DragDropModule],
   templateUrl: './agenda-day-view.component.html',
-  styleUrls: ['./agenda-day-view.component.css']
+  styleUrls: ['./agenda-day-view.component.css'],
+  styles: [`
+    :host { 
+      display: flex; 
+      flex-direction: column; 
+      height: 100%;
+      overflow: hidden;
+    }
+  `]
 })
 export class AgendaDayViewComponent implements OnChanges {
   private appointmentsService = inject(AppointmentsService);
@@ -87,11 +95,21 @@ export class AgendaDayViewComponent implements OnChanges {
     if (!this.branchId) return;
     
     this.isLoading.set(true);
-    const dateStr = format(this.date, 'yyyy-MM-dd');
+    
+    // Rango completo del día local en formato ISO
+    const start = new Date(this.date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(this.date);
+    end.setHours(23, 59, 59, 999);
+
+    const startDate = start.toISOString();
+    const endDate = end.toISOString();
+
+    console.log(`[Agenda] Cargando turnos desde ${startDate} hasta ${endDate} en sucursal ${this.branchId}`);
     
     this.appointmentsService.findAll({ 
-      startDate: dateStr, 
-      endDate: dateStr,
+      startDate, 
+      endDate,
       branchId: this.branchId
     }).subscribe({
       next: (data) => {
@@ -108,7 +126,7 @@ export class AgendaDayViewComponent implements OnChanges {
             height: (duration * 25) / 15
           };
         });
-        
+        console.log('Cantidad de turnos: ', uiAppointments.length);
         this.appointments.set(uiAppointments);
         this.isLoading.set(false);
       },

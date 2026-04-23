@@ -238,62 +238,101 @@ async function main() {
     data: randomClients
   })
 
-  console.log('📅 Agendando Turnos de Prueba...')
-  // Encontrar el próximo Miércoles a las 14:00 (para asegurar que Dibu y Leo trabajen)
-  const nextWed = new Date()
-  nextWed.setDate(nextWed.getDate() + ((3 + 7 - nextWed.getDay()) % 7 || 7))
-  nextWed.setUTCHours(14, 0, 0, 0)
+  console.log('📅 Agendando Turnos de Prueba (Hoy, Mañana y Pasado)...')
   
-  const endWed1 = new Date(nextWed.getTime() + corteClasico.duration * 60000)
+  const belgranoBranch = tenant.branches.find(b => b.name === 'Sede Belgrano')!
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  // Función auxiliar para crear turnos fáciles
+  const createAppt = async (dayOffset: number, hour: number, profId: string, servId: string, branchId: string, notes: string) => {
+    const start = new Date(today)
+    start.setDate(start.getDate() + dayOffset)
+    start.setHours(hour, 0, 0, 0)
+    const end = new Date(start.getTime() + 45 * 60000)
+    
+    return prisma.appointment.create({
+      data: {
+        tenantId: tenant.id,
+        clientId: clienteVIP.id,
+        professionalId: profId,
+        serviceId: servId,
+        branchId: branchId,
+        startTime: start,
+        endTime: end,
+        status: 'CONFIRMED',
+        notes,
+        logs: { create: [{ changedBy: tenant.users[0].id, newStatus: 'CONFIRMED', notes: 'Seed' }] }
+      }
+    })
+  }
 
-  await prisma.appointment.create({
+  // --- HOY ---
+  await createAppt(0, 10, leoMessi.id, corteClasico.id, palermoBranch.id, 'Turno Hoy Palermo')
+  await createAppt(0, 14, dibuMtz.id, corteNavaja.id, belgranoBranch.id, 'Turno Hoy Belgrano')
+
+  // --- MAÑANA ---
+  await createAppt(1, 11, leoMessi.id, corteNavaja.id, palermoBranch.id, 'Turno Mañana Palermo')
+  await createAppt(1, 15, dibuMtz.id, arregloBarba.id, belgranoBranch.id, 'Turno Mañana Belgrano')
+
+  // --- PASADO MAÑANA ---
+  await createAppt(2, 0, leoMessi.id, arregloBarba.id, palermoBranch.id, 'Turno Pasado Mañana')
+
+  console.log('🛡️ Creando al Cuti Romero (Exclusivo Belgrano)...')
+  const cutiRomero = await prisma.professional.create({
     data: {
       tenantId: tenant.id,
-      clientId: clienteVIP.id,
-      professionalId: leoMessi.id,
-      serviceId: corteClasico.id,
-      branchId: palermoBranch.id,
-      startTime: nextWed,
-      endTime: endWed1,
-      status: 'CONFIRMED',
-      notes: 'Viene apurado',
-      logs: {
-        create: [
-          {
-            changedBy: tenant.users[0].id,
-            newStatus: 'CONFIRMED',
-            notes: 'Turno creado y confirmado desde seed'
-          }
-        ]
-      }
+      firstName: 'Cuti',
+      lastName: 'Romero',
+      bio: 'Especialista en cortes agresivos',
+      color: '#009688',
+      active: true,
+      branches: { create: [{ branchId: belgranoBranch.id }] },
+      services: { create: [{ serviceId: corteClasico.id }, { serviceId: corteNavaja.id }] }
     }
   })
 
-  const nextWedDibu = new Date(nextWed)
-  nextWedDibu.setUTCHours(15, 0, 0, 0)
-  const endWed2 = new Date(nextWedDibu.getTime() + corteNavaja.duration * 60000)
+  // Disponibilidad del Cuti: Lunes a Sábado en Belgrano
+  for (let i = 1; i <= 6; i++) {
+    await prisma.availability.create({
+      data: { professionalId: cutiRomero.id, dayOfWeek: i, startTime: '09:00', endTime: '20:00', branchId: belgranoBranch.id }
+    })
+  }
 
-  await prisma.appointment.create({
-    data: {
-      tenantId: tenant.id,
-      clientId: clienteNormal.id,
-      professionalId: dibuMtz.id,
-      serviceId: corteNavaja.id,
-      branchId: palermoBranch.id,
-      startTime: nextWedDibu,
-      endTime: endWed2,
-      status: 'PENDING',
-      logs: {
-        create: [
-          {
-            changedBy: tenant.users[0].id,
-            newStatus: 'PENDING',
-            notes: 'Turno creado desde seed'
-          }
-        ]
-      }
+  // Turnos para el Cuti
+  await createAppt(0, 16, cutiRomero.id, corteClasico.id, belgranoBranch.id, 'Cuti Hoy')
+  await createAppt(1, 12, cutiRomero.id, corteNavaja.id, belgranoBranch.id, 'Cuti Mañana')
+  
+  // Asegurar disponibilidad para esos días
+  const days = [today.getDay(), (today.getDay() + 1) % 7, (today.getDay() + 2) % 7]
+  for (const day of days) {
+    // Leo en Palermo (Si no la tiene ya de 1-5)
+    if (day === 0 || day === 6) {
+      await prisma.availability.create({
+        data: { professionalId: leoMessi.id, dayOfWeek: day, startTime: '09:00', endTime: '18:00', branchId: palermoBranch.id }
+      }).catch(() => null)
     }
-  })
+    
+    // Dibu en Belgrano
+    await prisma.availability.create({
+      data: { professionalId: dibuMtz.id, dayOfWeek: day, startTime: '09:00', endTime: '20:00', branchId: belgranoBranch.id }
+    }).catch(() => null)
+
+    // Leo en Belgrano (Nuevo!)
+    await prisma.availability.create({
+      data: { professionalId: leoMessi.id, dayOfWeek: day, startTime: '09:00', endTime: '18:00', branchId: belgranoBranch.id }
+    }).catch(() => null)
+  }
+
+  // Asegurar que Leo esté en la rama Belgrano
+  await prisma.professionalBranch.create({
+    data: { professionalId: leoMessi.id, branchId: belgranoBranch.id }
+  }).catch(() => null)
+
+  // Asegurar que Dibu esté en la rama Belgrano
+  await prisma.professionalBranch.create({
+    data: { professionalId: dibuMtz.id, branchId: belgranoBranch.id }
+  }).catch(() => null)
 
   console.log('✅ Base de datos poblada exitosamente.')
   console.log('🔑 Puedes ingresar con: admin@axenda.com / Password123!')

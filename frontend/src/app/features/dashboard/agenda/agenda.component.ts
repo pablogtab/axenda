@@ -49,17 +49,32 @@ export class AgendaComponent implements OnInit {
 
   loadInitialData(): void {
     this.isLoading.set(true);
-    forkJoin({
-      branches: this.branchesService.findAll(),
-      professionals: this.professionalsService.findAll()
-    }).subscribe({
-      next: (res) => {
-        this.branches.set(res.branches.filter(b => b.active));
-        this.professionals.set(res.professionals.filter(p => p.active));
+    this.branchesService.findAll().subscribe({
+      next: (branches) => {
+        const activeBranches = branches.filter(b => b.active);
+        this.branches.set(activeBranches);
         
-        if (this.branches().length > 0 && !this.selectedBranchId()) {
-          this.selectedBranchId.set(this.branches()[0].id);
+        if (activeBranches.length > 0 && !this.selectedBranchId()) {
+          this.selectedBranchId.set(activeBranches[0].id);
         }
+        
+        this.loadProfessionals();
+      },
+      error: () => this.isLoading.set(false)
+    });
+  }
+
+  loadProfessionals(): void {
+    const branchId = this.selectedBranchId();
+    if (!branchId) {
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.professionalsService.findAll(branchId).subscribe({
+      next: (profs) => {
+        this.professionals.set(profs.filter(p => p.active));
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
@@ -76,6 +91,7 @@ export class AgendaComponent implements OnInit {
 
   onBranchChange(id: string): void {
     this.selectedBranchId.set(id);
+    this.loadProfessionals();
   }
 
   setView(view: AgendaViewType): void {

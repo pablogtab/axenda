@@ -46,8 +46,10 @@ export class ProfessionalsService {
     return this.http.get<Professional[]>(`${this.apiUrl}/search`, { params: { q: query } });
   }
 
-  findAll(): Observable<Professional[]> {
-    return this.http.get<Professional[]>(this.apiUrl);
+  findAll(branchId?: string): Observable<Professional[]> {
+    const params: any = {};
+    if (branchId) params.branchId = branchId;
+    return this.http.get<Professional[]>(this.apiUrl, { params });
   }
 
   findOne(id: string): Observable<Professional> {

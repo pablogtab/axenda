@@ -42,11 +42,12 @@ export class AppointmentsController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
-  @ApiOperation({ summary: 'Listar turnos del tenant' })
-  findAll(@CurrentUser() user: JwtPayload) {
-    // Nota: A futuro si es PROFESSIONAL solo deberia ver los suyos. 
-    // Lo simplificamos para el MVP.
-    return this.appointmentsService.findAll(user.tenantId)
+  @ApiOperation({ summary: 'Listar turnos del tenant con filtros' })
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: { startDate?: string; endDate?: string; branchId?: string }
+  ) {
+    return this.appointmentsService.findAll(user.tenantId, query)
   }
 
   @Get(':id')

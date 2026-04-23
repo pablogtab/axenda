@@ -34,9 +34,12 @@ export class ProfessionalsController {
   // ─── CRUD Básico ────────────────────────────────────────────────────────────
 
   @Get()
-  @ApiOperation({ summary: 'Listar profesionales del tenant' })
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.professionalsService.findAll(user.tenantId)
+  @ApiOperation({ summary: 'Listar profesionales del tenant con filtros' })
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query('branchId') branchId?: string
+  ) {
+    return this.professionalsService.findAll(user.tenantId, branchId)
   }
 
   @Get('search')

@@ -18,9 +18,26 @@ export class AppointmentsService {
 
   // ─── Turnos (Appointments) ────────────────────────────────────────────────
 
-  async findAll(tenantId: string) {
+  async findAll(tenantId: string, query: { startDate?: string; endDate?: string; branchId?: string }) {
+    console.log(`[Backend] Buscando turnos - Tenant: ${tenantId}, Branch: ${query.branchId}, Start: ${query.startDate}`);
+    const where: any = { tenantId }
+
+    if (query.branchId) {
+      where.branchId = query.branchId
+    }
+
+    if (query.startDate || query.endDate) {
+      where.startTime = {}
+      if (query.startDate) {
+        where.startTime.gte = new Date(query.startDate)
+      }
+      if (query.endDate) {
+        where.startTime.lte = new Date(query.endDate)
+      }
+    }
+
     return this.prisma.appointment.findMany({
-      where: { tenantId },
+      where,
       include: {
         client: true,
         professional: true,

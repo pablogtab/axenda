@@ -10,9 +10,17 @@ export class ProfessionalsService {
 
   // ─── CRUD Básico ────────────────────────────────────────────────────────────
 
-  async findAll(tenantId: string) {
+  async findAll(tenantId: string, branchId?: string) {
+    const where: any = { tenantId }
+    
+    if (branchId) {
+      where.branches = {
+        some: { branchId }
+      }
+    }
+
     return this.prisma.professional.findMany({
-      where: { tenantId },
+      where,
       include: {
         branches: { include: { branch: true } },
         services: { include: { service: true } },
