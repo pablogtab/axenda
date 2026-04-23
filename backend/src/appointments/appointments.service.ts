@@ -25,9 +25,24 @@ export class AppointmentsService {
         client: true,
         professional: true,
         service: true,
+        branch: true
       },
       orderBy: { startTime: 'asc' },
     })
+  }
+
+  async findOne(tenantId: string, id: string) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id, tenantId },
+      include: {
+        client: true,
+        professional: true,
+        service: true,
+        branch: true
+      }
+    })
+    if (!appointment) throw new NotFoundException(`Turno ${id} no encontrado`)
+    return appointment
   }
 
   async create(tenantId: string, userId: string, dto: CreateAppointmentDto) {

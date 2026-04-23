@@ -139,6 +139,32 @@ describe('Professionals — Integration', () => {
     })
   })
 
+  // ── GET /api/professionals/search ──────────────────────────────────────────
+
+  describe('GET /api/professionals/search', () => {
+    it('should search professionals by query string', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/professionals/search')
+        .query({ q: 'Maria' })
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(Array.isArray(res.body.data)).toBe(true)
+      expect(res.body.data.length).toBe(1)
+      expect(res.body.data[0].firstName).toBe('Maria')
+    })
+
+    it('should return empty list if no results', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/professionals/search')
+        .query({ q: 'NonExistentProfessional' })
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data).toHaveLength(0)
+    })
+  })
+
   // ── PATCH /api/professionals/:id ───────────────────────────────────────────
 
   describe('PATCH /api/professionals/:id', () => {

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -36,6 +37,12 @@ export class ProfessionalsController {
   @ApiOperation({ summary: 'Listar profesionales del tenant' })
   findAll(@CurrentUser() user: JwtPayload) {
     return this.professionalsService.findAll(user.tenantId)
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar profesionales por nombre o bio' })
+  search(@CurrentUser() user: JwtPayload, @Query('q') q: string) {
+    return this.professionalsService.search(user.tenantId, q || '')
   }
 
   @Get(':id')

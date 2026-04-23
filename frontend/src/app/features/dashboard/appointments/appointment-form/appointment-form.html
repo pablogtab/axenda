@@ -2,8 +2,12 @@
   <!-- Header -->
   <header class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
     <div>
-      <h2 class="text-xl font-bold text-text-main">Agendar Nuevo Turno</h2>
-      <p class="text-xs text-text-dim mt-1">Completa los detalles para reservar la cita</p>
+      <h2 class="text-xl font-bold text-text-main">
+        {{ isEditMode() ? '📝 Editar Turno' : '📅 Agendar Nuevo Turno' }}
+      </h2>
+      <p class="text-xs text-text-dim mt-1">
+        {{ isEditMode() ? 'Modifica los detalles del turno seleccionado' : 'Completa los detalles para reservar la cita' }}
+      </p>
     </div>
     <button (click)="close()" class="p-2 hover:bg-white/10 rounded-xl transition-all text-text-dim hover:text-text-main">
       ✕
@@ -13,76 +17,10 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
     
     <!-- Sección: Cliente -->
-    <div class="space-y-3">
-      <label class="text-sm font-bold text-text-main flex items-center gap-2">
-        👤 Cliente
-      </label>
-      <div class="relative">
-        <input #searchInput
-               type="text" 
-               placeholder="Buscar cliente por nombre o teléfono..."
-               (input)="filterClients($event)"
-               (focus)="onFocus($event)"
-               (blur)="onBlur()"
-               (keydown)="handleKeyDown($event)"
-               [hidden]="selectedClient()"
-               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all">
-        
-        <!-- Estado de búsqueda -->
-        @if (isSearching()) {
-          <div class="absolute right-4 top-3.5">
-            <div class="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        }
-
-        <!-- Resultados de Búsqueda de Cliente -->
-        @if (filteredClients().length > 0) {
-          <div class="absolute top-full left-0 right-0 mt-2 bg-bg-primary border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-            @for (client of filteredClients(); track client.id; let i = $index) {
-              <button type="button" 
-                      (click)="selectClient(client)"
-                      [class.bg-white/10]="i === selectedIndex()"
-                      class="w-full px-4 py-3 text-left hover:bg-white/5 flex items-center justify-between border-b border-white/5 last:border-0 group transition-colors">
-                <div class="flex flex-col">
-                  <span class="text-sm font-bold text-text-main group-hover:text-primary transition-colors" [class.text-primary]="i === selectedIndex()">
-                    {{ client.firstName }} {{ client.lastName }}
-                  </span>
-                  <span class="text-[11px] text-text-dim">{{ client.phone || 'Sin teléfono' }}</span>
-                </div>
-                <span class="text-xs text-primary font-bold transition-all" [class.opacity-100]="i === selectedIndex()" [class.opacity-0]="i !== selectedIndex()">
-                  {{ i === selectedIndex() ? 'Elegir (Enter)' : 'Seleccionar' }}
-                </span>
-              </button>
-            }
-          </div>
-        } @else if (searchInput.value.length > 0 && !isSearching() && !selectedClient()) {
-          <!-- No se encontraron resultados -->
-          <div class="absolute top-full left-0 right-0 mt-2 bg-bg-primary border border-white/10 rounded-xl p-4 text-center z-50 shadow-2xl">
-            <p class="text-sm text-text-dim">No se encontraron clientes "<span class="text-text-main font-bold">{{ searchInput.value }}</span>"</p>
-          </div>
-        }
-
-        <!-- Cliente Seleccionado (Tag) -->
-        @if (selectedClient()) {
-          <div class="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 animate-in fade-in duration-200">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                {{ selectedClient()?.firstName?.[0] }}
-              </div>
-              <div class="flex flex-col">
-                <span class="text-sm font-bold text-text-main">
-                  {{ selectedClient()?.firstName }} {{ selectedClient()?.lastName }}
-                </span>
-                <span class="text-[11px] text-text-dim">{{ selectedClient()?.phone }}</span>
-              </div>
-            </div>
-            <button type="button" (click)="clearClient()" class="text-xs text-text-dim hover:text-red-400 font-bold p-2 transition-colors">
-              Cambiar
-            </button>
-          </div>
-        }
-      </div>
-    </div>
+    <app-searchable-select 
+      formControlName="clientId"
+      [config]="clientConfig"
+    ></app-searchable-select>
 
     <!-- Sección: Servicio y Profesional -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -92,34 +30,32 @@
                 class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none appearance-none">
           <option value="" disabled>Seleccionar servicio</option>
           @for (service of services(); track service.id) {
-            <option [value]="service.id">{{ service.name }} - ${{ service.price }}</option>
+            <option [value]="service.id">{{ service.name }}</option>
           }
         </select>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Profesional</label>
-        <select formControlName="professionalId" 
-                [attr.disabled]="data.professionalId ? true : null"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none appearance-none disabled:opacity-50">
-          <option value="" disabled>Seleccionar profesional</option>
-          @for (prof of professionals(); track prof.id) {
-            <option [value]="prof.id">{{ prof.firstName }} {{ prof.lastName }}</option>
-          }
-        </select>
-      </div>
+      <app-searchable-select
+        formControlName="professionalId"
+        [config]="profConfig"
+      ></app-searchable-select>
     </div>
 
     <!-- Sección: Fecha y Hora -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="space-y-2">
         <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Fecha</label>
         <input type="date" formControlName="date"
                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
       </div>
       <div class="space-y-2">
-        <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora</label>
+        <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Inicio</label>
         <input type="time" formControlName="time"
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Fin</label>
+        <input type="time" formControlName="endTime"
                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
       </div>
     </div>
@@ -142,9 +78,16 @@
       Cancelar
     </button>
     <button (click)="onSubmit()" 
-            [disabled]="form.invalid || isSubmitting()"
+            [disabled]="isSubmitting()"
             class="px-8 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
-      {{ isSubmitting() ? 'Agendando...' : 'Confirmar Turno' }}
+      @if (isSubmitting()) {
+        <div class="flex items-center gap-2">
+          <div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+          <span>Agendando...</span>
+        </div>
+      } @else {
+        <span>{{ isEditMode() ? 'Actualizar Turno' : 'Confirmar Turno' }}</span>
+      }
     </button>
   </footer>
 </div>

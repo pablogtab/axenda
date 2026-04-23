@@ -24,6 +24,26 @@ export class ProfessionalsService {
     })
   }
 
+  async search(tenantId: string, query: string) {
+    const parts = query.trim().split(/[\s*]+/).filter(p => p.length > 0);
+
+    return this.prisma.professional.findMany({
+      where: {
+        tenantId,
+        active: true,
+        AND: parts.map(part => ({
+          OR: [
+            { firstName: { contains: part, mode: 'insensitive' } },
+            { lastName: { contains: part, mode: 'insensitive' } },
+            { bio: { contains: part, mode: 'insensitive' } },
+          ],
+        })),
+      },
+      take: 10,
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+    })
+  }
+
   async findOne(tenantId: string, id: string) {
     const professional = await this.prisma.professional.findUnique({
       where: { id },

@@ -292,6 +292,17 @@ describe('Appointments — Integration', () => {
       expect(logs[0].newStatus).toBe('PENDING')
       expect(logs[0].changedBy).toBe(adminUserId)
     })
+
+    it('should fetch a single appointment by ID', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/appointments/${appointmentId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data.id).toBe(appointmentId)
+      expect(res.body.data.client.id).toBe(clientId)
+      expect(res.body.data.branch.id).toBe(branchId)
+    })
   })
 
   // ── Status Changes ─────────────────────────────────────────────────────────

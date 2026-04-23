@@ -49,6 +49,13 @@ export class AppointmentsController {
     return this.appointmentsService.findAll(user.tenantId)
   }
 
+  @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
+  @ApiOperation({ summary: 'Obtener detalle de un turno' })
+  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.appointmentsService.findOne(user.tenantId, id)
+  }
+
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Crear un nuevo turno desde panel (manual/sobreturno)' })

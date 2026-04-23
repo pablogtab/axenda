@@ -209,6 +209,23 @@ export class AgendaComponent implements OnInit {
     });
   }
 
+  editAppointment(appointment: AppointmentUI): void {
+    const dialogRef = this.modal.open(AppointmentFormComponent, {
+      data: {
+        appointmentId: appointment.id,
+        professionalId: appointment.professional?.id,
+        branchId: appointment.branch?.id
+      },
+      width: '500px'
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) {
+        this.loadAppointments();
+      }
+    });
+  }
+
   onDrop(event: CdkDragDrop<any>): void {
     const app = event.item.data as Appointment;
     const newProfessionalId = event.container.id;

@@ -42,6 +42,10 @@ export class ProfessionalsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/professionals`;
 
+  search(query: string): Observable<Professional[]> {
+    return this.http.get<Professional[]>(`${this.apiUrl}/search`, { params: { q: query } });
+  }
+
   findAll(): Observable<Professional[]> {
     return this.http.get<Professional[]>(this.apiUrl);
   }

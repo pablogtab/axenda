@@ -97,16 +97,17 @@
           
           @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
             <div cdkDrag [cdkDragData]="app"
-                 (cdkDragStarted)="isDragging.set(true)"
-                 (cdkDragEnded)="isDragging.set(false)"
-                 class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-grab active:cursor-grabbing group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
-                 [style.top.px]="app.top"
-                 [style.height.px]="app.height"
-                 [ngStyle]="{
-                   'background-color': app.service.color + '20',
-                   'border-left': '4px solid ' + app.service.color,
-                   'color': app.service.color
-                 }">
+                  (cdkDragStarted)="isDragging.set(true)"
+                  (cdkDragEnded)="isDragging.set(false)"
+                  (dblclick)="editAppointment(app)"
+                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-grab active:cursor-grabbing group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+                  [style.top.px]="app.top"
+                  [style.height.px]="app.height"
+                  [ngStyle]="{
+                    'background-color': app.service.color + '20',
+                    'border-left': '4px solid ' + app.service.color,
+                    'color': app.service.color
+                  }">
               
               <!-- Placeholder mientras se arrastra -->
               <div *cdkDragPlaceholder class="bg-white/10 border-2 border-dashed border-white/20 rounded-lg h-full w-full"></div>
