@@ -279,18 +279,31 @@ export class AgendaComponent implements OnInit {
     const [hours, mins] = newTimeStr.split(':').map(Number);
     console.log('Confirmed Drop at:', hours, ':', mins);
     
+    // 1. Calcular duración original para preservarla
+    const originalStart = new Date(app.startTime);
+    const originalEnd = new Date(app.endTime);
+    const durationMs = originalEnd.getTime() - originalStart.getTime();
+
+    // 2. Calcular nuevas fechas
     const newStartTime = new Date(this.selectedDate());
     newStartTime.setHours(hours, mins, 0, 0);
+    
+    const newEndTime = new Date(newStartTime.getTime() + durationMs);
 
     // 3. Actualización Optimista (UI Instantánea)
     const originalAppointments = this.appointments();
+    const durationMins = durationMs / (1000 * 60);
+    const newHeight = (durationMins * 25) / 15;
+
     const updatedAppointments = originalAppointments.map(a => {
       if (a.id === app.id) {
         return {
           ...a,
           professional: { ...a.professional, id: newProfessionalId },
           startTime: newStartTime.toISOString(),
-          top: newIndex * 25 // Actualizamos el TOP instantáneamente
+          endTime: newEndTime.toISOString(),
+          top: newIndex * 25,
+          height: newHeight // Mantenemos el alto visual correcto
         };
       }
       return a;
@@ -298,10 +311,11 @@ export class AgendaComponent implements OnInit {
     
     this.appointments.set(updatedAppointments);
 
-    // 4. Sincronizar con el backend en segundo plano
+    // 4. Sincronizar con el backend preservando el final
     this.appointmentsService.update(app.id, {
       professionalId: newProfessionalId,
-      startTime: newStartTime.toISOString()
+      startTime: newStartTime.toISOString(),
+      endTime: newEndTime.toISOString()
     }).subscribe({
       next: () => {
         // Recargamos para asegurar que todo esté sincronizado (opcional, pero seguro)

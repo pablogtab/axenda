@@ -99,8 +99,8 @@
             <div cdkDrag [cdkDragData]="app"
                   (cdkDragStarted)="isDragging.set(true)"
                   (cdkDragEnded)="isDragging.set(false)"
-                  (dblclick)="editAppointment(app)"
-                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-grab active:cursor-grabbing group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+                  (click)="editAppointment(app); $event.stopPropagation()"
+                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
                   [style.top.px]="app.top"
                   [style.height.px]="app.height"
                   [ngStyle]="{
