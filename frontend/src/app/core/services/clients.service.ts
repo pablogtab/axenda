@@ -26,6 +26,12 @@ export class ClientsService {
     return this.http.get<Client[]>(this.apiUrl);
   }
 
+  search(query: string): Observable<Client[]> {
+    return this.http.get<Client[]>(`${this.apiUrl}/search`, { 
+      params: { q: query } 
+    });
+  }
+
   findOne(id: string): Observable<Client> {
     return this.http.get<Client>(`${this.apiUrl}/${id}`);
   }

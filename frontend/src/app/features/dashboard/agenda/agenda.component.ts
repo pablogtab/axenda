@@ -9,6 +9,7 @@ import { forkJoin } from 'rxjs';
 import { format, addDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
+import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -18,7 +19,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, AppointmentFormComponent],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
 })
@@ -191,7 +192,21 @@ export class AgendaComponent implements OnInit {
   }
 
   openAppointmentForm(professional?: Professional, time?: string): void {
-    console.log('Abrir formulario para:', professional?.firstName, time);
+    const dialogRef = this.modal.open(AppointmentFormComponent, {
+      data: {
+        professionalId: professional?.id,
+        startTime: time,
+        date: format(this.selectedDate(), 'yyyy-MM-dd'),
+        branchId: this.selectedBranchId()
+      },
+      width: '500px'
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) {
+        this.loadAppointments();
+      }
+    });
   }
 
   onDrop(event: CdkDragDrop<any>): void {

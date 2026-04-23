@@ -8,13 +8,34 @@ export class ClientsService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ─── CRUD Básico de Clientes ───────────────────────────────────────────────
-
+  
   async findAll(tenantId: string) {
     return this.prisma.client.findMany({
       where: { tenantId, active: true },
       include: {
         tags: true,
       },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+    })
+  }
+
+  async search(tenantId: string, query: string) {
+    const parts = query.trim().split(/[\s*]+/).filter(p => p.length > 0);
+
+    return this.prisma.client.findMany({
+      where: {
+        tenantId,
+        active: true,
+        AND: parts.map(part => ({
+          OR: [
+            { firstName: { contains: part, mode: 'insensitive' } },
+            { lastName: { contains: part, mode: 'insensitive' } },
+            { email: { contains: part, mode: 'insensitive' } },
+            { phone: { contains: part, mode: 'insensitive' } },
+          ],
+        })),
+      },
+      take: 10,
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
     })
   }

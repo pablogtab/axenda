@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -34,6 +35,12 @@ export class ClientsController {
   @ApiOperation({ summary: 'Listar todos los clientes del tenant' })
   findAll(@CurrentUser() user: JwtPayload) {
     return this.clientsService.findAll(user.tenantId)
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar clientes por nombre, email o teléfono' })
+  search(@CurrentUser() user: JwtPayload, @Query('q') query: string) {
+    return this.clientsService.search(user.tenantId, query || '')
   }
 
   @Get(':id')

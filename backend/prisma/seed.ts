@@ -222,6 +222,22 @@ async function main() {
     }
   })
 
+  console.log('🎲 Generando 100 Clientes Aleatorios...')
+  const { fakerES: faker } = await import('@faker-js/faker')
+  
+  const randomClients = Array.from({ length: 100 }).map(() => ({
+    tenantId: tenant.id,
+    firstName: faker.person.firstName(),
+    lastName: faker.person.lastName(),
+    email: faker.internet.email().toLowerCase(),
+    phone: faker.phone.number(),
+    active: true
+  }))
+
+  await prisma.client.createMany({
+    data: randomClients
+  })
+
   console.log('📅 Agendando Turnos de Prueba...')
   // Encontrar el próximo Miércoles a las 14:00 (para asegurar que Dibu y Leo trabajen)
   const nextWed = new Date()
