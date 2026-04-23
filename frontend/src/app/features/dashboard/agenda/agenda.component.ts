@@ -19,7 +19,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, AppointmentFormComponent],
+  imports: [CommonModule, FormsModule, DragDropModule],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
 })
@@ -203,7 +203,7 @@ export class AgendaComponent implements OnInit {
     });
 
     dialogRef.closed.subscribe(result => {
-      if (result) {
+      if (result) { 
         this.loadAppointments();
       }
     });
