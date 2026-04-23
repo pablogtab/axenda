@@ -25,7 +25,7 @@
   </header>
 
   <!-- Agenda Grid -->
-  <div class="flex-1 overflow-auto custom-scrollbar relative">
+  <div class="flex-1 overflow-auto custom-scrollbar relative" cdkDropListGroup>
     <div class="grid" 
          [style.grid-template-columns]="'60px repeat(' + professionals().length + ', minmax(250px, 1fr))'"
          [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', 25px)'">
@@ -58,57 +58,76 @@
           }
         </div>
 
-        <!-- Celdas de Fondo por Profesional -->
+        <!-- Celdas de Fondo Estáticas (Para Grid Lines y Click) -->
         @for (prof of professionals(); track prof.id; let colIndex = $index) {
           <div class="border-r border-b border-white/[0.02] relative"
                [style.grid-row]="rowIndex + 2"
                [style.grid-column]="colIndex + 2"
                (click)="openAppointmentForm(prof, slot)">
             
-            <!-- Disponibilidad (Fondo con el color del profesional muy tenue) -->
-            @if (isProfessionalAvailableAt(prof, slot)) {
-              <div class="absolute inset-0 transition-colors" [style.background-color]="prof.color + '10'"></div>
+            <!-- Disponibilidad (Lookup rápido) -->
+            @if (availabilityMap()[prof.id + '-' + slot]) {
+              <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>
+            } @else {
+              <!-- Zona NO disponible (Se resalta más al draggear) -->
+              <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="isDragging()"></div>
             }
             
-            <!-- Bloqueo Parcial (Stripe) -->
-            @if (isProfessionalBlockedAt(prof, slot)) {
+            <!-- Bloqueo Parcial (Lookup rápido) -->
+            @if (blockedMap()[prof.id + '-' + slot]) {
               <div class="absolute inset-0 bg-stripe-pattern opacity-20"></div>
             }
           </div>
         }
       }
 
-      <!-- Turnos (Absolute-like positioning using grid coordinates) -->
+      <!-- Capas de Arrastre (Una por profesional, superpuesta al grid) -->
       @for (prof of professionals(); track prof.id; let colIndex = $index) {
-        @for (app of getAppointmentsForProfessional(prof.id); track app.id) {
-          <div class="m-1 rounded-lg p-2 shadow-xl transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] group/appt overflow-hidden border border-white/5 z-10"
-               [style.grid-column]="colIndex + 2"
-               [style.grid-row]="getAppointmentGridRange(app)"
-               [ngStyle]="{
-                 'background-color': app.service.color + '20',
-                 'border-left': '4px solid ' + app.service.color,
-                 'color': app.service.color
-               }">
-            <div class="flex justify-between items-center h-full gap-2 px-1">
-              <div class="flex flex-col min-w-0 flex-1">
-                <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 truncate leading-none">
-                  {{ app.service.name }}
-                </span>
-                <span class="text-[13px] font-bold truncate text-text-main leading-tight">
-                  {{ app.client.firstName }} {{ app.client.lastName }}
-                </span>
-              </div>
-              <div class="flex flex-col items-end shrink-0 text-right opacity-70">
-                <span class="text-[10px] font-bold font-mono leading-none">
-                  {{ app.startTime | date:'HH:mm' }}
-                </span>
-                <span class="text-[10px] font-bold font-mono leading-none">
-                  {{ app.endTime | date:'HH:mm' }}
-                </span>
+        <div class="relative"
+             [style.grid-column]="colIndex + 2"
+             [style.grid-row]="'2 / span ' + timeSlots().length"
+             cdkDropList
+             [id]="prof.id"
+             [cdkDropListData]="appointmentsByProfessional().get(prof.id) || []"
+             (cdkDropListDropped)="onDrop($event); isDragging.set(false)">
+          
+          @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
+            <div cdkDrag [cdkDragData]="app"
+                 (cdkDragStarted)="isDragging.set(true)"
+                 (cdkDragEnded)="isDragging.set(false)"
+                 class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-grab active:cursor-grabbing group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+                 [style.top.px]="app.top"
+                 [style.height.px]="app.height"
+                 [ngStyle]="{
+                   'background-color': app.service.color + '20',
+                   'border-left': '4px solid ' + app.service.color,
+                   'color': app.service.color
+                 }">
+              
+              <!-- Placeholder mientras se arrastra -->
+              <div *cdkDragPlaceholder class="bg-white/10 border-2 border-dashed border-white/20 rounded-lg h-full w-full"></div>
+
+              <div class="flex justify-between items-center h-full gap-2 px-1 pointer-events-none">
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 truncate leading-none">
+                    {{ app.service.name }}
+                  </span>
+                  <span class="text-[13px] font-bold truncate text-text-main leading-tight">
+                    {{ app.client.firstName }} {{ app.client.lastName }}
+                  </span>
+                </div>
+                <div class="flex flex-col items-end shrink-0 text-right opacity-70">
+                  <span class="text-[10px] font-bold font-mono leading-none">
+                    {{ app.startTime | date:'HH:mm' }}
+                  </span>
+                  <span class="text-[10px] font-bold font-mono leading-none">
+                    {{ app.endTime | date:'HH:mm' }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        }
+          }
+        </div>
       }
 
     </div>

@@ -56,6 +56,17 @@ export class AppointmentsController {
     return this.appointmentsService.create(user.tenantId, user.sub, dto)
   }
 
+  @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: 'Actualizar datos generales de un turno' })
+  update(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: any,
+  ) {
+    return this.appointmentsService.update(user.tenantId, id, user.sub, dto)
+  }
+
   @Patch(':id/status')
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
   @ApiOperation({ summary: 'Cambiar el estado de un turno (ej. a COMPLETADO)' })

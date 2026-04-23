@@ -3,17 +3,9 @@
   height: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .bg-stripe-pattern {
@@ -30,30 +22,42 @@
   background-size: 20px 20px;
 }
 
-.transition-all {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* CURSORES Y EFECTOS BÁSICOS */
+.cursor-grab { cursor: grab; }
+.cursor-grabbing { cursor: grabbing; }
+
+.cdk-drag-preview {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: grabbing;
 }
 
-/* Efecto Hover en Turnos */
+.cdk-drag-placeholder {
+  opacity: 0 !important;
+}
+
+/* CERO ANIMACIÓN AL SOLTAR (Para evitar rebotes) */
+.cdk-drag-animating {
+  transition: none !important;
+}
+
 .group\/appt:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.2);
   z-index: 30;
 }
 
-/* Agenda Grid Styles */
-.grid {
-  display: grid;
-  /* Grid lines for debugging or visual structure */
-  background-color: rgba(255, 255, 255, 0.02);
+/* TRANSICIONES SELECTIVAS (Ahora incluimos top/left para el retorno suave) */
+.group\/appt {
+  transition: 
+    top 0.2s cubic-bezier(0, 0, 0.2, 1), 
+    left 0.2s cubic-bezier(0, 0, 0.2, 1),
+    filter 0.2s ease, 
+    box-shadow 0.2s ease, 
+    background-color 0.2s ease !important;
 }
 
-/* Sticky behavior for Grid items */
-.sticky {
-  position: sticky;
+.cdk-drag-dragging {
+  transition: none !important;
+  z-index: 1000 !important;
+  opacity: 0.9;
 }
-
-.z-50 { z-index: 50; }
-.z-40 { z-index: 40; }
-.z-30 { z-index: 30; }
-.z-20 { z-index: 20; }
-.z-10 { z-index: 10; }

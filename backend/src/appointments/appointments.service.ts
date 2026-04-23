@@ -115,6 +115,38 @@ export class AppointmentsService {
     })
   }
 
+  async update(tenantId: string, id: string, userId: string, dto: any) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id, tenantId },
+      include: { service: true }
+    })
+    if (!appointment) throw new NotFoundException(`Turno ${id} no encontrado`)
+
+    // Si cambia el startTime, recalculamos el endTime basado en la duración del servicio
+    const data: any = { ...dto }
+    if (dto.startTime && !dto.endTime) {
+      const start = new Date(dto.startTime)
+      data.endTime = new Date(start.getTime() + appointment.service.duration * 60000)
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.appointment.update({
+        where: { id },
+        data
+      })
+
+      await tx.appointmentLog.create({
+        data: {
+          appointmentId: id,
+          changedBy: userId,
+          notes: 'Turno reprogramado o reasignado'
+        },
+      })
+
+      return updated
+    })
+  }
+
   async cancel(tenantId: string, id: string, userId: string) {
     return this.changeStatus(tenantId, id, userId, { status: 'CANCELLED' })
   }
