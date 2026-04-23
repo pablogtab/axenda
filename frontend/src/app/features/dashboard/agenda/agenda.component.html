@@ -63,6 +63,7 @@
           [professionals]="professionals()"
           (addAppointment)="onAddAppointment($event)"
           (editAppointment)="onEditAppointment($event)"
+          (dateChange)="selectedDate.set($event)"
         ></app-agenda-day-view>
       }
       @case ('week') {

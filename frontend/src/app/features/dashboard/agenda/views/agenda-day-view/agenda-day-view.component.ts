@@ -40,6 +40,11 @@ export class AgendaDayViewComponent implements OnChanges {
   timeSlots = signal<string[]>([]);
   isLoading = signal(false);
   isDragging = signal(false);
+  draggedApp = signal<AppointmentUI | null>(null);
+  dropPreview = signal<{ professionalId: string, top: number, height: number } | null>(null);
+  
+  private dayChangeTimeout: any;
+  @Output() dateChange = new EventEmitter<Date>();
 
   // Maps para optimización
   availabilityMap = signal<Record<string, boolean>>({});
@@ -122,12 +127,81 @@ export class AgendaDayViewComponent implements OnChanges {
             height: (duration * 25) / 15
           };
         });
-        console.log('Cantidad de turnos: ', uiAppointments.length);
-        this.appointments.set(uiAppointments);
-        this.isLoading.set(false);
+
+        // Usamos setTimeout para sacar la actualización del ciclo actual de detección
+        // de cambios y evitar conflictos con las manipulaciones del DOM de CDK.
+        setTimeout(() => {
+          const currentDragged = this.draggedApp();
+          
+          // Si estamos arrastrando, nos aseguramos de que el turno persistente
+          // esté en la lista, pero solo si no vino ya en la nueva data
+          if (currentDragged && !uiAppointments.find(a => a.id === currentDragged.id)) {
+            // Lo insertamos al principio para que Angular tenga una referencia más estable
+            uiAppointments.unshift(currentDragged);
+          }
+
+          this.appointments.set(uiAppointments);
+          this.isLoading.set(false);
+        }, 0);
       },
       error: () => this.isLoading.set(false)
     });
+  }
+
+  onDragStarted(app: AppointmentUI): void {
+    this.isDragging.set(true);
+    this.draggedApp.set(app);
+  }
+
+  onDragEnded(): void {
+    // Delay para permitir que onDrop lea el preview antes de limpiar
+    setTimeout(() => {
+      if (this.isDragging()) {
+        this.isDragging.set(false);
+        this.draggedApp.set(null);
+        this.dropPreview.set(null);
+        this.clearDayChangeTimer();
+      }
+    }, 50);
+  }
+
+  onCellHover(prof: Professional, slot: string): void {
+    if (!this.isDragging() || !this.draggedApp()) return;
+    
+    const startIndex = this.timeSlots().findIndex(s => s === slot);
+    if (startIndex === -1) return;
+
+    const newPreview = {
+      professionalId: prof.id,
+      top: startIndex * 25,
+      height: this.draggedApp()?.height || 0
+    };
+
+    if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
+      this.dropPreview.set(newPreview);
+    }
+  }
+
+  onZoneEnter(direction: 'prev' | 'next'): void {
+    if (!this.isDragging()) return;
+    
+    this.clearDayChangeTimer();
+    this.dayChangeTimeout = setTimeout(() => {
+      const newDate = new Date(this.date);
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+      this.dateChange.emit(newDate);
+    }, 800); // 800ms de hover para cambiar de día
+  }
+
+  onZoneLeave(): void {
+    this.clearDayChangeTimer();
+  }
+
+  private clearDayChangeTimer(): void {
+    if (this.dayChangeTimeout) {
+      clearTimeout(this.dayChangeTimeout);
+      this.dayChangeTimeout = null;
+    }
   }
 
   isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
@@ -155,36 +229,29 @@ export class AgendaDayViewComponent implements OnChanges {
 
   onDrop(event: CdkDragDrop<any[]>): void {
     const app = event.item.data;
-    const newProfessionalId = event.container.id;
+    const preview = this.dropPreview();
     
-    // Calcular cuántos slots se movió (25px por slot)
-    const rowsMoved = Math.round(event.distance.y / 25);
-    
-    const start = new Date(app.startTime);
-    const startStr = format(start, 'HH:mm');
-    const startIndex = this.timeSlots().findIndex(s => s === startStr);
-    const newIndex = startIndex + rowsMoved;
-
-    if (newIndex < 0 || newIndex >= this.timeSlots().length) {
+    if (!preview) {
       this.refreshUI(app);
+      this.finishDrag();
       return;
     }
 
+    const newProfessionalId = preview.professionalId;
+    const newIndex = preview.top / 25;
     const newTimeStr = this.timeSlots()[newIndex];
+
     if (!this.availabilityMap()[`${newProfessionalId}-${newTimeStr}`]) {
       this.refreshUI(app);
+      this.finishDrag();
       return;
     }
 
-    const [hours, mins] = newTimeStr.split(':').map(Number);
     const originalDuration = new Date(app.endTime).getTime() - new Date(app.startTime).getTime();
-    
-    // Usar el helper para evitar problemas de UTC
     const dateStr = format(this.date, 'yyyy-MM-dd');
     const newStartTime = createLocalDate(dateStr, newTimeStr);
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
-    // Actualización optimista
     this.appointments.update(apps => apps.map(a => 
       a.id === app.id ? { 
         ...a, 
@@ -202,6 +269,15 @@ export class AgendaDayViewComponent implements OnChanges {
     }).subscribe({
       error: () => this.loadAppointments()
     });
+
+    this.finishDrag();
+  }
+
+  private finishDrag(): void {
+    this.isDragging.set(false);
+    this.draggedApp.set(null);
+    this.dropPreview.set(null);
+    this.clearDayChangeTimer();
   }
 
   private refreshUI(app: Appointment): void {
