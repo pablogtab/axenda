@@ -162,7 +162,7 @@ export class AgendaDayViewComponent implements OnChanges {
         this.dropPreview.set(null);
         this.clearDayChangeTimer();
       }
-    }, 50);
+    }, 100);
   }
 
   onCellHover(prof: Professional, slot: string): void {
