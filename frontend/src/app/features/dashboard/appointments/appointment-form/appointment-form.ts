@@ -5,9 +5,9 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { AppointmentsService } from '@services/appointments.service';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
-import { ClientsService, Client } from '@services/clients.service';
+import { ClientsService } from '@services/clients.service';
 import { format } from 'date-fns';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, finalize } from 'rxjs';
+import { createLocalDate, toLocalDateStr, toLocalTimeStr } from '@core/utils/date-utils';
 
 export interface AppointmentFormData {
   appointmentId?: string;
@@ -17,7 +17,7 @@ export interface AppointmentFormData {
   branchId?: string;
 }
 
-import { SearchableSelectComponent, SearchableSelectConfig } from '@shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
 import { getClientSearchConfig, getProfessionalSearchConfig } from '@core/configs/search-configs';
 
 @Component({
@@ -95,11 +95,11 @@ export class AppointmentFormComponent implements OnInit {
     const service = this.services().find(s => s.id === serviceId);
     if (!service) return;
 
-    const start = new Date(`${date}T${startTime}`);
+    const start = createLocalDate(date, startTime);
     const end = new Date(start.getTime() + service.duration * 60000);
     
     this.form.patchValue({
-      endTime: format(end, 'HH:mm')
+      endTime: toLocalTimeStr(end)
     }, { emitEvent: false });
   }
 
@@ -108,19 +108,15 @@ export class AppointmentFormComponent implements OnInit {
       // Ajustamos la fecha y hora
       const startDate = new Date(appointment.startTime);
       const endDate = new Date(appointment.endTime);
-      
-      const date = format(startDate, 'yyyy-MM-dd');
-      const time = format(startDate, 'HH:mm');
-      const endTime = format(endDate, 'HH:mm');
 
       this.form.patchValue({
         clientId: appointment.client?.id,
         serviceId: appointment.service?.id,
         professionalId: appointment.professional?.id,
         branchId: appointment.branch?.id,
-        date: date,
-        time: time,
-        endTime: endTime,
+        date: toLocalDateStr(startDate),
+        time: toLocalTimeStr(startDate),
+        endTime: toLocalTimeStr(endDate),
         notes: appointment.notes,
         internalNotes: appointment.internalNotes
       });
@@ -155,14 +151,8 @@ export class AppointmentFormComponent implements OnInit {
     this.isSubmitting.set(true);
     const val = this.form.value;
     
-    // Construir fechas ISO
-    const [hStart, mStart] = val.time.split(':');
-    const start = new Date(val.date);
-    start.setHours(Number(hStart), Number(mStart), 0, 0);
-
-    const [hEnd, mEnd] = val.endTime.split(':');
-    const end = new Date(val.date);
-    end.setHours(Number(hEnd), Number(mEnd), 0, 0);
+    const start = createLocalDate(val.date, val.time);
+    const end = createLocalDate(val.date, val.endTime);
 
     const payload = {
       clientId: val.clientId,
@@ -170,7 +160,6 @@ export class AppointmentFormComponent implements OnInit {
       professionalId: val.professionalId,
       branchId: val.branchId,
       startTime: start.toISOString(),
-      endTime: end.toISOString(),
       notes: val.notes,
       internalNotes: val.internalNotes
     };

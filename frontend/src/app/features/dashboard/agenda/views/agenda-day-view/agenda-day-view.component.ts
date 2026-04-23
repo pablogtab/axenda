@@ -4,6 +4,7 @@ import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, startOfDay } from 'date-fns';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
+import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -97,13 +98,8 @@ export class AgendaDayViewComponent implements OnChanges {
     this.isLoading.set(true);
     
     // Rango completo del día local en formato ISO
-    const start = new Date(this.date);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(this.date);
-    end.setHours(23, 59, 59, 999);
-
-    const startDate = start.toISOString();
-    const endDate = end.toISOString();
+    const startDate = startOfLocalDate(this.date).toISOString();
+    const endDate = endOfLocalDate(this.date).toISOString();
 
     console.log(`[Agenda] Cargando turnos desde ${startDate} hasta ${endDate} en sucursal ${this.branchId}`);
     
@@ -157,16 +153,18 @@ export class AgendaDayViewComponent implements OnChanges {
     });
   }
 
-  onDrop(event: CdkDragDrop<any>): void {
-    const app = event.item.data as Appointment;
+  onDrop(event: CdkDragDrop<any[]>): void {
+    const app = event.item.data;
     const newProfessionalId = event.container.id;
+    
+    // Calcular cuántos slots se movió (25px por slot)
     const rowsMoved = Math.round(event.distance.y / 25);
     
     const start = new Date(app.startTime);
     const startStr = format(start, 'HH:mm');
     const startIndex = this.timeSlots().findIndex(s => s === startStr);
     const newIndex = startIndex + rowsMoved;
-    
+
     if (newIndex < 0 || newIndex >= this.timeSlots().length) {
       this.refreshUI(app);
       return;
@@ -181,8 +179,9 @@ export class AgendaDayViewComponent implements OnChanges {
     const [hours, mins] = newTimeStr.split(':').map(Number);
     const originalDuration = new Date(app.endTime).getTime() - new Date(app.startTime).getTime();
     
-    const newStartTime = new Date(this.date);
-    newStartTime.setHours(hours, mins, 0, 0);
+    // Usar el helper para evitar problemas de UTC
+    const dateStr = format(this.date, 'yyyy-MM-dd');
+    const newStartTime = createLocalDate(dateStr, newTimeStr);
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
     // Actualización optimista
@@ -190,6 +189,7 @@ export class AgendaDayViewComponent implements OnChanges {
       a.id === app.id ? { 
         ...a, 
         professional: { ...a.professional, id: newProfessionalId },
+        professionalId: newProfessionalId,
         startTime: newStartTime.toISOString(),
         endTime: newEndTime.toISOString(),
         top: newIndex * 25
@@ -198,8 +198,7 @@ export class AgendaDayViewComponent implements OnChanges {
 
     this.appointmentsService.update(app.id, {
       professionalId: newProfessionalId,
-      startTime: newStartTime.toISOString(),
-      endTime: newEndTime.toISOString()
+      startTime: newStartTime.toISOString()
     }).subscribe({
       error: () => this.loadAppointments()
     });

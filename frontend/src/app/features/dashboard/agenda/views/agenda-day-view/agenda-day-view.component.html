@@ -33,16 +33,15 @@
 
       <!-- Celdas de Fondo Estáticas -->
       @for (prof of professionals; track prof.id; let colIndex = $index) {
-        <div class="border-r border-b border-white/[0.02] relative group"
+        <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
              [style.grid-row]="rowIndex + 2"
              [style.grid-column]="colIndex + 2"
-             (click)="addAppointment.emit({ professional: prof, time: slot })">
+             [class.hover:bg-primary/10]="!isDragging()"
+             (dblclick)="addAppointment.emit({ professional: prof, time: slot })">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {
             <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>
-            <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           } @else {
-            <!-- Zona NO disponible (Se resalta más al draggear) -->
             <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="isDragging()"></div>
           }
           
@@ -55,7 +54,9 @@
 
     <!-- Capas de Arrastre -->
     @for (prof of professionals; track prof.id; let colIndex = $index) {
-      <div class="relative"
+      <div class="relative transition-colors duration-300"
+           [class.pointer-events-none]="!isDragging()"
+           [class.pointer-events-auto]="isDragging()"
            [style.grid-column]="colIndex + 2"
            [style.grid-row]="'2 / span ' + timeSlots().length"
            cdkDropList
