@@ -5,6 +5,7 @@ import { format, startOfDay } from 'date-fns';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
+import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
 
 interface AppointmentUI extends Appointment {
@@ -30,6 +31,7 @@ interface AppointmentUI extends Appointment {
 export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   private appointmentsService = inject(AppointmentsService);
   private userConfig = inject(UserConfigurationService);
+  private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
 
   @Input({ required: true }) date!: Date;
@@ -40,8 +42,22 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Output() editAppointment = new EventEmitter<Appointment>();
 
   rawAppointments = signal<Appointment[]>([]);
-  timeSlots = signal<string[]>([]);
   private zoomLevel = this.userConfig.agendaZoom;
+  private startHour = this.userConfig.agendaStartHour;
+  private endHour = this.userConfig.agendaEndHour;
+  
+  timeSlots = computed(() => {
+    const start = this.startHour();
+    const end = this.endHour();
+    const slots: string[] = [];
+    for (let hour = start; hour < end; hour++) {
+      for (let min of ['00', '15', '30', '45']) {
+        slots.push(`${hour.toString().padStart(2, '0')}:${min}`);
+      }
+    }
+    return slots;
+  });
+
   containerHeight = signal(0);
   isLoading = signal(false);
   isDragging = signal(false);
@@ -80,6 +96,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   });
 
   private dayChangeTimeout: any;
+  private originalDate: Date | null = null;
   @Output() dateChange = new EventEmitter<Date>();
 
   // Maps para optimización
@@ -111,9 +128,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  constructor() {
-    this.generateTimeSlots();
-  }
+  constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['date'] || changes['branchId'] || changes['professionals']) {
@@ -122,15 +137,6 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  generateTimeSlots(): void {
-    const slots: string[] = [];
-    for (let hour = 8; hour < 21; hour++) {
-      for (let min of ['00', '15', '30', '45']) {
-        slots.push(`${hour.toString().padStart(2, '0')}:${min}`);
-      }
-    }
-    this.timeSlots.set(slots);
-  }
 
   computeGridStatus(): void {
     const avail: Record<string, boolean> = {};
@@ -189,6 +195,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   onDragStarted(app: AppointmentUI): void {
     this.isDragging.set(true);
     this.draggedApp.set(app);
+    this.originalDate = new Date(this.date);
   }
 
   onDragEnded(): void {
@@ -278,7 +285,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const preview = this.dropPreview();
     
     if (!preview) {
-      this.refreshUI(app);
+      this.handleFailedDrop(app);
       this.finishDrag();
       return;
     }
@@ -288,7 +295,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const newTimeStr = this.timeSlots()[newIndex];
 
     if (!this.availabilityMap()[`${newProfessionalId}-${newTimeStr}`]) {
-      this.refreshUI(app);
+      this.handleFailedDrop(app);
       this.finishDrag();
       return;
     }
@@ -322,7 +329,16 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.isDragging.set(false);
     this.draggedApp.set(null);
     this.dropPreview.set(null);
+    this.originalDate = null;
     this.clearDayChangeTimer();
+  }
+
+  private handleFailedDrop(app: Appointment): void {
+    this.snackbarService.warning('El profesional no está disponible en este horario o zona.');
+    if (this.originalDate && this.originalDate.getTime() !== this.date.getTime()) {
+      this.dateChange.emit(this.originalDate);
+    }
+    this.refreshUI(app);
   }
 
   private refreshUI(app: Appointment): void {

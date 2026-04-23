@@ -43,3 +43,4 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [ ] **Generación Automática de Servicios**: Al registrar un nuevo Tenant (por ej. una barbería), que se creen automáticamente servicios por defecto (Corte, Barba, etc.) para que el usuario no tenga que empezar desde cero.
 - [ ] **Turnos Genéricos**: Permitir crear Turnos (Appointments) en el sistema donde no sea estrictamente obligatorio asignar un "Servicio", dando más flexibilidad a recepcionistas para bloqueos de agenda rápidos.
 - [ ] **Sobreturnos (Overbooking manual)**: Capacidad para que un administrador o recepcionista pueda forzar un turno en un horario que ya está ocupado, solapando citas intencionalmente.
+- [ ] **Bloqueos de Agenda por Horario**: Funcionalidad para que un profesional o administrador pueda bloquear franjas horarias específicas de forma rápida directamente desde la vista de agenda (excepciones puntuales de disponibilidad).

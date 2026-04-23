@@ -12,6 +12,7 @@ import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
 import { AgendaViewType } from './agenda.types';
 import { Appointment } from '@services/appointments.service';
+import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
 
 @Component({
   selector: 'app-agenda',
@@ -20,7 +21,8 @@ import { Appointment } from '@services/appointments.service';
     CommonModule, 
     FormsModule, 
     AgendaDayViewComponent, 
-    AgendaWeekViewComponent
+    AgendaWeekViewComponent,
+    AgendaSettingsComponent
   ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
@@ -137,5 +139,11 @@ export class AgendaComponent implements OnInit {
     // tal vez necesitemos un Subject de refresh o simplemente recrear la referencia si queremos forzar.
     // Por ahora, al cerrar el modal, las vistas deberían refrescarse si implementamos un trigger.
     this.selectedDate.set(new Date(this.selectedDate())); // Trigger re-render
+  }
+
+  openSettings(): void {
+    this.modal.open(AgendaSettingsComponent, {
+      width: '450px'
+    });
   }
 }
