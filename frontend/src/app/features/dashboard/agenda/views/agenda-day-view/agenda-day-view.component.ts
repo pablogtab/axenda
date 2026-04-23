@@ -61,6 +61,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   containerHeight = signal(0);
   isLoading = signal(false);
   isDragging = signal(false);
+  hoveredSlot = signal<string | null>(null);
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ professionalId: string, top: number, height: number } | null>(null);
 
@@ -225,6 +226,14 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
       this.dropPreview.set(newPreview);
     }
+  }
+
+  onCellEnter(slot: string): void {
+    this.hoveredSlot.set(slot);
+  }
+
+  onCellLeave(): void {
+    this.hoveredSlot.set(null);
   }
 
   onZoneEnter(direction: 'prev' | 'next'): void {

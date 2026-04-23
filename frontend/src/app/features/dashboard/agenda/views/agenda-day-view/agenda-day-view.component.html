@@ -68,13 +68,18 @@
     @for (slot of timeSlots(); track slot; let rowIndex = $index) {
       
       <!-- Label de Hora (Sticky Left) -->
-      <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-2 items-center text-[11px] font-mono text-text-dim z-20 cursor-ns-resize"
+      <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-3 items-center text-[11px] font-mono text-text-dim z-20 cursor-ns-resize transition-all duration-200"
            [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
+           [class.!text-primary]="hoveredSlot() === slot"
+           [class.!bg-white/5]="hoveredSlot() === slot"
+           [class.!font-bold]="hoveredSlot() === slot"
            (wheel)="onMouseWheel($event)">
         @if (slot.endsWith(':00')) {
-          <span class="text-text-main font-bold">{{ slot }}</span>
+          <span class="transition-colors" [class.text-primary]="hoveredSlot() === slot" [class.font-bold]="!slot.endsWith(':00') || hoveredSlot() === slot">{{ slot }}</span>
         } @else if (slot.endsWith(':30')) {
-          <span class="opacity-30">-</span>
+          <span class="opacity-30" [class.opacity-100]="hoveredSlot() === slot">-</span>
+        } @else {
+          <span class="opacity-0 transition-all" [class.opacity-40]="hoveredSlot() === slot">·</span>
         }
       </div>
 
@@ -84,6 +89,8 @@
              [style.grid-row]="rowIndex + 2"
              [style.grid-column]="colIndex + 2"
              [class.hover:bg-primary/10]="!isDragging()"
+             (mouseenter)="onCellEnter(slot)"
+             (mouseleave)="onCellLeave()"
              (dblclick)="addAppointment.emit({ professional: prof, time: slot })">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {
