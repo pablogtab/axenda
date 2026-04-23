@@ -74,6 +74,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ dayIndex: number, top: number, height: number } | null>(null);
 
+  // Picker de profesionales
+  pendingSelection = signal<{
+    type: 'ADD' | 'MOVE',
+    data: any,
+    date?: Date,
+    time?: string
+  } | null>(null);
+
   private dayChangeTimeout: any;
   private originalDate: Date | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -96,12 +104,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const height = this.slotHeight();
     const slots = this.timeSlots();
     const days = this.weekDaysSignal();
-    const prof = this.selectedProfessional();
+    const profs = this.professionalsSignal();
 
-    if (!prof) return [];
+    if (profs.length === 0) return [];
+
+    const profIds = new Set(profs.map(p => p.id));
 
     return this.rawAppointments()
-      .filter(app => app.professional.id === prof.id)
+      .filter(app => profIds.has(app.professional.id))
       .map(app => {
         const appDate = new Date(app.startTime);
         const startStr = format(appDate, 'HH:mm');
@@ -163,8 +173,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   computeGridStatus(): void {
-    const prof = this.selectedProfessional();
-    if (!prof) return;
+    const profs = this.professionalsSignal();
+    if (profs.length === 0) return;
 
     const avail: Record<string, boolean> = {};
     const block: Record<string, boolean> = {};
@@ -172,8 +182,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.weekDaysSignal().forEach((day, dayIndex) => {
       this.timeSlots().forEach(slot => {
         const key = `${dayIndex}-${slot}`;
-        avail[key] = this.isProfessionalAvailableAt(prof, day, slot);
-        block[key] = this.isProfessionalBlockedAt(prof, day, slot);
+        // Si hay varios profesionales, mostramos disponible si AL MENOS UNO lo está
+        avail[key] = profs.some(p => this.isProfessionalAvailableAt(p, day, slot));
+        // Bloqueado solo si todos los seleccionados están bloqueados (opcional, por ahora lo dejamos así)
+        block[key] = profs.length === 1 ? this.isProfessionalBlockedAt(profs[0], day, slot) : false;
       });
     });
 
@@ -276,7 +288,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Usamos el dayIndex de la previsualización, que es el más preciso
     const targetDayIndex = preview.dayIndex;
     const newTimeStr = this.timeSlots()[Math.round(preview.top / this.slotHeight())];
     const newDate = this.weekDaysSignal()[targetDayIndex];
@@ -291,23 +302,69 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const newStartTime = createLocalDate(toLocalDateStr(newDate), newTimeStr);
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
+    const moveData = {
+      app,
+      newStartTime,
+      newEndTime
+    };
+
+    if (this.professionalsSignal().length > 1) {
+      this.pendingSelection.set({
+        type: 'MOVE',
+        data: moveData
+      });
+    } else {
+      this.executeMove(app, newStartTime, newEndTime, this.professionalsSignal()[0]);
+    }
+
+    this.finishDrag();
+  }
+
+  executeMove(app: Appointment, newStartTime: Date, newEndTime: Date, targetProf: Professional): void {
     // Actualización optimista local
     this.rawAppointments.update(apps => apps.map(a =>
       a.id === app.id ? {
         ...a,
         startTime: newStartTime.toISOString(),
-        endTime: newEndTime.toISOString()
+        endTime: newEndTime.toISOString(),
+        professional: {
+          id: targetProf.id,
+          firstName: targetProf.firstName,
+          lastName: targetProf.lastName,
+          color: targetProf.color || '#6366f1'
+        }
       } : a
     ));
 
     this.appointmentsService.update(app.id, {
       startTime: newStartTime.toISOString(),
-      professionalId: this.selectedProfessional()?.id
+      professionalId: targetProf.id
     }).subscribe({
       error: () => this.loadAppointments()
     });
+  }
 
-    this.finishDrag();
+  selectProfessional(prof: Professional): void {
+    const pending = this.pendingSelection();
+    if (!pending) return;
+
+    if (pending.type === 'MOVE') {
+      const { app, newStartTime, newEndTime } = pending.data;
+      this.executeMove(app, newStartTime, newEndTime, prof);
+    } else if (pending.type === 'ADD') {
+      this.addAppointment.emit({
+        professional: prof,
+        time: pending.time!,
+        date: pending.date
+      });
+    }
+
+    this.pendingSelection.set(null);
+  }
+
+  cancelSelection(): void {
+    this.pendingSelection.set(null);
+    this.loadAppointments(); // Recargar por si hubo cambios optimistas que hay que revertir
   }
 
   private finishDrag(): void {
@@ -369,9 +426,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onAdd(day: Date, time: string): void {
-    const prof = this.selectedProfessional();
-    if (prof) {
-      this.addAppointment.emit({ professional: prof, time, date: day });
+    const profs = this.professionalsSignal();
+    if (profs.length === 1) {
+      this.addAppointment.emit({ professional: profs[0], time, date: day });
+    } else if (profs.length > 1) {
+      this.pendingSelection.set({
+        type: 'ADD',
+        data: {},
+        date: day,
+        time: time
+      });
     }
   }
 }

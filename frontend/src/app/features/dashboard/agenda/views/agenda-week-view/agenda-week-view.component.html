@@ -89,7 +89,7 @@
                (dblclick)="onAdd(day, slot)">
             
             @if (availabilityMap()[dayIndex + '-' + slot]) {
-              <div class="absolute inset-0" [style.background-color]="(selectedProfessional()?.color || '#6366f1') + '08'"></div>
+              <div class="absolute inset-0" [style.background-color]="(professionalsSignal().length === 1 ? (selectedProfessional()?.color || '#6366f1') : '#6366f1') + '08'"></div>
             } @else {
               <div class="absolute inset-0 bg-black/20"></div>
             }
@@ -163,6 +163,15 @@
               <div *cdkDragPlaceholder class="opacity-0"></div>
 
               <div class="flex flex-col h-full gap-0.5 px-1 pointer-events-none">
+                <!-- Badge de Profesional -->
+                @if (professionalsSignal().length > 1) {
+                  <div class="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white border border-white/20 shadow-lg z-20"
+                       [style.background-color]="app.professional.color || '#6366f1'"
+                       [attr.title]="app.professional.firstName + ' ' + app.professional.lastName">
+                    {{ app.professional.firstName[0] }}{{ app.professional.lastName[0] }}
+                  </div>
+                }
+
                 <span class="text-[9px] font-bold uppercase tracking-wider opacity-60 truncate">
                   {{ app.service.name }}
                 </span>
@@ -182,4 +191,39 @@
       }
     </div>
   </div>
+
+  <!-- Modal de Selección de Profesional -->
+  @if (pendingSelection(); as pending) {
+    <div class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div class="bg-bg-secondary border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-sm flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+        <div class="flex flex-col gap-1">
+          <h3 class="text-lg font-bold text-text-main">Seleccionar Profesional</h3>
+          <p class="text-xs text-text-dim">
+            {{ pending.type === 'MOVE' ? '¿A qué profesional quieres asignar este turno?' : 'Elige un profesional para el nuevo turno' }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 max-h-[300px] overflow-auto pr-2 custom-scrollbar">
+          @for (prof of professionalsSignal(); track prof.id) {
+            <button (click)="selectProfessional(prof)"
+                    class="flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:bg-white/5 transition-all text-left group">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg transition-transform group-hover:scale-110"
+                   [style.background-color]="prof.color || '#6366f1'">
+                {{ prof.firstName[0] }}{{ prof.lastName[0] }}
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-text-main">{{ prof.firstName }} {{ prof.lastName }}</span>
+                <span class="text-[10px] text-text-dim uppercase tracking-wider">Profesional</span>
+              </div>
+            </button>
+          }
+        </div>
+
+        <button (click)="cancelSelection()" 
+                class="mt-2 py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-xs font-bold text-text-dim uppercase tracking-widest transition-all">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  }
 </div>
