@@ -14,10 +14,18 @@ export class UserConfigurationService {
   private _agendaStartHour = signal<number>(this.storage.get('agenda_start_hour', 8));
   private _agendaEndHour = signal<number>(this.storage.get('agenda_end_hour', 21));
 
+  // Filtros de la agenda
+  private _agendaSelectedBranchId = signal<string | null>(this.storage.get('agenda_selected_branch_id', null));
+  private _agendaSelectedProfessionalIds = signal<string[]>(this.storage.get('agenda_selected_professional_ids', []));
+  private _agendaView = signal<'day' | 'week' | 'month'>(this.storage.get('agenda_view', 'day'));
+
   // Exponemos como readonly para fomentar el uso de setters
   agendaZoom = this._agendaZoom.asReadonly();
   agendaStartHour = this._agendaStartHour.asReadonly();
   agendaEndHour = this._agendaEndHour.asReadonly();
+  agendaSelectedBranchId = this._agendaSelectedBranchId.asReadonly();
+  agendaSelectedProfessionalIds = this._agendaSelectedProfessionalIds.asReadonly();
+  agendaView = this._agendaView.asReadonly();
 
   constructor() {
     // Efecto para persistir automáticamente cualquier cambio en la configuración
@@ -25,6 +33,9 @@ export class UserConfigurationService {
       this.storage.set('agenda_zoom_level', this._agendaZoom());
       this.storage.set('agenda_start_hour', this._agendaStartHour());
       this.storage.set('agenda_end_hour', this._agendaEndHour());
+      this.storage.set('agenda_selected_branch_id', this._agendaSelectedBranchId());
+      this.storage.set('agenda_selected_professional_ids', this._agendaSelectedProfessionalIds());
+      this.storage.set('agenda_view', this._agendaView());
     });
   }
 
@@ -42,5 +53,17 @@ export class UserConfigurationService {
     
     this._agendaStartHour.set(start);
     this._agendaEndHour.set(end);
+  }
+
+  updateAgendaBranchId(id: string | null): void {
+    this._agendaSelectedBranchId.set(id);
+  }
+
+  updateAgendaProfessionalIds(ids: string[]): void {
+    this._agendaSelectedProfessionalIds.set(ids);
+  }
+
+  updateAgendaView(view: 'day' | 'week' | 'month'): void {
+    this._agendaView.set(view);
   }
 }

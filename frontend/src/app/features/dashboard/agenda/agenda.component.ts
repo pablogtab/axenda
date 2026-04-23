@@ -33,27 +33,61 @@ export class AgendaComponent implements OnInit {
   private userConfig = inject(UserConfigurationService);
 
   constructor() {
+    // Sincronizar cambios de vuelta a la configuración de usuario para persistencia
     effect(() => {
-      console.log('[AgendaComponent] ID Profesional seleccionado:', this.selectedProfessionalId());
+      this.userConfig.updateAgendaBranchId(this.selectedBranchId());
+    });
+    effect(() => {
+      this.userConfig.updateAgendaProfessionalIds(this.selectedProfessionalIds());
+    });
+    effect(() => {
+      this.userConfig.updateAgendaView(this.selectedView());
+    });
+
+    effect(() => {
+      console.log('[AgendaComponent] ID Profesional seleccionado:', this.selectedProfessionalIds());
       console.log('[AgendaComponent] Profesionales enviados a las vistas:', this.activeProfessionals());
     });
   }
 
-  // Estado Global de la Agenda
+  // Estado Global de la Agenda (Inicializado desde la configuración persistida)
   selectedDate = signal<Date>(startOfDay(new Date()));
-  selectedBranchId = signal<string | null>(null);
-  selectedView = signal<AgendaViewType>('day');
-  selectedProfessionalId = signal<string | 'all'>('all');
+  selectedBranchId = signal<string | null>(this.userConfig.agendaSelectedBranchId());
+  selectedView = signal<AgendaViewType>(this.userConfig.agendaView());
+  selectedProfessionalIds = signal<string[]>(this.userConfig.agendaSelectedProfessionalIds());
   
   professionals = signal<Professional[]>([]);
   branches = signal<Branch[]>([]);
   isLoading = signal(true);
+  showFilters = signal(false);
+
+  selectedProfessionalName = computed(() => {
+    const ids = this.selectedProfessionalIds();
+    const all = this.professionals();
+    if (ids.length === 0 || ids.length === all.length) return 'Todos los Profesionales';
+    if (ids.length === 1) {
+      const prof = all.find(p => p.id === ids[0]);
+      return prof ? `${prof.firstName} ${prof.lastName}` : '1 Profesional';
+    }
+    return `${ids.length} Profesionales`;
+  });
+
+  selectedBranchName = computed(() => {
+    const id = this.selectedBranchId();
+    const branch = this.branches().find(b => b.id === id);
+    return branch ? branch.name : 'Seleccionar Sucursal';
+  });
 
   activeProfessionals = computed(() => {
-    const id = this.selectedProfessionalId();
+    const ids = this.selectedProfessionalIds();
     const all = this.professionals();
-    if (id === 'all') return all;
-    return all.filter(p => p.id === id);
+    if (ids.length === 0) return all;
+    return all.filter(p => ids.includes(p.id));
+  });
+
+  isAllProfessionalsSelected = computed(() => {
+    return this.selectedProfessionalIds().length === 0 || 
+           this.selectedProfessionalIds().length === this.professionals().length;
   });
 
   weekRange = computed(() => {
@@ -93,8 +127,12 @@ export class AgendaComponent implements OnInit {
         const activeBranches = branches.filter(b => b.active);
         this.branches.set(activeBranches);
         
-        if (activeBranches.length > 0 && !this.selectedBranchId()) {
-          this.selectedBranchId.set(activeBranches[0].id);
+        if (activeBranches.length > 0) {
+          const currentId = this.selectedBranchId();
+          const exists = activeBranches.some(b => b.id === currentId);
+          if (!exists) {
+            this.selectedBranchId.set(activeBranches[0].id);
+          }
         }
         
         this.loadProfessionals();
@@ -131,11 +169,47 @@ export class AgendaComponent implements OnInit {
 
   onBranchChange(id: string): void {
     this.selectedBranchId.set(id);
+    this.selectedProfessionalIds.set([]); // Al cambiar de sucursal, reseteamos los filtros de profesionales
     this.loadProfessionals();
   }
 
   setView(view: AgendaViewType): void {
     this.selectedView.set(view);
+  }
+
+  toggleProfessional(id: string): void {
+    const current = this.selectedProfessionalIds();
+    if (current.includes(id)) {
+      this.selectedProfessionalIds.set(current.filter(i => i !== id));
+    } else {
+      this.selectedProfessionalIds.set([...current, id]);
+    }
+  }
+
+  toggleAllProfessionals(): void {
+    if (this.isAllProfessionalsSelected()) {
+      // If all are selected (or none explicitly, which means all), we clear to "none" but in our logic none = all.
+      // Wait, if I want to "deselect all", I should probably have a state where nothing is visible?
+      // Usually "Todos" means showing all.
+      this.selectedProfessionalIds.set(this.professionals().map(p => p.id));
+    } else {
+      this.selectedProfessionalIds.set([]); // Logic: empty = all
+    }
+  }
+  
+  // Re-evaluating the logic: 
+  // Empty array = show all.
+  // Full array = show all.
+  // This might be confusing. Let's make it explicit:
+  // selectedProfessionalIds should always contain what is checked.
+  // On init, it should be empty (all).
+  
+  selectOnlyProfessional(id: string): void {
+    this.selectedProfessionalIds.set([id]);
+  }
+
+  selectAllProfessionals(): void {
+    this.selectedProfessionalIds.set([]);
   }
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────

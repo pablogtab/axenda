@@ -61,3 +61,32 @@
   z-index: 1000 !important;
   opacity: 0.9;
 }
+
+/* Animaciones para el dropdown */
+.animate-in {
+  animation-duration: 200ms;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.zoom-in-95 {
+  animation-name: zoomIn95;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn95 {
+  from { transform: scale(0.95); }
+  to { transform: scale(1); }
+}
+
+/* Estilo para los botones dentro del dropdown */
+.group\/item:hover div:first-child {
+  border-color: rgba(99, 102, 241, 0.4);
+}

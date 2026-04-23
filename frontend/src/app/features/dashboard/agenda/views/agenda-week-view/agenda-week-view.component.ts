@@ -74,13 +74,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ dayIndex: number, top: number, height: number } | null>(null);
 
-  // Picker de profesionales
   pendingSelection = signal<{
     type: 'ADD' | 'MOVE',
     data: any,
     date?: Date,
     time?: string
   } | null>(null);
+
+  selectedProfessionalId = signal<string | null>(null);
 
   private dayChangeTimeout: any;
   private originalDate: Date | null = null;
@@ -311,8 +312,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     if (this.professionalsSignal().length > 1) {
       this.pendingSelection.set({
         type: 'MOVE',
-        data: moveData
+        data: { ...moveData, originalProfessionalId: app.professional.id },
+        date: newDate,
+        time: newTimeStr
       });
+      
+      // Pre-seleccionar al original si está disponible
+      const originalProf = this.professionalsSignal().find(p => p.id === app.professional.id);
+      if (originalProf && this.isProfessionalAvailableAt(originalProf, newDate, newTimeStr)) {
+        this.selectedProfessionalId.set(originalProf.id);
+      }
     } else {
       this.executeMove(app, newStartTime, newEndTime, this.professionalsSignal()[0]);
     }
@@ -345,8 +354,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   selectProfessional(prof: Professional): void {
+    this.selectedProfessionalId.set(prof.id);
+  }
+
+  confirmSelection(): void {
     const pending = this.pendingSelection();
-    if (!pending) return;
+    const profId = this.selectedProfessionalId();
+    if (!pending || !profId) return;
+
+    const prof = this.professionalsSignal().find(p => p.id === profId);
+    if (!prof) return;
 
     if (pending.type === 'MOVE') {
       const { app, newStartTime, newEndTime } = pending.data;
@@ -360,11 +377,18 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.pendingSelection.set(null);
+    this.selectedProfessionalId.set(null);
   }
 
   cancelSelection(): void {
+    const pending = this.pendingSelection();
+    if (pending && pending.type === 'MOVE') {
+      this.refreshUI(pending.data.app);
+    }
+    
     this.pendingSelection.set(null);
-    this.loadAppointments(); // Recargar por si hubo cambios optimistas que hay que revertir
+    this.selectedProfessionalId.set(null);
+    this.loadAppointments();
   }
 
   private finishDrag(): void {
