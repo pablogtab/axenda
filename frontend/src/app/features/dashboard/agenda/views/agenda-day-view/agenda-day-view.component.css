@@ -1,0 +1,57 @@
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.bg-stripe-pattern {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: grabbing;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0 !important;
+}
+
+.cdk-drag-animating {
+  transition: none !important;
+}
+
+.group\/appt:hover {
+  filter: brightness(1.2);
+  z-index: 30;
+}
+
+.group\/appt {
+  transition: 
+    top 0.2s cubic-bezier(0, 0, 0.2, 1), 
+    left 0.2s cubic-bezier(0, 0, 0.2, 1),
+    filter 0.2s ease, 
+    box-shadow 0.2s ease, 
+    background-color 0.2s ease !important;
+}
+
+.cdk-drag-dragging {
+  transition: none !important;
+  z-index: 1000 !important;
+  opacity: 0.9;
+}
