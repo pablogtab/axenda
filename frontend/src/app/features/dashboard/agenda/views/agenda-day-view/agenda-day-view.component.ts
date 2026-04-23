@@ -184,13 +184,21 @@ export class AgendaDayViewComponent implements OnChanges {
 
   onZoneEnter(direction: 'prev' | 'next'): void {
     if (!this.isDragging()) return;
-    
     this.clearDayChangeTimer();
+    this.startDayChangeTimer(direction);
+  }
+
+  private startDayChangeTimer(direction: 'prev' | 'next'): void {
     this.dayChangeTimeout = setTimeout(() => {
+      if (!this.isDragging()) return;
+
       const newDate = new Date(this.date);
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
       this.dateChange.emit(newDate);
-    }, 800); // 800ms de hover para cambiar de día
+      
+      // Reiniciar para permitir cambio continuo (scroll temporal)
+      this.startDayChangeTimer(direction);
+    }, 800);
   }
 
   onZoneLeave(): void {
