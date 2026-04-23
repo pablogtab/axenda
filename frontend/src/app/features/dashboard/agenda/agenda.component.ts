@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
@@ -60,6 +60,13 @@ export class AgendaComponent implements OnInit {
   branches = signal<Branch[]>([]);
   isLoading = signal(true);
   showFilters = signal(false);
+
+  @HostListener('document:keydown.escape', ['$event'])
+  handleEscape(event: any) {
+    if (this.showFilters()) {
+      this.showFilters.set(false);
+    }
+  }
 
   selectedProfessionalName = computed(() => {
     const ids = this.selectedProfessionalIds();

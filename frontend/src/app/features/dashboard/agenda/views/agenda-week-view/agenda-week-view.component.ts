@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, addDays, startOfWeek, endOfWeek, startOfDay } from 'date-fns';
@@ -86,6 +86,31 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private dayChangeTimeout: any;
   private originalDate: Date | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private dragCancelled = false;
+
+  @HostListener('document:keydown.escape', ['$event'])
+  handleEscape(event: any) {
+    if (this.pendingSelection()) {
+      this.cancelSelection();
+    } else if (this.isDragging()) {
+      this.dragCancelled = true;
+      // Despachamos un evento de mouseup para forzar a CDK a terminar el arrastre
+      document.dispatchEvent(new MouseEvent('mouseup'));
+
+      const app = this.draggedApp();
+
+      // Si la semana cambió durante el arrastre, revertimos a la original
+      if (this.originalDate && this.originalDate.getTime() !== this.weekDays[0]?.getTime()) {
+        this.dateChange.emit(this.originalDate);
+      }
+
+      // Usamos un pequeño delay para asegurar que CDK termine su ciclo
+      setTimeout(() => {
+        this.finishDrag();
+        if (app) this.refreshUI(app);
+      }, 0);
+    }
+  }
 
   slotHeight = computed(() => {
     const h = this.containerHeight();
@@ -249,15 +274,15 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.isDragging.set(true);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.weekDays[0]);
+    this.dragCancelled = false;
   }
 
   onDragEnded(): void {
+    // Delay para permitir que onDrop lea el preview antes de limpiar
+    // y evitar errores de ExpressionChangedAfterItHasBeenChecked
     setTimeout(() => {
       if (this.isDragging()) {
-        this.isDragging.set(false);
-        this.draggedApp.set(null);
-        this.dropPreview.set(null);
-        this.clearDayChangeTimer();
+        this.finishDrag();
       }
     }, 100);
   }
@@ -280,6 +305,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onDrop(event: CdkDragDrop<any[]>, dropListDayIndex: number): void {
+    if (this.dragCancelled) {
+      this.dragCancelled = false;
+      return;
+    }
     const app = event.item.data;
     const preview = this.dropPreview();
 
@@ -345,6 +374,9 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       } : a
     ));
 
+    // Aplicamos el efecto de desaparición/aparición para forzar a CDK a resetearse
+    this.refreshUI(app);
+
     this.appointmentsService.update(app.id, {
       startTime: newStartTime.toISOString(),
       professionalId: targetProf.id
@@ -392,11 +424,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private finishDrag(): void {
-    this.isDragging.set(false);
-    this.draggedApp.set(null);
-    this.dropPreview.set(null);
-    this.originalDate = null;
-    this.clearDayChangeTimer();
+    // Usamos setTimeout para sacar la actualización del ciclo actual de detección
+    // de cambios y evitar conflictos con las manipulaciones del DOM de CDK,
+    // previniendo el error ExpressionChangedAfterItHasBeenCheckedError.
+    setTimeout(() => {
+      this.isDragging.set(false);
+      this.draggedApp.set(null);
+      this.dropPreview.set(null);
+      this.originalDate = null;
+      this.clearDayChangeTimer();
+    }, 0);
   }
 
   private handleFailedDrop(app: Appointment): void {
