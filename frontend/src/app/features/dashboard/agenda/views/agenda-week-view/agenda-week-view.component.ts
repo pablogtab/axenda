@@ -44,14 +44,24 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   @Output() editAppointment = new EventEmitter<Appointment>();
   @Output() dateChange = new EventEmitter<Date>();
 
-  selectedProfessionalId = signal<string | null>(null);
   rawAppointments = signal<Appointment[]>([]);
+  professionalsSignal = signal<Professional[]>([]);
   
   private zoomLevel = this.userConfig.agendaZoom;
   private startHour = this.userConfig.agendaStartHour;
   private endHour = this.userConfig.agendaEndHour;
   
+  constructor() {
+    effect(() => {
+      console.log('[AgendaWeek] Profesionales activos:', this.professionalsSignal());
+      console.log('[AgendaWeek] Profesional seleccionado:', this.selectedProfessional());
+    });
+  }
+
   weekDays = computed(() => {
+    // Para que sea reactivo al cambio de date, necesitamos que date sea una señal o 
+    // forzar la reevaluación. Por ahora usamos la señal de profesionales como disparador
+    // o simplemente confiamos en ngOnChanges para las tareas pesadas.
     const start = startOfWeek(this.date, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   });
@@ -90,9 +100,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   });
 
   selectedProfessional = computed(() => {
-    const id = this.selectedProfessionalId();
-    if (!id) return this.professionals[0] || null;
-    return this.professionals.find(p => p.id === id) || this.professionals[0] || null;
+    return this.professionalsSignal()[0] || null;
   });
 
   appointments = computed(() => {
@@ -144,10 +152,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       }
     });
     this.resizeObserver.observe(this.el.nativeElement);
-
-    if (this.professionals.length > 0 && !this.selectedProfessionalId()) {
-      this.selectedProfessionalId.set(this.professionals[0].id);
-    }
   }
 
   ngOnDestroy(): void {
@@ -157,10 +161,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['professionals']) {
+      console.log('[AgendaWeek] Input professionals cambió:', this.professionals);
+      this.professionalsSignal.set(this.professionals);
+    }
     if (changes['date'] || changes['branchId'] || changes['professionals']) {
-      if (this.professionals.length > 0 && !this.selectedProfessionalId()) {
-        this.selectedProfessionalId.set(this.professionals[0].id);
-      }
       this.loadAppointments();
       this.computeGridStatus();
     }
@@ -370,11 +375,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.1 : 0.1;
     this.userConfig.updateAgendaZoom(this.zoomLevel() + delta);
-  }
-
-  selectProfessional(id: string): void {
-    this.selectedProfessionalId.set(id);
-    this.computeGridStatus();
   }
 
   onAdd(day: Date, time: string): void {

@@ -34,6 +34,14 @@
     </div>
 
     <div class="flex items-center gap-4">
+      <select [ngModel]="selectedProfessionalId()" (ngModelChange)="selectedProfessionalId.set($event)" 
+              class="bg-white/5 border border-white/10 text-text-main rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none min-w-[150px]">
+        <option value="all">👥 Todos los Profesionales</option>
+        @for (prof of professionals(); track prof.id) {
+          <option [value]="prof.id">👤 {{ prof.firstName }} {{ prof.lastName }}</option>
+        }
+      </select>
+
       <select [ngModel]="selectedBranchId()" (ngModelChange)="onBranchChange($event)" 
               class="bg-white/5 border border-white/10 text-text-main rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none">
         @for (branch of branches(); track branch.id) {
@@ -45,7 +53,7 @@
               title="Configuración de Agenda">
         <span class="text-xl">⚙️</span>
       </button>
-      <button (click)="onAddAppointment({ professional: professionals()[0], time: '09:00' })" 
+      <button (click)="onAddAppointment({ professional: activeProfessionals()[0], time: '09:00' })" 
               class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
         + Nuevo Turno
       </button>
@@ -65,7 +73,7 @@
         <app-agenda-day-view 
           [date]="selectedDate()"
           [branchId]="selectedBranchId()"
-          [professionals]="professionals()"
+          [professionals]="activeProfessionals()"
           (addAppointment)="onAddAppointment($event)"
           (editAppointment)="onEditAppointment($event)"
           (dateChange)="selectedDate.set($event)"
@@ -75,7 +83,7 @@
         <app-agenda-week-view
           [date]="selectedDate()"
           [branchId]="selectedBranchId()"
-          [professionals]="professionals()"
+          [professionals]="activeProfessionals()"
           (addAppointment)="onAddAppointment($event)"
           (editAppointment)="onEditAppointment($event)"
         ></app-agenda-week-view>

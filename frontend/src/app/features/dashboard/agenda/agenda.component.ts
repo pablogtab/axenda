@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
+import { UserConfigurationService } from '@services/user-configuration.service';
 import { format, addDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
@@ -29,15 +30,31 @@ export class AgendaComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
   private branchesService = inject(BranchesService);
   private modal = inject(ModalService);
+  private userConfig = inject(UserConfigurationService);
+
+  constructor() {
+    effect(() => {
+      console.log('[AgendaComponent] ID Profesional seleccionado:', this.selectedProfessionalId());
+      console.log('[AgendaComponent] Profesionales enviados a las vistas:', this.activeProfessionals());
+    });
+  }
 
   // Estado Global de la Agenda
   selectedDate = signal<Date>(startOfDay(new Date()));
   selectedBranchId = signal<string | null>(null);
   selectedView = signal<AgendaViewType>('day');
+  selectedProfessionalId = signal<string | 'all'>('all');
   
   professionals = signal<Professional[]>([]);
   branches = signal<Branch[]>([]);
   isLoading = signal(true);
+
+  activeProfessionals = computed(() => {
+    const id = this.selectedProfessionalId();
+    const all = this.professionals();
+    if (id === 'all') return all;
+    return all.filter(p => p.id === id);
+  });
 
   formattedDate = computed(() => {
     return format(this.selectedDate(), "EEEE d 'de' MMMM", { locale: es });
