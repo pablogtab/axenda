@@ -76,6 +76,8 @@
           [date]="selectedDate()"
           [branchId]="selectedBranchId()"
           [professionals]="professionals()"
+          (addAppointment)="onAddAppointment($event)"
+          (editAppointment)="onEditAppointment($event)"
         ></app-agenda-week-view>
       }
     }

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
-import { forkJoin } from 'rxjs';
 import { format, addDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
@@ -21,8 +20,7 @@ import { AgendaSettingsComponent } from './components/agenda-settings/agenda-set
     CommonModule, 
     FormsModule, 
     AgendaDayViewComponent, 
-    AgendaWeekViewComponent,
-    AgendaSettingsComponent
+    AgendaWeekViewComponent
   ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
@@ -102,12 +100,13 @@ export class AgendaComponent implements OnInit {
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────
 
-  onAddAppointment(event: { professional: Professional, time: string }): void {
+  onAddAppointment(event: { professional: Professional, time: string, date?: Date }): void {
+    const appointmentDate = event.date || this.selectedDate();
     const dialogRef = this.modal.open(AppointmentFormComponent, {
       data: {
         professionalId: event.professional.id,
         startTime: event.time,
-        date: format(this.selectedDate(), 'yyyy-MM-dd'),
+        date: format(appointmentDate, 'yyyy-MM-dd'),
         branchId: this.selectedBranchId()
       },
       width: '500px'

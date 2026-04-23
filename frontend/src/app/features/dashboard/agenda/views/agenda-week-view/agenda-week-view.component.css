@@ -1,0 +1,132 @@
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.bg-stripe-pattern {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: grabbing;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0 !important;
+}
+
+.cdk-drag-animating {
+  transition: none !important;
+}
+
+.group\/appt:hover {
+  filter: brightness(1.2);
+  z-index: 30;
+}
+
+.group\/appt {
+  transition: 
+    top 0.2s cubic-bezier(0, 0, 0.2, 1), 
+    left 0.2s cubic-bezier(0, 0, 0.2, 1),
+    filter 0.2s ease, 
+    box-shadow 0.2s ease, 
+    background-color 0.2s ease !important;
+}
+
+.cdk-drag-dragging {
+  transition: none !important;
+  z-index: 1000 !important;
+  opacity: 0.9;
+}
+
+.day-change-zone {
+  position: absolute;
+  top: 40px;
+  bottom: 0;
+  width: 40px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  backdrop-filter: blur(0px);
+}
+
+.day-change-zone.visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.left-zone {
+  left: 60px;
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.15), transparent);
+  border-left: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.right-zone {
+  right: 0;
+  background: linear-gradient(to left, rgba(99, 102, 241, 0.15), transparent);
+  border-right: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.day-change-zone:hover {
+  width: 80px;
+  backdrop-filter: blur(8px);
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.right-zone:hover {
+  background: linear-gradient(to left, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #6366f1;
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.day-change-zone:hover .zone-content {
+  transform: scale(1.2);
+  color: white;
+  opacity: 1;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 2px;
+}
+
+@keyframes pulse-zone {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+.day-change-zone.visible:not(:hover) .zone-content {
+  animation: pulse-zone 2s infinite ease-in-out;
+}
