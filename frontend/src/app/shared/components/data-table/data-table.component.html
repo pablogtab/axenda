@@ -9,7 +9,7 @@
     </tr>
   </thead>
   <tbody class="divide-y divide-white/[0.05]">
-    @for (item of data(); track $index) {
+    @for (item of safeData(); track $index) {
       <tr class="transition-colors hover:bg-white/[0.03] group">
         @for (column of columns(); track column) {
           <td class="px-6 py-4 align-middle text-text-main">

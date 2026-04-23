@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
 export interface AuthData {
@@ -14,6 +15,7 @@ export interface AuthData {
 })
 export class AuthService {
   private http: HttpClient = inject(HttpClient);
+  private router: Router = inject(Router);
   private readonly ACCESS_TOKEN_KEY = 'axenda_access_token';
   private readonly REFRESH_TOKEN_KEY = 'axenda_refresh_token';
   
@@ -47,6 +49,7 @@ export class AuthService {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     this.isLoggedInSubject.next(false);
+    this.router.navigate(['/login']);
   }
 
   getAccessToken(): string | null {

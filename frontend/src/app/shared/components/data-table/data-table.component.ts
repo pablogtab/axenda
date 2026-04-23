@@ -1,4 +1,4 @@
-import { Component, input, contentChildren, TemplateRef } from '@angular/core';
+import { Component, input, contentChildren, TemplateRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkTableModule } from '@angular/cdk/table';
 import { TableCellDirective } from './table-cell.directive';
@@ -16,6 +16,9 @@ export class DataTableComponent {
   headers = input.required<string[]>();
   
   cellTemplates = contentChildren(TableCellDirective);
+
+  // Garantizar que data siempre sea un array iterable para el template
+  safeData = computed(() => Array.isArray(this.data()) ? this.data() : []);
 
   getTemplateForColumn(columnName: string): TemplateRef<any> | null {
     const directive = this.cellTemplates().find(t => t.column() === columnName);
