@@ -24,7 +24,7 @@
   <div class="h-full overflow-auto custom-scrollbar relative">
     <div class="grid" 
          [style.grid-template-columns]="'60px repeat(' + professionals.length + ', minmax(250px, 1fr))'"
-         [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', 25px)'">
+         [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
       
       <!-- Esquina Superior Izquierda -->
       <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"></div>
@@ -34,7 +34,7 @@
         <div class="absolute inset-0 z-[60] pointer-events-none">
           <div class="grid h-full"
                [style.grid-template-columns]="'60px repeat(' + professionals.length + ', minmax(250px, 1fr))'"
-               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', 25px)'">
+               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
             <!-- Espaciador de header y horas -->
             <div [style.grid-column]="'1 / -1'" [style.grid-row]="1"></div>
             <div [style.grid-column]="1" [style.grid-row]="'1 / -1'"></div>
@@ -68,8 +68,9 @@
     @for (slot of timeSlots(); track slot; let rowIndex = $index) {
       
       <!-- Label de Hora (Sticky Left) -->
-      <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-2 items-center text-[11px] font-mono text-text-dim z-20"
-           [style.grid-row]="rowIndex + 2" [style.grid-column]="1">
+      <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-2 items-center text-[11px] font-mono text-text-dim z-20 cursor-ns-resize"
+           [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
+           (wheel)="onMouseWheel($event)">
         @if (slot.endsWith(':00')) {
           <span class="text-text-main font-bold">{{ slot }}</span>
         } @else if (slot.endsWith(':30')) {

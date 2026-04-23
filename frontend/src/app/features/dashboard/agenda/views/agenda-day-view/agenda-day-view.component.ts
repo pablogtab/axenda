@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, startOfDay } from 'date-fns';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
+import { UserConfigurationService } from '@services/user-configuration.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
 
 interface AppointmentUI extends Appointment {
@@ -26,8 +27,10 @@ interface AppointmentUI extends Appointment {
     }
   `]
 })
-export class AgendaDayViewComponent implements OnChanges {
+export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   private appointmentsService = inject(AppointmentsService);
+  private userConfig = inject(UserConfigurationService);
+  private el = inject(ElementRef);
 
   @Input({ required: true }) date!: Date;
   @Input({ required: true }) branchId: string | null = null;
@@ -36,13 +39,46 @@ export class AgendaDayViewComponent implements OnChanges {
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string }>();
   @Output() editAppointment = new EventEmitter<Appointment>();
 
-  appointments = signal<AppointmentUI[]>([]);
+  rawAppointments = signal<Appointment[]>([]);
   timeSlots = signal<string[]>([]);
+  private zoomLevel = this.userConfig.agendaZoom;
+  containerHeight = signal(0);
   isLoading = signal(false);
   isDragging = signal(false);
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ professionalId: string, top: number, height: number } | null>(null);
-  
+
+  private resizeObserver: ResizeObserver | null = null;
+
+  slotHeight = computed(() => {
+    const h = this.containerHeight();
+    const slots = this.timeSlots().length;
+    if (h === 0 || slots === 0) return 25;
+
+    // Header is 40px
+    const availableHeight = h - 40;
+    return (availableHeight / slots) * this.zoomLevel();
+  });
+
+  appointments = computed(() => {
+    const height = this.slotHeight();
+    const slots = this.timeSlots();
+
+    return this.rawAppointments().map(app => {
+      const start = new Date(app.startTime);
+      const end = new Date(app.endTime);
+      const startStr = format(start, 'HH:mm');
+      const startIndex = slots.findIndex(s => s === startStr);
+      const duration = (end.getTime() - start.getTime()) / (1000 * 60);
+
+      return {
+        ...app,
+        top: startIndex !== -1 ? startIndex * height : 0,
+        height: (duration * height) / 15
+      } as AppointmentUI;
+    });
+  });
+
   private dayChangeTimeout: any;
   @Output() dateChange = new EventEmitter<Date>();
 
@@ -59,6 +95,21 @@ export class AgendaDayViewComponent implements OnChanges {
     });
     return map;
   });
+
+  ngOnInit(): void {
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        this.containerHeight.set(entry.contentRect.height);
+      }
+    });
+    this.resizeObserver.observe(this.el.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+  }
 
   constructor() {
     this.generateTimeSlots();
@@ -114,33 +165,20 @@ export class AgendaDayViewComponent implements OnChanges {
       branchId: this.branchId
     }).subscribe({
       next: (data) => {
-        const uiAppointments: AppointmentUI[] = data.map(app => {
-          const start = new Date(app.startTime);
-          const end = new Date(app.endTime);
-          const startStr = format(start, 'HH:mm');
-          const startIndex = this.timeSlots().findIndex(s => s === startStr);
-          const duration = (end.getTime() - start.getTime()) / (1000 * 60);
-
-          return {
-            ...app,
-            top: startIndex !== -1 ? startIndex * 25 : 0,
-            height: (duration * 25) / 15
-          };
-        });
-
         // Usamos setTimeout para sacar la actualización del ciclo actual de detección
         // de cambios y evitar conflictos con las manipulaciones del DOM de CDK.
         setTimeout(() => {
           const currentDragged = this.draggedApp();
           
+          let finalData = [...data];
           // Si estamos arrastrando, nos aseguramos de que el turno persistente
           // esté en la lista, pero solo si no vino ya en la nueva data
-          if (currentDragged && !uiAppointments.find(a => a.id === currentDragged.id)) {
+          if (currentDragged && !finalData.find(a => a.id === currentDragged.id)) {
             // Lo insertamos al principio para que Angular tenga una referencia más estable
-            uiAppointments.unshift(currentDragged);
+            finalData.unshift(currentDragged);
           }
 
-          this.appointments.set(uiAppointments);
+          this.rawAppointments.set(finalData);
           this.isLoading.set(false);
         }, 0);
       },
@@ -173,7 +211,7 @@ export class AgendaDayViewComponent implements OnChanges {
 
     const newPreview = {
       professionalId: prof.id,
-      top: startIndex * 25,
+      top: startIndex * this.slotHeight(),
       height: this.draggedApp()?.height || 0
     };
 
@@ -246,7 +284,7 @@ export class AgendaDayViewComponent implements OnChanges {
     }
 
     const newProfessionalId = preview.professionalId;
-    const newIndex = preview.top / 25;
+    const newIndex = Math.round(preview.top / this.slotHeight());
     const newTimeStr = this.timeSlots()[newIndex];
 
     if (!this.availabilityMap()[`${newProfessionalId}-${newTimeStr}`]) {
@@ -260,14 +298,13 @@ export class AgendaDayViewComponent implements OnChanges {
     const newStartTime = createLocalDate(dateStr, newTimeStr);
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
-    this.appointments.update(apps => apps.map(a => 
+    this.rawAppointments.update(apps => apps.map(a => 
       a.id === app.id ? { 
         ...a, 
         professional: { ...a.professional, id: newProfessionalId },
         professionalId: newProfessionalId,
         startTime: newStartTime.toISOString(),
-        endTime: newEndTime.toISOString(),
-        top: newIndex * 25
+        endTime: newEndTime.toISOString()
       } : a
     ));
 
@@ -289,8 +326,14 @@ export class AgendaDayViewComponent implements OnChanges {
   }
 
   private refreshUI(app: Appointment): void {
-    const current = this.appointments();
-    this.appointments.set(current.filter(a => a.id !== app.id));
-    setTimeout(() => this.appointments.set(current), 0);
+    const current = this.rawAppointments();
+    this.rawAppointments.set(current.filter(a => a.id !== app.id));
+    setTimeout(() => this.rawAppointments.set(current), 0);
+  }
+
+  onMouseWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    this.userConfig.updateAgendaZoom(this.zoomLevel() + delta);
   }
 }
