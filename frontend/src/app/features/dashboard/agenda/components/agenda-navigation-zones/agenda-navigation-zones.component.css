@@ -43,7 +43,6 @@
 .right-zone:hover {
   background: linear-gradient(to left, rgba(99, 102, 241, 0.3), transparent);
 }
-
 .zone-content {
   display: flex;
   flex-direction: column;
@@ -53,6 +52,7 @@
   filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
   transition: all 0.3s ease;
   opacity: 0.6;
+  pointer-events: auto;
 }
 
 .day-change-zone:hover .zone-content {

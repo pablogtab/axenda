@@ -79,6 +79,20 @@ export class AgendaComponent implements OnInit {
     }
   }
 
+  @HostListener('document:mouseup')
+  handleGlobalMouseUp() {
+    if (this.agendaService.isDragging()) {
+      console.log('[AgendaComponent] Global MouseUp detected. Checking drag state consistency...');
+      // Damos un margen para que los eventos locales (onDrop) se procesen
+      setTimeout(() => {
+        if (this.agendaService.isDragging()) {
+          console.warn('[AgendaComponent] Drag state was stuck. Forcing stop.');
+          this.agendaService.stopDragging();
+        }
+      }, 300);
+    }
+  }
+
   selectedProfessionalName = computed(() => {
     const ids = this.selectedProfessionalIds();
     const all = this.professionals();
@@ -193,13 +207,18 @@ export class AgendaComponent implements OnInit {
 
   changeDate(days: number): void {
     const view = this.selectedView();
+    const oldDate = this.selectedDate();
+    console.log(`[AgendaComponent] changeDate: days=${days}, view=${view}, current=${oldDate.toISOString()}`);
+    
     if (view === 'month') {
-      const current = this.selectedDate();
-      const newDate = addMonths(startOfMonth(current), days);
+      const newDate = addMonths(startOfMonth(oldDate), days);
+      console.log(`[AgendaComponent] Month Navigation: New Date = ${newDate.toISOString()}`);
       this.selectedDate.set(newDate);
     } else {
       const step = view === 'week' ? days * 7 : days;
-      this.selectedDate.set(addDays(this.selectedDate(), step));
+      const newDate = addDays(oldDate, step);
+      console.log(`[AgendaComponent] ${view === 'week' ? 'Week' : 'Day'} Navigation: New Date = ${newDate.toISOString()}`);
+      this.selectedDate.set(newDate);
     }
   }
 
