@@ -6,13 +6,15 @@ import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { format, addDays, startOfDay, startOfWeek } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
-import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
+import { AgendaMonthViewComponent } from './views/agenda-month-view/agenda-month-view.component';
 import { AgendaViewType } from './agenda.types';
 import { Appointment } from '@services/appointments.service';
 import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
+import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
 
 @Component({
   selector: 'app-agenda',
@@ -20,8 +22,9 @@ import { AgendaSettingsComponent } from './components/agenda-settings/agenda-set
   imports: [
     CommonModule, 
     FormsModule, 
-    AgendaDayViewComponent, 
-    AgendaWeekViewComponent
+    AgendaDayViewComponent,
+    AgendaWeekViewComponent,
+    AgendaMonthViewComponent
   ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
@@ -113,6 +116,26 @@ export class AgendaComponent implements OnInit {
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   });
 
+  currentDateLabel = computed(() => {
+    const date = this.selectedDate();
+    const view = this.selectedView();
+    
+    if (view === 'day') {
+      return format(date, "EEEE, d 'de' MMMM", { locale: es });
+    }
+    
+    if (view === 'week') {
+      const { start, end } = this.weekRange();
+      if (start.getMonth() === end.getMonth()) {
+        return `${format(start, 'd')} - ${format(end, "d 'de' MMMM 'de' yyyy")}`;
+      }
+      return `${format(start, 'd MMM')} - ${format(end, "d MMM yyyy")}`;
+    }
+    
+    // Month view
+    return format(date, "MMMM 'de' yyyy", { locale: es });
+  });
+
 
 
   ngOnInit(): void {
@@ -158,8 +181,15 @@ export class AgendaComponent implements OnInit {
   }
 
   changeDate(days: number): void {
-    const step = this.selectedView() === 'week' ? days * 7 : days;
-    this.selectedDate.set(addDays(this.selectedDate(), step));
+    const view = this.selectedView();
+    if (view === 'month') {
+      const current = this.selectedDate();
+      const newDate = new Date(current.getFullYear(), current.getMonth() + days, 1);
+      this.selectedDate.set(newDate);
+    } else {
+      const step = view === 'week' ? days * 7 : days;
+      this.selectedDate.set(addDays(this.selectedDate(), step));
+    }
   }
 
   today(): void {

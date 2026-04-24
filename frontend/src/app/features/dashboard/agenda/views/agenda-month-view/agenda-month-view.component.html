@@ -1,0 +1,65 @@
+<div class="flex flex-col h-full bg-bg-primary select-none">
+  <!-- Header: Días de la semana -->
+  <div class="grid grid-cols-7 border-b border-white/5 bg-white/5 backdrop-blur-md">
+    @for (day of weekDays; track day) {
+      <div class="py-3 text-center">
+        <span class="text-[10px] font-black text-text-dim tracking-[0.2em] uppercase">{{ day }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Grid de días -->
+  <div class="flex-1 overflow-y-auto custom-scrollbar">
+    <div class="grid grid-cols-7 h-full min-h-[600px]">
+      @for (day of monthDays(); track day.getTime()) {
+        @let dayApps = getAppointmentsForDay(day);
+        <div 
+          class="min-h-[120px] border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer"
+          [class.bg-white/[0.03]]="!isCurrentMonth(day)"
+          (click)="onAddAppointment(day, $event)">
+          
+          <!-- Número del día -->
+          <div class="flex justify-center mb-1">
+            <div 
+              class="h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all"
+              [class.w-8]="formatDayNumber(day).length <= 2"
+              [class.px-3]="formatDayNumber(day).length > 2"
+              [class.bg-primary]="isToday(day)"
+              [class.text-white]="isToday(day)"
+              [class.text-text-main]="isCurrentMonth(day) && !isToday(day)"
+              [class.text-text-dim]="!isCurrentMonth(day)">
+              {{ formatDayNumber(day) }}
+            </div>
+          </div>
+
+          <!-- Lista de turnos -->
+          <div class="flex-1 flex flex-col gap-1 overflow-hidden">
+            @for (app of dayApps.slice(0, 5); track app.id) {
+              <div 
+                (click)="onEditApp(app, $event)"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5"
+                [style.background-color]="app.professional.color + '15'"
+                [style.border-left]="'3px solid ' + app.professional.color">
+                
+                <span class="font-bold text-text-main opacity-80 shrink-0">{{ formatTime(app.startTime) }}</span>
+                <span class="truncate text-text-main font-medium">{{ app.client.firstName }} {{ app.client.lastName }}</span>
+              </div>
+            }
+            
+            @if (dayApps.length > 5) {
+              <div class="px-2 py-0.5 text-[10px] font-bold text-text-dim mt-auto">
+                {{ dayApps.length - 5 }} más
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="absolute inset-0 bg-bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>
+  }
+</div>

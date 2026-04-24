@@ -1,11 +1,4 @@
 <div class="flex-1 relative flex flex-col overflow-hidden" cdkDropListGroup>
-  <!-- Header de la Vista (Fecha) -->
-  <div class="px-6 py-3 bg-white/5 border-b border-white/10 flex items-center gap-4">
-    <span class="text-sm font-bold text-text-main uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
-      {{ formattedDate() }}
-    </span>
-  </div>
-
   <!-- Zonas de Cambio de Día (Fijas en el viewport de la agenda) -->
   <div class="day-change-zone left-zone" 
        [class.visible]="isDragging()"
@@ -36,7 +29,8 @@
          [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
       
       <!-- Esquina Superior Izquierda -->
-      <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"></div>
+      <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"
+           [style.grid-column]="1" [style.grid-row]="1"></div>
 
       <!-- Indicador de Hora Actual -->
       <app-agenda-time-indicator [slotHeight]="slotHeight()" [viewDate]="date()" [style.grid-column]="'1 / -1'" [style.grid-row]="'1 / -1'"></app-agenda-time-indicator>
@@ -67,7 +61,8 @@
     <!-- Headers de Profesionales (Sticky Top) -->
     @for (prof of professionals; track prof.id; let i = $index) {
       <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex items-center justify-center gap-3 z-30"
-           [style.grid-column]="i + 2">
+           [style.grid-column]="i + 2"
+           [style.grid-row]="1">
         <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px]" 
              [style.background-color]="prof.color + '30'" [style.color]="prof.color">
           {{ prof.firstName[0] }}{{ prof.lastName[0] }}
