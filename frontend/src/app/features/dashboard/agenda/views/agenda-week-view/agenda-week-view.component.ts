@@ -9,6 +9,7 @@ import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate, toLocalDateStr } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
+import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -19,7 +20,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-week-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent],
   templateUrl: './agenda-week-view.component.html',
   styleUrls: ['./agenda-week-view.component.css'],
   styles: [`
@@ -47,6 +48,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   rawAppointments = signal<Appointment[]>([]);
   professionalsSignal = signal<Professional[]>([]);
+  todayDate = new Date();
 
   private zoomLevel = this.userConfig.agendaZoom;
   private startHour = this.userConfig.agendaStartHour;

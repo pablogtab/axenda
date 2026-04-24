@@ -9,6 +9,7 @@ import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
+import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -18,7 +19,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-day-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent],
   templateUrl: './agenda-day-view.component.html',
   styleUrls: ['./agenda-day-view.component.css'],
   styles: [`
@@ -93,6 +94,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       const startStr = format(start, 'HH:mm');
       const startIndex = slots.findIndex(s => s === startStr);
       const duration = (end.getTime() - start.getTime()) / (1000 * 60);
+
+
 
       return {
         ...app,

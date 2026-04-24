@@ -36,11 +36,25 @@
       <!-- Headers de Días (Sticky Top) -->
       @for (day of weekDaysSignal(); track $index; let i = $index) {
         <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex flex-col items-center justify-center z-30"
-             [style.grid-column]="i + 2">
+             [style.grid-column]="i + 2"
+             [style.grid-row]="1">
           <span class="text-[10px] uppercase tracking-widest text-text-dim leading-none">{{ day | date:'EEEE':'': 'es' }}</span>
           <span class="text-xs font-bold text-text-main">{{ day | date:'dd MMM' }}</span>
         </div>
       }
+
+      <!-- Indicadores de Hora Actual (Capa independiente para no mover el grid) -->
+      @for (day of weekDaysSignal(); track $index; let i = $index) {
+        <app-agenda-time-indicator 
+          [slotHeight]="slotHeight()" 
+          [viewDate]="day" 
+          [fullWidth]="false"
+          [style.grid-column]="i + 2" 
+          [style.grid-row]="'1 / -1'">
+        </app-agenda-time-indicator>
+      }
+
+
 
       <!-- Capa de Detección de Hover (Solo activa al arrastrar) -->
       @if (isDragging()) {

@@ -38,6 +38,9 @@
       <!-- Esquina Superior Izquierda -->
       <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"></div>
 
+      <!-- Indicador de Hora Actual -->
+      <app-agenda-time-indicator [slotHeight]="slotHeight()" [viewDate]="date()" [style.grid-column]="'1 / -1'" [style.grid-row]="'1 / -1'"></app-agenda-time-indicator>
+
       <!-- Capa de Detección de Hover (Solo activa al arrastrar, esta sí scrollea) -->
       @if (isDragging()) {
         <div class="absolute inset-0 z-[60] pointer-events-none">
