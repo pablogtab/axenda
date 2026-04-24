@@ -95,6 +95,16 @@ export class AgendaComponent implements OnInit {
       this.agendaService.triggerNavigationFeedback();
       event.preventDefault();
     }
+
+    // Atajos de Vista
+    const key = event.key.toLowerCase();
+    if (key === 'd') {
+      this.setView('day');
+    } else if (key === 'w') {
+      this.setView('week');
+    } else if (key === 'm') {
+      this.setView('month');
+    }
   }
 
   private lastWheelNavTime = 0;
