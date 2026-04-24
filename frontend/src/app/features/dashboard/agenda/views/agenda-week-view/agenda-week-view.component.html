@@ -69,13 +69,12 @@
       @for (slot of timeSlots(); track slot; let rowIndex = $index) {
         
         <!-- Label de Hora (Sticky Left) -->
-        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-3 items-center text-[11px] font-mono text-text-dim z-20 cursor-ns-resize transition-all duration-200 select-none"
+        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-3 items-center text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
+             appAgendaZoom
              [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
              [class.!text-primary]="hoveredSlot() === slot"
              [class.!bg-white/5]="hoveredSlot() === slot"
-             [class.!font-bold]="hoveredSlot() === slot"
-             (wheel)="onMouseWheel($event)"
-             (mousedown)="onZoomMouseDown($event)">
+             [class.!font-bold]="hoveredSlot() === slot">
           @if (slot.endsWith(':00')) {
             <span>{{ slot }}</span>
           } @else if (slot.endsWith(':30')) {
