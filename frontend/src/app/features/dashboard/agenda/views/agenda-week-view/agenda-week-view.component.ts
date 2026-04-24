@@ -489,6 +489,12 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
+  onZoneClick(direction: 'prev' | 'next'): void {
+    const newDate = new Date(this.weekDaysSignal()[0]);
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    this.dateChange.emit(newDate);
+  }
+
   onMouseWheel(event: WheelEvent): void {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.1 : 0.1;

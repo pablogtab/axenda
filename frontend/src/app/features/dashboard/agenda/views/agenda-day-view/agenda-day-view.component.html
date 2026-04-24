@@ -3,7 +3,8 @@
   <div class="day-change-zone left-zone" 
        [class.visible]="isDragging()"
        (mouseenter)="onZoneEnter('prev')"
-       (mouseleave)="onZoneLeave()">
+       (mouseleave)="onZoneLeave()"
+       (click)="onZoneClick('prev')">
     <div class="zone-content">
       <span class="text-2xl">‹</span>
       <span class="text-[10px] uppercase font-bold vertical-text">Día Anterior</span>
@@ -13,7 +14,8 @@
   <div class="day-change-zone right-zone"
        [class.visible]="isDragging()"
        (mouseenter)="onZoneEnter('next')"
-       (mouseleave)="onZoneLeave()">
+       (mouseleave)="onZoneLeave()"
+       (click)="onZoneClick('next')">
     <div class="zone-content">
       <span class="text-2xl">›</span>
       <span class="text-[10px] uppercase font-bold vertical-text">Día Siguiente</span>

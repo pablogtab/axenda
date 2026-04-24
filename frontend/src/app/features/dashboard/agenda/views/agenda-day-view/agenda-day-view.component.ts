@@ -391,6 +391,12 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     setTimeout(() => this.rawAppointments.set(current), 0);
   }
 
+  onZoneClick(direction: 'prev' | 'next'): void {
+    const newDate = new Date(this.date);
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+    this.dateChange.emit(newDate);
+  }
+
   onMouseWheel(event: WheelEvent): void {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.1 : 0.1;

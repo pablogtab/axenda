@@ -60,20 +60,22 @@
   position: absolute;
   top: 40px;
   bottom: 0;
-  width: 40px;
+  width: 40px; /* Zona sensible más amplia para facilitar el hover */
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
   opacity: 0;
+  cursor: pointer;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   backdrop-filter: blur(0px);
 }
 
-.day-change-zone.visible {
-  pointer-events: auto;
+.day-change-zone.visible,
+.day-change-zone:hover {
   opacity: 1;
+  width: 80px;
 }
 
 .left-zone {
@@ -89,7 +91,6 @@
 }
 
 .day-change-zone:hover {
-  width: 80px;
   backdrop-filter: blur(8px);
   background: linear-gradient(to right, rgba(99, 102, 241, 0.3), transparent);
 }
