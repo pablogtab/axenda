@@ -10,8 +10,8 @@
         <button (click)="today()" class="px-4 py-2 hover:bg-white/10 rounded-lg text-sm font-bold transition-all text-text-main">Hoy</button>
       </div>
       <div>
-        <button (click)="changeDate(-1)" class="p-2 hover:bg-white/10 rounded-lg transition-all text-text-dim hover:text-text-main">←</button>
-        <button (click)="changeDate(1)" class="p-2 hover:bg-white/10 rounded-lg transition-all text-text-dim hover:text-text-main">→</button>
+        <button (click)="changeDate(-1)" class="p-2 hover:bg-white/10 rounded-full transition-all text-text-dim hover:text-text-main">&lt;</button>
+        <button (click)="changeDate(1)" class="p-2 hover:bg-white/10 rounded-full transition-all text-text-dim hover:text-text-main">&gt;</button>
       </div>
 
       <span class="text-lg font-bold text-text-main capitalize min-w-[200px]">{{ currentDateLabel() }}</span>

@@ -130,6 +130,11 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     return this.appointmentsByDay().get(toLocalDateStr(day)) || [];
   }
 
+  onDayClick(day: Date, event: Event): void {
+    event.stopPropagation();
+    this.dateChange.emit(day);
+  }
+
   onAddAppointment(day: Date, event: Event): void {
     event.stopPropagation();
     if (this.professionals.length > 0) {

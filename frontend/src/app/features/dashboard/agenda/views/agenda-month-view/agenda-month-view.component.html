@@ -21,7 +21,8 @@
           <!-- Número del día -->
           <div class="flex justify-center mb-1">
             <div 
-              class="h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all"
+              class="h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all cursor-pointer"
+              (click)="onDayClick(day, $event)"
               [class.w-8]="formatDayNumber(day).length <= 2"
               [class.px-3]="formatDayNumber(day).length > 2"
               [class.bg-primary]="isToday(day)"
@@ -38,9 +39,13 @@
               <div 
                 (click)="onEditApp(app, $event)"
                 class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5"
-                [style.background-color]="app.professional.color + '15'"
-                [style.border-left]="'3px solid ' + app.professional.color">
+                [style.background-color]="app.service.color + '15'"
+                [style.border-left]="'3px solid ' + app.service.color">
                 
+                <div class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 shadow-sm"
+                     [style.background-color]="app.professional.color || '#6366f1'">
+                  {{ app.professional.firstName[0] }}
+                </div>
                 <span class="font-bold text-text-main opacity-80 shrink-0">{{ formatTime(app.startTime) }}</span>
                 <span class="truncate text-text-main font-medium">{{ app.client.firstName }} {{ app.client.lastName }}</span>
               </div>
