@@ -30,31 +30,6 @@
         </app-agenda-time-indicator>
       }
 
-      <!-- Capa de Detección de Arrastre (Solo activa al arrastrar) -->
-      @if (agendaService.isDragging()) {
-        <div class="absolute inset-0 z-[60]">
-          <div class="grid h-full"
-               [style.grid-template-columns]="'60px repeat(7, minmax(120px, 1fr))'"
-               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'"
-               (dragover)="$event.preventDefault()"
-               (drop)="onDrop($event)">
-            <!-- Espaciadores de header y horas -->
-            <div [style.grid-column]="'1 / -1'" [style.grid-row]="1"></div>
-            <div [style.grid-column]="1" [style.grid-row]="'1 / -1'"></div>
-            
-            @for (slot of timeSlots(); track slot; let rowIndex = $index) {
-              @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
-                <div class="pointer-events-auto"
-                     [style.grid-row]="rowIndex + 2"
-                     [style.grid-column]="dayIndex + 2"
-                     (dragover)="onCellDragOver($event, dayIndex, slot)">
-                </div>
-              }
-            }
-          </div>
-        </div>
-      }
-
       <!-- Filas de Tiempo -->
       @for (slot of timeSlots(); track slot; let rowIndex = $index) {
         
@@ -115,12 +90,9 @@
           }
           
           @for (app of appointmentsByDay().get(dayIndex) || []; track app.id) {
-            <div draggable="true"
-                  (dragstart)="onDragStart(app, $event)"
-                  (drag)="onDrag($event)"
-                  (dragend)="onDragEnd()"
-                  (click)="editAppointment.emit({ appointment: app }); $event.stopPropagation()"
-                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+            <div (pointerdown)="onPointerDown(app, $event)"
+                  (click)="onAppClick(app, $event)"
+                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
                   [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
                   [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
                   [style.top.px]="app.top"

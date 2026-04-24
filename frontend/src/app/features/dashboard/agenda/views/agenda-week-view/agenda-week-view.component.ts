@@ -31,6 +31,10 @@ interface AppointmentUI extends Appointment {
       height: 100%;
       overflow: hidden;
     }
+    .dragging-active {
+      cursor: grabbing !important;
+      user-select: none;
+    }
   `]
 })
 export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
@@ -90,6 +94,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private originalDate: Date | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private dragCancelled = false;
+  private wasDragging = false;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
@@ -98,7 +103,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     } else if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
       
-      // Si la semana cambió durante el arrastre, revertimos a la original
       if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
         this.dateChange.emit(this.originalDate);
       }
@@ -210,9 +214,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.weekDaysSignal().forEach((day, dayIndex) => {
       this.timeSlots().forEach(slot => {
         const key = `${dayIndex}-${slot}`;
-        // Si hay varios profesionales, mostramos disponible si AL MENOS UNO lo está
         avail[key] = profs.some(p => this.isProfessionalAvailableAt(p, day, slot));
-        // Bloqueado solo si todos los seleccionados están bloqueados
         block[key] = profs.length === 1 ? this.isProfessionalBlockedAt(profs[0], day, slot) : false;
       });
     });
@@ -274,58 +276,85 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  onDragStart(app: AppointmentUI, event: DragEvent): void {
+  // ─── Lógica de Arrastre con Pointer Events ──────────────────────────────
+
+  onPointerDown(app: AppointmentUI, event: PointerEvent): void {
+    // Solo clic izquierdo
+    if (event.button !== 0) return;
+
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture(event.pointerId);
+
     this.agendaService.setDragging(true, app);
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.weekDaysSignal()[0]);
     this.dragCancelled = false;
-
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      const img = new Image();
-      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-      event.dataTransfer.setDragImage(img, 0, 0);
-    }
+    this.wasDragging = false;
+    
+    document.body.classList.add('dragging-active');
   }
 
-  onDrag(event: DragEvent): void {
-    if (event.clientX !== 0 || event.clientY !== 0) {
-      this.agendaService.updateMousePosition(event.clientX, event.clientY);
-    }
+  @HostListener('document:pointermove', ['$event'])
+  onPointerMove(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
+    
+    this.wasDragging = true;
+    this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.updateDropPreviewFromCoords(event.clientX, event.clientY);
   }
 
-  onDragEnd(): void {
-    this.agendaService.stopDragging();
-    this.draggedApp.set(null);
-    this.dropPreview.set(null);
-    this.originalDate = null;
+  @HostListener('document:pointerup', ['$event'])
+  onPointerUp(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
+
+    document.body.classList.remove('dragging-active');
+    this.handleDropAction();
   }
 
-  onCellDragOver(event: DragEvent, dayIndex: number, slot: string): void {
-    event.preventDefault();
-    if (!this.agendaService.isDragging() || !this.draggedApp()) return;
-
-    const startIndex = this.timeSlots().findIndex(s => s === slot);
-    if (startIndex === -1) return;
-
-    const newPreview = {
-      dayIndex,
-      top: startIndex * this.slotHeight(),
-      height: this.draggedApp()?.height || 0
-    };
-
-    if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
-      this.dropPreview.set(newPreview);
-    }
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    if (this.dragCancelled) {
-      this.dragCancelled = false;
+  private updateDropPreviewFromCoords(x: number, y: number): void {
+    const gridEl = this.el.nativeElement.querySelector('.grid');
+    if (!gridEl) return;
+    
+    const rect = gridEl.getBoundingClientRect();
+    
+    // El grid tiene un offset de 40px arriba (header) y 60px a la izquierda (time column)
+    const relativeX = x - rect.left;
+    const relativeY = y - rect.top;
+    
+    if (relativeY < 40 || relativeX < 60 || relativeX > rect.width || relativeY > rect.height) {
+      this.dropPreview.set(null);
       return;
     }
+    
+    const columnWidth = (rect.width - 60) / 7;
+    const dayIndex = Math.floor((relativeX - 60) / columnWidth);
+    
+    const h = this.slotHeight();
+    const rowIndex = Math.floor((relativeY - 40) / h);
+    
+    if (dayIndex >= 0 && dayIndex < 7 && rowIndex >= 0 && rowIndex < this.timeSlots().length) {
+      const newPreview = {
+        dayIndex,
+        top: rowIndex * h,
+        height: this.draggedApp()?.height || 0
+      };
+      
+      if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
+        this.dropPreview.set(newPreview);
+      }
+    } else {
+      this.dropPreview.set(null);
+    }
+  }
+
+  private handleDropAction(): void {
+    if (this.dragCancelled) {
+      this.dragCancelled = false;
+      this.onDragEnd();
+      return;
+    }
+
     const app = this.agendaService.draggedApp();
     const preview = this.dropPreview();
 
@@ -363,7 +392,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         time: newTimeStr
       });
 
-      // Pre-seleccionar al original si está disponible
       const originalProf = this.professionalsSignal().find(p => p.id === app.professional.id);
       if (originalProf && this.isProfessionalAvailableAt(originalProf, newDate, newTimeStr)) {
         this.selectedProfessionalId.set(originalProf.id);
@@ -373,6 +401,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.onDragEnd();
+  }
+
+  onDragEnd(): void {
+    this.agendaService.stopDragging();
+    this.draggedApp.set(null);
+    this.dropPreview.set(null);
+    this.originalDate = null;
+    document.body.classList.remove('dragging-active');
   }
 
   executeMove(app: Appointment, newStartTime: Date, newEndTime: Date, targetProf: Professional): void {
@@ -450,6 +486,15 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const current = this.rawAppointments();
     this.rawAppointments.set(current.filter(a => a.id !== app.id));
     setTimeout(() => this.rawAppointments.set(current), 0);
+  }
+
+  onAppClick(app: Appointment, event: Event): void {
+    event.stopPropagation();
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      return;
+    }
+    this.editAppointment.emit({ appointment: app });
   }
 
   onAdd(day: Date, time: string): void {

@@ -13,31 +13,6 @@
       <!-- Indicador de Hora Actual -->
       <app-agenda-time-indicator [slotHeight]="slotHeight()" [viewDate]="date()" [style.grid-column]="'1 / -1'" [style.grid-row]="'1 / -1'"></app-agenda-time-indicator>
 
-      <!-- Capa de Detección de Arrastre (Solo activa al arrastrar) -->
-      @if (agendaService.isDragging()) {
-        <div class="absolute inset-0 z-[60]">
-          <div class="grid h-full"
-               [style.grid-template-columns]="'60px repeat(' + professionals.length + ', minmax(250px, 1fr))'"
-               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'"
-               (dragover)="$event.preventDefault()"
-               (drop)="onDrop($event)">
-            <!-- Espaciador de header y horas -->
-            <div [style.grid-column]="'1 / -1'" [style.grid-row]="1"></div>
-            <div [style.grid-column]="1" [style.grid-row]="'1 / -1'"></div>
-            
-            @for (slot of timeSlots(); track slot; let rowIndex = $index) {
-              @for (prof of professionals; track prof.id; let colIndex = $index) {
-                <div class="pointer-events-auto"
-                     [style.grid-row]="rowIndex + 2"
-                     [style.grid-column]="colIndex + 2"
-                     (dragover)="onCellDragOver($event, prof, slot)">
-                </div>
-              }
-            }
-          </div>
-        </div>
-      }
-
     <!-- Headers de Profesionales (Sticky Top) -->
     @for (prof of professionals; track prof.id; let i = $index) {
       <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex items-center justify-center gap-3 z-30"
@@ -113,12 +88,9 @@
         }
         
         @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
-          <div draggable="true"
-                (dragstart)="onDragStart(app, $event)"
-                (drag)="onDrag($event)"
-                (dragend)="onDragEnd()"
-                (click)="editAppointment.emit({ appointment: app }); $event.stopPropagation()"
-                class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+          <div (pointerdown)="onPointerDown(app, $event)"
+                (click)="onAppClick(app, $event)"
+                class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
                 [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
                 [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
                 [style.top.px]="app.top"

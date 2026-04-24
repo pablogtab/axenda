@@ -11,15 +11,13 @@
 
   <!-- Grid de días -->
   <div class="flex-1 overflow-y-auto custom-scrollbar">
-    <div class="grid grid-cols-7 h-full min-h-[600px]">
+    <div class="grid grid-cols-7 h-full min-h-[600px] month-grid">
       @for (day of monthDays(); track $index) {
         @let dayApps = getAppointmentsForDay(day);
         <div 
           class="min-h-[120px] border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer"
           [class.bg-white/[0.03]]="!isCurrentMonth(day)"
           [class.bg-primary/5]="dropPreviewDate()?.getTime() === day.getTime()"
-          (dragover)="onDragOver($event, day)"
-          (drop)="onDrop($event, day)"
           (click)="onAddAppointment(day, $event)">
 
           <!-- Número del día -->
@@ -42,12 +40,9 @@
             @for (app of dayApps; track app.id) {
             @if ($index < 5 || agendaService.draggedApp()?.id===app.id) {
               <div
-              draggable="true"
-              (dragstart)="onDragStart(app, $event)"
-              (drag)="onDrag($event)"
-              (dragend)="onDragEnd()"
-              (click)="onEditApp(app, $event)"
-              class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1"
+              (pointerdown)="onPointerDown(app, $event)"
+              (click)="onAppClick(app, $event)"
+              class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1 touch-none"
               [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
               [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
               [style.background-color]="app.service.color + '15'"

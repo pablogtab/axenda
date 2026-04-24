@@ -50,11 +50,6 @@ export class AgendaComponent implements OnInit {
     effect(() => {
       this.userConfig.updateAgendaView(this.selectedView());
     });
-
-    effect(() => {
-      console.log('[AgendaComponent] ID Profesional seleccionado:', this.selectedProfessionalIds());
-      console.log('[AgendaComponent] Profesionales enviados a las vistas:', this.activeProfessionals());
-    });
   }
 
   // Estado Global de la Agenda (Inicializado desde la configuración persistida)
@@ -69,8 +64,9 @@ export class AgendaComponent implements OnInit {
   showFilters = signal(false);
   showViewSelector = signal(false);
 
-  @HostListener('window:keydown', ['$event'])
+  @HostListener('document:keydown', ['$event'])
   handleGlobalKeyDown(event: KeyboardEvent) {
+    console.log("captured")
     if (this.showFilters()) {
       if (event.key === 'Escape') this.showFilters.set(false);
       return;
@@ -104,6 +100,7 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('window:wheel', ['$event'])
   handleGlobalWheel(event: WheelEvent) {
+    console.log("Wheel captured")
     if (this.showFilters() || this.showViewSelector()) return;
     
     // Solo permitimos navegación por rueda en vista mes o si estamos arrastrando
@@ -123,7 +120,6 @@ export class AgendaComponent implements OnInit {
       this.lastWheelNavTime = now;
       this.changeDate(event.deltaY < 0 ? -1 : 1);
       this.agendaService.triggerNavigationFeedback();
-      event.preventDefault();
     }
   }
 
@@ -137,18 +133,17 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('document:mouseup', ['$event'])
   handleGlobalMouseUp(event: MouseEvent) {
+    console.log('aca mouse up')
     if (this.agendaService.isDragging()) {
       // Si estamos navegando (cambio de mes), ignoramos el mouseup global por completo
       // porque el navegador suele disparar eventos falsos al reconstruir el DOM.
       if (this.agendaService.isNavigating()) {
-        console.log('[AgendaComponent] Global MouseUp ignored during navigation');
         return;
       }
       
       // Para otros casos, damos un pequeño margen
       setTimeout(() => {
         if (this.agendaService.isDragging()) {
-          console.warn('[AgendaComponent] Drag state was stuck. Forcing stop.');
           this.agendaService.stopDragging();
         }
       }, 300);
@@ -270,18 +265,15 @@ export class AgendaComponent implements OnInit {
   changeDate(days: number): void {
     const view = this.selectedView();
     const oldDate = this.selectedDate();
-    console.log(`[AgendaComponent] changeDate: days=${days}, view=${view}, current=${oldDate.toISOString()}`);
     
     if (view === 'month') {
       const newDate = addMonths(startOfMonth(oldDate), days);
-      console.log(`[AgendaComponent] Month Navigation: New Date = ${newDate.toISOString()}`);
       // Usamos setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
       // y dar tiempo al sistema de Drag&Drop a estabilizarse
       setTimeout(() => this.selectedDate.set(newDate), 0);
     } else {
       const step = view === 'week' ? days * 7 : days;
       const newDate = addDays(oldDate, step);
-      console.log(`[AgendaComponent] ${view === 'week' ? 'Week' : 'Day'} Navigation: New Date = ${newDate.toISOString()}`);
       setTimeout(() => this.selectedDate.set(newDate), 0);
     }
   }

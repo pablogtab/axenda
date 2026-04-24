@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener, OnInit, Renderer2 } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener, OnInit, effect, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgendaService } from '../../agenda.service';
 
@@ -12,11 +12,6 @@ import { AgendaService } from '../../agenda.service';
          [style.left]="offsetLeft"
          [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
          [class.navigating]="activeDir === 'prev'"
-         (mouseenter)="onZoneEnter('prev')"
-         (mouseleave)="onZoneLeave()"
-         (dragenter)="onDragEnter($event, 'prev')"
-         (dragover)="onDragOver($event)"
-         (dragleave)="onDragLeave($event)"
          (click)="navigate.emit('prev')">
       <div class="zone-content">
         <span class="text-2xl">‹</span>
@@ -28,11 +23,6 @@ import { AgendaService } from '../../agenda.service';
     <div class="day-change-zone right-zone"
          [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
          [class.navigating]="activeDir === 'next'"
-         (mouseenter)="onZoneEnter('next')"
-         (mouseleave)="onZoneLeave()"
-         (dragenter)="onDragEnter($event, 'next')"
-         (dragover)="onDragOver($event)"
-         (dragleave)="onDragLeave($event)"
          (click)="navigate.emit('next')">
       <div class="zone-content">
         <span class="text-2xl">›</span>
@@ -40,7 +30,18 @@ import { AgendaService } from '../../agenda.service';
       </div>
     </div>
   `,
-  styleUrls: ['./agenda-navigation-zones.component.css']
+  styleUrls: ['./agenda-navigation-zones.component.css'],
+  styles: [`
+    :host {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .day-change-zone {
+      pointer-events: auto;
+    }
+  `]
 })
 export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Input() prevLabel = 'Anterior';
@@ -50,39 +51,43 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Input() currentView = '';
   @Output() navigate = new EventEmitter<'prev' | 'next'>();
 
-  agendaService = inject(AgendaService);
+  public agendaService = inject(AgendaService);
+  private el = inject(ElementRef);
   private navigationTimer: any = null;
-  private lastWheelNavTime = 0;
-  private readonly wheelNavThrottle = 200;
+  public activeDir: 'prev' | 'next' | null = null;
 
-  ngOnInit(): void {
+  constructor() {
+    // Detección reactiva de posición para navegación lateral
+    effect(() => {
+      const x = this.agendaService.mouseX();
+      const dragging = this.agendaService.isDragging();
+
+      if (!dragging) {
+        if (this.activeDir) this.onZoneLeave();
+        return;
+      }
+
+      const rect = this.el.nativeElement.getBoundingClientRect();
+      const relativeX = x - rect.left;
+      const width = rect.width;
+      const zoneWidth = 80;
+      const offset = parseInt(this.offsetLeft) || 0;
+
+      // Detección relativa al componente (ignora el sidebar)
+      if (relativeX >= offset && relativeX <= offset + zoneWidth) {
+        this.onZoneEnter('prev');
+      } else if (relativeX >= width - zoneWidth && relativeX <= width) {
+        this.onZoneEnter('next');
+      } else {
+        this.onZoneLeave();
+      }
+    });
   }
+
+  ngOnInit(): void { }
 
   ngOnDestroy(): void {
     this.clearTimer();
-  }
-
-  activeDir: 'prev' | 'next' | null = null;
-
-  onDragEnter(event: DragEvent, dir: 'prev' | 'next'): void {
-    event.preventDefault();
-    if (this.activeDir === dir) return;
-    this.onZoneEnter(dir);
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    // Re-check if we need to start timer (e.g. if it was cleared by accident)
-    // But mostly we just need to preventDefault to allow the drag ghost to show over it
-  }
-
-  onDragLeave(event: DragEvent): void {
-    // Only leave if we are really leaving the zone element, not just a child
-    const target = event.relatedTarget as Node;
-    const zone = event.currentTarget as Node;
-    if (zone.contains(target)) return;
-    
-    this.onZoneLeave();
   }
 
   onZoneEnter(dir: 'prev' | 'next'): void {
@@ -104,7 +109,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       } else {
         this.clearTimer();
       }
-    }, 800);
+    }, 500);
   }
 
   onZoneLeave(): void {

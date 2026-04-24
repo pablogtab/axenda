@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, OnInit, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   format,
@@ -30,6 +30,7 @@ import { AgendaService } from '../../agenda.service';
 })
 export class AgendaMonthViewComponent implements OnChanges, OnInit {
   private appointmentsService = inject(AppointmentsService);
+  private el = inject(ElementRef);
   public agendaService = inject(AgendaService);
 
   private _date = signal<Date>(new Date());
@@ -49,6 +50,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   professionalsSignal = signal<Professional[]>([]);
   isLoading = signal(false);
   dropPreviewDate = signal<Date | null>(null);
+  private wasDragging = false;
 
   today = new Date();
 
@@ -178,45 +180,82 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     this.editAppointment.emit({ appointment: app });
   }
 
-  onDragStart(app: Appointment, event: DragEvent): void {
+  // ─── Lógica de Arrastre con Pointer Events ──────────────────────────────
+
+  onPointerDown(app: Appointment, event: PointerEvent): void {
+    if (event.button !== 0) return;
+
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture(event.pointerId);
+
     this.agendaService.setDragging(true, app);
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.wasDragging = false;
+    document.body.classList.add('dragging-active');
+  }
 
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      // Create a transparent drag image to use our custom global preview
-      const img = new Image();
-      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-      event.dataTransfer.setDragImage(img, 0, 0);
+  @HostListener('document:pointermove', ['$event'])
+  onPointerMove(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
+
+    this.wasDragging = true;
+    this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.updateDropPreviewFromCoords(event.clientX, event.clientY);
+  }
+
+  @HostListener('document:pointerup', ['$event'])
+  onPointerUp(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
+
+    document.body.classList.remove('dragging-active');
+    this.handleDropAction();
+  }
+
+  private updateDropPreviewFromCoords(x: number, y: number): void {
+    const gridEl = this.el.nativeElement.querySelector('.month-grid');
+    if (!gridEl) return;
+
+    const rect = gridEl.getBoundingClientRect();
+    const relativeX = x - rect.left;
+    const relativeY = y - rect.top;
+
+    if (relativeX < 0 || relativeY < 0 || relativeX > rect.width || relativeY > rect.height) {
+      this.dropPreviewDate.set(null);
+      return;
+    }
+
+    const colWidth = rect.width / 7;
+    const rowHeight = rect.height / 6;
+
+    const col = Math.floor(relativeX / colWidth);
+    const row = Math.floor(relativeY / rowHeight);
+
+    const index = row * 7 + col;
+    if (index >= 0 && index < 42) {
+      const day = this.monthDays()[index];
+      if (this.dropPreviewDate() !== day) {
+        this.dropPreviewDate.set(day);
+      }
+    } else {
+      this.dropPreviewDate.set(null);
     }
   }
 
-  onDrag(event: DragEvent): void {
-    // Only update if coordinates are valid (browser sometimes sends 0,0 at end)
-    if (event.clientX !== 0 || event.clientY !== 0) {
-      this.agendaService.updateMousePosition(event.clientX, event.clientY);
+  private handleDropAction(): void {
+    const app = this.agendaService.draggedApp();
+    const targetDate = this.dropPreviewDate();
+
+    if (app && targetDate) {
+      this.editAppointment.emit({ appointment: app, newDate: targetDate });
     }
+
+    this.onDragEnd();
   }
 
   onDragEnd(): void {
     this.agendaService.stopDragging();
     this.dropPreviewDate.set(null);
-  }
-
-  onDragOver(event: DragEvent, day: Date): void {
-    event.preventDefault(); // Required to allow drop
-    if (this.agendaService.isDragging()) {
-      this.dropPreviewDate.set(day);
-    }
-  }
-
-  onDrop(event: DragEvent, targetDate: Date): void {
-    event.preventDefault();
-    const app = this.agendaService.draggedApp();
-    if (app) {
-      this.editAppointment.emit({ appointment: app, newDate: targetDate });
-    }
-    this.onDragEnd();
+    document.body.classList.remove('dragging-active');
   }
 
   formatTime(isoString: string): string {
@@ -229,5 +268,14 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
       return format(day, 'd MMM', { locale: es });
     }
     return dayNum;
+  }
+
+  onAppClick(app: Appointment, event: Event): void {
+    event.stopPropagation();
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      return;
+    }
+    this.onEditApp(app, event);
   }
 }

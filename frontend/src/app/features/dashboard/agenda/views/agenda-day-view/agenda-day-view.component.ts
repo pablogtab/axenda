@@ -30,6 +30,10 @@ interface AppointmentUI extends Appointment {
       height: 100%;
       overflow: hidden;
     }
+    .dragging-active {
+      cursor: grabbing !important;
+      user-select: none;
+    }
   `]
 })
 export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
@@ -107,13 +111,13 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   private originalDate: Date | null = null;
   @Output() dateChange = new EventEmitter<Date>();
   private dragCancelled = false;
+  private wasDragging = false;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
     if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
       
-      // Si la fecha cambió durante el arrastre, la revertimos
       if (this.originalDate && this.originalDate.getTime() !== this.date().getTime()) {
         this.dateChange.emit(this.originalDate);
       }
@@ -181,7 +185,6 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     
     this.isLoading.set(true);
     
-    // Rango completo del día local en formato ISO
     const startDate = startOfLocalDate(this.date()).toISOString();
     const endDate = endOfLocalDate(this.date()).toISOString();
 
@@ -207,89 +210,87 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  onDragStart(app: AppointmentUI, event: DragEvent): void {
+  // ─── Lógica de Arrastre con Pointer Events ──────────────────────────────
+
+  onPointerDown(app: AppointmentUI, event: PointerEvent): void {
+    if (event.button !== 0) return;
+
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture(event.pointerId);
+
     this.agendaService.setDragging(true, app);
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.date());
     this.dragCancelled = false;
+    this.wasDragging = false;
 
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      const img = new Image();
-      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-      event.dataTransfer.setDragImage(img, 0, 0);
-    }
+    document.body.classList.add('dragging-active');
   }
 
-  onDrag(event: DragEvent): void {
-    if (event.clientX !== 0 || event.clientY !== 0) {
-      this.agendaService.updateMousePosition(event.clientX, event.clientY);
-    }
-  }
-
-  onDragEnd(): void {
-    this.agendaService.stopDragging();
-    this.draggedApp.set(null);
-    this.dropPreview.set(null);
-    this.originalDate = null;
-  }
-
-  onCellDragOver(event: DragEvent, prof: Professional, slot: string): void {
-    event.preventDefault(); // Permite el drop
-    if (!this.agendaService.isDragging() || !this.draggedApp()) return;
+  @HostListener('document:pointermove', ['$event'])
+  onPointerMove(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
     
-    const startIndex = this.timeSlots().findIndex(s => s === slot);
-    if (startIndex === -1) return;
-
-    const newPreview = {
-      professionalId: prof.id,
-      top: startIndex * this.slotHeight(),
-      height: this.draggedApp()?.height || 0
-    };
-
-    if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
-      this.dropPreview.set(newPreview);
-    }
+    this.wasDragging = true;
+    this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.updateDropPreviewFromCoords(event.clientX, event.clientY);
   }
 
-  onCellEnter(slot: string): void {
-    this.hoveredSlot.set(slot);
+  @HostListener('document:pointerup', ['$event'])
+  onPointerUp(event: PointerEvent): void {
+    if (!this.agendaService.isDragging()) return;
+
+    document.body.classList.remove('dragging-active');
+    this.handleDropAction();
   }
 
-  onCellLeave(): void {
-    this.hoveredSlot.set(null);
-  }
-
-  isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
-    const dayOfWeek = this.date().getDay();
-    const isOut = prof.exceptions?.some(ex => {
-      const start = startOfDay(new Date(ex.date));
-      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
-      const current = startOfDay(this.date());
-      return current >= start && current <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
-    });
-    if (isOut) return false;
-
-    const blocks = prof.availability?.filter(a => a.dayOfWeek === dayOfWeek) || [];
-    return blocks.some(b => slot >= b.startTime && slot < b.endTime);
-  }
-
-  isProfessionalBlockedAt(prof: Professional, slot: string): boolean {
-    const current = startOfDay(this.date());
-    return (prof.exceptions || []).some(ex => {
-      const start = startOfDay(new Date(ex.date));
-      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
-      return current >= start && current <= end && ex.type === 'BLOCK' && ex.startTime && ex.endTime && slot >= ex.startTime && slot < ex.endTime;
-    });
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    if (this.dragCancelled) {
-      this.dragCancelled = false;
+  private updateDropPreviewFromCoords(x: number, y: number): void {
+    const gridEl = this.el.nativeElement.querySelector('.grid');
+    if (!gridEl) return;
+    
+    const rect = gridEl.getBoundingClientRect();
+    
+    const relativeX = x - rect.left;
+    const relativeY = y - rect.top;
+    
+    if (relativeY < 40 || relativeX < 60 || relativeX > rect.width || relativeY > rect.height) {
+      this.dropPreview.set(null);
       return;
     }
+    
+    const columnCount = this.professionals.length;
+    if (columnCount === 0) return;
+
+    const columnWidth = (rect.width - 60) / columnCount;
+    const profIndex = Math.floor((relativeX - 60) / columnWidth);
+    
+    const h = this.slotHeight();
+    const rowIndex = Math.floor((relativeY - 40) / h);
+    
+    if (profIndex >= 0 && profIndex < columnCount && rowIndex >= 0 && rowIndex < this.timeSlots().length) {
+      const prof = this.professionals[profIndex];
+      const newPreview = {
+        professionalId: prof.id,
+        top: rowIndex * h,
+        height: this.draggedApp()?.height || 0
+      };
+      
+      if (JSON.stringify(this.dropPreview()) !== JSON.stringify(newPreview)) {
+        this.dropPreview.set(newPreview);
+      }
+    } else {
+      this.dropPreview.set(null);
+    }
+  }
+
+  private handleDropAction(): void {
+    if (this.dragCancelled) {
+      this.dragCancelled = false;
+      this.onDragEnd();
+      return;
+    }
+
     const app = this.agendaService.draggedApp();
     const preview = this.dropPreview();
     
@@ -336,6 +337,45 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.onDragEnd();
   }
 
+  onDragEnd(): void {
+    this.agendaService.stopDragging();
+    this.draggedApp.set(null);
+    this.dropPreview.set(null);
+    this.originalDate = null;
+    document.body.classList.remove('dragging-active');
+  }
+
+  onCellEnter(slot: string): void {
+    this.hoveredSlot.set(slot);
+  }
+
+  onCellLeave(): void {
+    this.hoveredSlot.set(null);
+  }
+
+  isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
+    const dayOfWeek = this.date().getDay();
+    const isOut = prof.exceptions?.some(ex => {
+      const start = startOfDay(new Date(ex.date));
+      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      const current = startOfDay(this.date());
+      return current >= start && current <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
+    });
+    if (isOut) return false;
+
+    const blocks = prof.availability?.filter(a => a.dayOfWeek === dayOfWeek) || [];
+    return blocks.some(b => slot >= b.startTime && slot < b.endTime);
+  }
+
+  isProfessionalBlockedAt(prof: Professional, slot: string): boolean {
+    const current = startOfDay(this.date());
+    return (prof.exceptions || []).some(ex => {
+      const start = startOfDay(new Date(ex.date));
+      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      return current >= start && current <= end && ex.type === 'BLOCK' && ex.startTime && ex.endTime && slot >= ex.startTime && slot < ex.endTime;
+    });
+  }
+
   private handleFailedDrop(app: Appointment): void {
     this.snackbarService.warning('El profesional no está disponible en este horario o zona.');
     if (this.originalDate && this.originalDate.getTime() !== this.date().getTime()) {
@@ -348,5 +388,14 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const current = this.rawAppointments();
     this.rawAppointments.set(current.filter(a => a.id !== app.id));
     setTimeout(() => this.rawAppointments.set(current), 0);
+  }
+
+  onAppClick(app: Appointment, event: Event): void {
+    event.stopPropagation();
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      return;
+    }
+    this.editAppointment.emit({ appointment: app });
   }
 }
