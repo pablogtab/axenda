@@ -12,7 +12,8 @@ import {
   isSameMonth, 
   isSameDay,
   startOfDay,
-  isToday
+  isToday,
+  addMonths
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
@@ -41,13 +42,19 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date }>();
-  @Output() editAppointment = new EventEmitter<Appointment>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date: Date }>();
+  @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
   @Output() dateChange = new EventEmitter<Date>();
+  @Output() dayClick = new EventEmitter<Date>();
 
   rawAppointments = signal<Appointment[]>([]);
   professionalsSignal = signal<Professional[]>([]);
   isLoading = signal(false);
+  isDragging = signal(false);
+  draggedApp = signal<Appointment | null>(null);
+  dropPreviewDate = signal<Date | null>(null);
+
+  private navigationTimer: any = null;
   today = new Date();
 
   monthDays = computed(() => {
@@ -132,11 +139,13 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   onDayClick(day: Date, event: Event): void {
     event.stopPropagation();
-    this.dateChange.emit(day);
+    this.dayClick.emit(day);
   }
 
   onAddAppointment(day: Date, event: Event): void {
     event.stopPropagation();
+    if (this.isDragging()) return;
+    
     if (this.professionals.length > 0) {
       this.addAppointment.emit({
         professional: this.professionals[0],
@@ -148,7 +157,43 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   onEditApp(app: Appointment, event: Event): void {
     event.stopPropagation();
-    this.editAppointment.emit(app);
+    this.editAppointment.emit({ appointment: app });
+  }
+
+  // ─── Drag & Drop ──────────────────────────────────────────────────────────
+
+  onDragStarted(app: Appointment): void {
+    this.isDragging.set(true);
+    this.draggedApp.set(app);
+  }
+
+  onDragEnded(): void {
+    this.isDragging.set(false);
+    this.draggedApp.set(null);
+    this.dropPreviewDate.set(null);
+  }
+
+  onDrop(event: CdkDragDrop<any>, targetDate: Date): void {
+    const app = event.item.data as Appointment;
+    if (app) {
+      this.editAppointment.emit({ appointment: app, newDate: targetDate });
+    }
+  }
+
+  onZoneEnter(dir: 'prev' | 'next'): void {
+    if (this.navigationTimer) clearTimeout(this.navigationTimer);
+    this.navigationTimer = setTimeout(() => {
+      const delta = dir === 'prev' ? -1 : 1;
+      const newDate = addMonths(startOfMonth(this.date()), delta);
+      this.dateChange.emit(newDate);
+    }, 1000); // 1 segundo de hover para navegar
+  }
+
+  onZoneLeave(): void {
+    if (this.navigationTimer) {
+      clearTimeout(this.navigationTimer);
+      this.navigationTimer = null;
+    }
   }
 
   formatTime(isoString: string): string {

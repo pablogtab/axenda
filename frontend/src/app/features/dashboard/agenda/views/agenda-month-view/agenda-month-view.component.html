@@ -1,9 +1,31 @@
-<div class="flex flex-col h-full bg-bg-primary select-none">
+<div class="flex flex-col h-full bg-bg-primary select-none relative" cdkDropListGroup>
+  
+  <!-- Zonas de Cambio de Mes (Solo activas al arrastrar) -->
+  <div class="day-change-zone left-zone" 
+       [class.visible]="isDragging()"
+       (mouseenter)="onZoneEnter('prev')"
+       (mouseleave)="onZoneLeave()">
+    <div class="zone-content">
+      <span class="text-2xl">‹</span>
+      <span class="text-[10px] uppercase font-bold vertical-text text-center">Mes Anterior</span>
+    </div>
+  </div>
+
+  <div class="day-change-zone right-zone"
+       [class.visible]="isDragging()"
+       (mouseenter)="onZoneEnter('next')"
+       (mouseleave)="onZoneLeave()">
+    <div class="zone-content">
+      <span class="text-2xl">›</span>
+      <span class="text-[10px] uppercase font-bold vertical-text text-center">Mes Siguiente</span>
+    </div>
+  </div>
+
   <!-- Header: Días de la semana -->
   <div class="grid grid-cols-7 border-b border-white/5 bg-white/5 backdrop-blur-md">
-    @for (day of weekDays; track day) {
+    @for (dayName of weekDays; track dayName) {
       <div class="py-3 text-center">
-        <span class="text-[10px] font-black text-text-dim tracking-[0.2em] uppercase">{{ day }}</span>
+        <span class="text-[10px] font-black text-text-dim tracking-[0.2em] uppercase">{{ dayName }}</span>
       </div>
     }
   </div>
@@ -16,10 +38,20 @@
         <div 
           class="min-h-[120px] border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer"
           [class.bg-white/[0.03]]="!isCurrentMonth(day)"
+          [class.bg-primary/5]="dropPreviewDate()?.getTime() === day.getTime()"
+          cdkDropList
+          [cdkDropListData]="day"
+          (cdkDropListDropped)="onDrop($event, day)"
+          (mouseenter)="isDragging() ? dropPreviewDate.set(day) : null"
           (click)="onAddAppointment(day, $event)">
           
+          <!-- Glass Preview Effect -->
+          @if (isDragging() && dropPreviewDate()?.getTime() === day.getTime()) {
+            <div class="absolute inset-0 bg-primary/10 backdrop-blur-[2px] border-2 border-primary/30 z-0 animate-pulse"></div>
+          }
+
           <!-- Número del día -->
-          <div class="flex justify-center mb-1">
+          <div class="flex justify-center mb-1 relative z-10">
             <div 
               class="h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all cursor-pointer"
               (click)="onDayClick(day, $event)"
@@ -34,11 +66,15 @@
           </div>
 
           <!-- Lista de turnos -->
-          <div class="flex-1 flex flex-col gap-1 overflow-hidden">
+          <div class="flex-1 flex flex-col gap-1 overflow-hidden relative z-10">
             @for (app of dayApps.slice(0, 5); track app.id) {
               <div 
+                cdkDrag
+                [cdkDragData]="app"
+                (cdkDragStarted)="onDragStarted(app)"
+                (cdkDragEnded)="onDragEnded()"
                 (click)="onEditApp(app, $event)"
-                class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1"
                 [style.background-color]="app.service.color + '15'"
                 [style.border-left]="'3px solid ' + app.service.color">
                 
@@ -48,6 +84,14 @@
                 </div>
                 <span class="font-bold text-text-main opacity-80 shrink-0">{{ formatTime(app.startTime) }}</span>
                 <span class="truncate text-text-main font-medium">{{ app.client.firstName }} {{ app.client.lastName }}</span>
+
+                <!-- Preview al arrastrar -->
+                <div *cdkDragPreview class="flex items-center gap-2 px-3 py-2 bg-bg-secondary rounded-xl border border-white/20 shadow-2xl scale-110">
+                   <div class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white" [style.background-color]="app.professional.color">
+                     {{ app.professional.firstName[0] }}
+                   </div>
+                   <span class="text-xs font-bold text-text-main">{{ app.client.firstName }}</span>
+                </div>
               </div>
             }
             
@@ -62,8 +106,8 @@
     </div>
   </div>
 
-  @if (isLoading()) {
-    <div class="absolute inset-0 bg-bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
+  @if (isLoading() && !isDragging()) {
+    <div class="absolute inset-0 bg-bg-primary/20 backdrop-blur-[1px] flex items-center justify-center z-[110]">
       <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
     </div>
   }

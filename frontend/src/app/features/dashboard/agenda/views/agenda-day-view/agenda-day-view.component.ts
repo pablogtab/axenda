@@ -43,7 +43,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string }>();
-  @Output() editAppointment = new EventEmitter<Appointment>();
+  @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
 
   rawAppointments = signal<Appointment[]>([]);
   private zoomLevel = this.userConfig.agendaZoom;

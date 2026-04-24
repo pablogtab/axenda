@@ -5,7 +5,7 @@ import { ProfessionalsService, Professional } from '@services/professionals.serv
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
-import { format, addDays, startOfDay, startOfWeek } from 'date-fns';
+import { format, addDays, startOfDay, startOfWeek, addMonths, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
@@ -184,7 +184,7 @@ export class AgendaComponent implements OnInit {
     const view = this.selectedView();
     if (view === 'month') {
       const current = this.selectedDate();
-      const newDate = new Date(current.getFullYear(), current.getMonth() + days, 1);
+      const newDate = addMonths(startOfMonth(current), days);
       this.selectedDate.set(newDate);
     } else {
       const step = view === 'week' ? days * 7 : days;
@@ -260,12 +260,13 @@ export class AgendaComponent implements OnInit {
     });
   }
 
-  onEditAppointment(appointment: Appointment): void {
+  onEditAppointment(appointment: Appointment, newDate?: Date): void {
     const dialogRef = this.modal.open(AppointmentFormComponent, {
       data: {
         appointmentId: appointment.id,
         professionalId: appointment.professional?.id,
-        branchId: appointment.branch?.id
+        branchId: appointment.branch?.id,
+        date: newDate ? format(newDate, 'yyyy-MM-dd') : undefined
       },
       width: '500px'
     });

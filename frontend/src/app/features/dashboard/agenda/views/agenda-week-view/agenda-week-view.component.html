@@ -148,7 +148,7 @@
             <div cdkDrag [cdkDragData]="app"
                   (cdkDragStarted)="onDragStarted(app)"
                   (cdkDragEnded)="onDragEnded()"
-                  (click)="editAppointment.emit(app); $event.stopPropagation()"
+                  (click)="editAppointment.emit({ appointment: app }); $event.stopPropagation()"
                   class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
                   [style.top.px]="app.top"
                   [style.height.px]="app.height"

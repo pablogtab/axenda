@@ -183,7 +183,7 @@
       [branchId]="selectedBranchId()"
       [professionals]="activeProfessionals()"
       (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event)"
+      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
       (dateChange)="selectedDate.set($event)"></app-agenda-day-view>
     }
     @case ('week') {
@@ -192,7 +192,7 @@
       [branchId]="selectedBranchId()"
       [professionals]="activeProfessionals()"
       (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event)"
+      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
       (dateChange)="selectedDate.set($event)"></app-agenda-week-view>
     }
     @case ('month') {
@@ -201,8 +201,9 @@
       [branchId]="selectedBranchId()"
       [professionals]="activeProfessionals()"
       (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event)"
-      (dateChange)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
+      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+      (dateChange)="selectedDate.set($event)"
+      (dayClick)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
     }
     }
   </div>

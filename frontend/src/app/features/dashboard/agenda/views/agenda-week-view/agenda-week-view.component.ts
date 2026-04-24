@@ -44,7 +44,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date }>();
-  @Output() editAppointment = new EventEmitter<Appointment>();
+  @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
   @Output() dateChange = new EventEmitter<Date>();
 
   rawAppointments = signal<Appointment[]>([]);

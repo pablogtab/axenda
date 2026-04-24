@@ -114,7 +114,7 @@ export class AppointmentFormComponent implements OnInit {
         serviceId: appointment.service?.id,
         professionalId: appointment.professional?.id,
         branchId: appointment.branch?.id,
-        date: toLocalDateStr(startDate),
+        date: this.data.date || toLocalDateStr(startDate),
         time: toLocalTimeStr(startDate),
         endTime: toLocalTimeStr(endDate),
         notes: appointment.notes,
