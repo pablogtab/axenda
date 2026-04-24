@@ -189,6 +189,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+      this.boundZoomMouseUp();
     }
   }
 
@@ -356,7 +357,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         date: newDate,
         time: newTimeStr
       });
-      
+
       // Pre-seleccionar al original si está disponible
       const originalProf = this.professionalsSignal().find(p => p.id === app.professional.id);
       if (originalProf && this.isProfessionalAvailableAt(originalProf, newDate, newTimeStr)) {
@@ -428,7 +429,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     if (pending && pending.type === 'MOVE') {
       this.refreshUI(pending.data.app);
     }
-    
+
     this.pendingSelection.set(null);
     this.selectedProfessionalId.set(null);
     this.loadAppointments();
@@ -501,6 +502,36 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.1 : 0.1;
     this.userConfig.updateAgendaZoom(this.zoomLevel() + delta);
+  }
+
+  private isZoomDragging = false;
+  private lastY = 0;
+
+  onZoomMouseDown(event: MouseEvent): void {
+    if (event.button !== 0) return; // Solo click izquierdo
+    this.isZoomDragging = true;
+    this.lastY = event.clientY;
+    document.addEventListener('mousemove', this.boundZoomMouseMove);
+    document.addEventListener('mouseup', this.boundZoomMouseUp);
+    event.preventDefault();
+  }
+
+  private boundZoomMouseMove = (event: MouseEvent) => this.onZoomMouseMove(event);
+  private boundZoomMouseUp = () => {
+    this.isZoomDragging = false;
+    document.removeEventListener('mousemove', this.boundZoomMouseMove);
+    document.removeEventListener('mouseup', this.boundZoomMouseUp);
+  };
+
+  private onZoomMouseMove(event: MouseEvent): void {
+    if (!this.isZoomDragging) return;
+
+    const deltaY = this.lastY - event.clientY; // Arriba es positivo (zoom in)
+    if (Math.abs(deltaY) < 2) return; // Umbral de sensibilidad
+
+    const zoomStep = deltaY * 0.005;
+    this.userConfig.updateAgendaZoom(this.zoomLevel() + zoomStep);
+    this.lastY = event.clientY;
   }
 
   onAdd(day: Date, time: string): void {
