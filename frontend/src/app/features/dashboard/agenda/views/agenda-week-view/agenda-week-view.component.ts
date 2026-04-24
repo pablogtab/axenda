@@ -36,7 +36,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
 
-  @Input({ required: true }) weekDays: Date[] = [];
+  @Input({ required: true }) date!: Date;
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
@@ -100,7 +100,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       const app = this.draggedApp();
 
       // Si la semana cambió durante el arrastre, revertimos a la original
-      if (this.originalDate && this.originalDate.getTime() !== this.weekDays[0]?.getTime()) {
+      if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
         this.dateChange.emit(this.originalDate);
       }
 
@@ -139,6 +139,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     return this.rawAppointments()
       .filter(app => profIds.has(app.professional.id))
       .map(app => {
+        const dragging = this.draggedApp();
+        if (dragging && dragging.id === app.id) {
+          return dragging;
+        }
+
         const appDate = new Date(app.startTime);
         const startStr = format(appDate, 'HH:mm');
         const startIndex = slots.findIndex(s => s === startStr);
@@ -189,10 +194,12 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     if (changes['professionals']) {
       this.professionalsSignal.set(this.professionals);
     }
-    if (changes['weekDays']) {
-      this.weekDaysSignal.set(this.weekDays);
+    if (changes['date']) {
+      const start = startOfWeek(this.date, { weekStartsOn: 1 });
+      const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+      this.weekDaysSignal.set(days);
     }
-    if (changes['weekDays'] || changes['branchId'] || changes['professionals']) {
+    if (changes['date'] || changes['branchId'] || changes['professionals']) {
       this.loadAppointments();
       this.computeGridStatus();
     }
@@ -223,9 +230,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     if (!this.branchId) return;
 
     this.isLoading.set(true);
+    const start = this.weekDaysSignal()[0];
+    const end = this.weekDaysSignal()[6];
 
-    const startDate = startOfLocalDate(this.weekDaysSignal()[0]).toISOString();
-    const endDate = endOfLocalDate(this.weekDaysSignal()[6]).toISOString();
+    const startDate = startOfLocalDate(start).toISOString();
+    const endDate = endOfLocalDate(end).toISOString();
 
     this.appointmentsService.findAll({
       startDate,
@@ -273,7 +282,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   onDragStarted(app: AppointmentUI): void {
     this.isDragging.set(true);
     this.draggedApp.set(app);
-    this.originalDate = new Date(this.weekDays[0]);
+    this.originalDate = new Date(this.weekDaysSignal()[0]);
     this.dragCancelled = false;
   }
 
@@ -438,7 +447,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   private handleFailedDrop(app: Appointment): void {
     this.snackbarService.warning('El profesional no está disponible en este horario.');
-    if (this.originalDate && this.originalDate.getTime() !== this.weekDays[0]?.getTime()) {
+    if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
       this.dateChange.emit(this.originalDate);
     }
     this.refreshUI(app);
@@ -460,7 +469,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.dayChangeTimeout = setTimeout(() => {
       if (!this.isDragging()) return;
 
-      const newDate = new Date(this.weekDays[0]);
+      const newDate = new Date(this.weekDaysSignal()[0]);
       // Cambiamos por semana (7 días)
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
       this.dateChange.emit(newDate);
