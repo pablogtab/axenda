@@ -15,6 +15,8 @@ import { AgendaViewType } from './agenda.types';
 import { Appointment } from '@services/appointments.service';
 import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
+import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones/agenda-navigation-zones.component';
+import { AgendaService } from './agenda.service';
 
 @Component({
   selector: 'app-agenda',
@@ -24,7 +26,8 @@ import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-vi
     FormsModule, 
     AgendaDayViewComponent,
     AgendaWeekViewComponent,
-    AgendaMonthViewComponent
+    AgendaMonthViewComponent,
+    AgendaNavigationZonesComponent
   ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']
@@ -34,6 +37,7 @@ export class AgendaComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private modal = inject(ModalService);
   private userConfig = inject(UserConfigurationService);
+  public agendaService = inject(AgendaService);
 
   constructor() {
     // Sincronizar cambios de vuelta a la configuración de usuario para persistencia
@@ -134,6 +138,13 @@ export class AgendaComponent implements OnInit {
     
     // Month view
     return format(date, "MMMM 'de' yyyy", { locale: es });
+  });
+  
+  navLabels = computed(() => {
+    const view = this.selectedView();
+    if (view === 'day') return { prev: 'Día Anterior', next: 'Día Siguiente', offset: '60px' };
+    if (view === 'week') return { prev: 'Semana Anterior', next: 'Semana Siguiente', offset: '60px' };
+    return { prev: 'Mes Anterior', next: 'Mes Siguiente', offset: '0px' };
   });
 
 

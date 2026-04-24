@@ -49,10 +49,14 @@ export class AgendaNavigationZonesComponent implements OnDestroy {
 
   onZoneEnter(dir: 'prev' | 'next'): void {
     this.clearTimer();
+    if (!this.agendaService.isDragging()) return;
+
     this.navigationTimer = setTimeout(() => {
-      this.navigate.emit(dir);
-      // Opcional: reiniciar para navegación continua
-      this.onZoneEnter(dir);
+      if (this.agendaService.isDragging()) {
+        this.navigate.emit(dir);
+        // Reiniciar para navegación continua solo si seguimos arrastrando
+        this.onZoneEnter(dir);
+      }
     }, 800); 
   }
 

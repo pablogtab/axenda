@@ -1,11 +1,5 @@
 <div class="flex-1 relative flex flex-col overflow-hidden" cdkDropListGroup>
   <!-- Zonas de Cambio de Día (Fijas en el viewport de la agenda) -->
-  <app-agenda-navigation-zones 
-    prevLabel="Día Anterior" 
-    nextLabel="Día Siguiente"
-    offsetLeft="60px"
-    (navigate)="onZoneClick($event)">
-  </app-agenda-navigation-zones>
 
   <!-- Contenedor con Scroll Real -->
   <div class="h-full overflow-auto custom-scrollbar relative">

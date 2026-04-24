@@ -12,7 +12,6 @@ import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
 import { AgendaService } from '../../agenda.service';
-import { AgendaNavigationZonesComponent } from '../../components/agenda-navigation-zones/agenda-navigation-zones.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -23,7 +22,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-week-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent, AgendaNavigationZonesComponent],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
   templateUrl: './agenda-week-view.component.html',
   styleUrls: ['./agenda-week-view.component.css'],
   styles: [`
@@ -466,11 +465,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
-  onZoneClick(direction: 'prev' | 'next'): void {
-    const newDate = new Date(this.weekDaysSignal()[0]);
-    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-    this.dateChange.emit(newDate);
-  }
 
   onAdd(day: Date, time: string): void {
     const profs = this.professionalsSignal();

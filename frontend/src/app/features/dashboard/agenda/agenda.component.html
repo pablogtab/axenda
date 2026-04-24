@@ -206,5 +206,12 @@
       (dayClick)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
     }
     }
+    
+    <app-agenda-navigation-zones 
+      [prevLabel]="navLabels().prev" 
+      [nextLabel]="navLabels().next"
+      [offsetLeft]="navLabels().offset"
+      (navigate)="changeDate($event === 'prev' ? -1 : 1)">
+    </app-agenda-navigation-zones>
   </div>
 </div>

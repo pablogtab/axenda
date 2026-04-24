@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { 
@@ -21,28 +21,22 @@ import { Professional } from '@services/professionals.service';
 import { startOfLocalDate, endOfLocalDate, toLocalDateStr } from '@core/utils/date-utils';
 
 import { AgendaService } from '../../agenda.service';
-import { AgendaNavigationZonesComponent } from '../../components/agenda-navigation-zones/agenda-navigation-zones.component';
 
 @Component({
   selector: 'app-agenda-month-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaNavigationZonesComponent],
+  imports: [CommonModule, DragDropModule],
   templateUrl: './agenda-month-view.component.html',
-  styleUrls: ['./agenda-month-view.component.css'],
-  styles: [`
-    :host { 
-      display: flex; 
-      flex-direction: column; 
-      height: 100%;
-      overflow: hidden;
-    }
-  `]
+  styleUrls: ['./agenda-month-view.component.css']
 })
 export class AgendaMonthViewComponent implements OnChanges, OnInit {
   private appointmentsService = inject(AppointmentsService);
   public agendaService = inject(AgendaService);
 
-  date = input.required<Date>();
+  private _date = signal<Date>(new Date());
+  @Input({ required: true }) set date(val: Date) { this._date.set(val); }
+  get date() { return this._date(); }
+
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
@@ -56,11 +50,10 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   isLoading = signal(false);
   dropPreviewDate = signal<Date | null>(null);
 
-  private navigationTimer: any = null;
   today = new Date();
 
   monthDays = computed(() => {
-    const current = this.date();
+    const current = this._date();
     const start = startOfWeek(startOfMonth(current), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(current), { weekStartsOn: 1 });
     
@@ -104,10 +97,12 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   }
 
   loadAppointments(): void {
-    if (!this.branchId) return;
+    if (!this.branchId || !this.date) return;
 
     this.isLoading.set(true);
     const days = this.monthDays();
+    if (days.length === 0) return;
+    
     const start = days[0];
     const end = days[days.length - 1];
 
@@ -128,7 +123,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   }
 
   isCurrentMonth(day: Date): boolean {
-    return isSameMonth(day, this.date());
+    return isSameMonth(day, this.date);
   }
 
   isToday(day: Date): boolean {
@@ -180,11 +175,6 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     }
   }
 
-  onNavigate(dir: 'prev' | 'next'): void {
-    const delta = dir === 'prev' ? -1 : 1;
-    const newDate = addMonths(startOfMonth(this.date()), delta);
-    this.dateChange.emit(newDate);
-  }
 
   formatTime(isoString: string): string {
     return format(new Date(isoString), 'HH:mm');

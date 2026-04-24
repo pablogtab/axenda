@@ -12,7 +12,6 @@ import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
 import { AgendaService } from '../../agenda.service';
-import { AgendaNavigationZonesComponent } from '../../components/agenda-navigation-zones/agenda-navigation-zones.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -22,7 +21,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-day-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent, AgendaNavigationZonesComponent],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
   templateUrl: './agenda-day-view.component.html',
   styleUrls: ['./agenda-day-view.component.css'],
   styles: [`
@@ -373,9 +372,4 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     setTimeout(() => this.rawAppointments.set(current), 0);
   }
 
-  onZoneClick(direction: 'prev' | 'next'): void {
-    const newDate = new Date(this.date());
-    newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-    this.dateChange.emit(newDate);
-  }
 }
