@@ -6,7 +6,7 @@ import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { format, addDays, startOfDay, startOfWeek } from 'date-fns';
-import { es } from 'date-fns/locale';
+
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
@@ -60,11 +60,15 @@ export class AgendaComponent implements OnInit {
   branches = signal<Branch[]>([]);
   isLoading = signal(true);
   showFilters = signal(false);
+  showViewSelector = signal(false);
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
     if (this.showFilters()) {
       this.showFilters.set(false);
+    }
+    if (this.showViewSelector()) {
+      this.showViewSelector.set(false);
     }
   }
 
@@ -109,19 +113,7 @@ export class AgendaComponent implements OnInit {
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   });
 
-  formattedDate = computed(() => {
-    const date = this.selectedDate();
-    if (this.selectedView() === 'day') {
-      return format(date, "EEEE d 'de' MMMM", { locale: es });
-    } else {
-      const { start, end } = this.weekRange();
-      if (start.getMonth() === end.getMonth()) {
-        return `${format(start, 'd')} - ${format(end, "d 'de' MMMM", { locale: es })}`;
-      } else {
-        return `${format(start, "d 'de' MMM", { locale: es })} - ${format(end, "d 'de' MMM", { locale: es })}`;
-      }
-    }
-  });
+
 
   ngOnInit(): void {
     this.loadInitialData();

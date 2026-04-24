@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, addDays, startOfWeek, endOfWeek, startOfDay } from 'date-fns';
@@ -36,7 +36,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
 
-  @Input({ required: true }) date!: Date;
+  date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
@@ -66,6 +66,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
     return slots;
   });
+
+
 
   containerHeight = signal(0);
   isLoading = signal(false);
@@ -195,7 +197,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       this.professionalsSignal.set(this.professionals);
     }
     if (changes['date']) {
-      const start = startOfWeek(this.date, { weekStartsOn: 1 });
+      const start = startOfWeek(this.date(), { weekStartsOn: 1 });
       const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
       this.weekDaysSignal.set(days);
     }

@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, startOfDay } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
@@ -34,7 +35,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
 
-  @Input({ required: true }) date!: Date;
+  date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
 
@@ -56,6 +57,10 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       }
     }
     return slots;
+  });
+
+  formattedDate = computed(() => {
+    return format(this.date(), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
   });
 
   containerHeight = signal(0);
@@ -111,7 +116,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       const app = this.draggedApp();
 
       // Si la fecha cambió durante el arrastre, la revertimos
-      if (this.originalDate && this.originalDate.getTime() !== this.date.getTime()) {
+      if (this.originalDate && this.originalDate.getTime() !== this.date().getTime()) {
         this.dateChange.emit(this.originalDate);
       }
 
@@ -185,8 +190,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.isLoading.set(true);
     
     // Rango completo del día local en formato ISO
-    const startDate = startOfLocalDate(this.date).toISOString();
-    const endDate = endOfLocalDate(this.date).toISOString();
+    const startDate = startOfLocalDate(this.date()).toISOString();
+    const endDate = endOfLocalDate(this.date()).toISOString();
 
     console.log(`[Agenda] Cargando turnos desde ${startDate} hasta ${endDate} en sucursal ${this.branchId}`);
     
@@ -220,7 +225,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   onDragStarted(app: AppointmentUI): void {
     this.isDragging.set(true);
     this.draggedApp.set(app);
-    this.originalDate = new Date(this.date);
+    this.originalDate = new Date(this.date());
     this.dragCancelled = false;
   }
 
@@ -269,7 +274,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.dayChangeTimeout = setTimeout(() => {
       if (!this.isDragging()) return;
 
-      const newDate = new Date(this.date);
+      const newDate = new Date(this.date());
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
       this.dateChange.emit(newDate);
       
@@ -290,11 +295,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
-    const dayOfWeek = this.date.getDay();
+    const dayOfWeek = this.date().getDay();
     const isOut = prof.exceptions?.some(ex => {
       const start = startOfDay(new Date(ex.date));
       const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
-      const current = startOfDay(this.date);
+      const current = startOfDay(this.date());
       return current >= start && current <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
     });
     if (isOut) return false;
@@ -304,7 +309,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   isProfessionalBlockedAt(prof: Professional, slot: string): boolean {
-    const current = startOfDay(this.date);
+    const current = startOfDay(this.date());
     return (prof.exceptions || []).some(ex => {
       const start = startOfDay(new Date(ex.date));
       const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
@@ -337,7 +342,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     const originalDuration = new Date(app.endTime).getTime() - new Date(app.startTime).getTime();
-    const dateStr = format(this.date, 'yyyy-MM-dd');
+    const dateStr = format(this.date(), 'yyyy-MM-dd');
     const newStartTime = createLocalDate(dateStr, newTimeStr);
     const newEndTime = new Date(newStartTime.getTime() + originalDuration);
 
@@ -379,7 +384,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   private handleFailedDrop(app: Appointment): void {
     this.snackbarService.warning('El profesional no está disponible en este horario o zona.');
-    if (this.originalDate && this.originalDate.getTime() !== this.date.getTime()) {
+    if (this.originalDate && this.originalDate.getTime() !== this.date().getTime()) {
       this.dateChange.emit(this.originalDate);
     }
     this.refreshUI(app);
@@ -392,7 +397,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onZoneClick(direction: 'prev' | 'next'): void {
-    const newDate = new Date(this.date);
+    const newDate = new Date(this.date());
     newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
     this.dateChange.emit(newDate);
   }
