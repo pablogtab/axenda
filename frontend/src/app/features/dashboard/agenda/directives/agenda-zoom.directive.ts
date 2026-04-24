@@ -14,7 +14,7 @@ export class AgendaZoomDirective implements OnDestroy {
 
   @HostListener('wheel', ['$event'])
   onMouseWheel(event: WheelEvent): void {
-    event.preventDefault();
+    event.stopPropagation();
     const delta = event.deltaY > 0 ? -0.1 : 0.1;
     this.userConfig.updateAgendaZoom(this.userConfig.agendaZoom() + delta);
   }
