@@ -1,25 +1,10 @@
 <div class="flex flex-col h-full bg-bg-primary select-none relative" cdkDropListGroup>
   
-  <!-- Zonas de Cambio de Mes (Solo activas al arrastrar) -->
-  <div class="day-change-zone left-zone" 
-       [class.visible]="isDragging()"
-       (mouseenter)="onZoneEnter('prev')"
-       (mouseleave)="onZoneLeave()">
-    <div class="zone-content">
-      <span class="text-2xl">‹</span>
-      <span class="text-[10px] uppercase font-bold vertical-text text-center">Mes Anterior</span>
-    </div>
-  </div>
-
-  <div class="day-change-zone right-zone"
-       [class.visible]="isDragging()"
-       (mouseenter)="onZoneEnter('next')"
-       (mouseleave)="onZoneLeave()">
-    <div class="zone-content">
-      <span class="text-2xl">›</span>
-      <span class="text-[10px] uppercase font-bold vertical-text text-center">Mes Siguiente</span>
-    </div>
-  </div>
+  <app-agenda-navigation-zones 
+    prevLabel="Mes Anterior" 
+    nextLabel="Mes Siguiente"
+    (navigate)="onNavigate($event)">
+  </app-agenda-navigation-zones>
 
   <!-- Header: Días de la semana -->
   <div class="grid grid-cols-7 border-b border-white/5 bg-white/5 backdrop-blur-md">
@@ -42,11 +27,11 @@
           cdkDropList
           [cdkDropListData]="day"
           (cdkDropListDropped)="onDrop($event, day)"
-          (mouseenter)="isDragging() ? dropPreviewDate.set(day) : null"
+          (mouseenter)="agendaService.isDragging() ? dropPreviewDate.set(day) : null"
           (click)="onAddAppointment(day, $event)">
           
           <!-- Glass Preview Effect -->
-          @if (isDragging() && dropPreviewDate()?.getTime() === day.getTime()) {
+          @if (agendaService.isDragging() && dropPreviewDate()?.getTime() === day.getTime()) {
             <div class="absolute inset-0 bg-primary/10 backdrop-blur-[2px] border-2 border-primary/30 z-0 animate-pulse"></div>
           }
 
@@ -106,7 +91,7 @@
     </div>
   </div>
 
-  @if (isLoading() && !isDragging()) {
+  @if (isLoading() && !agendaService.isDragging()) {
     <div class="absolute inset-0 bg-bg-primary/20 backdrop-blur-[1px] flex items-center justify-center z-[110]">
       <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
     </div>

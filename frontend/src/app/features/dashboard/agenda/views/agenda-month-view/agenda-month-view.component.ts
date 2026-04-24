@@ -20,10 +20,13 @@ import { AppointmentsService, Appointment } from '@services/appointments.service
 import { Professional } from '@services/professionals.service';
 import { startOfLocalDate, endOfLocalDate, toLocalDateStr } from '@core/utils/date-utils';
 
+import { AgendaService } from '../../agenda.service';
+import { AgendaNavigationZonesComponent } from '../../components/agenda-navigation-zones/agenda-navigation-zones.component';
+
 @Component({
   selector: 'app-agenda-month-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, AgendaNavigationZonesComponent],
   templateUrl: './agenda-month-view.component.html',
   styleUrls: ['./agenda-month-view.component.css'],
   styles: [`
@@ -37,6 +40,7 @@ import { startOfLocalDate, endOfLocalDate, toLocalDateStr } from '@core/utils/da
 })
 export class AgendaMonthViewComponent implements OnChanges, OnInit {
   private appointmentsService = inject(AppointmentsService);
+  public agendaService = inject(AgendaService);
 
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
@@ -50,8 +54,6 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   rawAppointments = signal<Appointment[]>([]);
   professionalsSignal = signal<Professional[]>([]);
   isLoading = signal(false);
-  isDragging = signal(false);
-  draggedApp = signal<Appointment | null>(null);
   dropPreviewDate = signal<Date | null>(null);
 
   private navigationTimer: any = null;
@@ -144,7 +146,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   onAddAppointment(day: Date, event: Event): void {
     event.stopPropagation();
-    if (this.isDragging()) return;
+    if (this.agendaService.isDragging()) return;
     
     if (this.professionals.length > 0) {
       this.addAppointment.emit({
@@ -163,13 +165,11 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   // ─── Drag & Drop ──────────────────────────────────────────────────────────
 
   onDragStarted(app: Appointment): void {
-    this.isDragging.set(true);
-    this.draggedApp.set(app);
+    this.agendaService.setDragging(true, app);
   }
 
   onDragEnded(): void {
-    this.isDragging.set(false);
-    this.draggedApp.set(null);
+    this.agendaService.stopDragging();
     this.dropPreviewDate.set(null);
   }
 
@@ -180,20 +180,10 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     }
   }
 
-  onZoneEnter(dir: 'prev' | 'next'): void {
-    if (this.navigationTimer) clearTimeout(this.navigationTimer);
-    this.navigationTimer = setTimeout(() => {
-      const delta = dir === 'prev' ? -1 : 1;
-      const newDate = addMonths(startOfMonth(this.date()), delta);
-      this.dateChange.emit(newDate);
-    }, 1000); // 1 segundo de hover para navegar
-  }
-
-  onZoneLeave(): void {
-    if (this.navigationTimer) {
-      clearTimeout(this.navigationTimer);
-      this.navigationTimer = null;
-    }
+  onNavigate(dir: 'prev' | 'next'): void {
+    const delta = dir === 'prev' ? -1 : 1;
+    const newDate = addMonths(startOfMonth(this.date()), delta);
+    this.dateChange.emit(newDate);
   }
 
   formatTime(isoString: string): string {

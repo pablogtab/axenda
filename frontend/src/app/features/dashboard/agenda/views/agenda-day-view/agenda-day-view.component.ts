@@ -11,6 +11,8 @@ import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/d
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
+import { AgendaService } from '../../agenda.service';
+import { AgendaNavigationZonesComponent } from '../../components/agenda-navigation-zones/agenda-navigation-zones.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -20,7 +22,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-day-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent, AgendaNavigationZonesComponent],
   templateUrl: './agenda-day-view.component.html',
   styleUrls: ['./agenda-day-view.component.css'],
   styles: [`
@@ -37,6 +39,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   private userConfig = inject(UserConfigurationService);
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
+  public agendaService = inject(AgendaService);
 
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
@@ -68,7 +71,6 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   containerHeight = signal(0);
   isLoading = signal(false);
-  isDragging = signal(false);
   hoveredSlot = signal<string | null>(null);
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ professionalId: string, top: number, height: number } | null>(null);
@@ -106,14 +108,13 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     });
   });
 
-  private dayChangeTimeout: any;
   private originalDate: Date | null = null;
   @Output() dateChange = new EventEmitter<Date>();
   private dragCancelled = false;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
-    if (this.isDragging()) {
+    if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
       // Despachamos un evento de mouseup para forzar a CDK a terminar el arrastre
       document.dispatchEvent(new MouseEvent('mouseup'));
@@ -228,7 +229,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onDragStarted(app: AppointmentUI): void {
-    this.isDragging.set(true);
+    this.agendaService.setDragging(true, app);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.date());
     this.dragCancelled = false;
@@ -238,14 +239,14 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     // Delay para permitir que onDrop lea el preview antes de limpiar
     // y evitar errores de ExpressionChangedAfterItHasBeenChecked
     setTimeout(() => {
-      if (this.isDragging()) {
+      if (this.agendaService.isDragging()) {
         this.finishDrag();
       }
     }, 100);
   }
 
   onCellHover(prof: Professional, slot: string): void {
-    if (!this.isDragging() || !this.draggedApp()) return;
+    if (!this.agendaService.isDragging() || !this.draggedApp()) return;
     
     const startIndex = this.timeSlots().findIndex(s => s === slot);
     if (startIndex === -1) return;
@@ -269,35 +270,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.hoveredSlot.set(null);
   }
 
-  onZoneEnter(direction: 'prev' | 'next'): void {
-    if (!this.isDragging()) return;
-    this.clearDayChangeTimer();
-    this.startDayChangeTimer(direction);
-  }
 
-  private startDayChangeTimer(direction: 'prev' | 'next'): void {
-    this.dayChangeTimeout = setTimeout(() => {
-      if (!this.isDragging()) return;
-
-      const newDate = new Date(this.date());
-      newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-      this.dateChange.emit(newDate);
-      
-      // Reiniciar para permitir cambio continuo (scroll temporal)
-      this.startDayChangeTimer(direction);
-    }, 800);
-  }
-
-  onZoneLeave(): void {
-    this.clearDayChangeTimer();
-  }
-
-  private clearDayChangeTimer(): void {
-    if (this.dayChangeTimeout) {
-      clearTimeout(this.dayChangeTimeout);
-      this.dayChangeTimeout = null;
-    }
-  }
 
   isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
     const dayOfWeek = this.date().getDay();
@@ -379,11 +352,10 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     // de cambios y evitar conflictos con las manipulaciones del DOM de CDK,
     // previniendo el error ExpressionChangedAfterItHasBeenCheckedError.
     setTimeout(() => {
-      this.isDragging.set(false);
+      this.agendaService.stopDragging();
       this.draggedApp.set(null);
       this.dropPreview.set(null);
       this.originalDate = null;
-      this.clearDayChangeTimer();
     }, 0);
   }
 

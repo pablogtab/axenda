@@ -1,26 +1,11 @@
 <div class="flex-1 relative flex flex-col overflow-hidden" cdkDropListGroup>
   <!-- Zonas de Cambio de Día (Fijas en el viewport de la agenda) -->
-  <div class="day-change-zone left-zone" 
-       [class.visible]="isDragging()"
-       (mouseenter)="onZoneEnter('prev')"
-       (mouseleave)="onZoneLeave()"
-       (click)="onZoneClick('prev')">
-    <div class="zone-content">
-      <span class="text-2xl">‹</span>
-      <span class="text-[10px] uppercase font-bold vertical-text">Día Anterior</span>
-    </div>
-  </div>
-
-  <div class="day-change-zone right-zone"
-       [class.visible]="isDragging()"
-       (mouseenter)="onZoneEnter('next')"
-       (mouseleave)="onZoneLeave()"
-       (click)="onZoneClick('next')">
-    <div class="zone-content">
-      <span class="text-2xl">›</span>
-      <span class="text-[10px] uppercase font-bold vertical-text">Día Siguiente</span>
-    </div>
-  </div>
+  <app-agenda-navigation-zones 
+    prevLabel="Día Anterior" 
+    nextLabel="Día Siguiente"
+    offsetLeft="60px"
+    (navigate)="onZoneClick($event)">
+  </app-agenda-navigation-zones>
 
   <!-- Contenedor con Scroll Real -->
   <div class="h-full overflow-auto custom-scrollbar relative">
@@ -36,7 +21,7 @@
       <app-agenda-time-indicator [slotHeight]="slotHeight()" [viewDate]="date()" [style.grid-column]="'1 / -1'" [style.grid-row]="'1 / -1'"></app-agenda-time-indicator>
 
       <!-- Capa de Detección de Hover (Solo activa al arrastrar, esta sí scrollea) -->
-      @if (isDragging()) {
+      @if (agendaService.isDragging()) {
         <div class="absolute inset-0 z-[60] pointer-events-none">
           <div class="grid h-full"
                [style.grid-template-columns]="'60px repeat(' + professionals.length + ', minmax(250px, 1fr))'"
@@ -95,7 +80,7 @@
         <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
              [style.grid-row]="rowIndex + 2"
              [style.grid-column]="colIndex + 2"
-             [class.hover:bg-primary/10]="!isDragging()"
+             [class.hover:bg-primary/10]="!agendaService.isDragging()"
              (mouseenter)="onCellEnter(slot)"
              (mouseleave)="onCellLeave()"
              (dblclick)="addAppointment.emit({ professional: prof, time: slot })">
@@ -103,7 +88,7 @@
           @if (availabilityMap()[prof.id + '-' + slot]) {
             <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>
           } @else {
-            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="isDragging()"></div>
+            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging()"></div>
           }
           
           @if (blockedMap()[prof.id + '-' + slot]) {
@@ -116,8 +101,8 @@
     <!-- Capas de Arrastre -->
     @for (prof of professionals; track prof.id; let colIndex = $index) {
       <div class="relative transition-colors duration-300"
-           [class.pointer-events-none]="!isDragging()"
-           [class.pointer-events-auto]="isDragging()"
+           [class.pointer-events-none]="!agendaService.isDragging()"
+           [class.pointer-events-auto]="agendaService.isDragging()"
            [style.grid-column]="colIndex + 2"
            [style.grid-row]="'2 / span ' + timeSlots().length"
            cdkDropList
