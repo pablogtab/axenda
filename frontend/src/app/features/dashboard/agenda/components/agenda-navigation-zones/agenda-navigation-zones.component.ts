@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgendaService } from '../../agenda.service';
 
@@ -10,7 +10,7 @@ import { AgendaService } from '../../agenda.service';
     <!-- Zona Izquierda -->
     <div class="day-change-zone left-zone" 
          [style.left]="offsetLeft"
-         [class.visible]="agendaService.isDragging()"
+         [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
          (mouseenter)="onZoneEnter('prev')"
          (mouseleave)="onZoneLeave()"
          (click)="navigate.emit('prev')">
@@ -22,7 +22,7 @@ import { AgendaService } from '../../agenda.service';
 
     <!-- Zona Derecha -->
     <div class="day-change-zone right-zone"
-         [class.visible]="agendaService.isDragging()"
+         [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
          (mouseenter)="onZoneEnter('next')"
          (mouseleave)="onZoneLeave()"
          (click)="navigate.emit('next')">
@@ -38,13 +38,62 @@ export class AgendaNavigationZonesComponent implements OnDestroy {
   @Input() prevLabel = 'Anterior';
   @Input() nextLabel = 'Siguiente';
   @Input() offsetLeft = '0px';
+  @Input() disabled = false;
+  @Input() currentView = '';
   @Output() navigate = new EventEmitter<'prev' | 'next'>();
 
   agendaService = inject(AgendaService);
   private navigationTimer: any = null;
+  private lastWheelNavTime = 0;
+  private readonly wheelNavThrottle = 200;
 
   ngOnDestroy(): void {
     this.clearTimer();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardNavigation(event: KeyboardEvent) {
+    if (this.disabled) return;
+    
+    const activeElement = document.activeElement;
+    const isInput = activeElement?.tagName === 'INPUT' || 
+                   activeElement?.tagName === 'TEXTAREA' || 
+                   activeElement?.hasAttribute('contenteditable');
+    
+    if (isInput) return;
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      this.navigate.emit('prev');
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      this.navigate.emit('next');
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
+    }
+  }
+
+  @HostListener('document:wheel', ['$event'])
+  handleWheelNavigation(event: WheelEvent) {
+    if (this.disabled || this.agendaService.isDragging()) return;
+    if (this.currentView !== 'month') return;
+
+    const activeElement = document.activeElement;
+    const isInput = activeElement?.tagName === 'INPUT' || 
+                   activeElement?.tagName === 'TEXTAREA' || 
+                   activeElement?.hasAttribute('contenteditable');
+    
+    if (isInput) return;
+
+    const now = Date.now();
+    if (now - this.lastWheelNavTime < this.wheelNavThrottle) return;
+
+    if (Math.abs(event.deltaY) > 30) {
+      this.lastWheelNavTime = now;
+      this.navigate.emit(event.deltaY < 0 ? 'prev' : 'next');
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
+    }
   }
 
   onZoneEnter(dir: 'prev' | 'next'): void {

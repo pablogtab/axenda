@@ -6,6 +6,7 @@ import { Appointment } from '@services/appointments.service';
 })
 export class AgendaService {
   isDragging = signal(false);
+  isNavigating = signal(false);
   draggedApp = signal<Appointment | null>(null);
 
   setDragging(isDragging: boolean, app: Appointment | null = null) {
@@ -16,5 +17,10 @@ export class AgendaService {
   stopDragging() {
     this.isDragging.set(false);
     this.draggedApp.set(null);
+  }
+
+  triggerNavigationFeedback() {
+    this.isNavigating.set(true);
+    setTimeout(() => this.isNavigating.set(false), 500);
   }
 }
