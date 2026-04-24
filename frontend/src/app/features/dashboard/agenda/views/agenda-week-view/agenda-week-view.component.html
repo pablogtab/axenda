@@ -158,51 +158,11 @@
                     'color': app.service.color
                   }">
               
-              <!-- Preview Global -->
-              <div *cdkDragPreview class="rounded-lg p-2 shadow-2xl border border-white/10 z-[1000] overflow-hidden pointer-events-none"
-                   [style.width.px]="120"
-                   [style.height.px]="app.height"
-                   [ngStyle]="{
-                     'background-color': '#1a1b26',
-                     'border-left': '4px solid ' + app.service.color,
-                     'color': app.service.color,
-                     'box-shadow': '0 20px 50px rgba(0,0,0,0.5)'
-                   }">
-                <div class="flex flex-col h-full gap-1 px-1">
-                  <span class="text-[9px] font-bold uppercase tracking-wider opacity-60 truncate">
-                    {{ app.service.name }}
-                  </span>
-                  <span class="text-[11px] font-bold truncate text-text-main">
-                    {{ app.client.firstName }} {{ app.client.lastName }}
-                  </span>
-                </div>
-              </div>
+              <app-agenda-appointment-card
+                [appointment]="app"
+                [height]="app.height"
+                [showProfessionalBadge]="professionalsSignal().length > 1"></app-agenda-appointment-card>
 
-              <div *cdkDragPlaceholder class="opacity-0"></div>
-
-              <div class="flex flex-col h-full gap-0.5 px-1 pointer-events-none">
-                <!-- Badge de Profesional -->
-                @if (professionalsSignal().length > 1) {
-                  <div class="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white border border-white/20 shadow-lg z-20"
-                       [style.background-color]="app.professional.color || '#6366f1'"
-                       [attr.title]="app.professional.firstName + ' ' + app.professional.lastName">
-                    {{ app.professional.firstName[0] }}{{ app.professional.lastName[0] }}
-                  </div>
-                }
-
-                <span class="text-[9px] font-bold uppercase tracking-wider opacity-60 truncate">
-                  {{ app.service.name }}
-                </span>
-                <span class="text-[11px] font-bold truncate text-text-main leading-none">
-                  {{ app.client.firstName }}
-                </span>
-                <span class="text-[11px] font-bold truncate text-text-main">
-                  {{ app.client.lastName }}
-                </span>
-                <div class="mt-auto flex justify-between items-end opacity-60">
-                   <span class="text-[9px] font-mono">{{ app.startTime | date:'HH:mm' }}</span>
-                </div>
-              </div>
             </div>
           }
         </div>

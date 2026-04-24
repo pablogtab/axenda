@@ -10,6 +10,7 @@ import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
+import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -19,7 +20,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-day-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent],
+  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
   templateUrl: './agenda-day-view.component.html',
   styleUrls: ['./agenda-day-view.component.css'],
   styles: [`
