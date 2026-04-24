@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { format, startOfDay } from 'date-fns';
+import { format, startOfDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
@@ -163,6 +163,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       this.computeGridStatus();
     }
   }
+  
+  isSameDayAsView(otherDate: Date | null): boolean {
+    if (!otherDate) return false;
+    return isSameDay(otherDate, this.date());
+  }
 
   computeGridStatus(): void {
     const avail: Record<string, boolean> = {};
@@ -218,7 +223,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
-    this.agendaService.setDragging(true, app);
+    this.agendaService.setDragging(true, app, app.height, new Date(this.date()));
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.date());

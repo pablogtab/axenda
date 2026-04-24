@@ -43,7 +43,8 @@
               (pointerdown)="onPointerDown(app, $event)"
               (click)="onAppClick(app, $event)"
               class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1 touch-none"
-              [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
+              [class.opacity-40]="agendaService.draggedApp()?.id === app.id && isSameDayAsView(agendaService.draggedAppOriginDate())"
+              [class.opacity-0]="agendaService.draggedApp()?.id === app.id && !isSameDayAsView(agendaService.draggedAppOriginDate())"
               [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
               [style.background-color]="app.service.color + '15'"
               [style.border-left]="'3px solid ' + app.service.color">

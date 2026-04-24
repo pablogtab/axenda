@@ -17,6 +17,7 @@ import { AgendaSettingsComponent } from './components/agenda-settings/agenda-set
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
 import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones/agenda-navigation-zones.component';
 import { AgendaService } from './agenda.service';
+import { AgendaAppointmentCardComponent } from './components/agenda-appointment-card/agenda-appointment-card.component';
 
 @Component({
   selector: 'app-agenda',
@@ -27,7 +28,8 @@ import { AgendaService } from './agenda.service';
     AgendaDayViewComponent,
     AgendaWeekViewComponent,
     AgendaMonthViewComponent,
-    AgendaNavigationZonesComponent
+    AgendaNavigationZonesComponent,
+    AgendaAppointmentCardComponent
   ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css']

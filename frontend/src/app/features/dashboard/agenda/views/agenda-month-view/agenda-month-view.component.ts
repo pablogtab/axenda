@@ -145,6 +145,11 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     });
   }
 
+  isSameDayAsView(otherDate: Date | null): boolean {
+    if (!otherDate) return false;
+    return this.monthDays().some(d => isSameDay(d, otherDate!));
+  }
+
   isCurrentMonth(day: Date): boolean {
     return isSameMonth(day, this.date);
   }
@@ -188,7 +193,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
-    this.agendaService.setDragging(true, app);
+    this.agendaService.setDragging(true, app, 40, new Date(app.startTime));
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.wasDragging = false;
     document.body.classList.add('dragging-active');

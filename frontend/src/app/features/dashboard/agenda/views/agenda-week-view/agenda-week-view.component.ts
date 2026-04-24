@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { format, addDays, startOfWeek, endOfWeek, startOfDay } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, startOfDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
@@ -204,6 +204,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
+  isSameDayAsView(otherDate: Date | null): boolean {
+    if (!otherDate) return false;
+    return this.weekDaysSignal().some(d => isSameDay(d, otherDate!));
+  }
+
   computeGridStatus(): void {
     const profs = this.professionalsSignal();
     if (profs.length === 0) return;
@@ -285,7 +290,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
-    this.agendaService.setDragging(true, app);
+    this.agendaService.setDragging(true, app, app.height, new Date(app.startTime));
     this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.weekDaysSignal()[0]);

@@ -216,16 +216,21 @@
     </app-agenda-navigation-zones>
   </div>
 
-  <!-- Global Drag Preview -->
   @if (agendaService.isDragging() && agendaService.draggedApp(); as app) {
-    <div class="fixed pointer-events-none z-[9999] flex items-center gap-2 px-3 py-2 bg-bg-secondary/90 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl scale-110"
-         [style.left.px]="agendaService.mouseX() + 10"
-         [style.top.px]="agendaService.mouseY() + 10">
-      <div class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white" 
-           [style.background-color]="app.professional.color">
-        {{ app.professional.firstName[0] }}
-      </div>
-      <span class="text-xs font-bold text-text-main">{{ app.client.firstName }}</span>
+    <div class="fixed pointer-events-none z-[9999] rounded-lg shadow-2xl border border-white/10 backdrop-blur-xl scale-105 origin-top-left"
+         [style.left.px]="agendaService.mouseX() + 5"
+         [style.top.px]="agendaService.mouseY() + 5"
+         [style.width.px]="240"
+         [style.height.px]="agendaService.draggedAppHeight()"
+         [ngStyle]="{
+           'background-color': app.service.color + '40',
+           'border-left': '4px solid ' + app.service.color,
+           'color': app.service.color
+         }">
+      <app-agenda-appointment-card
+        [appointment]="app"
+        [height]="agendaService.draggedAppHeight()"
+        [showProfessionalBadge]="true"></app-agenda-appointment-card>
     </div>
   }
 </div>
