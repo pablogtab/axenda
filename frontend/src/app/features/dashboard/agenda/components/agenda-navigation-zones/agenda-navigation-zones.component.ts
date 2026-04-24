@@ -75,7 +75,7 @@ export class AgendaNavigationZonesComponent implements OnDestroy {
 
   @HostListener('document:wheel', ['$event'])
   handleWheelNavigation(event: WheelEvent) {
-    if (this.disabled || this.agendaService.isDragging()) return;
+    if (this.disabled) return;
     if (this.currentView !== 'month') return;
 
     const activeElement = document.activeElement;
