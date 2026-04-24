@@ -1,6 +1,5 @@
-<div class="flex flex-col h-full bg-bg-primary select-none relative" cdkDropListGroup>
+<div class="flex flex-col h-full bg-bg-primary select-none relative">
   
-
   <!-- Header: Días de la semana -->
   <div class="grid grid-cols-7 border-b border-white/5 bg-white/5 backdrop-blur-md">
     @for (dayName of weekDays; track dayName) {
@@ -13,22 +12,15 @@
   <!-- Grid de días -->
   <div class="flex-1 overflow-y-auto custom-scrollbar">
     <div class="grid grid-cols-7 h-full min-h-[600px]">
-      @for (day of monthDays(); track day.getTime()) {
+      @for (day of monthDays(); track $index) {
         @let dayApps = getAppointmentsForDay(day);
         <div 
           class="min-h-[120px] border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer"
           [class.bg-white/[0.03]]="!isCurrentMonth(day)"
           [class.bg-primary/5]="dropPreviewDate()?.getTime() === day.getTime()"
-          cdkDropList
-          [cdkDropListData]="day"
-          (cdkDropListDropped)="onDrop($event, day)"
-          (mouseenter)="agendaService.isDragging() ? dropPreviewDate.set(day) : null"
+          (dragover)="onDragOver($event, day)"
+          (drop)="onDrop($event, day)"
           (click)="onAddAppointment(day, $event)">
-          
-          <!-- Glass Preview Effect -->
-          @if (agendaService.isDragging() && dropPreviewDate()?.getTime() === day.getTime()) {
-            <div class="absolute inset-0 bg-primary/10 backdrop-blur-[2px] border-2 border-primary/30 z-0 animate-pulse"></div>
-          }
 
           <!-- Número del día -->
           <div class="flex justify-center mb-1 relative z-10">
@@ -47,32 +39,28 @@
 
           <!-- Lista de turnos -->
           <div class="flex-1 flex flex-col gap-1 overflow-hidden relative z-10">
-            @for (app of dayApps.slice(0, 5); track app.id) {
-              <div 
-                cdkDrag
-                [cdkDragData]="app"
-                (cdkDragStarted)="onDragStarted(app)"
-                (cdkDragEnded)="onDragEnded()"
-                (click)="onEditApp(app, $event)"
-                class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1"
-                [style.background-color]="app.service.color + '15'"
-                [style.border-left]="'3px solid ' + app.service.color">
-                
-                <div class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 shadow-sm"
-                     [style.background-color]="app.professional.color || '#6366f1'">
-                  {{ app.professional.firstName[0] }}
-                </div>
-                <span class="font-bold text-text-main opacity-80 shrink-0">{{ formatTime(app.startTime) }}</span>
-                <span class="truncate text-text-main font-medium">{{ app.client.firstName }} {{ app.client.lastName }}</span>
-
-                <!-- Preview al arrastrar -->
-                <div *cdkDragPreview class="flex items-center gap-2 px-3 py-2 bg-bg-secondary rounded-xl border border-white/20 shadow-2xl scale-110">
-                   <div class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white" [style.background-color]="app.professional.color">
-                     {{ app.professional.firstName[0] }}
-                   </div>
-                   <span class="text-xs font-bold text-text-main">{{ app.client.firstName }}</span>
-                </div>
+            @for (app of dayApps; track app.id) {
+            @if ($index < 5 || agendaService.draggedApp()?.id===app.id) {
+              <div
+              draggable="true"
+              (dragstart)="onDragStart(app, $event)"
+              (drag)="onDrag($event)"
+              (dragend)="onDragEnd()"
+              (click)="onEditApp(app, $event)"
+              class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-all cursor-pointer group/appt hover:translate-x-0.5 active:scale-[0.98] active:rotate-1"
+              [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
+              [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
+              [style.background-color]="app.service.color + '15'"
+              [style.border-left]="'3px solid ' + app.service.color">
+            
+              <div class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 shadow-sm"
+                [style.background-color]="app.professional.color || '#6366f1'">
+                {{ app.professional.firstName[0] }}
               </div>
+              <span class="font-bold text-text-main opacity-80 shrink-0">{{ formatTime(app.startTime) }}</span>
+              <span class="truncate text-text-main font-medium">{{ app.client.firstName }} {{ app.client.lastName }}</span>
+              </div>
+              }
             }
             
             @if (dayApps.length > 5) {

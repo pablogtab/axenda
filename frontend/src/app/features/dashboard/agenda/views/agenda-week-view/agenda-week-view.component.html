@@ -1,6 +1,4 @@
-<div class="flex-1 relative flex flex-col overflow-hidden" cdkDropListGroup>
-
-
+<div class="flex-1 relative flex flex-col overflow-hidden">
 
   <!-- Contenedor con Scroll Real -->
   <div class="flex-1 overflow-auto custom-scrollbar relative">
@@ -32,14 +30,14 @@
         </app-agenda-time-indicator>
       }
 
-
-
-      <!-- Capa de Detección de Hover (Solo activa al arrastrar) -->
+      <!-- Capa de Detección de Arrastre (Solo activa al arrastrar) -->
       @if (agendaService.isDragging()) {
-        <div class="absolute inset-0 z-[60] pointer-events-none">
+        <div class="absolute inset-0 z-[60]">
           <div class="grid h-full"
                [style.grid-template-columns]="'60px repeat(7, minmax(120px, 1fr))'"
-               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
+               [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'"
+               (dragover)="$event.preventDefault()"
+               (drop)="onDrop($event)">
             <!-- Espaciadores de header y horas -->
             <div [style.grid-column]="'1 / -1'" [style.grid-row]="1"></div>
             <div [style.grid-column]="1" [style.grid-row]="'1 / -1'"></div>
@@ -49,7 +47,7 @@
                 <div class="pointer-events-auto"
                      [style.grid-row]="rowIndex + 2"
                      [style.grid-column]="dayIndex + 2"
-                     (mouseenter)="onCellHover(dayIndex, slot)">
+                     (dragover)="onCellDragOver($event, dayIndex, slot)">
                 </div>
               }
             }
@@ -97,19 +95,13 @@
         }
       }
 
-      <!-- Capas de Arrastre -->
+      <!-- Capas de Turnos -->
       @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
-        <div class="relative"
-             [class.pointer-events-none]="!agendaService.isDragging()"
-             [class.pointer-events-auto]="agendaService.isDragging()"
+        <div class="relative pointer-events-none"
              [style.grid-column]="dayIndex + 2"
-             [style.grid-row]="'2 / span ' + timeSlots().length"
-             cdkDropList
-             [id]="'day-' + dayIndex"
-             [cdkDropListData]="appointmentsByDay().get(dayIndex) || []"
-             (cdkDropListDropped)="onDrop($event, dayIndex)">
+             [style.grid-row]="'2 / span ' + timeSlots().length">
           
-          <!-- Glass Node: Vista previa del resultado del drop -->
+          <!-- Vista previa del resultado del drop -->
           @if (dropPreview(); as preview) {
             @if (preview.dayIndex === dayIndex) {
               <div class="absolute left-1 right-1 rounded-lg border-2 border-primary/30 bg-primary/5 backdrop-blur-sm pointer-events-none z-0 transition-all duration-150"
@@ -123,11 +115,14 @@
           }
           
           @for (app of appointmentsByDay().get(dayIndex) || []; track app.id) {
-            <div cdkDrag [cdkDragData]="app"
-                  (cdkDragStarted)="onDragStarted(app)"
-                  (cdkDragEnded)="onDragEnded()"
+            <div draggable="true"
+                  (dragstart)="onDragStart(app, $event)"
+                  (drag)="onDrag($event)"
+                  (dragend)="onDragEnd()"
                   (click)="editAppointment.emit({ appointment: app }); $event.stopPropagation()"
                   class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto"
+                  [class.opacity-0]="agendaService.draggedApp()?.id === app.id"
+                  [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
                   [style.top.px]="app.top"
                   [style.height.px]="app.height"
                   [ngStyle]="{

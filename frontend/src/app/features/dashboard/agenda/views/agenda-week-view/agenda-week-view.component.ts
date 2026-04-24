@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { format, addDays, startOfWeek, endOfWeek, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
@@ -22,7 +21,7 @@ interface AppointmentUI extends Appointment {
 @Component({
   selector: 'app-agenda-week-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
+  imports: [CommonModule, AgendaZoomDirective, AgendaTimeIndicatorComponent, AgendaAppointmentCardComponent],
   templateUrl: './agenda-week-view.component.html',
   styleUrls: ['./agenda-week-view.component.css'],
   styles: [`
@@ -73,8 +72,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     return slots;
   });
 
-
-
   containerHeight = signal(0);
   isLoading = signal(false);
   hoveredSlot = signal<string | null>(null);
@@ -100,21 +97,13 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       this.cancelSelection();
     } else if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
-      // Despachamos un evento de mouseup para forzar a CDK a terminar el arrastre
-      document.dispatchEvent(new MouseEvent('mouseup'));
-
-      const app = this.draggedApp();
-
+      
       // Si la semana cambió durante el arrastre, revertimos a la original
       if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
         this.dateChange.emit(this.originalDate);
       }
 
-      // Usamos un pequeño delay para asegurar que CDK termine su ciclo
-      setTimeout(() => {
-        this.finishDrag();
-        if (app) this.refreshUI(app);
-      }, 0);
+      this.onDragEnd();
     }
   }
 
@@ -223,7 +212,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         const key = `${dayIndex}-${slot}`;
         // Si hay varios profesionales, mostramos disponible si AL MENOS UNO lo está
         avail[key] = profs.some(p => this.isProfessionalAvailableAt(p, day, slot));
-        // Bloqueado solo si todos los seleccionados están bloqueados (opcional, por ahora lo dejamos así)
+        // Bloqueado solo si todos los seleccionados están bloqueados
         block[key] = profs.length === 1 ? this.isProfessionalBlockedAt(profs[0], day, slot) : false;
       });
     });
@@ -285,24 +274,36 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  onDragStarted(app: AppointmentUI): void {
+  onDragStart(app: AppointmentUI, event: DragEvent): void {
     this.agendaService.setDragging(true, app);
+    this.agendaService.updateMousePosition(event.clientX, event.clientY);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.weekDaysSignal()[0]);
     this.dragCancelled = false;
+
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      const img = new Image();
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      event.dataTransfer.setDragImage(img, 0, 0);
+    }
   }
 
-  onDragEnded(): void {
-    // Delay para permitir que onDrop lea el preview antes de limpiar
-    // y evitar errores de ExpressionChangedAfterItHasBeenChecked
-    setTimeout(() => {
-      if (this.agendaService.isDragging()) {
-        this.finishDrag();
-      }
-    }, 100);
+  onDrag(event: DragEvent): void {
+    if (event.clientX !== 0 || event.clientY !== 0) {
+      this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    }
   }
 
-  onCellHover(dayIndex: number, slot: string): void {
+  onDragEnd(): void {
+    this.agendaService.stopDragging();
+    this.draggedApp.set(null);
+    this.dropPreview.set(null);
+    this.originalDate = null;
+  }
+
+  onCellDragOver(event: DragEvent, dayIndex: number, slot: string): void {
+    event.preventDefault();
     if (!this.agendaService.isDragging() || !this.draggedApp()) return;
 
     const startIndex = this.timeSlots().findIndex(s => s === slot);
@@ -319,17 +320,18 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  onDrop(event: CdkDragDrop<any[]>, dropListDayIndex: number): void {
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
     if (this.dragCancelled) {
       this.dragCancelled = false;
       return;
     }
-    const app = event.item.data;
+    const app = this.agendaService.draggedApp();
     const preview = this.dropPreview();
 
-    if (!preview) {
-      this.handleFailedDrop(app);
-      this.finishDrag();
+    if (!app || !preview) {
+      if (app) this.handleFailedDrop(app);
+      this.onDragEnd();
       return;
     }
 
@@ -339,7 +341,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
     if (!this.availabilityMap()[`${targetDayIndex}-${newTimeStr}`]) {
       this.handleFailedDrop(app);
-      this.finishDrag();
+      this.onDragEnd();
       return;
     }
 
@@ -370,11 +372,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       this.executeMove(app, newStartTime, newEndTime, this.professionalsSignal()[0]);
     }
 
-    this.finishDrag();
+    this.onDragEnd();
   }
 
   executeMove(app: Appointment, newStartTime: Date, newEndTime: Date, targetProf: Professional): void {
-    // Actualización optimista local
     this.rawAppointments.update(apps => apps.map(a =>
       a.id === app.id ? {
         ...a,
@@ -389,7 +390,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       } : a
     ));
 
-    // Aplicamos el efecto de desaparición/aparición para forzar a CDK a resetearse
     this.refreshUI(app);
 
     this.appointmentsService.update(app.id, {
@@ -438,18 +438,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.loadAppointments();
   }
 
-  private finishDrag(): void {
-    // Usamos setTimeout para sacar la actualización del ciclo actual de detección
-    // de cambios y evitar conflictos con las manipulaciones del DOM de CDK,
-    // previniendo el error ExpressionChangedAfterItHasBeenCheckedError.
-    setTimeout(() => {
-      this.agendaService.stopDragging();
-      this.draggedApp.set(null);
-      this.dropPreview.set(null);
-      this.originalDate = null;
-    }, 0);
-  }
-
   private handleFailedDrop(app: Appointment): void {
     this.snackbarService.warning('El profesional no está disponible en este horario.');
     if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
@@ -463,8 +451,6 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.rawAppointments.set(current.filter(a => a.id !== app.id));
     setTimeout(() => this.rawAppointments.set(current), 0);
   }
-
-
 
   onAdd(day: Date, time: string): void {
     const profs = this.professionalsSignal();

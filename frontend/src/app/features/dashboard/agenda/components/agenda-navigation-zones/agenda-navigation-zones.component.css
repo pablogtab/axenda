@@ -1,9 +1,9 @@
 .day-change-zone {
   position: absolute;
-  top: 40px;
+  top: 0;
   bottom: 0;
   width: 40px;
-  z-index: 100;
+  z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,9 +15,14 @@
 }
 
 .day-change-zone.visible,
+.day-change-zone.navigating,
 .day-change-zone:hover {
   opacity: 1;
   width: 80px;
+}
+
+.day-change-zone.navigating {
+  backdrop-filter: blur(8px);
 }
 
 .left-zone {
@@ -32,15 +37,18 @@
   border-right: 2px solid rgba(99, 102, 241, 0.3);
 }
 
-.day-change-zone:hover {
+.day-change-zone:hover,
+.day-change-zone.navigating {
   backdrop-filter: blur(8px);
 }
 
-.left-zone:hover {
+.left-zone:hover,
+.left-zone.navigating {
   background: linear-gradient(to right, rgba(99, 102, 241, 0.3), transparent);
 }
 
-.right-zone:hover {
+.right-zone:hover,
+.right-zone.navigating {
   background: linear-gradient(to left, rgba(99, 102, 241, 0.3), transparent);
 }
 .zone-content {
@@ -55,7 +63,8 @@
   pointer-events: auto;
 }
 
-.day-change-zone:hover .zone-content {
+.day-change-zone:hover .zone-content,
+.day-change-zone.navigating .zone-content {
   transform: scale(1.2);
   color: white;
   opacity: 1;

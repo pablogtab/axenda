@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgendaService } from '../../agenda.service';
 
@@ -11,8 +11,12 @@ import { AgendaService } from '../../agenda.service';
     <div class="day-change-zone left-zone" 
          [style.left]="offsetLeft"
          [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'prev'"
          (mouseenter)="onZoneEnter('prev')"
          (mouseleave)="onZoneLeave()"
+         (dragenter)="onDragEnter($event, 'prev')"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
          (click)="navigate.emit('prev')">
       <div class="zone-content">
         <span class="text-2xl">‹</span>
@@ -23,8 +27,12 @@ import { AgendaService } from '../../agenda.service';
     <!-- Zona Derecha -->
     <div class="day-change-zone right-zone"
          [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'next'"
          (mouseenter)="onZoneEnter('next')"
          (mouseleave)="onZoneLeave()"
+         (dragenter)="onDragEnter($event, 'next')"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
          (click)="navigate.emit('next')">
       <div class="zone-content">
         <span class="text-2xl">›</span>
@@ -34,7 +42,7 @@ import { AgendaService } from '../../agenda.service';
   `,
   styleUrls: ['./agenda-navigation-zones.component.css']
 })
-export class AgendaNavigationZonesComponent implements OnDestroy {
+export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Input() prevLabel = 'Anterior';
   @Input() nextLabel = 'Siguiente';
   @Input() offsetLeft = '0px';
@@ -47,72 +55,60 @@ export class AgendaNavigationZonesComponent implements OnDestroy {
   private lastWheelNavTime = 0;
   private readonly wheelNavThrottle = 200;
 
+  ngOnInit(): void {
+  }
+
   ngOnDestroy(): void {
     this.clearTimer();
   }
 
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardNavigation(event: KeyboardEvent) {
-    if (this.disabled) return;
-    
-    const activeElement = document.activeElement;
-    const isInput = activeElement?.tagName === 'INPUT' || 
-                   activeElement?.tagName === 'TEXTAREA' || 
-                   activeElement?.hasAttribute('contenteditable');
-    
-    if (isInput) return;
+  activeDir: 'prev' | 'next' | null = null;
 
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      this.navigate.emit('prev');
-      this.agendaService.triggerNavigationFeedback();
-      event.preventDefault();
-    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      this.navigate.emit('next');
-      this.agendaService.triggerNavigationFeedback();
-      event.preventDefault();
-    }
+  onDragEnter(event: DragEvent, dir: 'prev' | 'next'): void {
+    event.preventDefault();
+    if (this.activeDir === dir) return;
+    this.onZoneEnter(dir);
   }
 
-  @HostListener('document:wheel', ['$event'])
-  handleWheelNavigation(event: WheelEvent) {
-    if (this.disabled) return;
-    if (this.currentView !== 'month') return;
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    // Re-check if we need to start timer (e.g. if it was cleared by accident)
+    // But mostly we just need to preventDefault to allow the drag ghost to show over it
+  }
 
-    const activeElement = document.activeElement;
-    const isInput = activeElement?.tagName === 'INPUT' || 
-                   activeElement?.tagName === 'TEXTAREA' || 
-                   activeElement?.hasAttribute('contenteditable');
+  onDragLeave(event: DragEvent): void {
+    // Only leave if we are really leaving the zone element, not just a child
+    const target = event.relatedTarget as Node;
+    const zone = event.currentTarget as Node;
+    if (zone.contains(target)) return;
     
-    if (isInput) return;
-
-    const now = Date.now();
-    if (now - this.lastWheelNavTime < this.wheelNavThrottle) return;
-
-    if (Math.abs(event.deltaY) > 30) {
-      this.lastWheelNavTime = now;
-      this.navigate.emit(event.deltaY < 0 ? 'prev' : 'next');
-      this.agendaService.triggerNavigationFeedback();
-      event.preventDefault();
-    }
+    this.onZoneLeave();
   }
 
   onZoneEnter(dir: 'prev' | 'next'): void {
-    console.log(`[NavigationZones] Enter: ${dir}, isDragging: ${this.agendaService.isDragging()}`);
+    if (this.activeDir === dir) return;
+    
     this.clearTimer();
     if (!this.agendaService.isDragging()) return;
 
+    this.activeDir = dir;
+    this.startNavigationTimer(dir);
+  }
+
+  private startNavigationTimer(dir: 'prev' | 'next'): void {
     this.navigationTimer = setTimeout(() => {
-      if (this.agendaService.isDragging()) {
-        console.log(`[NavigationZones] Firing navigation: ${dir}`);
+      if (this.agendaService.isDragging() && this.activeDir === dir) {
         this.navigate.emit(dir);
-        // Reiniciar para navegación continua solo si seguimos arrastrando
-        this.onZoneEnter(dir);
+        this.agendaService.triggerNavigationFeedback();
+        this.startNavigationTimer(dir);
+      } else {
+        this.clearTimer();
       }
-    }, 800); 
+    }, 800);
   }
 
   onZoneLeave(): void {
-    console.log(`[NavigationZones] Leave`);
+    this.activeDir = null;
     this.clearTimer();
   }
 

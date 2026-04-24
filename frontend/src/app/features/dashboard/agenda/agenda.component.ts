@@ -69,21 +69,83 @@ export class AgendaComponent implements OnInit {
   showFilters = signal(false);
   showViewSelector = signal(false);
 
-  @HostListener('document:keydown.escape', ['$event'])
-  handleEscape(event: any) {
+  @HostListener('window:keydown', ['$event'])
+  handleGlobalKeyDown(event: KeyboardEvent) {
     if (this.showFilters()) {
-      this.showFilters.set(false);
+      if (event.key === 'Escape') this.showFilters.set(false);
+      return;
     }
     if (this.showViewSelector()) {
-      this.showViewSelector.set(false);
+      if (event.key === 'Escape') this.showViewSelector.set(false);
+      return;
+    }
+
+    // Navegación con Flechas
+    const activeElement = document.activeElement;
+    const isInput = activeElement?.tagName === 'INPUT' || 
+                   activeElement?.tagName === 'TEXTAREA' || 
+                   activeElement?.hasAttribute('contenteditable');
+    
+    if (isInput) return;
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      this.changeDate(-1);
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      this.changeDate(1);
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
     }
   }
 
-  @HostListener('document:mouseup')
-  handleGlobalMouseUp() {
+  private lastWheelNavTime = 0;
+  private readonly wheelNavThrottle = 300;
+
+  @HostListener('window:wheel', ['$event'])
+  handleGlobalWheel(event: WheelEvent) {
+    if (this.showFilters() || this.showViewSelector()) return;
+    
+    // Solo permitimos navegación por rueda en vista mes o si estamos arrastrando
+    if (this.selectedView() !== 'month' && !this.agendaService.isDragging()) return;
+
+    const activeElement = document.activeElement;
+    const isInput = activeElement?.tagName === 'INPUT' || 
+                   activeElement?.tagName === 'TEXTAREA' || 
+                   activeElement?.hasAttribute('contenteditable');
+    
+    if (isInput) return;
+
+    const now = Date.now();
+    if (now - this.lastWheelNavTime < this.wheelNavThrottle) return;
+
+    if (Math.abs(event.deltaY) > 50) {
+      this.lastWheelNavTime = now;
+      this.changeDate(event.deltaY < 0 ? -1 : 1);
+      this.agendaService.triggerNavigationFeedback();
+      event.preventDefault();
+    }
+  }
+
+  @HostListener('document:dragover', ['$event'])
+  handleGlobalDragOver(event: DragEvent) {
     if (this.agendaService.isDragging()) {
-      console.log('[AgendaComponent] Global MouseUp detected. Checking drag state consistency...');
-      // Damos un margen para que los eventos locales (onDrop) se procesen
+      this.agendaService.updateMousePosition(event.clientX, event.clientY);
+      // We don't preventDefault here to allow actual drop targets to handle it
+    }
+  }
+
+  @HostListener('document:mouseup', ['$event'])
+  handleGlobalMouseUp(event: MouseEvent) {
+    if (this.agendaService.isDragging()) {
+      // Si estamos navegando (cambio de mes), ignoramos el mouseup global por completo
+      // porque el navegador suele disparar eventos falsos al reconstruir el DOM.
+      if (this.agendaService.isNavigating()) {
+        console.log('[AgendaComponent] Global MouseUp ignored during navigation');
+        return;
+      }
+      
+      // Para otros casos, damos un pequeño margen
       setTimeout(() => {
         if (this.agendaService.isDragging()) {
           console.warn('[AgendaComponent] Drag state was stuck. Forcing stop.');
@@ -213,12 +275,14 @@ export class AgendaComponent implements OnInit {
     if (view === 'month') {
       const newDate = addMonths(startOfMonth(oldDate), days);
       console.log(`[AgendaComponent] Month Navigation: New Date = ${newDate.toISOString()}`);
-      this.selectedDate.set(newDate);
+      // Usamos setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
+      // y dar tiempo al sistema de Drag&Drop a estabilizarse
+      setTimeout(() => this.selectedDate.set(newDate), 0);
     } else {
       const step = view === 'week' ? days * 7 : days;
       const newDate = addDays(oldDate, step);
       console.log(`[AgendaComponent] ${view === 'week' ? 'Week' : 'Day'} Navigation: New Date = ${newDate.toISOString()}`);
-      this.selectedDate.set(newDate);
+      setTimeout(() => this.selectedDate.set(newDate), 0);
     }
   }
 
