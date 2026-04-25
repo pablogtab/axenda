@@ -5,6 +5,14 @@
   <!-- Header: Controles -->
   <header class="p-2 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center z-[70]">
     <div class="flex items-center gap-6">
+      <!-- Sidebar Toggle -->
+      <button 
+        (click)="sidebarService.toggle()" 
+        class="p-2.5 bg-white/5 hover:bg-white/10 text-text-dim hover:text-text-main rounded-xl border border-white/10 transition-all active:scale-95 group"
+        [title]="sidebarService.isCollapsed() ? 'Mostrar menú' : 'Ocultar menú'">
+        <span class="text-xl transition-transform group-hover:scale-110">☰</span>
+      </button>
+
       <!-- Navegación de Fecha -->
       <div class="flex items-center bg-white/5 rounded-2xl border border-white/10 p-1">
         <button (click)="today()" class="px-4 py-2 hover:bg-white/10 rounded-lg text-sm font-bold transition-all text-text-main">Hoy</button>

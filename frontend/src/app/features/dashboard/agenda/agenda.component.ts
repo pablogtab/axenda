@@ -7,6 +7,7 @@ import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { format, addDays, startOfDay, startOfWeek, addMonths, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SidebarService } from '@services/sidebar.service';
 
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
@@ -40,6 +41,7 @@ export class AgendaComponent implements OnInit {
   private modal = inject(ModalService);
   private userConfig = inject(UserConfigurationService);
   public agendaService = inject(AgendaService);
+  public sidebarService = inject(SidebarService);
 
   constructor() {
     // Sincronizar cambios de vuelta a la configuración de usuario para persistencia

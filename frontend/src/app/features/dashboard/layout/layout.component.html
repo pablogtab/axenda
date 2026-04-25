@@ -1,57 +1,86 @@
-<div class="flex h-screen bg-bg-primary overflow-hidden">
+<div class="flex h-screen bg-bg-primary overflow-hidden relative">
+  <!-- Mobile Backdrop -->
+  <div 
+    *ngIf="!sidebarService.isCollapsed() && (sidebarService.isMobile())" 
+    (click)="sidebarService.toggle()"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden transition-opacity duration-300">
+  </div>
+
   <!-- Sidebar -->
-  <aside class="w-[280px] flex flex-col p-8 border-r border-border glass relative z-10">
-    <div class="mb-12 px-2">
-      <h2 class="text-3xl font-bold tracking-tight text-gradient">Axenda</h2>
+  <aside 
+    [class.w-\[280px\]]="!sidebarService.isCollapsed()"
+    [class.w-0]="sidebarService.isCollapsed()"
+    [class.border-r-0]="sidebarService.isCollapsed()"
+    [class.-translate-x-full]="sidebarService.isCollapsed() && sidebarService.isMobile()"
+    class="flex flex-col border-r border-border glass relative z-30 transition-all duration-300 ease-in-out lg:translate-x-0 fixed lg:static h-full shrink-0 overflow-hidden"
+    [class.p-8]="!sidebarService.isCollapsed()"
+    [class.p-0]="sidebarService.isCollapsed()">
+    
+    <div class="mb-12 px-2 flex items-center justify-between overflow-hidden">
+      <h2 *ngIf="!sidebarService.isCollapsed()" class="text-3xl font-bold tracking-tight text-gradient whitespace-nowrap">Axenda</h2>
+      <button 
+        (click)="sidebarService.toggle()" 
+        class="p-2 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-text-main shrink-0"
+        title="Colapsar menú">
+        <span class="text-xl">⬅️</span>
+      </button>
     </div>
 
-    <nav class="flex-1 flex flex-col gap-2">
+    <nav class="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
       <a routerLink="/dashboard/agenda" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
-        <span class="text-xl transition-transform group-hover:scale-110">📅</span>
-        Agenda
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">📅</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Agenda</span>
       </a>
       
       <a routerLink="/dashboard/clients" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
-        <span class="text-xl transition-transform group-hover:scale-110">👥</span>
-        Clientes
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">👥</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Clientes</span>
       </a>
 
       <a routerLink="/dashboard/services" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
-        <span class="text-xl transition-transform group-hover:scale-110">✂️</span>
-        Servicios
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">✂️</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Servicios</span>
       </a>
 
       <a routerLink="/dashboard/professionals" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
-        <span class="text-xl transition-transform group-hover:scale-110">👨‍⚕️</span>
-        Profesionales
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">👨‍⚕️</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Profesionales</span>
       </a>
 
       <a routerLink="/dashboard/branches" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group">
-        <span class="text-xl transition-transform group-hover:scale-110">🏢</span>
-        Sucursales
+         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">🏢</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Sucursales</span>
       </a>
     </nav>
 
     <div class="mt-auto pt-8">
       <button (click)="logout()" 
-              class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/10 text-red-400 font-medium transition-all hover:bg-red-500/10 hover:border-red-500/30">
-        <span>🚪</span> Cerrar Sesión
+              class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/10 text-red-400 font-medium transition-all hover:bg-red-500/10 hover:border-red-500/30 overflow-hidden">
+        <span class="shrink-0">🚪</span> 
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Cerrar Sesión</span>
       </button>
     </div>
   </aside>
 
   <!-- Main Content -->
   <main class="flex-1 flex flex-col min-w-0 relative">
+    <!-- Mobile Header -->
+    <header *ngIf="sidebarService.isMobile()" class="flex items-center gap-4 p-4 border-b border-border glass shrink-0">
+      <button (click)="sidebarService.toggle()" class="p-2 rounded-lg hover:bg-white/5 text-text-main">
+        <span class="text-xl">☰</span>
+      </button>
+      <h2 class="text-xl font-bold tracking-tight text-gradient">Axenda</h2>
+    </header>
 
     <!-- Content Area -->
     <div class="flex-1 overflow-hidden">
