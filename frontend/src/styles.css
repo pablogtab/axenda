@@ -35,6 +35,37 @@
     @apply bg-bg-primary text-text-main antialiased overflow-x-hidden;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
+
+  /* Reseteo definitivo para inputs de fecha y hora en iOS (Safari/Chrome) */
+  input[type="date"],
+  input[type="time"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    text-align: left !important;
+    min-height: auto !important; /* Dejamos que el padding/line-height mande para igualar al resto */
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 1.25em !important; /* Altura mínima justa para evitar el colapso sin pasarse */
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+  }
 }
 
 /* Definición de utilidades personalizadas (v4 syntax) */

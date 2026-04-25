@@ -3,8 +3,8 @@
   <div class="fixed inset-0 z-[60]" (click)="showFilters.set(false); showViewSelector.set(false)"></div>
   }
   <!-- Header: Controles -->
-  <header class="py-0.5 sm:py-1 px-1 sm:px-3 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center z-[70]">
-    <div class="flex items-center gap-1 sm:gap-4">
+  <header class="py-1 sm:py-2 px-2 sm:px-4 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center z-[70]">
+    <div class="flex items-center gap-1.5 sm:gap-4">
       <!-- Sidebar Toggle -->
       <button 
         (click)="sidebarService.toggle()" 
@@ -22,7 +22,7 @@
         <button (click)="changeDate(1)" class="p-1 sm:p-1.5 hover:bg-white/10 rounded-full transition-all text-text-dim hover:text-text-main">&gt;</button>
       </div>
 
-      <span class="text-sm sm:text-base font-bold text-text-main capitalize min-w-0 sm:min-w-[180px]">{{ currentDateLabel() }}</span>
+      <span class="text-xs sm:text-base font-bold text-text-main capitalize truncate sm:min-w-[180px]">{{ currentDateLabel() }}</span>
 
       <!-- Selector de Vista (Dropdown Estilo Google) -->
       <div class="relative">

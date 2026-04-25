@@ -4,6 +4,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@a
 import { OverlayModule } from '@angular/cdk/overlay';
 import { Subject, Observable, of } from 'rxjs';
 import { debounceTime, switchMap, finalize, tap } from 'rxjs/operators';
+import { SidebarService } from '@core/services/sidebar.service';
 
 export interface SearchableSelectConfig<T = any> {
   label?: string;
@@ -49,6 +50,7 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   selectedItem = signal<T | null>(null);
   isSearching = signal(false);
   selectedIndex = signal(-1);
+  sidebarService = inject(SidebarService);
   
   private searchSubject = new Subject<string>();
 
@@ -65,6 +67,13 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
       debounceTime(300),
       switchMap(query => {
         this.selectedIndex.set(-1);
+
+        // Si el query es vacío, simplemente limpiamos y no buscamos
+        if (query.trim().length === 0) {
+          this.isSearching.set(false);
+          return of([]);
+        }
+
         this.isSearching.set(true);
         const search = this.searchFn;
         if (!search) return of([]);
@@ -82,17 +91,14 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
 
   onFocus(event: Event): void {
     const val = (event.target as HTMLInputElement).value;
-    const search = this.searchFn;
-    if (!search) return;
 
-    this.isSearching.set(true);
-    search(val).subscribe({
-      next: (res) => {
-        this.results.set(res);
-        this.isSearching.set(false);
-      },
-      error: () => this.isSearching.set(false)
-    });
+    // CLAVE PARA MÓVILES EN DIÁLOGOS:
+    // Al abrir un diálogo, el CDK enfoca automáticamente el primer campo.
+    // Si el campo está vacío, ignoramos este primer foco para evitar que el buscador 
+    // se abra solo y compita con la animación del teclado/diálogo.
+    if (this.sidebarService.isMobile() && val.trim().length === 0) return;
+
+    this.searchSubject.next(val);
   }
 
   onBlur(): void {
