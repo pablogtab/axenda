@@ -11,8 +11,8 @@ import { SidebarService } from '@core/services/sidebar.service';
     <!-- Zona Izquierda -->
     <div class="day-change-zone left-zone" 
          [style.left]="offsetLeft"
-         [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'prev'"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile())"
          (click)="navigate.emit('prev')">
       <div class="zone-content">
         <span class="text-2xl">‹</span>
@@ -22,8 +22,8 @@ import { SidebarService } from '@core/services/sidebar.service';
 
     <!-- Zona Derecha -->
     <div class="day-change-zone right-zone"
-         [class.visible]="agendaService.isDragging() || agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'next'"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile())"
          (click)="navigate.emit('next')">
       <div class="zone-content">
         <span class="text-2xl">›</span>
@@ -118,7 +118,14 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @HostListener('document:touchmove', ['$event'])
   onTouchMove(event: TouchEvent): void {
     if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) return;
-    if (this.agendaService.isDragging()) return;
+    
+    // Si se inicia un arrastre de turno, invalidamos el inicio del swipe para evitar 
+    // que al soltar el turno se interprete como una navegación lateral.
+    if (this.agendaService.isDragging()) {
+      this.touchStartX = 0;
+      this.activeDir = null;
+      return;
+    }
 
     const touch = event.touches[0];
     const deltaX = touch.clientX - this.touchStartX;
@@ -152,7 +159,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     const absY = Math.abs(deltaY);
 
     // Umbral: 100px de recorrido y claramente horizontal (más de 2 veces el vertical)
-    if (absX > 100 && absX > absY * 2) {
+    if (absX > 150 && absX > absY * 2) {
       const dir = deltaX > 0 ? 'prev' : 'next';
       this.activeDir = dir;
       this.navigate.emit(dir);
@@ -160,9 +167,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       
       // Mantener el feedback visual durante la transición
       setTimeout(() => {
-        if (!this.agendaService.isDragging()) {
-          this.activeDir = null;
-        }
+        this.activeDir = null;
       }, 500);
     } else {
       this.activeDir = null;

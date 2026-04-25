@@ -68,6 +68,16 @@
   }
 }
 
+/* Prevenir selección de texto y menús contextuales (Desktop & Mobile) */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Definición de utilidades personalizadas (v4 syntax) */
 @utility glass {
   @apply backdrop-blur-md border border-white/10;
