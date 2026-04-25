@@ -11,8 +11,8 @@ import { SidebarService } from '@core/services/sidebar.service';
     <!-- Zona Izquierda -->
     <div class="day-change-zone left-zone" 
          [style.left]="offsetLeft"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile())"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating() && sidebarService.isCollapsed()"
+         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile()) && sidebarService.isCollapsed()"
          (click)="navigate.emit('prev')">
       <div class="zone-content">
         <span class="text-2xl">‹</span>
@@ -22,8 +22,8 @@ import { SidebarService } from '@core/services/sidebar.service';
 
     <!-- Zona Derecha -->
     <div class="day-change-zone right-zone"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile())"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating() && sidebarService.isCollapsed()"
+         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile()) && sidebarService.isCollapsed()"
          (click)="navigate.emit('next')">
       <div class="zone-content">
         <span class="text-2xl">›</span>
@@ -37,7 +37,7 @@ import { SidebarService } from '@core/services/sidebar.service';
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 999;
+      z-index: 50;
     }
     .day-change-zone {
       pointer-events: auto;
@@ -102,6 +102,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @HostListener('document:touchstart', ['$event'])
   onTouchStart(event: TouchEvent): void {
     if (!this.sidebarService.isMobile() || this.disabled) return;
+    if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
     
     const touch = event.touches[0];
     const rect = this.el.nativeElement.getBoundingClientRect();
@@ -120,6 +121,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @HostListener('document:touchmove', ['$event'])
   onTouchMove(event: TouchEvent): void {
     if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) return;
+    if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
     
     // Si se inicia un arrastre de turno, invalidamos el inicio del swipe para evitar 
     // que al soltar el turno se interprete como una navegación lateral.
@@ -151,6 +153,8 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       this.activeDir = null;
       return;
     }
+    
+    if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
     
     if (this.agendaService.isDragging()) {
       this.touchStartX = 0;
