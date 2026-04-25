@@ -1,37 +1,33 @@
 <div class="flex flex-col h-full bg-bg-primary select-none relative">
   
-  <!-- Header: Días de la semana -->
-  <div class="grid grid-cols-7 border-b border-white/5 bg-white/5 backdrop-blur-md">
-    @for (dayName of weekDays; track dayName) {
-      <div class="py-3 text-center">
-        <span class="text-[10px] font-black text-text-dim tracking-[0.2em] uppercase">{{ dayName }}</span>
-      </div>
-    }
-  </div>
-
   <!-- Grid de días -->
-  <div class="flex-1 overflow-y-auto custom-scrollbar">
-    <div class="grid grid-cols-7 h-full min-h-[600px] month-grid">
+  <div class="flex-1 overflow-hidden">
+    <div class="grid grid-cols-7 h-full month-grid">
       @for (day of monthDays(); track $index) {
         @let dayApps = getAppointmentsForDay(day);
         <div 
-          class="min-h-[120px] border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer"
+          class="border-r border-b border-white/5 p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-1 relative group/day cursor-pointer overflow-hidden"
           [class.bg-white/[0.03]]="!isCurrentMonth(day)"
           [class.bg-primary/5]="dropPreviewDate()?.getTime() === day.getTime()"
           (click)="onAddAppointment(day, $event)">
 
-          <!-- Número del día -->
-          <div class="flex justify-center mb-1 relative z-10">
+          <!-- Cabecera de celda: Día de la semana (Solo primera fila) y Número -->
+          <div class="flex flex-col items-center mb-1 relative z-10">
+            @if ($index < 7) {
+              <span class="text-[9px] font-black text-text-dim tracking-[0.1em] uppercase mb-1">{{ weekDays[$index] }}</span>
+              }
             <div 
-              class="h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all cursor-pointer"
+              class="h-4 flex items-center justify-center rounded-full text-sm font-bold transition-all cursor-pointer"
               (click)="onDayClick(day, $event)"
               [class.w-8]="formatDayNumber(day).length <= 2"
               [class.px-3]="formatDayNumber(day).length > 2"
-              [class.bg-primary]="isToday(day)"
-              [class.text-white]="isToday(day)"
               [class.text-text-main]="isCurrentMonth(day) && !isToday(day)"
               [class.text-text-dim]="!isCurrentMonth(day)">
-              {{ formatDayNumber(day) }}
+              @if(isToday(day)) {
+              <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">{{ formatDayNumber(day) }}</span>
+              } @else {
+              <span>{{ formatDayNumber(day) }}</span>
+              }
             </div>
           </div>
 

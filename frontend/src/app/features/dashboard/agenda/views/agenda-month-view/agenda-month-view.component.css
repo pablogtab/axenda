@@ -23,3 +23,7 @@
 .cdk-drag-animating {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+.month-grid {
+  grid-template-rows: repeat(6, 1fr);
+}
