@@ -59,9 +59,14 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   monthDays = computed(() => {
     const current = this._date();
     const start = startOfWeek(startOfMonth(current), { weekStartsOn: 1 });
-    // Forzamos siempre 6 semanas (42 días) para que la estructura de celdas en el DOM
-    // sea estable y los eventos no se pierdan al cambiar de mes.
-    return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+    const end = endOfWeek(endOfMonth(current), { weekStartsOn: 1 });
+
+    // Calculamos el intervalo real de días necesarios para cubrir el mes completo por semanas
+    return eachDayOfInterval({ start, end });
+  });
+
+  monthRows = computed(() => {
+    return this.monthDays().length / 7;
   });
 
   weekDays = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
@@ -257,14 +262,16 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     }
 
     const colWidth = rect.width / 7;
-    const rowHeight = rect.height / 6;
+    const rows = this.monthRows();
+    const rowHeight = rect.height / rows;
 
     const col = Math.floor(relativeX / colWidth);
     const row = Math.floor(relativeY / rowHeight);
 
     const index = row * 7 + col;
-    if (index >= 0 && index < 42) {
-      const day = this.monthDays()[index];
+    const days = this.monthDays();
+    if (index >= 0 && index < days.length) {
+      const day = days[index];
       if (this.dropPreviewDate() !== day) {
         this.dropPreviewDate.set(day);
       }
@@ -297,7 +304,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   formatDayNumber(day: Date): string {
     const dayNum = format(day, 'd');
     if (dayNum === '1') {
-      return format(day, 'd MMM', { locale: es });
+      return format(day, "d 'de' MMM", { locale: es }); //1 de Abr
     }
     return dayNum;
   }

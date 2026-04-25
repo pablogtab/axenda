@@ -2,7 +2,7 @@
   
   <!-- Grid de días -->
   <div class="flex-1 overflow-hidden">
-    <div class="grid grid-cols-7 h-full month-grid">
+    <div class="grid grid-cols-7 h-full month-grid" [style.grid-template-rows]="'repeat(' + monthRows() + ', 1fr)'">
       @for (day of monthDays(); track $index) {
         @let dayApps = getAppointmentsForDay(day);
         <div 
@@ -17,7 +17,7 @@
               <span class="text-[9px] font-black text-text-dim tracking-[0.1em] uppercase mb-1">{{ weekDays[$index] }}</span>
               }
             <div 
-              class="h-4 flex items-center justify-center rounded-full text-sm font-bold transition-all cursor-pointer"
+              class="h-4 flex items-center justify-center rounded-full text-xs font-bold transition-all cursor-pointer"
               (click)="onDayClick(day, $event)"
               [class.w-8]="formatDayNumber(day).length <= 2"
               [class.px-3]="formatDayNumber(day).length > 2"
