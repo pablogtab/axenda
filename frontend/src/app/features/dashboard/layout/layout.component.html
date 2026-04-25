@@ -18,12 +18,6 @@
     
     <div class="mb-12 px-2 flex items-center justify-between overflow-hidden">
       <h2 *ngIf="!sidebarService.isCollapsed()" class="text-3xl font-bold tracking-tight text-gradient whitespace-nowrap">Axenda</h2>
-      <button 
-        (click)="sidebarService.toggle()" 
-        class="p-2 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-text-main shrink-0"
-        title="Colapsar menú">
-        <span class="text-xl">⬅️</span>
-      </button>
     </div>
 
     <nav class="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
