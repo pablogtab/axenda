@@ -21,26 +21,37 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] **Motor de Disponibilidad**: Lógica inteligente (endpoints) para calcular "slots" de tiempo libres cruzando la agenda del profesional, la duración de los servicios y las excepciones.
 - [x] **Estados y Flujo del Turno**: Cambios de estado (Pendiente, Confirmado, En curso, Completado, Ausente, Cancelado).
 
-## 🔴 Fase 4: Frontend (Panel Administrativo)
-- [ ] Setup de proyecto Frontend (Angular)
-- [ ] Integración de Auth en UI.
-- [ ] Vistas de configuración (Mi Negocio, Sucursales, Equipo, Catálogo).
-- [ ] Calendario interactivo (Vista diaria/semanal, arrastrar y soltar turnos).
+## 🟡 Fase 4: UX de Gestión Interna (Prioridad Actual)
+- [x] Setup de proyecto Frontend (Angular).
+- [x] Integración de Auth en UI.
+- [x] Calendario interactivo (Vista diaria/semanal, drag & drop).
+- [ ] **Carga rápida de clientes**: Crear un cliente nuevo directamente desde el buscador del modal de turnos.
+- [ ] **Estados detallados de reserva**: Implementar flujo *Confirmado, En Espera, Asiste, No asistió*.
+- [ ] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
+- [ ] **Sobreturnos (Overbooking)**: Permitir solapamientos manuales forzados por el administrador.
+- [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
 
-## 🔴 Fase 5: Canal Público de Reservas (Widget/Link)
-- [ ] Flujo público para que el cliente seleccione Servicio -> Profesional -> Horario libre.
-- [ ] Formulario de carga de datos de cliente y confirmación de reserva.
-- [ ] Generación de enlaces/QR por sucursal o profesional.
+## 🔴 Fase 5: Reglas de Negocio y Lógica Avanzada
+- [ ] **Políticas de Anticipación**: Configurar límites mínimos y máximos para reservas.
+- [ ] **Modalidad Presencial/Virtual**: Definir tipo de servicio y links de reunión automáticos.
+- [ ] **Horarios por Servicio**: Restricción de disponibilidad según el servicio seleccionado.
+- [ ] **Turnos Genéricos**: Bloqueos de tiempo sin servicio específico.
+- [ ] **Reservas Recurrentes**: Soporte para citas que se repiten en el tiempo.
 
-## 🔴 Fase 6: Notificaciones e Integraciones (Post-MVP)
-- [ ] **Emails Transaccionales**: (Resgrid, SendGrid) confirmaciones de turnos.
-- [ ] **WhatsApp/SMS**: Notificaciones y recordatorios automatizados.
-- [ ] **Pasarela de Pagos**: Si se exige seña o pago por adelantado (MercadoPago / Stripe).
+## 🔴 Fase 6: Canal Público y Link de Reserva
+- [ ] **Link Público Personalizable**: Flujo de reserva para clientes finales (*Servicio → Prof → Hora*).
+- [ ] **Diseño y Temas**: Personalización de colores y logo en la vista pública.
+- [ ] **Generación de QR**: Generar códigos para acceso rápido al agendamiento.
+- [ ] **Google Login**: Autenticación social para clientes.
 
----
+## 🔴 Fase 7: Pagos y Notificaciones (Post-MVP)
+- [ ] **Integración MercadoPago**: Cobro de señas o total del turno.
+- [ ] **Estados de Pago**: Tracking de *Pendiente, Señado, Pagado*.
+- [ ] **WhatsApp Recordatorios**: Mensajes automáticos previos a la cita.
+- [ ] **Bot de WhatsApp**: Reservas automáticas vía chat.
 
-## 📝 Backlog / Ideas Anotadas (Futuro)
-- [ ] **Generación Automática de Servicios**: Al registrar un nuevo Tenant (por ej. una barbería), que se creen automáticamente servicios por defecto (Corte, Barba, etc.) para que el usuario no tenga que empezar desde cero.
-- [ ] **Turnos Genéricos**: Permitir crear Turnos (Appointments) en el sistema donde no sea estrictamente obligatorio asignar un "Servicio", dando más flexibilidad a recepcionistas para bloqueos de agenda rápidos.
-- [ ] **Sobreturnos (Overbooking manual)**: Capacidad para que un administrador o recepcionista pueda forzar un turno en un horario que ya está ocupado, solapando citas intencionalmente.
-- [ ] **Bloqueos de Agenda por Horario**: Funcionalidad para que un profesional o administrador pueda bloquear franjas horarias específicas de forma rápida directamente desde la vista de agenda (excepciones puntuales de disponibilidad).
+## 🔴 Fase 8: Valor Agregado y Cierre
+- [ ] **Google Reviews**: Integración para solicitar reseñas post-cita.
+- [ ] **Guía de Configuración**: Onboarding guiado para nuevos negocios.
+- [ ] **Tutoriales y Cursos**: Centro de ayuda integrado.
+- [ ] **Generación Automática de Servicios**: Templates por rubro al registrarse.
