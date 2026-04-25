@@ -67,6 +67,7 @@ export class AgendaComponent implements OnInit {
   isLoading = signal(true);
   showFilters = signal(false);
   showViewSelector = signal(false);
+  showMobileSettings = signal(false);
   viewTransitionClass = signal<string>('');
 
   @HostListener('document:keydown', ['$event'])
