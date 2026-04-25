@@ -227,8 +227,11 @@ export class AgendaComponent implements OnInit {
   
   navLabels = computed(() => {
     const view = this.selectedView();
-    if (view === 'day') return { prev: 'Día Anterior', next: 'Día Siguiente', offset: '60px' };
-    if (view === 'week') return { prev: 'Semana Anterior', next: 'Semana Siguiente', offset: '60px' };
+    const isMobile = this.sidebarService.isMobile();
+    const timeColWidth = isMobile ? '45px' : '60px';
+    
+    if (view === 'day') return { prev: 'Día Anterior', next: 'Día Siguiente', offset: timeColWidth };
+    if (view === 'week') return { prev: 'Semana Anterior', next: 'Semana Siguiente', offset: timeColWidth };
     return { prev: 'Mes Anterior', next: 'Mes Siguiente', offset: '0px' };
   });
 

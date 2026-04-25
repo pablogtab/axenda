@@ -2,20 +2,21 @@
 
   <!-- Contenedor con Scroll Real -->
   <div class="flex-1 overflow-auto custom-scrollbar relative">
-    <div class="grid" 
-         [style.grid-template-columns]="'60px repeat(7, minmax(120px, 1fr))'"
-         [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
+    <div class="grid transition-all duration-300" 
+         [style.grid-template-columns]="(sidebarService.isMobile() ? '45px' : '60px') + ' repeat(7, minmax(' + (sidebarService.isMobile() ? '80px' : '120px') + ', 1fr))'"
+         [style.grid-template-rows]="(sidebarService.isMobile() ? '32px' : '40px') + ' repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
       
       <!-- Esquina Superior Izquierda -->
       <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"></div>
 
       <!-- Headers de Días (Sticky Top) -->
       @for (day of weekDaysSignal(); track $index; let i = $index) {
-        <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex flex-col items-center justify-center z-30"
+        <div class="sticky top-0 bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex flex-col items-center justify-center z-30 transition-all"
+             [style.height.px]="sidebarService.isMobile() ? 32 : 40"
              [style.grid-column]="i + 2"
              [style.grid-row]="1">
-          <span class="text-[10px] uppercase tracking-widest text-text-dim leading-none">{{ day | date:'EEEE':'': 'es' }}</span>
-          <span class="text-xs font-bold text-text-main">{{ day | date:'dd MMM' }}</span>
+          <span class="text-[8px] sm:text-[10px] uppercase tracking-tighter sm:tracking-widest text-text-dim leading-none">{{ day | date:'EEE':'': 'es' }}</span>
+          <span class="text-[10px] sm:text-xs font-bold text-text-main">{{ day | date:'dd' }}</span>
         </div>
       }
 
@@ -34,15 +35,15 @@
       @for (slot of timeSlots(); track slot; let rowIndex = $index) {
         
         <!-- Label de Hora (Sticky Left) -->
-        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-3 items-center text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
+        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-1 sm:pr-3 items-center text-[9px] sm:text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
              appAgendaZoom
              [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
              [class.!text-primary]="hoveredSlot() === slot"
              [class.!bg-white/5]="hoveredSlot() === slot"
              [class.!font-bold]="hoveredSlot() === slot">
           @if (slot.endsWith(':00')) {
-            <span>{{ slot }}</span>
-          } @else if (slot.endsWith(':30')) {
+            <span class="transition-all">{{ slot }}</span>
+          } @else if (slot.endsWith(':30') && !sidebarService.isMobile()) {
             <span class="opacity-30">-</span>
           }
         </div>
@@ -92,7 +93,7 @@
           @for (app of appointmentsByDay().get(dayIndex) || []; track app.id) {
             <div (pointerdown)="onPointerDown(app, $event)"
                   (click)="onAppClick(app, $event)"
-                  class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
+                  class="absolute left-0.5 right-0.5 sm:left-1 sm:right-1 rounded-md sm:rounded-lg p-1 sm:p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
                   [class.opacity-40]="agendaService.draggedApp()?.id === app.id && isSameDayAsView(agendaService.draggedAppOriginDate())"
                   [class.opacity-0]="agendaService.draggedApp()?.id === app.id && !isSameDayAsView(agendaService.draggedAppOriginDate())"
                   [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
@@ -100,7 +101,7 @@
                   [style.height.px]="app.height"
                   [ngStyle]="{
                     'background-color': app.service.color + '20',
-                    'border-left': '4px solid ' + app.service.color,
+                    'border-left': (sidebarService.isMobile() ? '2px' : '4px') + ' solid ' + app.service.color,
                     'color': app.service.color
                   }">
               

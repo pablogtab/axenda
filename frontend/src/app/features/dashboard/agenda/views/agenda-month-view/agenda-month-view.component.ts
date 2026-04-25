@@ -20,6 +20,7 @@ import { Professional } from '@services/professionals.service';
 import { startOfLocalDate, endOfLocalDate, toLocalDateStr } from '@core/utils/date-utils';
 
 import { AgendaService } from '../../agenda.service';
+import { SidebarService } from '@core/services/sidebar.service';
 
 @Component({
   selector: 'app-agenda-month-view',
@@ -32,6 +33,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   private appointmentsService = inject(AppointmentsService);
   private el = inject(ElementRef);
   public agendaService = inject(AgendaService);
+  public sidebarService = inject(SidebarService);
 
   private _date = signal<Date>(new Date());
   @Input({ required: true }) set date(val: Date) { this._date.set(val); }

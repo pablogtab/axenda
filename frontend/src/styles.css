@@ -24,6 +24,13 @@
 }
 
 @layer base {
+  html {
+    @apply text-[16px];
+    @media (max-width: 640px) {
+      font-size: 13px;
+    }
+  }
+
   body {
     @apply bg-bg-primary text-text-main antialiased overflow-x-hidden;
     font-family: 'Plus Jakarta Sans', sans-serif;

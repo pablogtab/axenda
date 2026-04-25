@@ -11,6 +11,7 @@ import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
 import { AgendaService } from '../../agenda.service';
+import { SidebarService } from '@core/services/sidebar.service';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -43,6 +44,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private snackbarService = inject(SnackbarService);
   private el = inject(ElementRef);
   public agendaService = inject(AgendaService);
+  public sidebarService = inject(SidebarService);
 
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;

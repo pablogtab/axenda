@@ -2,9 +2,9 @@
   
   <!-- Contenedor con Scroll Real -->
   <div class="h-full overflow-auto custom-scrollbar relative">
-    <div class="grid" 
-         [style.grid-template-columns]="'60px repeat(' + professionals.length + ', minmax(250px, 1fr))'"
-         [style.grid-template-rows]="'40px repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
+    <div class="grid transition-all duration-300" 
+         [style.grid-template-columns]="(sidebarService.isMobile() ? '45px' : '60px') + ' repeat(' + professionals.length + ', minmax(' + (sidebarService.isMobile() ? '140px' : '250px') + ', 1fr))'"
+         [style.grid-template-rows]="(sidebarService.isMobile() ? '32px' : '40px') + ' repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
       
       <!-- Esquina Superior Izquierda -->
       <div class="sticky top-0 left-0 bg-bg-primary border-b border-r border-white/10 z-50"
@@ -15,14 +15,15 @@
 
     <!-- Headers de Profesionales (Sticky Top) -->
     @for (prof of professionals; track prof.id; let i = $index) {
-      <div class="sticky top-0 h-[40px] bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex items-center justify-center gap-3 z-30"
+      <div class="sticky top-0 bg-bg-primary/95 backdrop-blur-md border-b border-r border-white/10 flex items-center justify-center gap-2 sm:gap-3 z-30 transition-all"
+           [style.height.px]="sidebarService.isMobile() ? 32 : 40"
            [style.grid-column]="i + 2"
            [style.grid-row]="1">
-        <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px]" 
+        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-bold text-[9px] sm:text-[10px]" 
              [style.background-color]="prof.color + '30'" [style.color]="prof.color">
           {{ prof.firstName[0] }}{{ prof.lastName[0] }}
         </div>
-        <span class="text-xs font-bold text-text-main">{{ prof.firstName }}</span>
+        <span class="text-[10px] sm:text-xs font-bold text-text-main truncate max-w-[80px] sm:max-w-none">{{ prof.firstName }}</span>
       </div>
     }
 
@@ -30,7 +31,7 @@
     @for (slot of timeSlots(); track slot; let rowIndex = $index) {
       
       <!-- Label de Hora (Sticky Left) -->
-        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-3 items-center text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
+        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-1 sm:pr-3 items-center text-[9px] sm:text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
              appAgendaZoom
              [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
              [class.!text-primary]="hoveredSlot() === slot"
@@ -90,7 +91,7 @@
         @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
           <div (pointerdown)="onPointerDown(app, $event)"
                 (click)="onAppClick(app, $event)"
-                class="absolute left-1 right-1 rounded-lg p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
+                class="absolute left-0.5 right-0.5 sm:left-1 sm:right-1 rounded-md sm:rounded-lg p-1 sm:p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
                 [class.opacity-40]="agendaService.draggedApp()?.id === app.id && isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.opacity-0]="agendaService.draggedApp()?.id === app.id && !isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
@@ -98,7 +99,7 @@
                 [style.height.px]="app.height"
                 [ngStyle]="{
                   'background-color': app.service.color + '20',
-                  'border-left': '4px solid ' + app.service.color,
+                  'border-left': (sidebarService.isMobile() ? '2px' : '4px') + ' solid ' + app.service.color,
                   'color': app.service.color
                 }">
             

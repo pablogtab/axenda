@@ -3,7 +3,7 @@
   <div 
     *ngIf="!sidebarService.isCollapsed() && (sidebarService.isMobile())" 
     (click)="sidebarService.toggle()"
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden transition-opacity duration-300">
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] lg:hidden transition-opacity duration-300">
   </div>
 
   <!-- Sidebar -->
@@ -12,7 +12,7 @@
     [class.w-0]="sidebarService.isCollapsed()"
     [class.border-r-0]="sidebarService.isCollapsed()"
     [class.-translate-x-full]="sidebarService.isCollapsed() && sidebarService.isMobile()"
-    class="flex flex-col border-r border-border glass relative z-30 transition-all duration-300 ease-in-out lg:translate-x-0 fixed lg:static h-full shrink-0 overflow-hidden"
+    class="flex flex-col border-r border-border glass z-[110] transition-all duration-300 ease-in-out lg:translate-x-0 fixed lg:static h-full shrink-0 overflow-hidden"
     [class.p-8]="!sidebarService.isCollapsed()"
     [class.p-0]="sidebarService.isCollapsed()">
     
@@ -75,11 +75,11 @@
   <!-- Main Content -->
   <main class="flex-1 flex flex-col min-w-0 relative">
     <!-- Mobile Header -->
-    <header *ngIf="sidebarService.isMobile()" class="flex items-center gap-4 p-4 border-b border-border glass shrink-0">
-      <button (click)="sidebarService.toggle()" class="p-2 rounded-lg hover:bg-white/5 text-text-main">
-        <span class="text-xl">☰</span>
+    <header *ngIf="sidebarService.isMobile() && !isAgendaView()" class="flex items-center gap-3 p-2 border-b border-border glass shrink-0">
+      <button (click)="sidebarService.toggle()" class="p-1.5 rounded-lg hover:bg-white/5 text-text-main">
+        <span class="text-lg">☰</span>
       </button>
-      <h2 class="text-xl font-bold tracking-tight text-gradient">Axenda</h2>
+      <h2 class="text-lg font-bold tracking-tight text-gradient">Axenda</h2>
     </header>
 
     <!-- Content Area -->

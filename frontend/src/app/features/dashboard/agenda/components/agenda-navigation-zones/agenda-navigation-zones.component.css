@@ -14,11 +14,25 @@
   backdrop-filter: blur(0px);
 }
 
+@media (max-width: 640px) {
+  .day-change-zone {
+    width: 20px;
+  }
+}
+
 .day-change-zone.visible,
 .day-change-zone.navigating,
 .day-change-zone:hover {
   opacity: 1;
   width: 80px;
+}
+
+@media (max-width: 640px) {
+  .day-change-zone.visible,
+  .day-change-zone.navigating,
+  .day-change-zone:hover {
+    width: 40px;
+  }
 }
 
 .day-change-zone.navigating {
@@ -63,6 +77,18 @@
   pointer-events: auto;
 }
 
+@media (max-width: 640px) {
+  .zone-content {
+    gap: 4px;
+  }
+  .zone-content .text-2xl {
+    font-size: 1.25rem;
+  }
+  .zone-content span:last-child {
+    font-size: 8px !important;
+  }
+}
+
 .day-change-zone:hover .zone-content,
 .day-change-zone.navigating .zone-content {
   transform: scale(1.2);
@@ -74,6 +100,12 @@
   writing-mode: vertical-rl;
   text-orientation: mixed;
   letter-spacing: 2px;
+}
+
+@media (max-width: 640px) {
+  .vertical-text {
+    letter-spacing: 1px;
+  }
 }
 
 @keyframes pulse-zone {

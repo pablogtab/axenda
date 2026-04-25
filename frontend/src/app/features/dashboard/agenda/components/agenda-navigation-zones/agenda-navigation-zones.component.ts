@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener, OnInit, effect, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgendaService } from '../../agenda.service';
+import { SidebarService } from '@core/services/sidebar.service';
 
 @Component({
   selector: 'app-agenda-navigation-zones',
@@ -52,6 +53,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Output() navigate = new EventEmitter<'prev' | 'next'>();
 
   public agendaService = inject(AgendaService);
+  public sidebarService = inject(SidebarService);
   private el = inject(ElementRef);
   private navigationTimer: any = null;
   public activeDir: 'prev' | 'next' | null = null;
@@ -70,7 +72,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       const rect = this.el.nativeElement.getBoundingClientRect();
       const relativeX = x - rect.left;
       const width = rect.width;
-      const zoneWidth = 80;
+      const zoneWidth = this.sidebarService.isMobile() ? 40 : 80;
       const offset = parseInt(this.offsetLeft) || 0;
 
       // Detección relativa al componente (ignora el sidebar)

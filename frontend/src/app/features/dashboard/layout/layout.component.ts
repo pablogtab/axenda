@@ -13,8 +13,12 @@ import { SidebarService } from '../../../core/services/sidebar.service';
 })
 export class LayoutComponent {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  public router = inject(Router);
   public sidebarService = inject(SidebarService);
+
+  isAgendaView(): boolean {
+    return this.router.url.includes('/dashboard/agenda');
+  }
 
   logout(): void {
     this.authService.logout();
