@@ -445,6 +445,12 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.onDragEnd();
   }
 
+  onCellClick(day: Date, time: string): void {
+    if (this.sidebarService.isMobile()) {
+      this.onAdd(day, time);
+    }
+  }
+
   onDragEnd(): void {
     this.agendaService.stopDragging();
     this.draggedApp.set(null);

@@ -56,6 +56,7 @@
                [class.hover:bg-primary/10]="!agendaService.isDragging()"
                (mouseenter)="hoveredSlot.set(slot)"
                (mouseleave)="hoveredSlot.set(null)"
+               (click)="onCellClick(day, slot)"
                (dblclick)="onAdd(day, slot)">
             
             @if (availabilityMap()[dayIndex + '-' + slot]) {

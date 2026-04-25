@@ -54,6 +54,7 @@
              [class.hover:bg-primary/10]="!agendaService.isDragging()"
              (mouseenter)="onCellEnter(slot)"
              (mouseleave)="onCellLeave()"
+             (click)="onCellClick(prof, slot)"
              (dblclick)="addAppointment.emit({ professional: prof, time: slot })">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {

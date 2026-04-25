@@ -159,7 +159,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     const absY = Math.abs(deltaY);
 
     // Umbral: 100px de recorrido y claramente horizontal (más de 2 veces el vertical)
-    if (absX > 150 && absX > absY * 2) {
+    if (absX > 75 && absX > absY * 2) {
       const dir = deltaX > 0 ? 'prev' : 'next';
       this.activeDir = dir;
       this.navigate.emit(dir);
