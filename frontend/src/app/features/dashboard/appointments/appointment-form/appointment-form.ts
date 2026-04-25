@@ -18,12 +18,13 @@ export interface AppointmentFormData {
 }
 
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
+import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 import { getClientSearchConfig, getProfessionalSearchConfig } from '@core/configs/search-configs';
 
 @Component({
   selector: 'app-appointment-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, SelectComponent],
   templateUrl: './appointment-form.html',
   styleUrls: ['./appointment-form.css']
 })
@@ -44,6 +45,14 @@ export class AppointmentFormComponent implements OnInit {
   // Configuraciones de los buscadores
   clientConfig = getClientSearchConfig(this.clientsService);
   profConfig = getProfessionalSearchConfig(this.professionalsService);
+
+  serviceConfig: SelectConfig<BusinessService> = {
+    label: 'Servicio',
+    placeholder: 'Seleccionar servicio...',
+    displayFn: (s) => s.name,
+    descriptionFn: (s) => `${s.duration} min - $${s.price}`,
+    valueFn: (s) => s.id
+  };
 
   constructor(
     public dialogRef: DialogRef<any>,
