@@ -34,6 +34,11 @@ export class CreateClientDto {
   @IsOptional()
   @IsString()
   photoUrl?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean
 }
 
 export class UpdateClientDto {

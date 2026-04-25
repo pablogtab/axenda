@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { DIALOG_DATA, DialogRef, Dialog } from '@angular/cdk/dialog';
 import { AppointmentsService } from '@services/appointments.service';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
@@ -20,6 +20,7 @@ export interface AppointmentFormData {
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 import { getClientSearchConfig, getProfessionalSearchConfig } from '@core/configs/search-configs';
+import { ClientFormComponent } from '../../clients/client-form/client-form.component';
 
 @Component({
   selector: 'app-appointment-form',
@@ -34,16 +35,21 @@ export class AppointmentFormComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
   private servicesService = inject(ServicesService);
   private clientsService = inject(ClientsService);
+  private dialog = inject(Dialog);
 
   form!: FormGroup;
   professionals = signal<Professional[]>([]);
+  allServices = signal<BusinessService[]>([]);
   services = signal<BusinessService[]>([]);
   
   isSubmitting = signal(false);
   isEditMode = signal(false);
 
   // Configuraciones de los buscadores
-  clientConfig = getClientSearchConfig(this.clientsService);
+  clientConfig = { 
+    ...getClientSearchConfig(this.clientsService), 
+    addLabel: 'Nuevo Cliente' 
+  };
   profConfig = getProfessionalSearchConfig(this.professionalsService);
 
   serviceConfig: SelectConfig<BusinessService> = {
@@ -138,12 +144,54 @@ export class AppointmentFormComponent implements OnInit {
     });
 
     this.servicesService.findAll().subscribe(services => {
-      this.services.set(services.filter(s => s.active));
+      const activeServices = services.filter(s => s.active);
+      this.allServices.set(activeServices);
+      
+      // Aplicar filtro inicial si ya hay un profesional seleccionado (ej: modo edición)
+      const currentProfId = this.form.get('professionalId')?.value;
+      if (currentProfId) {
+        this.filterServicesByProfessional(currentProfId);
+      } else {
+        this.services.set(activeServices);
+      }
     });
   }
 
   filterServicesByProfessional(profId: string): void {
-    // Implementación futura de filtrado de servicios por profesional
+    if (!profId) {
+      this.services.set(this.allServices());
+      return;
+    }
+
+    const prof = this.professionals().find(p => p.id === profId);
+    
+    if (!prof) {
+      // Si el profesional no está en la lista inicial (ej: se cargó por búsqueda)
+      // cargamos sus datos completos para tener sus servicios
+      this.professionalsService.findOne(profId).subscribe(p => {
+        // Actualizamos la lista local para futuras referencias
+        this.professionals.update(profs => [...profs, p]);
+        this.applyServiceFilter(p);
+      });
+    } else {
+      this.applyServiceFilter(prof);
+    }
+  }
+
+  private applyServiceFilter(prof: Professional): void {
+    if (!prof.services || prof.services.length === 0) {
+      this.services.set([]);
+    } else {
+      const allowedIds = prof.services.map(ps => ps.service.id);
+      const filtered = this.allServices().filter(s => allowedIds.includes(s.id));
+      this.services.set(filtered);
+    }
+
+    // Validar si el servicio actual sigue siendo válido
+    const currentServiceId = this.form.get('serviceId')?.value;
+    if (currentServiceId && !this.services().some(s => s.id === currentServiceId)) {
+      this.form.patchValue({ serviceId: '' });
+    }
   }
 
   onSubmit(): void {
@@ -191,5 +239,17 @@ export class AppointmentFormComponent implements OnInit {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  openNewClient(query: string): void {
+    const dialogRef = this.dialog.open(ClientFormComponent, {
+      data: { firstName: query }
+    });
+
+    dialogRef.closed.subscribe((result: any) => {
+      if (result && result.id) {
+        this.form.patchValue({ clientId: result.id });
+      }
+    });
   }
 }

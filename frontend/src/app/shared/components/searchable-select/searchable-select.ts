@@ -15,6 +15,7 @@ export interface SearchableSelectConfig<T = any> {
   descriptionFn?: (item: T) => string;
   valueFn?: (item: T) => any;
   initItemFn?: (value: any) => Observable<T>;
+  addLabel?: string;
 }
 
 @Component({
@@ -33,6 +34,7 @@ export interface SearchableSelectConfig<T = any> {
 })
 export class SearchableSelectComponent<T = any> implements ControlValueAccessor {
   @Input({ required: true }) config!: SearchableSelectConfig<T>;
+  @Output() onAdd = new EventEmitter<string>();
 
   // Getters simplificados (públicos para el HTML)
   get label() { return this.config?.label ?? ''; }
@@ -56,6 +58,7 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   
   // Flag para evitar el autofocus inicial del CDK cuando estamos en un modal
   skipFocus = signal(!!this.dialogRef);
+  triggerWidth = signal<number | string>('auto');
   
   private searchSubject = new Subject<string>();
 
@@ -90,13 +93,14 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   }
 
   onInput(event: Event): void {
+    this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
     const val = (event.target as HTMLInputElement).value;
     this.searchSubject.next(val);
   }
 
   onFocus(event: Event): void {
     if (this.skipFocus()) return;
-    
+    this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
     const val = (event.target as HTMLInputElement).value;
     this.searchSubject.next(val);
   }
@@ -119,9 +123,15 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   clearSelection(): void {
     this.selectedItem.set(null);
     this.onChange(null);
+    this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
     setTimeout(() => {
       this.searchInput?.nativeElement.focus();
     }, 0);
+  }
+
+  onAddClick(): void {
+    this.onAdd.emit(this.searchInput.nativeElement.value);
+    this.results.set([]);
   }
 
   handleKeyDown(event: KeyboardEvent): void {

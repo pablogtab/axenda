@@ -1,61 +1,98 @@
-<div class="card-glass w-[550px] max-w-full !p-10">
-  <header class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold text-text-main">{{ isEditing ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
-    <button class="text-3xl leading-none text-text-dim hover:text-red-500 transition-colors" (click)="onCancel()">×</button>
+<div class="bg-bg-primary border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-w-lg w-full flex flex-col animate-in fade-in zoom-in duration-200">
+  <!-- Header -->
+  <header class="px-6 py-4 border-b border-white/10 bg-white/5 flex justify-between items-center">
+    <div>
+      <h2 class="text-xl font-bold text-text-main">
+        {{ isEditing ? '📝 Editar Cliente' : '👤 Nuevo Cliente' }}
+      </h2>
+      <p class="text-xs text-text-dim mt-1">
+        {{ isEditing ? 'Modifica los datos del cliente' : 'Registra un nuevo cliente en el sistema' }}
+      </p>
+    </div>
+    <button (click)="onCancel()" class="p-2 hover:bg-white/10 rounded-xl transition-all text-text-dim hover:text-text-main">
+      ✕
+    </button>
   </header>
 
-  <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-    <div class="grid grid-cols-2 gap-6">
-      <div class="flex flex-col gap-2">
-        <label for="firstName" class="text-sm font-semibold text-text-muted">Nombre *</label>
-        <input id="firstName" type="text" formControlName="firstName" class="input-field" placeholder="Ej: Lionel">
+  <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="px-6 py-4 space-y-4 overflow-y-auto max-h-[calc(100dvh-150px)] custom-scrollbar">
+    
+    <!-- Nombre y Apellido -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label for="firstName" class="text-xs font-bold text-text-dim uppercase tracking-wider">Nombre *</label>
+        <input id="firstName" type="text" formControlName="firstName" 
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+               placeholder="Ej: Lionel">
         @if (clientForm.get('firstName')?.touched && clientForm.get('firstName')?.invalid) {
-          <span class="text-xs text-red-400">El nombre es obligatorio</span>
+          <span class="text-[10px] text-red-400 font-medium block ml-1">El nombre es obligatorio</span>
         }
       </div>
-      <div class="flex flex-col gap-2">
-        <label for="lastName" class="text-sm font-semibold text-text-muted">Apellido *</label>
-        <input id="lastName" type="text" formControlName="lastName" class="input-field" placeholder="Ej: Messi">
+
+      <div class="space-y-2">
+        <label for="lastName" class="text-xs font-bold text-text-dim uppercase tracking-wider">Apellido *</label>
+        <input id="lastName" type="text" formControlName="lastName" 
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+               placeholder="Ej: Messi">
         @if (clientForm.get('lastName')?.touched && clientForm.get('lastName')?.invalid) {
-          <span class="text-xs text-red-400">El apellido es obligatorio</span>
+          <span class="text-[10px] text-red-400 font-medium block ml-1">El apellido es obligatorio</span>
         }
       </div>
     </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="email" class="text-sm font-semibold text-text-muted">Email</label>
-      <input id="email" type="email" formControlName="email" class="input-field" placeholder="ejemplo@correo.com">
+    <!-- Email -->
+    <div class="space-y-2">
+      <label for="email" class="text-xs font-bold text-text-dim uppercase tracking-wider">Email</label>
+      <input id="email" type="email" formControlName="email" 
+             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+             placeholder="ejemplo@correo.com">
       @if (clientForm.get('email')?.touched && clientForm.get('email')?.invalid) {
-        <span class="text-xs text-red-400">Email inválido</span>
+        <span class="text-[10px] text-red-400 font-medium block ml-1">Email inválido</span>
       }
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
-      <div class="flex flex-col gap-2">
-        <label for="phone" class="text-sm font-semibold text-text-muted">Teléfono</label>
-        <input id="phone" type="text" formControlName="phone" class="input-field" placeholder="+54 9 11 ...">
+    <!-- Teléfono y Documento -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label for="phone" class="text-xs font-bold text-text-dim uppercase tracking-wider">Teléfono</label>
+        <input id="phone" type="text" formControlName="phone" 
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+               placeholder="+54 9 11 ...">
       </div>
-      <div class="flex flex-col gap-2">
-        <label for="document" class="text-sm font-semibold text-text-muted">Documento / CUIT</label>
-        <input id="document" type="text" formControlName="document" class="input-field" placeholder="DNI o CUIT">
+      <div class="space-y-2">
+        <label for="document" class="text-xs font-bold text-text-dim uppercase tracking-wider">Documento / CUIT</label>
+        <input id="document" type="text" formControlName="document" 
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+               placeholder="DNI o CUIT">
       </div>
     </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="notes" class="text-sm font-semibold text-text-muted">Notas / Observaciones</label>
-      <textarea id="notes" formControlName="notes" rows="3" class="input-field resize-none" placeholder="Detalles relevantes del cliente..."></textarea>
+    <!-- Notas -->
+    <div class="space-y-2">
+      <label for="notes" class="text-xs font-bold text-text-dim uppercase tracking-wider">Notas / Observaciones</label>
+      <textarea id="notes" formControlName="notes" rows="2" 
+                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"
+                placeholder="Detalles relevantes del cliente..."></textarea>
     </div>
 
-    <div class="flex items-center gap-3 py-2">
-      <input id="active" type="checkbox" formControlName="active" class="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20">
-      <label for="active" class="text-sm font-medium text-text-muted cursor-pointer">Cliente activo</label>
+    <!-- Estado -->
+    <div class="flex items-center gap-3 pt-2">
+      <input id="active" type="checkbox" formControlName="active" 
+             class="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20 cursor-pointer">
+      <label for="active" class="text-xs font-bold text-text-dim uppercase tracking-wider cursor-pointer">Cliente activo</label>
     </div>
 
-    <footer class="flex justify-end gap-4 mt-4">
-      <button type="button" class="btn-secondary flex-1" (click)="onCancel()">Cancelar</button>
-      <button type="submit" class="btn-primary flex-1" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Cliente') }}
-      </button>
-    </footer>
   </form>
+
+  <!-- Footer -->
+  <footer class="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end items-center gap-3">
+    <button type="button" (click)="onCancel()" 
+            class="px-6 py-2 rounded-xl text-sm font-bold text-text-dim hover:bg-white/5 transition-all">
+      Cancelar
+    </button>
+    <button (click)="onSubmit()" 
+            [disabled]="isSubmitting"
+            class="px-8 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
+      {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar Cliente' : 'Crear Cliente') }}
+    </button>
+  </footer>
 </div>

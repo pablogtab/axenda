@@ -46,6 +46,7 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
   
   private dialogRef = inject(DialogRef, { optional: true });
   skipFocus = signal(!!this.dialogRef);
+  triggerWidth = signal<number | string>('auto');
 
   // Opciones filtradas basadas en el input
   filteredOptions = computed(() => {
@@ -73,12 +74,14 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
     if (this.selectedItem()) return;
     this.isOpen.update(v => !v);
     if (this.isOpen()) {
+      this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
       setTimeout(() => this.searchInput?.nativeElement.focus(), 0);
     }
   }
 
   onFocus(): void {
     if (this.skipFocus()) return;
+    this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
     this.isOpen.set(true);
   }
 
@@ -102,6 +105,7 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
     event?.stopPropagation();
     this.selectedItem.set(null);
     this.onChange(null);
+    this.triggerWidth.set(this.searchInput.nativeElement.offsetWidth);
     this.isOpen.set(true);
     setTimeout(() => {
       this.searchInput?.nativeElement.focus();

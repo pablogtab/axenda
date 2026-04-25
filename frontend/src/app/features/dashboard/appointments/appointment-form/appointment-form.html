@@ -1,6 +1,6 @@
-<div class="bg-bg-primary border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-w-2xl w-full flex flex-col animate-in fade-in zoom-in duration-200">
+<div class="bg-bg-primary border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-w-lg w-full flex flex-col animate-in fade-in zoom-in duration-200">
   <!-- Header -->
-  <header class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
+  <header class="px-6 py-4 border-b border-white/10 bg-white/5 flex justify-between items-center">
     <div>
       <h2 class="text-xl font-bold text-text-main">
         {{ isEditMode() ? '📝 Editar Turno' : '📅 Agendar Nuevo Turno' }}
@@ -14,34 +14,33 @@
     </button>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 space-y-6 overflow-y-auto max-h-[calc(100dvh-180px)] custom-scrollbar">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-6 py-4 space-y-4 overflow-y-auto max-h-[calc(100dvh-150px)] custom-scrollbar">
     
     <!-- Sección: Cliente -->
     <app-searchable-select 
       formControlName="clientId"
       [config]="clientConfig"
+      (onAdd)="openNewClient($event)"
     ></app-searchable-select>
 
-    <!-- Sección: Servicio y Profesional -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <app-select
-        formControlName="serviceId"
-        [options]="services()"
-        [config]="serviceConfig"
-      ></app-select>
+    <!-- Sección: Servicio y Profesional (Aislados en filas diferentes) -->
+    <app-select
+      formControlName="serviceId"
+      [options]="services()"
+      [config]="serviceConfig"
+    ></app-select>
 
-      <app-searchable-select
-        formControlName="professionalId"
-        [config]="profConfig"
-      ></app-searchable-select>
-    </div>
+    <app-searchable-select
+      formControlName="professionalId"
+      [config]="profConfig"
+    ></app-searchable-select>
 
     <!-- Sección: Fecha y Hora -->
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
       <div class="col-span-2 md:col-span-1 space-y-2">
         <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Fecha</label>
         <input type="date" formControlName="date"
-               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
       </div>
       <!-- Horas en la misma fila -->
       <div class="col-span-2 md:col-span-2">
@@ -49,12 +48,12 @@
           <div class="flex-1 space-y-2">
             <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Inicio</label>
             <input type="time" formControlName="time"
-                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
           </div>
           <div class="flex-1 space-y-2">
             <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Fin</label>
             <input type="time" formControlName="endTime"
-                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
           </div>
         </div>
       </div>
@@ -66,13 +65,13 @@
       <textarea formControlName="notes" 
                 rows="2"
                 placeholder="Ej: El cliente llega 5 min tarde..."
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none resize-none"></textarea>
+                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none resize-none"></textarea>
     </div>
 
   </form>
 
   <!-- Footer -->
-  <footer class="p-6 border-t border-white/10 bg-white/5 flex justify-end items-center gap-3">
+  <footer class="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end items-center gap-3">
     <button type="button" (click)="close()" 
             class="px-6 py-2 rounded-xl text-sm font-bold text-text-dim hover:bg-white/5 transition-all">
       Cancelar
