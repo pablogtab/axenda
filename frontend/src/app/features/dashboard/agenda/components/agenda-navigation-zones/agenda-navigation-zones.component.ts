@@ -61,6 +61,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   // Propiedades para detección de Swipe en Mobile
   private touchStartX = 0;
   private touchStartY = 0;
+  private touchStartTime = 0;
 
   constructor() {
     // Detección reactiva de posición para navegación lateral durante DRAG
@@ -110,6 +111,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
         touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
       this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
+      this.touchStartTime = Date.now();
     } else {
       this.touchStartX = 0;
     }
@@ -131,8 +133,11 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     const deltaX = touch.clientX - this.touchStartX;
     const absX = Math.abs(deltaX);
 
-    // Feedback visual preventivo si el movimiento es horizontal
-    if (absX > 20) {
+    const duration = Date.now() - this.touchStartTime;
+    const dynamicThreshold = 30 + (duration * 5);
+
+    // Feedback visual preventivo si el movimiento es horizontal y suficientemente rápido
+    if (absX > dynamicThreshold) {
       this.activeDir = deltaX > 0 ? 'prev' : 'next';
     } else {
       this.activeDir = null;
@@ -157,9 +162,15 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     const deltaY = touch.clientY - this.touchStartY;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
+    const duration = Date.now() - this.touchStartTime;
 
-    // Umbral: 100px de recorrido y claramente horizontal (más de 2 veces el vertical)
-    if (absX > 75 && absX > absY * 2) {
+    // Calculamos el umbral dinámico usando una recta: d = m*t + b
+    // Queremos que para un t pequeño (flick rápido), baste con poca distancia (~60px)
+    // Pero si el tiempo t aumenta, la distancia requerida crece para evitar gestos lentos.
+    const minRequiredDistance = 60 + (duration * 0.2); 
+
+    // Umbral: Distancia dinámica, claramente horizontal y tiempo máximo razonable
+    if (absX > minRequiredDistance && absX > absY * 1.5 && duration < 700) {
       const dir = deltaX > 0 ? 'prev' : 'next';
       this.activeDir = dir;
       this.navigate.emit(dir);

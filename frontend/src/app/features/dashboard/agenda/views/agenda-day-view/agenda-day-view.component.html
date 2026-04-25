@@ -1,7 +1,7 @@
 <div class="flex-1 relative flex flex-col overflow-hidden no-select">
   
   <!-- Contenedor con Scroll Real -->
-  <div class="h-full overflow-auto custom-scrollbar relative">
+  <div class="h-full overflow-auto custom-scrollbar relative" appAgendaZoom>
     <div class="grid transition-all duration-300" 
          [style.grid-template-columns]="(sidebarService.isMobile() ? '45px' : '60px') + ' repeat(' + professionals.length + ', minmax(' + (sidebarService.isMobile() ? '140px' : '250px') + ', 1fr))'"
          [style.grid-template-rows]="(sidebarService.isMobile() ? '32px' : '40px') + ' repeat(' + timeSlots().length + ', ' + slotHeight() + 'px)'">
@@ -31,8 +31,7 @@
     @for (slot of timeSlots(); track slot; let rowIndex = $index) {
       
       <!-- Label de Hora (Sticky Left) -->
-        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-1 sm:pr-3 items-center text-[9px] sm:text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none"
-             appAgendaZoom
+        <div class="sticky left-0 bg-bg-primary/95 backdrop-blur-md border-r border-b border-white/[0.05] flex justify-end pr-1 sm:pr-3 items-center text-[9px] sm:text-[11px] font-mono text-text-dim z-20 transition-all duration-200 select-none zoom-handle"
              [style.grid-row]="rowIndex + 2" [style.grid-column]="1"
              [class.!text-primary]="hoveredSlot() === slot"
              [class.!bg-white/5]="hoveredSlot() === slot"
