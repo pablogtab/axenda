@@ -5,6 +5,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { Subject, Observable, of } from 'rxjs';
 import { debounceTime, switchMap, finalize, tap } from 'rxjs/operators';
 import { SidebarService } from '@core/services/sidebar.service';
+import { DialogRef } from '@angular/cdk/dialog';
 
 export interface SearchableSelectConfig<T = any> {
   label?: string;
@@ -51,6 +52,10 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   isSearching = signal(false);
   selectedIndex = signal(-1);
   sidebarService = inject(SidebarService);
+  private dialogRef = inject(DialogRef, { optional: true });
+  
+  // Flag para evitar el autofocus inicial del CDK cuando estamos en un modal
+  skipFocus = signal(!!this.dialogRef);
   
   private searchSubject = new Subject<string>();
 
@@ -60,6 +65,12 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
 
   constructor() {
     this.setupSearch();
+    
+    // Si estamos en un diálogo, esperamos un poco antes de permitir el foco
+    // para que el "focus trap" del CDK pase de largo.
+    if (this.skipFocus()) {
+      setTimeout(() => this.skipFocus.set(false), 100);
+    }
   }
 
   private setupSearch(): void {
@@ -84,8 +95,9 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
   }
 
   onFocus(event: Event): void {
+    if (this.skipFocus()) return;
+    
     const val = (event.target as HTMLInputElement).value;
-
     this.searchSubject.next(val);
   }
 

@@ -16,6 +16,7 @@
            autocapitalize="off"
            spellcheck="false"
            [placeholder]="placeholder"
+           [tabIndex]="skipFocus() ? -1 : 0"
            (input)="onInput($event)"
            (focus)="onFocus($event)"
            (blur)="onBlur()"
