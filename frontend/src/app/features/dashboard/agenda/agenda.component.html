@@ -96,7 +96,7 @@
             </h3>
           </div>
 
-          <div class="p-1 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div class="p-1 max-h-[70dvh] overflow-y-auto custom-scrollbar">
             <!-- Sección Sucursal -->
             <div class="px-2 pt-2 pb-1">
               <span class="text-[9px] uppercase font-bold text-text-dim tracking-widest px-2">Sucursal</span>
@@ -184,36 +184,38 @@
     </div>
     }
 
-    @switch (selectedView()) {
-    @case ('day') {
-    <app-agenda-day-view
-      [date]="selectedDate()"
-      [branchId]="selectedBranchId()"
-      [professionals]="activeProfessionals()"
-      (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
-      (dateChange)="selectedDate.set($event)"></app-agenda-day-view>
-    }
-    @case ('week') {
-    <app-agenda-week-view
-      [date]="selectedDate()"
-      [branchId]="selectedBranchId()"
-      [professionals]="activeProfessionals()"
-      (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
-      (dateChange)="selectedDate.set($event)"></app-agenda-week-view>
-    }
-    @case ('month') {
-    <app-agenda-month-view
-      [date]="selectedDate()"
-      [branchId]="selectedBranchId()"
-      [professionals]="activeProfessionals()"
-      (addAppointment)="onAddAppointment($event)"
-      (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
-      (dateChange)="selectedDate.set($event)"
-      (dayClick)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
-    }
-    }
+    <div [class]="viewTransitionClass()" class="h-full w-full">
+      @switch (selectedView()) {
+      @case ('day') {
+      <app-agenda-day-view
+        [date]="selectedDate()"
+        [branchId]="selectedBranchId()"
+        [professionals]="activeProfessionals()"
+        (addAppointment)="onAddAppointment($event)"
+        (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+        (dateChange)="selectedDate.set($event)"></app-agenda-day-view>
+      }
+      @case ('week') {
+      <app-agenda-week-view
+        [date]="selectedDate()"
+        [branchId]="selectedBranchId()"
+        [professionals]="activeProfessionals()"
+        (addAppointment)="onAddAppointment($event)"
+        (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+        (dateChange)="selectedDate.set($event)"></app-agenda-week-view>
+      }
+      @case ('month') {
+      <app-agenda-month-view
+        [date]="selectedDate()"
+        [branchId]="selectedBranchId()"
+        [professionals]="activeProfessionals()"
+        (addAppointment)="onAddAppointment($event)"
+        (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+        (dateChange)="selectedDate.set($event)"
+        (dayClick)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
+      }
+      }
+    </div>
     
     <app-agenda-navigation-zones 
       [prevLabel]="navLabels().prev" 

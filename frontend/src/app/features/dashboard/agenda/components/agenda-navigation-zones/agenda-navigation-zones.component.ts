@@ -58,14 +58,18 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   private navigationTimer: any = null;
   public activeDir: 'prev' | 'next' | null = null;
 
+  // Propiedades para detección de Swipe en Mobile
+  private touchStartX = 0;
+  private touchStartY = 0;
+
   constructor() {
-    // Detección reactiva de posición para navegación lateral
+    // Detección reactiva de posición para navegación lateral durante DRAG
     effect(() => {
       const x = this.agendaService.mouseX();
       const dragging = this.agendaService.isDragging();
 
       if (!dragging) {
-        if (this.activeDir) this.onZoneLeave();
+        if (this.activeDir && !this.agendaService.isNavigating()) this.onZoneLeave();
         return;
       }
 
@@ -91,6 +95,83 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.clearTimer();
   }
+
+  // --- Lógica de Swipe para Mobile ---
+  
+  @HostListener('document:touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (!this.sidebarService.isMobile() || this.disabled) return;
+    
+    const touch = event.touches[0];
+    const rect = this.el.nativeElement.getBoundingClientRect();
+
+    // Solo capturar si el touch empieza dentro del área de la agenda
+    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+      this.touchStartX = touch.clientX;
+      this.touchStartY = touch.clientY;
+    } else {
+      this.touchStartX = 0;
+    }
+  }
+
+  @HostListener('document:touchmove', ['$event'])
+  onTouchMove(event: TouchEvent): void {
+    if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) return;
+    if (this.agendaService.isDragging()) return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - this.touchStartX;
+    const absX = Math.abs(deltaX);
+
+    // Feedback visual preventivo si el movimiento es horizontal
+    if (absX > 20) {
+      this.activeDir = deltaX > 0 ? 'prev' : 'next';
+    } else {
+      this.activeDir = null;
+    }
+  }
+
+  @HostListener('document:touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) {
+      this.touchStartX = 0;
+      this.activeDir = null;
+      return;
+    }
+    
+    if (this.agendaService.isDragging()) {
+      this.touchStartX = 0;
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - this.touchStartX;
+    const deltaY = touch.clientY - this.touchStartY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Umbral: 100px de recorrido y claramente horizontal (más de 2 veces el vertical)
+    if (absX > 100 && absX > absY * 2) {
+      const dir = deltaX > 0 ? 'prev' : 'next';
+      this.activeDir = dir;
+      this.navigate.emit(dir);
+      this.agendaService.triggerNavigationFeedback();
+      
+      // Mantener el feedback visual durante la transición
+      setTimeout(() => {
+        if (!this.agendaService.isDragging()) {
+          this.activeDir = null;
+        }
+      }, 500);
+    } else {
+      this.activeDir = null;
+    }
+    
+    this.touchStartX = 0;
+  }
+
+  // --- Lógica de Navegación por Hover (Zonas de Drag) ---
 
   onZoneEnter(dir: 'prev' | 'next'): void {
     if (this.activeDir === dir) return;

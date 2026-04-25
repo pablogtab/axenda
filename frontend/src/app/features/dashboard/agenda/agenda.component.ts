@@ -67,6 +67,7 @@ export class AgendaComponent implements OnInit {
   isLoading = signal(true);
   showFilters = signal(false);
   showViewSelector = signal(false);
+  viewTransitionClass = signal<string>('');
 
   @HostListener('document:keydown', ['$event'])
   handleGlobalKeyDown(event: KeyboardEvent) {
@@ -283,15 +284,24 @@ export class AgendaComponent implements OnInit {
     const view = this.selectedView();
     const oldDate = this.selectedDate();
     
+    const direction = days > 0 ? 'slide-next' : 'slide-prev';
+    this.viewTransitionClass.set(direction);
+    
     if (view === 'month') {
       const newDate = addMonths(startOfMonth(oldDate), days);
       // Usamos setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
       // y dar tiempo al sistema de Drag&Drop a estabilizarse
-      setTimeout(() => this.selectedDate.set(newDate), 0);
+      setTimeout(() => {
+        this.selectedDate.set(newDate);
+        setTimeout(() => this.viewTransitionClass.set(''), 450);
+      }, 0);
     } else {
       const step = view === 'week' ? days * 7 : days;
       const newDate = addDays(oldDate, step);
-      setTimeout(() => this.selectedDate.set(newDate), 0);
+      setTimeout(() => {
+        this.selectedDate.set(newDate);
+        setTimeout(() => this.viewTransitionClass.set(''), 450);
+      }, 0);
     }
   }
 
