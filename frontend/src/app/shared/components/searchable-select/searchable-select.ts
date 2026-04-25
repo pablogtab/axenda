@@ -68,12 +68,6 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
       switchMap(query => {
         this.selectedIndex.set(-1);
 
-        // Si el query es vacío, simplemente limpiamos y no buscamos
-        if (query.trim().length === 0) {
-          this.isSearching.set(false);
-          return of([]);
-        }
-
         this.isSearching.set(true);
         const search = this.searchFn;
         if (!search) return of([]);
@@ -91,12 +85,6 @@ export class SearchableSelectComponent<T = any> implements ControlValueAccessor 
 
   onFocus(event: Event): void {
     const val = (event.target as HTMLInputElement).value;
-
-    // CLAVE PARA MÓVILES EN DIÁLOGOS:
-    // Al abrir un diálogo, el CDK enfoca automáticamente el primer campo.
-    // Si el campo está vacío, ignoramos este primer foco para evitar que el buscador 
-    // se abra solo y compita con la animación del teclado/diálogo.
-    if (this.sidebarService.isMobile() && val.trim().length === 0) return;
 
     this.searchSubject.next(val);
   }
