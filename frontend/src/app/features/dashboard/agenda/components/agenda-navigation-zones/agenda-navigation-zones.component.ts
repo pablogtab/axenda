@@ -109,7 +109,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       } else {
         this.clearTimer();
       }
-    }, 500);
+    }, 800);
   }
 
   onZoneLeave(): void {

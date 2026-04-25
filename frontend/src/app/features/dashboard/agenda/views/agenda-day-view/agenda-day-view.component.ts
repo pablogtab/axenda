@@ -112,6 +112,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Output() dateChange = new EventEmitter<Date>();
   private dragCancelled = false;
   private wasDragging = false;
+  private dragTimeout: any = null;
+  private isPreDragging = false;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
@@ -223,14 +225,29 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
+    this.isPreDragging = true;
+    
+    // Almacenamos los datos para cuando expire el timeout
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    this.dragTimeout = setTimeout(() => {
+      this.startDragging(app, startX, startY);
+    }, 180); // 180ms delay para distinguir click de drag
+  }
+
+  private startDragging(app: AppointmentUI, x: number, y: number): void {
+    this.isPreDragging = false;
     this.agendaService.setDragging(true, app, app.height, new Date(this.date()));
-    this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.agendaService.updateMousePosition(x, y);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.date());
     this.dragCancelled = false;
     this.wasDragging = false;
-
     document.body.classList.add('dragging-active');
+    
+    // Actualizar preview inmediatamente
+    this.updateDropPreviewFromCoords(x, y);
   }
 
   @HostListener('document:pointermove', ['$event'])
@@ -244,6 +261,16 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   @HostListener('document:pointerup', ['$event'])
   onPointerUp(event: PointerEvent): void {
+    if (this.dragTimeout) {
+      clearTimeout(this.dragTimeout);
+      this.dragTimeout = null;
+    }
+
+    if (this.isPreDragging) {
+      this.isPreDragging = false;
+      return;
+    }
+
     if (!this.agendaService.isDragging()) return;
 
     document.body.classList.remove('dragging-active');

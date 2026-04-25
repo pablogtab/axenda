@@ -51,6 +51,8 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   isLoading = signal(false);
   dropPreviewDate = signal<Date | null>(null);
   private wasDragging = false;
+  private dragTimeout: any = null;
+  private isPreDragging = false;
 
   today = new Date();
 
@@ -193,10 +195,25 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
+    this.isPreDragging = true;
+    
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    this.dragTimeout = setTimeout(() => {
+      this.startDragging(app, startX, startY);
+    }, 180); // 180ms delay
+  }
+
+  private startDragging(app: Appointment, x: number, y: number): void {
+    this.isPreDragging = false;
     this.agendaService.setDragging(true, app, 40, new Date(app.startTime));
-    this.agendaService.updateMousePosition(event.clientX, event.clientY);
+    this.agendaService.updateMousePosition(x, y);
     this.wasDragging = false;
     document.body.classList.add('dragging-active');
+    
+    // Actualizar preview inmediatamente
+    this.updateDropPreviewFromCoords(x, y);
   }
 
   @HostListener('document:pointermove', ['$event'])
@@ -210,6 +227,16 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   @HostListener('document:pointerup', ['$event'])
   onPointerUp(event: PointerEvent): void {
+    if (this.dragTimeout) {
+      clearTimeout(this.dragTimeout);
+      this.dragTimeout = null;
+    }
+
+    if (this.isPreDragging) {
+      this.isPreDragging = false;
+      return;
+    }
+
     if (!this.agendaService.isDragging()) return;
 
     document.body.classList.remove('dragging-active');
