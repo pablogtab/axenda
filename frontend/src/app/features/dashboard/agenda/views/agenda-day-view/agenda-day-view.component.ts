@@ -284,11 +284,16 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     if (!gridEl) return;
     
     const rect = gridEl.getBoundingClientRect();
+    const isMobile = this.sidebarService.isMobile();
+    const timeColWidth = isMobile ? 45 : 60;
+    const headerHeight = isMobile ? 32 : 40;
     
     const relativeX = x - rect.left;
     const relativeY = y - rect.top;
     
-    if (relativeY < 40 || relativeX < 60 || relativeX > rect.width || relativeY > rect.height) {
+    const totalWidth = gridEl.scrollWidth;
+    
+    if (relativeY < headerHeight || relativeX < timeColWidth || relativeX > totalWidth || relativeY > rect.height) {
       this.dropPreview.set(null);
       return;
     }
@@ -296,11 +301,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const columnCount = this.professionals.length;
     if (columnCount === 0) return;
 
-    const columnWidth = (rect.width - 60) / columnCount;
-    const profIndex = Math.floor((relativeX - 60) / columnWidth);
+    const columnWidth = (totalWidth - timeColWidth) / columnCount;
+    const profIndex = Math.floor((relativeX - timeColWidth) / columnWidth);
     
     const h = this.slotHeight();
-    const rowIndex = Math.floor((relativeY - 40) / h);
+    const rowIndex = Math.floor((relativeY - headerHeight) / h);
     
     if (profIndex >= 0 && profIndex < columnCount && rowIndex >= 0 && rowIndex < this.timeSlots().length) {
       const prof = this.professionals[profIndex];

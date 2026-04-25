@@ -352,21 +352,28 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     if (!gridEl) return;
     
     const rect = gridEl.getBoundingClientRect();
+    const isMobile = this.sidebarService.isMobile();
+    const timeColWidth = isMobile ? 45 : 60;
+    const headerHeight = isMobile ? 32 : 40;
     
-    // El grid tiene un offset de 40px arriba (header) y 60px a la izquierda (time column)
+    // Posición relativa al inicio del contenido del grid (incluyendo scroll)
     const relativeX = x - rect.left;
     const relativeY = y - rect.top;
     
-    if (relativeY < 40 || relativeX < 60 || relativeX > rect.width || relativeY > rect.height) {
+    // rect.width a veces puede ser solo el ancho visible si el elemento está contenido,
+    // usamos scrollWidth para asegurar el ancho total de las columnas
+    const totalWidth = gridEl.scrollWidth;
+    
+    if (relativeY < headerHeight || relativeX < timeColWidth || relativeX > totalWidth || relativeY > rect.height) {
       this.dropPreview.set(null);
       return;
     }
     
-    const columnWidth = (rect.width - 60) / 7;
-    const dayIndex = Math.floor((relativeX - 60) / columnWidth);
+    const columnWidth = (totalWidth - timeColWidth) / 7;
+    const dayIndex = Math.floor((relativeX - timeColWidth) / columnWidth);
     
     const h = this.slotHeight();
-    const rowIndex = Math.floor((relativeY - 40) / h);
+    const rowIndex = Math.floor((relativeY - headerHeight) / h);
     
     if (dayIndex >= 0 && dayIndex < 7 && rowIndex >= 0 && rowIndex < this.timeSlots().length) {
       const newPreview = {
