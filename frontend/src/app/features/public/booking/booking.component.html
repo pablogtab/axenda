@@ -1,0 +1,211 @@
+<div class="public-booking-container" *ngIf="tenant(); else loadingOrError">
+  
+  <!-- Banner / Header -->
+  <header class="banner-container">
+    <div class="absolute inset-0 bg-black/10"></div>
+  </header>
+
+  <!-- Business Info -->
+  <section class="profile-section">
+    <div class="profile-image-wrapper">
+      @if (tenant()?.logoUrl) {
+        <img [src]="tenant()!.logoUrl" class="profile-image" alt="Logo">
+      } @else {
+        <div class="profile-image placeholder-gradient">
+          {{ tenant()?.name?.charAt(0) || 'A' }}
+        </div>
+      }
+    </div>
+    <h1 class="business-name">{{ tenant()!.name }}</h1>
+  </section>
+
+  <!-- Stepper Nav -->
+  <nav class="stepper-nav">
+    @for (step of steps; track step.id; let i = $index) {
+      <div class="step-item" [class.active]="currentStep() === i + 1">
+        <span>{{ step.label }}</span>
+      </div>
+      @if (i < steps.length - 1) {
+        <span class="step-separator">›</span>
+      }
+    }
+  </nav>
+
+  <main class="booking-layout">
+    
+    <!-- Step Content -->
+    <div class="step-content">
+      
+      <!-- Step 1: Servicios -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 1">
+        <div class="step-title-wrapper">
+          <div class="step-number">1</div>
+          <h2 class="step-title">Servicios</h2>
+        </div>
+        <p class="step-description">Elija el servicio que desea reservar</p>
+
+        <div class="service-list">
+          @for (service of availableServices(); track service.id) {
+            <div class="service-item" 
+                 [class.selected]="selectedService()?.id === service.id"
+                 (click)="selectService(service)">
+              <div class="service-info">
+                <div class="service-icon">
+                  <span [style.color]="service.color">★</span>
+                </div>
+                <div>
+                  <div class="service-name">{{ service.name }}</div>
+                  <div class="service-duration">{{ service.duration }} min</div>
+                </div>
+              </div>
+              <div class="service-price">${{ service.price }}</div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Step 2: Fecha -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 2">
+        <div class="step-title-wrapper">
+          <div class="step-number">2</div>
+          <h2 class="step-title">Fecha</h2>
+        </div>
+        <p class="step-description">Seleccione el día de su preferencia</p>
+
+        <div class="grid grid-cols-1 gap-4">
+          <input type="date" 
+                 class="w-full p-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                 (change)="onDateChange($event)">
+          
+          <div class="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
+            <span class="text-2xl">💡</span>
+            <p class="text-sm text-primary font-medium">Seleccione una fecha para ver los horarios disponibles.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Horario -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 3">
+        <div class="step-title-wrapper">
+          <div class="step-number">3</div>
+          <h2 class="step-title">Horario</h2>
+        </div>
+        <p class="step-description">Seleccione la hora que mejor le convenga</p>
+
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          @for (time of ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00']; track time) {
+            <button class="p-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all font-bold text-sm"
+                    [class.bg-primary]="selectedTime() === time"
+                    [class.text-white]="selectedTime() === time"
+                    [class.border-primary]="selectedTime() === time"
+                    (click)="selectedTime.set(time)">
+              {{ time }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Steps placeholder for 4, 5... -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() > 3">
+        <div class="step-title-wrapper">
+          <div class="step-number">{{ currentStep() }}</div>
+          <h2 class="step-title">{{ steps[currentStep() - 1].label }}</h2>
+        </div>
+        <div class="flex flex-col items-center justify-center py-10 text-center">
+          <div class="w-full space-y-4 text-left">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Email</label>
+              <input type="email" placeholder="tu@email.com" class="w-full p-4 rounded-xl border border-border focus:border-primary outline-none">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Nombre Completo</label>
+              <input type="text" placeholder="Ej: Juan Pérez" class="w-full p-4 rounded-xl border border-border focus:border-primary outline-none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Summary Sidebar -->
+    <aside class="summary-sidebar">
+      <div class="summary-card">
+        <h3 class="summary-title">Resumen de tu reserva</h3>
+        <p class="summary-subtitle">Por favor verifica que los datos sean correctos antes de confirmar.</p>
+
+        <div class="summary-details">
+          
+          <!-- Dirección -->
+          <div class="summary-item">
+            <div class="summary-icon">📍</div>
+            <div class="flex flex-col">
+              <span class="summary-label">Dirección</span>
+              <span class="summary-value">{{ tenant()!.address || 'a (Canals, Córdoba)' }}</span>
+            </div>
+          </div>
+
+          <!-- Servicio Seleccionado -->
+          <div class="summary-item" *ngIf="selectedService()">
+            <div class="summary-icon">✂️</div>
+            <div class="flex flex-col">
+              <span class="summary-label">Servicio</span>
+              <span class="summary-value">{{ selectedService()!.name }}</span>
+            </div>
+          </div>
+
+          <!-- Fecha y Hora -->
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <div class="summary-item">
+              <div class="summary-icon">📅</div>
+              <div class="flex flex-col">
+                <span class="summary-label">Fecha</span>
+                <span class="summary-value">{{ selectedDate() ? (selectedDate() | date:'dd/MM/yyyy') : '--' }}</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-icon">🕒</div>
+              <div class="flex flex-col">
+                <span class="summary-label">Horario</span>
+                <span class="summary-value">{{ selectedTime() || '--' }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex flex-col gap-3 mt-8">
+          <button class="btn-continue" 
+                  [disabled]="!canContinue()"
+                  (click)="nextStep()">
+            {{ currentStep() === steps.length ? 'Confirmar Reserva' : 'Siguiente paso' }}
+          </button>
+          
+          <button *ngIf="currentStep() > 1" 
+                  (click)="prevStep()"
+                  class="text-xs font-bold text-text-muted uppercase tracking-widest hover:text-primary transition-colors">
+            Volver atrás
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+</div>
+
+<ng-template #loadingOrError>
+  <div class="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
+    <div *ngIf="loading()" class="flex flex-col items-center gap-6">
+      <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-text-muted font-medium">Cargando experiencia...</p>
+    </div>
+
+    <div *ngIf="!loading() && error()" class="text-center space-y-4 max-w-sm">
+      <span class="text-6xl block mb-6">🔍</span>
+      <h2 class="text-2xl font-bold text-text-main">Negocio no encontrado</h2>
+      <p class="text-text-muted">El link que ingresaste no parece ser válido o el negocio no está activo.</p>
+      <button (click)="goToHome()" class="btn-continue !mt-8">
+        Ir al Inicio
+      </button>
+    </div>
+  </div>
+</ng-template>

@@ -27,7 +27,24 @@ export class TenantsService {
         name: true,
         logoUrl: true,
         mode: true,
-        // Add other public fields
+        services: {
+          where: { active: true },
+          select: {
+            id: true,
+            name: true,
+            duration: true,
+            price: true,
+            color: true
+          }
+        },
+        branches: {
+          where: { active: true },
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
+        }
       }
     })
     if (!tenant) throw new NotFoundException('Negocio no encontrado')

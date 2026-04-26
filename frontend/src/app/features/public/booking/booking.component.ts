@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TenantsService, Tenant } from '../../../core/services/tenants.service';
@@ -7,81 +7,94 @@ import { TenantsService, Tenant } from '../../../core/services/tenants.service';
   selector: 'app-booking',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
-      <div *ngIf="loading" class="animate-pulse flex flex-col items-center gap-4">
-        <div class="w-20 h-20 bg-white/5 rounded-2xl"></div>
-        <div class="h-6 w-48 bg-white/5 rounded-lg"></div>
-      </div>
-
-      <div *ngIf="!loading && tenant" class="w-full max-w-md glass p-8 rounded-3xl border border-white/10 flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
-        <div class="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
-          <img *ngIf="tenant.logoUrl" [src]="tenant.logoUrl" class="w-full h-full object-cover">
-          <span *ngIf="!tenant.logoUrl" class="text-4xl">🏢</span>
-        </div>
-        
-        <div class="text-center space-y-2">
-          <h1 class="text-3xl font-bold text-text-main tracking-tight">{{ tenant.name }}</h1>
-          <p class="text-text-muted">¡Bienvenido! Pronto podrás reservar tus turnos aquí.</p>
-        </div>
-
-        <div class="w-full pt-6 border-t border-white/5">
-          <div class="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-center">
-            <span class="text-primary font-bold text-sm">Página en construcción 🚧</span>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="!loading && error" class="text-center space-y-4">
-        <span class="text-6xl">🔍</span>
-        <h2 class="text-xl font-bold text-text-main">Negocio no encontrado</h2>
-        <p class="text-text-muted">El link que ingresaste no parece ser válido.</p>
-        <button (click)="goToHome()" class="px-6 py-2 bg-white/5 hover:bg-white/10 text-text-main rounded-xl transition-all border border-white/10 font-bold">
-          Ir al Inicio
-        </button>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .glass {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-  `]
+  templateUrl: './booking.component.html',
+  styleUrls: ['./booking.component.css']
 })
 export class BookingComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private tenantsService = inject(TenantsService);
 
-  tenant: Tenant | null = null;
-  loading = true;
-  error = false;
+  tenant = signal<Tenant | null>(null);
+  loading = signal(true);
+  error = signal(false);
+
+  // Stepper State
+  currentStep = signal(1);
+  steps = [
+    { id: 'services', label: 'Servicios' },
+    { id: 'date', label: 'Fecha' },
+    { id: 'time', label: 'Horario' },
+    { id: 'email', label: 'Email' },
+    { id: 'personal', label: 'Información Personal' }
+  ];
+
+  // Selection State
+  selectedService = signal<any | null>(null);
+  selectedBranch = signal<any | null>(null);
+  selectedDate = signal<Date | null>(null);
+  selectedTime = signal<string | null>(null);
+
+  availableServices = computed(() => this.tenant()?.services || []);
+  availableBranches = computed(() => this.tenant()?.branches || []);
 
   ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('publicSlug');
     if (slug) {
       this.loadTenant(slug);
     } else {
-      this.loading = false;
-      this.error = true;
+      this.loading.set(false);
+      this.error.set(true);
     }
   }
 
   loadTenant(slug: string) {
-    // We need to implement this in TenantsService too (calling the public endpoint)
-    // For now let's assume getPublicInfo exists or we add it
     this.tenantsService.getPublicInfo(slug).subscribe({
       next: (tenant) => {
-        this.tenant = tenant;
-        this.loading = false;
+        this.tenant.set(tenant);
+        // Default branch if exists
+        if (tenant.branches && tenant.branches.length > 0) {
+          this.selectedBranch.set(tenant.branches[0]);
+        }
+        this.loading.set(false);
       },
       error: () => {
-        this.error = true;
-        this.loading = false;
+        this.error.set(true);
+        this.loading.set(false);
       }
     });
+  }
+
+  selectService(service: any) {
+    this.selectedService.set(service);
+  }
+
+  onDateChange(event: any) {
+    const dateStr = event.target.value;
+    if (dateStr) {
+      this.selectedDate.set(new Date(dateStr));
+    }
+  }
+
+  canContinue(): boolean {
+    const step = this.currentStep();
+    if (step === 1) return !!this.selectedService();
+    if (step === 2) return !!this.selectedDate();
+    if (step === 3) return !!this.selectedTime();
+    return true;
+  }
+
+  nextStep() {
+    if (this.canContinue() && this.currentStep() < this.steps.length) {
+      this.currentStep.update(s => s + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  prevStep() {
+    if (this.currentStep() > 1) {
+      this.currentStep.update(s => s - 1);
+    }
   }
 
   goToHome() {

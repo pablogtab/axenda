@@ -12,7 +12,10 @@ export interface Tenant {
   timezone: string;
   currency: string;
   logoUrl?: string;
+  address?: string;
   active: boolean;
+  services?: any[];
+  branches?: any[];
 }
 
 export interface UpdateTenantDto {
