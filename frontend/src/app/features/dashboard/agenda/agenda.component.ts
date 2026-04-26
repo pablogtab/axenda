@@ -408,7 +408,7 @@ export class AgendaComponent implements OnInit {
     }
 
     const dialogRef = this.modal.open(AgendaActionSelectorComponent, {
-      width: '260px',
+      width: '200px',
       data: { x: event.x, y: event.y },
       hasBackdrop: false,
       panelClass: 'modal-panel-dropdown'
@@ -448,7 +448,7 @@ export class AgendaComponent implements OnInit {
 
     dialogRef.closed.subscribe(result => {
       if (result) {
-        this.loadProfessionals();
+        this.refreshView();
       }
     });
   }
@@ -473,11 +473,20 @@ export class AgendaComponent implements OnInit {
 
   private openExceptionForm(event: { professional: Professional, time: string, date?: Date, endTime?: string }): void {
     const exceptionDate = event.date || this.selectedDate();
+    let endTime = event.endTime;
+    if (!endTime && event.time) {
+      const [h, m] = event.time.split(':').map(Number);
+      const totalMins = h * 60 + m + 15;
+      const endH = Math.floor(totalMins / 60);
+      const endM = totalMins % 60;
+      endTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+    }
+
     const dialogRef = this.modal.open(ProfessionalExceptionFormComponent, {
       data: {
         professionalId: event.professional.id,
         startTime: event.time,
-        endTime: event.endTime || '',
+        endTime: endTime || '',
         date: format(exceptionDate, 'yyyy-MM-dd')
       },
       width: '450px'
@@ -505,11 +514,8 @@ export class AgendaComponent implements OnInit {
   }
 
   private refreshView(): void {
-    // Aquí podríamos disparar un evento global o simplemente dejar que las vistas reaccionen a cambios si fuera necesario,
-    // pero como el loadAppointments está dentro de cada vista y reacciona a Inputs, 
-    // tal vez necesitemos un Subject de refresh o simplemente recrear la referencia si queremos forzar.
-    // Por ahora, al cerrar el modal, las vistas deberían refrescarse si implementamos un trigger.
-    this.selectedDate.set(new Date(this.selectedDate())); // Trigger re-render
+    this.loadProfessionals();
+    this.selectedDate.set(new Date(this.selectedDate())); // Trigger re-render in views
   }
 
   openSettings(): void {

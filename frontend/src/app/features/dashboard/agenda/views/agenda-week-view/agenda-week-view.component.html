@@ -107,7 +107,7 @@
           
         <!-- Bloqueos / Excepciones (Evidentes - Glass Red) -->
         @for (block of blockedBlocksByDay().get(dayIndex) || []; track block.id) {
-          <div class="absolute left-0 right-0 z-[15] cursor-pointer group/block pointer-events-auto"
+          <div class="absolute left-0 right-0 z-[5] cursor-pointer group/block pointer-events-auto"
                (click)="onExceptionClick(block.exception, $event)"
                [style.top.px]="block.top"
                [style.height.px]="block.height">
@@ -136,7 +136,7 @@
               <app-agenda-appointment-card
                 [appointment]="app"
                 [height]="app.height"
-                [showProfessionalBadge]="professionalsSignal().length > 1"></app-agenda-appointment-card>
+                [showProfessionalBadge]="professionals().length > 1"></app-agenda-appointment-card>
 
             </div>
           }
@@ -157,7 +157,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-2 max-h-[300px] overflow-auto pr-2 custom-scrollbar">
-          @for (prof of professionalsSignal(); track prof.id) {
+          @for (prof of professionals(); track prof.id) {
             @let isAvailable = isProfessionalAvailableAt(prof, pending.date!, pending.time!);
             @let isOriginal = pending.type === 'MOVE' && pending.data.originalProfessionalId === prof.id;
             

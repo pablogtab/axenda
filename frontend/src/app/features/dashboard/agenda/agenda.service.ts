@@ -9,16 +9,18 @@ export class AgendaService {
   isNavigating = signal(false);
   draggedApp = signal<Appointment | null>(null);
   draggedAppHeight = signal<number>(0);
+  draggedAppWidth = signal<number>(0);
   draggedAppOriginDate = signal<Date | null>(null);
   
   // Track mouse position for custom drag preview
   mouseX = signal(0);
   mouseY = signal(0);
 
-  setDragging(isDragging: boolean, app: Appointment | null = null, height: number = 0, originDate: Date | null = null) {
+  setDragging(isDragging: boolean, app: Appointment | null = null, height: number = 0, width: number = 0, originDate: Date | null = null) {
     this.isDragging.set(isDragging);
     this.draggedApp.set(app);
     this.draggedAppHeight.set(height);
+    this.draggedAppWidth.set(width);
     this.draggedAppOriginDate.set(originDate);
   }
 
@@ -31,6 +33,7 @@ export class AgendaService {
     this.isDragging.set(false);
     this.draggedApp.set(null);
     this.draggedAppHeight.set(0);
+    this.draggedAppWidth.set(0);
     this.draggedAppOriginDate.set(null);
   }
 

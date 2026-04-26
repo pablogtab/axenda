@@ -313,7 +313,7 @@
     <div class="fixed pointer-events-none z-[9999] rounded-lg shadow-2xl border border-white/10 backdrop-blur-xl scale-105 origin-top-left"
          [style.left.px]="agendaService.mouseX() + 5"
          [style.top.px]="agendaService.mouseY() + 5"
-         [style.width.px]="240"
+         [style.width.px]="agendaService.draggedAppWidth()"
          [style.height.px]="agendaService.draggedAppHeight()"
          [ngStyle]="{
            'background-color': app.service.color + '40',

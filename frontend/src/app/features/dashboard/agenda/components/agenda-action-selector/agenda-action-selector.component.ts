@@ -11,35 +11,26 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
          [style.left.px]="pos.left"
          [style.top.px]="pos.top"
          (click)="$event.stopPropagation()">
-      <div class="bg-bg-secondary rounded-xl border border-white/10 shadow-2xl overflow-hidden w-[260px] backdrop-blur-md">
-        <div class="p-1.5 grid gap-1">
+      <div class="bg-bg-secondary/90 rounded-xl border border-white/10 shadow-2xl overflow-hidden w-[200px] backdrop-blur-md">
+        <div class="p-1 grid gap-0.5">
           <button (click)="select('APPOINTMENT')" 
-                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all group">
-            <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-              <i class="fa-solid fa-calendar-plus text-sm"></i>
+                  class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/10 transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+              <i class="fa-solid fa-calendar-plus text-xs"></i>
             </div>
             <div class="text-left">
-              <div class="text-sm font-bold text-text-main">Nuevo Turno</div>
-              <div class="text-[10px] text-text-dim">Agendar un servicio</div>
+              <div class="text-xs font-bold text-text-main">Nuevo Turno</div>
             </div>
           </button>
 
           <button (click)="select('EXCEPTION')" 
-                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all group">
-            <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
-              <i class="fa-solid fa-lock text-sm"></i>
+                  class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/10 transition-all group">
+            <div class="w-7 h-7 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
+              <i class="fa-solid fa-lock text-xs"></i>
             </div>
             <div class="text-left">
-              <div class="text-sm font-bold text-text-main">Bloquear Horario</div>
-              <div class="text-[10px] text-text-dim">Crear una excepción</div>
+              <div class="text-xs font-bold text-text-main">Bloquear Horario</div>
             </div>
-          </button>
-        </div>
-
-        <div class="border-t border-white/5 p-1">
-          <button (click)="close()" 
-                  class="w-full py-1.5 text-[11px] font-bold text-text-dim hover:text-white transition-colors">
-            Cancelar
           </button>
         </div>
       </div>
@@ -66,8 +57,8 @@ export class AgendaActionSelectorComponent {
     const winWidth = window.innerWidth;
     const winHeight = window.innerHeight;
     
-    const menuWidth = 260;
-    const menuHeight = 160; // Altura estimada con margen
+    const menuWidth = 200;
+    const menuHeight = 100; // Altura estimada con margen
     
     let left = x - (menuWidth / 2);
     let top = y + 10;

@@ -1,5 +1,7 @@
-import { Injectable, signal } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Dialog, DialogRef } from '@angular/cdk/dialog';
+import { firstValueFrom } from 'rxjs';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 export interface DialogOptions {
   title: string;
@@ -13,30 +15,21 @@ export interface DialogOptions {
   providedIn: 'root'
 })
 export class DialogService {
-  private activeDialog = signal<DialogOptions | null>(null);
-  readonly dialogState = this.activeDialog.asReadonly();
-  
-  private resultSubject = new Subject<boolean>();
+  private dialog = inject(Dialog);
 
-  confirm(options: DialogOptions): Promise<boolean> {
-    this.activeDialog.set({
-      ...options,
-      confirmText: options.confirmText || 'Confirmar',
-      cancelText: options.cancelText || 'Cancelar',
-      type: options.type || 'info'
+  async confirm(options: DialogOptions): Promise<boolean> {
+    const dialogRef = this.dialog.open<boolean>(ConfirmDialogComponent, {
+      data: {
+        ...options,
+        confirmText: options.confirmText || 'Confirmar',
+        cancelText: options.cancelText || 'Cancelar',
+        type: options.type || 'info'
+      },
+      backdropClass: 'modal-backdrop',
+      panelClass: 'modal-panel-confirm'
     });
     
-    this.resultSubject = new Subject<boolean>();
-    return new Promise((resolve) => {
-      this.resultSubject.subscribe((result) => {
-        this.activeDialog.set(null);
-        resolve(result);
-      });
-    });
-  }
-
-  resolve(result: boolean): void {
-    this.resultSubject.next(result);
-    this.resultSubject.complete();
+    const result = await firstValueFrom(dialogRef.closed);
+    return !!result;
   }
 }

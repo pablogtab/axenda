@@ -215,13 +215,13 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     const startY = event.clientY;
 
     this.dragTimeout = setTimeout(() => {
-      this.startDragging(app, startX, startY);
+      this.startDragging(app, startX, startY, target.offsetWidth);
     }, 180); // 180ms delay
   }
 
-  private startDragging(app: Appointment, x: number, y: number): void {
+  private startDragging(app: Appointment, x: number, y: number, width: number): void {
     this.isPreDragging = false;
-    this.agendaService.setDragging(true, app, 40, new Date(app.startTime));
+    this.agendaService.setDragging(true, app, 40, width, new Date(app.startTime));
     this.agendaService.updateMousePosition(x, y);
     this.wasDragging = false;
     document.body.classList.add('dragging-active');

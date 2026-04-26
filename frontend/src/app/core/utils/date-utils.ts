@@ -46,3 +46,12 @@ export function endOfLocalDate(date: Date): Date {
   d.setHours(23, 59, 59, 999);
   return d;
 }
+/**
+ * Parsea una fecha ISO que representa un día (ej: "2026-04-26T00:00:00.000Z")
+ * como el inicio de ese día en hora local, ignorando el desplazamiento de zona horaria.
+ */
+export function parseISODateToLocal(isoStr: string): Date {
+  if (!isoStr) return new Date();
+  const datePart = isoStr.split('T')[0];
+  return createLocalDate(datePart);
+}

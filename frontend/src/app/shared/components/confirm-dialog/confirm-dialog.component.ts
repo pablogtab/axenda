@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DialogService } from '@services/dialog.service';
+import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
+import { DialogOptions } from '@services/dialog.service';
 
 @Component({
   selector: 'app-confirm-dialog',
@@ -10,14 +11,14 @@ import { DialogService } from '@services/dialog.service';
   styleUrl: './confirm-dialog.component.css'
 })
 export class ConfirmDialogComponent {
-  private dialogService = inject(DialogService);
-  state = this.dialogService.dialogState;
+  public dialogRef = inject(DialogRef<boolean>);
+  public data: DialogOptions = inject(DIALOG_DATA);
 
   onConfirm(): void {
-    this.dialogService.resolve(true);
+    this.dialogRef.close(true);
   }
 
   onCancel(): void {
-    this.dialogService.resolve(false);
+    this.dialogRef.close(false);
   }
 }

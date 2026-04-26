@@ -26,8 +26,8 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] Integración de Auth en UI.
 - [x] Calendario interactivo (Vista diaria/semanal, drag & drop).
 - [x] **Carga rápida de clientes**: Crear un cliente nuevo directamente desde el buscador del modal de turnos.
-- [ ] **Estados detallados de reserva**: Implementar flujo *Confirmado, En Espera, Asiste, No asistió*.
-- [ ] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
+- [x] **Estados detallados de reserva**: Implementar flujo *Confirmado, En Espera, Asiste, No asistió*.
+- [x] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
 - [ ] **Sobreturnos (Overbooking)**: Permitir solapamientos manuales forzados por el administrador.
 - [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
 

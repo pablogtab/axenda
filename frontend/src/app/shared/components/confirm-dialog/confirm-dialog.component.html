@@ -1,22 +1,38 @@
-@if (state()) {
-  <div class="dialog-overlay" (click)="onCancel()">
-    <div class="dialog-card glass" (click)="$event.stopPropagation()">
-      <header class="dialog-header">
-        <h2 [class]="state()?.type">{{ state()?.title }}</h2>
-      </header>
-      
-      <div class="dialog-body">
-        <p>{{ state()?.message }}</p>
+<div class="bg-bg-secondary rounded-2xl border border-white/10 shadow-2xl overflow-hidden w-full max-w-sm animate-in fade-in zoom-in duration-300">
+  <div class="p-6 text-center space-y-4">
+    <header class="space-y-2">
+      <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center bg-white/5 border border-white/10 mb-4">
+        @if (data.type === 'danger') {
+          <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
+        } @else if (data.type === 'warning') {
+          <i class="fa-solid fa-circle-exclamation text-amber-500 text-xl"></i>
+        } @else {
+          <i class="fa-solid fa-circle-info text-blue-500 text-xl"></i>
+        }
       </div>
-
-      <footer class="dialog-actions">
-        <button class="btn btn-secondary" (click)="onCancel()">
-          {{ state()?.cancelText }}
-        </button>
-        <button class="btn" [class]="'btn-' + state()?.type" (click)="onConfirm()">
-          {{ state()?.confirmText }}
-        </button>
-      </footer>
+      <h2 class="text-xl font-bold text-text-main" [class.text-red-500]="data.type === 'danger'">
+        {{ data.title }}
+      </h2>
+    </header>
+    
+    <div class="text-sm text-text-dim leading-relaxed">
+      {{ data.message }}
     </div>
+
+    <footer class="flex gap-3 pt-2">
+      <button class="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-text-main font-bold hover:bg-white/5 transition-all text-sm" 
+              (click)="onCancel()">
+        {{ data.cancelText }}
+      </button>
+      <button class="flex-[1.5] text-white font-bold py-2.5 rounded-xl shadow-lg transition-all text-sm" 
+              [class.bg-red-500]="data.type === 'danger'"
+              [class.hover:bg-red-600]="data.type === 'danger'"
+              [class.shadow-red-500/20]="data.type === 'danger'"
+              [class.bg-primary]="data.type !== 'danger'"
+              [class.hover:bg-primary-hover]="data.type !== 'danger'"
+              (click)="onConfirm()">
+        {{ data.confirmText }}
+      </button>
+    </footer>
   </div>
-}
+</div>

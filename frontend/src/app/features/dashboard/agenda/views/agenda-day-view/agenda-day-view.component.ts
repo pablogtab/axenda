@@ -6,7 +6,7 @@ import { AppointmentsService, Appointment } from '@services/appointments.service
 import { AvailabilityException, Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
-import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
+import { startOfLocalDate, endOfLocalDate, createLocalDate, parseISODateToLocal } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
@@ -46,9 +46,9 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   public sidebarService = inject(SidebarService);
 
   date = input.required<Date>();
-  @Input({ required: true }) branchId: string | null = null;
-  @Input({ required: true }) professionals: Professional[] = [];
-  @Input() selectedStatuses: string[] = [];
+  branchId = input.required<string | null>();
+  professionals = input.required<Professional[]>();
+  selectedStatuses = input<string[]>([]);
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number, type?: 'APPOINTMENT' | 'EXCEPTION' }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
@@ -124,7 +124,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const slots = this.timeSlots();
 
     const filteredRaw = this.rawAppointments().filter(app => 
-      this.selectedStatuses.length === 0 || this.selectedStatuses.includes(app.status)
+      this.selectedStatuses().length === 0 || this.selectedStatuses().includes(app.status)
     );
 
     return filteredRaw.map(app => {
@@ -186,12 +186,12 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const slots = this.timeSlots();
     const viewDate = this.date();
 
-    this.professionals.forEach(prof => {
+    this.professionals().forEach(prof => {
       const blocks: any[] = [];
       const exceptions = prof.exceptions || [];
 
       exceptions.forEach(ex => {
-        const exceptionDate = new Date(ex.date);
+        const exceptionDate = parseISODateToLocal(ex.date);
 
         // Verificar si la excepción es para el día actual y es un bloqueo
         if (isSameDay(exceptionDate, viewDate) && ex.type === 'BLOCK') {
@@ -249,9 +249,9 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   computeGridStatus(): void {
     const avail: Record<string, boolean> = {};
     const block: Record<string, boolean> = {};
-    const isSingleProf = this.professionals.length === 1;
+    const isSingleProf = this.professionals().length === 1;
 
-    this.professionals.forEach(prof => {
+    this.professionals().forEach(prof => {
       this.timeSlots().forEach(slot => {
         const key = `${prof.id}-${slot}`;
         avail[key] = this.isProfessionalAvailableAt(prof, slot);
@@ -264,7 +264,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   loadAppointments(): void {
-    if (!this.branchId) return;
+    if (!this.branchId()) return;
     
     this.isLoading.set(true);
     
@@ -274,8 +274,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.appointmentsService.findAll({ 
       startDate, 
       endDate,
-      branchId: this.branchId,
-      statuses: this.selectedStatuses
+      branchId: this.branchId()!,
+      statuses: this.selectedStatuses()
     }).subscribe({
       next: (data) => {
         setTimeout(() => {
@@ -309,13 +309,13 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const startY = event.clientY;
 
     this.dragTimeout = setTimeout(() => {
-      this.startDragging(app, startX, startY);
+      this.startDragging(app, startX, startY, target.offsetWidth);
     }, 180); // 180ms delay para distinguir click de drag
   }
 
-  private startDragging(app: AppointmentUI, x: number, y: number): void {
+  private startDragging(app: AppointmentUI, x: number, y: number, width: number): void {
     this.isPreDragging = false;
-    this.agendaService.setDragging(true, app, app.height, new Date(this.date()));
+    this.agendaService.setDragging(true, app, app.height, width, new Date(this.date()));
     this.agendaService.updateMousePosition(x, y);
     this.draggedApp.set(app);
     this.originalDate = new Date(this.date());
@@ -382,7 +382,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     
-    const columnCount = this.professionals.length;
+    const columnCount = this.professionals().length;
     if (columnCount === 0) return;
 
     const columnWidth = (totalWidth - timeColWidth) / columnCount;
@@ -392,7 +392,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const rowIndex = Math.floor((relativeY - headerHeight) / h);
     
     if (profIndex >= 0 && profIndex < columnCount && rowIndex >= 0 && rowIndex < this.timeSlots().length) {
-      const prof = this.professionals[profIndex];
+      const prof = this.professionals()[profIndex];
       const newPreview = {
         professionalId: prof.id,
         top: rowIndex * h,
@@ -593,8 +593,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   isProfessionalAvailableAt(prof: Professional, slot: string): boolean {
     const dayOfWeek = this.date().getDay();
     const isOut = prof.exceptions?.some(ex => {
-      const start = startOfDay(new Date(ex.date));
-      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      const start = startOfLocalDate(parseISODateToLocal(ex.date));
+      const end = ex.endDate ? startOfLocalDate(parseISODateToLocal(ex.endDate)) : start;
       const current = startOfDay(this.date());
       return current >= start && current <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
     });
@@ -607,8 +607,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   isProfessionalBlockedAt(prof: Professional, slot: string): boolean {
     const current = startOfDay(this.date());
     return (prof.exceptions || []).some(ex => {
-      const start = startOfDay(new Date(ex.date));
-      const end = ex.endDate ? startOfDay(new Date(ex.endDate)) : start;
+      const start = startOfLocalDate(parseISODateToLocal(ex.date));
+      const end = ex.endDate ? startOfLocalDate(parseISODateToLocal(ex.endDate)) : start;
       return current >= start && current <= end && ex.type === 'BLOCK' && ex.startTime && ex.endTime && slot >= ex.startTime && slot < ex.endTime;
     });
   }
