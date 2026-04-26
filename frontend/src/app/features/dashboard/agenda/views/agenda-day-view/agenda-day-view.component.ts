@@ -50,7 +50,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
 
   rawAppointments = signal<Appointment[]>([]);
@@ -79,6 +79,32 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   hoveredSlot = signal<string | null>(null);
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ professionalId: string, top: number, height: number } | null>(null);
+
+  // Estados para selección de rango
+  isSelectingRange = signal(false);
+  selectionStartSlot = signal<string | null>(null);
+  selectionEndSlot = signal<string | null>(null);
+  selectionProfessional = signal<Professional | null>(null);
+
+  selectionPreview = computed(() => {
+    if (!this.isSelectingRange() || !this.selectionStartSlot() || !this.selectionEndSlot() || !this.selectionProfessional()) return null;
+    
+    const slots = this.timeSlots();
+    const startIndex = slots.indexOf(this.selectionStartSlot()!);
+    const endIndex = slots.indexOf(this.selectionEndSlot()!);
+    
+    if (startIndex === -1 || endIndex === -1) return null;
+    
+    const start = Math.min(startIndex, endIndex);
+    const end = Math.max(startIndex, endIndex);
+    
+    const h = this.slotHeight();
+    return {
+      professionalId: this.selectionProfessional()!.id,
+      top: start * h,
+      height: (end - start + 1) * h
+    };
+  });
 
   private resizeObserver: ResizeObserver | null = null;
 
@@ -124,6 +150,10 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: any) {
+    if (this.isSelectingRange()) {
+      this.onRangeSelectionEnd();
+      return;
+    }
     if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
       
@@ -260,6 +290,10 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    if (this.isSelectingRange()) {
+      this.updateRangeSelectionFromCoords(event.clientX, event.clientY);
+      return;
+    }
     if (!this.agendaService.isDragging()) return;
     
     this.wasDragging = true;
@@ -276,6 +310,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
     if (this.isPreDragging) {
       this.isPreDragging = false;
+      return;
+    }
+
+    if (this.isSelectingRange()) {
+      this.handleRangeSelectionDrop();
       return;
     }
 
@@ -404,6 +443,103 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
 
   onCellLeave(): void {
     this.hoveredSlot.set(null);
+  }
+
+  // ─── Lógica de Selección de Rango ──────────────────────────────────────
+
+  onCellPointerDown(prof: Professional, slot: string, event: PointerEvent): void {
+    // Solo clic izquierdo, si no es mobile y si no estamos ya arrastrando algo
+    if (event.button !== 0 || this.sidebarService.isMobile() || this.agendaService.isDragging()) return;
+
+    this.isSelectingRange.set(true);
+    this.selectionStartSlot.set(slot);
+    this.selectionEndSlot.set(slot);
+    this.selectionProfessional.set(prof);
+    
+    // Desactivar selección de texto durante el arrastre
+    document.body.classList.add('dragging-active');
+  }
+
+  onCellPointerEnter(slot: string): void {
+    this.onCellEnter(slot);
+    // Ya no actualizamos el rango aquí, lo hacemos por coordenadas para mayor robustez
+  }
+
+  private updateRangeSelectionFromCoords(x: number, y: number): void {
+    const gridEl = this.el.nativeElement.querySelector('.grid');
+    if (!gridEl) return;
+    
+    const rect = gridEl.getBoundingClientRect();
+    const isMobile = this.sidebarService.isMobile();
+    const headerHeight = isMobile ? 32 : 40;
+    
+    const relativeY = y - rect.top;
+    
+    if (relativeY < headerHeight || relativeY > rect.height) return;
+    
+    const h = this.slotHeight();
+    const rowIndex = Math.floor((relativeY - headerHeight) / h);
+    
+    if (rowIndex >= 0 && rowIndex < this.timeSlots().length) {
+      const slot = this.timeSlots()[rowIndex];
+      if (this.selectionEndSlot() !== slot) {
+        this.selectionEndSlot.set(slot);
+      }
+    }
+  }
+
+  private handleRangeSelectionDrop(): void {
+    const startSlot = this.selectionStartSlot();
+    const endSlot = this.selectionEndSlot();
+    const prof = this.selectionProfessional();
+
+    if (!startSlot || !endSlot || !prof) {
+      this.onRangeSelectionEnd();
+      return;
+    }
+
+    const slots = this.timeSlots();
+    const startIndex = slots.indexOf(startSlot);
+    const endIndex = slots.indexOf(endSlot);
+
+    if (startIndex === -1 || endIndex === -1) {
+      this.onRangeSelectionEnd();
+      return;
+    }
+
+    const minIndex = Math.min(startIndex, endIndex);
+    const maxIndex = Math.max(startIndex, endIndex);
+
+    const finalStartSlot = slots[minIndex];
+    
+    // Calcular el endTime basado en el último slot + 15 min
+    let endTimeStr = '';
+    if (maxIndex + 1 < slots.length) {
+      endTimeStr = slots[maxIndex + 1];
+    } else {
+      const [h, m] = slots[maxIndex].split(':').map(Number);
+      const totalMins = h * 60 + m + 15;
+      const endH = Math.floor(totalMins / 60);
+      const endM = totalMins % 60;
+      endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+    }
+    
+    this.addAppointment.emit({ 
+      professional: prof, 
+      time: finalStartSlot,
+      endTime: endTimeStr
+    });
+
+    this.wasDragging = true;
+    this.onRangeSelectionEnd();
+  }
+
+  onRangeSelectionEnd(): void {
+    this.isSelectingRange.set(false);
+    this.selectionStartSlot.set(null);
+    this.selectionEndSlot.set(null);
+    this.selectionProfessional.set(null);
+    document.body.classList.remove('dragging-active');
   }
 
   isProfessionalAvailableAt(prof: Professional, slot: string): boolean {

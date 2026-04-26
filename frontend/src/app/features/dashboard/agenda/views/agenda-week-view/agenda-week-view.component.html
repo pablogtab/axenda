@@ -47,47 +47,63 @@
           }
         </div>
 
-        <!-- Celdas de Fondo Estáticas -->
-        @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
-          <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
-               [style.grid-row]="rowIndex + 2"
-               [style.grid-column]="dayIndex + 2"
-               [class.hover:bg-primary/10]="!agendaService.isDragging()"
-               (mouseenter)="hoveredSlot.set(slot)"
-               (mouseleave)="hoveredSlot.set(null)"
-               (click)="onCellClick(day, slot)">
-            
-            @if (availabilityMap()[dayIndex + '-' + slot]) {
-              <div class="absolute inset-0" [style.background-color]="(professionalsSignal().length === 1 ? (selectedProfessional()?.color || '#6366f1') : '#6366f1') + '08'"></div>
-            } @else {
-              <div class="absolute inset-0 bg-black/20"></div>
-            }
-            
-            @if (blockedMap()[dayIndex + '-' + slot]) {
-              <div class="absolute inset-0 bg-stripe-pattern opacity-10"></div>
-            }
-          </div>
-        }
-      }
-
-      <!-- Capas de Turnos -->
-      @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
-        <div class="relative pointer-events-none"
+        <!-- Celdas de Fondo -->
+      @for (day of weekDaysSignal(); track day; let dayIndex = $index) {
+        <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
+             [style.grid-row]="rowIndex + 2"
              [style.grid-column]="dayIndex + 2"
-             [style.grid-row]="'2 / span ' + timeSlots().length">
+             [class.hover:bg-primary/10]="!agendaService.isDragging() && !isSelectingRange()"
+             (mouseenter)="onCellPointerEnter(slot)"
+             (mouseleave)="hoveredSlot.set(null)"
+             (pointerdown)="onCellPointerDown(dayIndex, slot, $event)"
+             (click)="onCellClick(day, slot)">
           
-          <!-- Vista previa del resultado del drop -->
-          @if (dropPreview(); as preview) {
-            @if (preview.dayIndex === dayIndex) {
-              <div class="absolute left-1 right-1 rounded-lg border-2 border-primary/30 bg-primary/5 backdrop-blur-sm pointer-events-none z-0 transition-all duration-150"
-                   [style.top.px]="preview.top"
-                   [style.height.px]="preview.height">
-                 <div class="w-full h-full flex items-center justify-center">
-                    <div class="w-full h-full bg-gradient-to-b from-primary/20 to-transparent opacity-50 animate-pulse"></div>
-                 </div>
-              </div>
-            }
+          @if (availabilityMap()[dayIndex + '-' + slot]) {
+            <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          } @else {
+            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging() || isSelectingRange()"></div>
           }
+
+          @if (blockedMap()[dayIndex + '-' + slot]) {
+            <div class="absolute inset-0 bg-stripe-pattern opacity-10"></div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Capas de Turnos -->
+    @for (day of weekDaysSignal(); track day; let dayIndex = $index) {
+      <div class="relative transition-colors duration-300 pointer-events-none"
+           [style.grid-column]="dayIndex + 2"
+           [style.grid-row]="'2 / span ' + timeSlots().length">
+        
+        <!-- Vista previa del resultado del drop -->
+        @if (dropPreview(); as preview) {
+          @if (preview.dayIndex === dayIndex) {
+            <div class="absolute left-1 right-1 rounded-lg border-2 border-primary/30 bg-primary/5 backdrop-blur-sm pointer-events-none z-0 transition-all duration-150"
+                 [style.top.px]="preview.top"
+                 [style.height.px]="preview.height">
+               <div class="w-full h-full flex items-center justify-center">
+                  <div class="w-full h-full bg-gradient-to-b from-primary/20 to-transparent opacity-50 animate-pulse"></div>
+               </div>
+            </div>
+          }
+        }
+
+        <!-- Vista previa de la selección de rango -->
+        @if (selectionPreview(); as preview) {
+          @if (preview.dayIndex === dayIndex) {
+            <div class="absolute left-1 right-1 rounded-lg border-2 border-primary bg-primary/20 backdrop-blur-sm pointer-events-none z-20 transition-all duration-75"
+                 [style.top.px]="preview.top"
+                 [style.height.px]="preview.height">
+               <div class="w-full h-full flex flex-col items-center justify-center text-white text-[10px] font-bold">
+                  <div class="bg-primary px-2 py-0.5 rounded shadow-lg animate-in fade-in zoom-in duration-200">
+                    NUEVO TURNO
+                  </div>
+               </div>
+            </div>
+          }
+        }
           
           @for (app of appointmentsByDay().get(dayIndex) || []; track app.id) {
             <div (pointerdown)="onPointerDown(app, $event)"

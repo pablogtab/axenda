@@ -13,6 +13,7 @@ export interface AppointmentFormData {
   appointmentId?: string;
   professionalId?: string;
   startTime?: string;
+  endTime?: string;
   date?: string;
   branchId?: string;
 }
@@ -94,6 +95,7 @@ export class AppointmentFormComponent implements OnInit {
   private initForm(): void {
     const defaultDate = this.data.date || format(new Date(), 'yyyy-MM-dd');
     const defaultTime = this.data.startTime || '09:00';
+    const defaultEndTime = this.data.endTime || '';
 
     this.form = this.fb.group({
       clientId: ['', Validators.required],
@@ -102,7 +104,7 @@ export class AppointmentFormComponent implements OnInit {
       branchId: [this.data.branchId || '', Validators.required],
       date: [defaultDate, Validators.required],
       time: [defaultTime, Validators.required],
-      endTime: ['', Validators.required],
+      endTime: [defaultEndTime, Validators.required],
       status: [AppointmentStatus.PENDING],
       notes: [''],
       internalNotes: ['']

@@ -385,12 +385,13 @@ export class AgendaComponent implements OnInit {
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────
 
-  onAddAppointment(event: { professional: Professional, time: string, date?: Date }): void {
+  onAddAppointment(event: { professional: Professional, time: string, date?: Date, endTime?: string }): void {
     const appointmentDate = event.date || this.selectedDate();
     const dialogRef = this.modal.open(AppointmentFormComponent, {
       data: {
         professionalId: event.professional.id,
         startTime: event.time,
+        endTime: event.endTime,
         date: format(appointmentDate, 'yyyy-MM-dd'),
         branchId: this.selectedBranchId()
       },

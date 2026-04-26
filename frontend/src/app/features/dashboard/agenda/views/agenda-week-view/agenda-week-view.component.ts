@@ -51,7 +51,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
   @Output() dateChange = new EventEmitter<Date>();
 
@@ -85,6 +85,32 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   draggedApp = signal<AppointmentUI | null>(null);
   dropPreview = signal<{ dayIndex: number, top: number, height: number } | null>(null);
 
+  // Estados para selección de rango
+  isSelectingRange = signal(false);
+  selectionStartSlot = signal<string | null>(null);
+  selectionEndSlot = signal<string | null>(null);
+  selectionDayIndex = signal<number | null>(null);
+
+  selectionPreview = computed(() => {
+    if (!this.isSelectingRange() || !this.selectionStartSlot() || !this.selectionEndSlot() || this.selectionDayIndex() === null) return null;
+    
+    const slots = this.timeSlots();
+    const startIndex = slots.indexOf(this.selectionStartSlot()!);
+    const endIndex = slots.indexOf(this.selectionEndSlot()!);
+    
+    if (startIndex === -1 || endIndex === -1) return null;
+    
+    const start = Math.min(startIndex, endIndex);
+    const end = Math.max(startIndex, endIndex);
+    
+    const h = this.slotHeight();
+    return {
+      dayIndex: this.selectionDayIndex()!,
+      top: start * h,
+      height: (end - start + 1) * h
+    };
+  });
+
   pendingSelection = signal<{
     type: 'ADD' | 'MOVE',
     data: any,
@@ -105,6 +131,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   handleEscape(event: any) {
     if (this.pendingSelection()) {
       this.cancelSelection();
+    } else if (this.isSelectingRange()) {
+      this.onRangeSelectionEnd();
     } else if (this.agendaService.isDragging()) {
       this.dragCancelled = true;
       
@@ -327,6 +355,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    if (this.isSelectingRange()) {
+      this.updateRangeSelectionFromCoords(event.clientX, event.clientY);
+      return;
+    }
     if (!this.agendaService.isDragging()) return;
     
     this.wasDragging = true;
@@ -343,6 +375,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
 
     if (this.isPreDragging) {
       this.isPreDragging = false;
+      return;
+    }
+
+    if (this.isSelectingRange()) {
+      this.handleRangeSelectionDrop();
       return;
     }
 
@@ -510,7 +547,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       this.addAppointment.emit({
         professional: prof,
         time: pending.time!,
-        date: pending.date
+        date: pending.date,
+        endTime: pending.data.endTime
       });
     }
 
@@ -552,17 +590,111 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.editAppointment.emit({ appointment: app });
   }
 
-  onAdd(day: Date, time: string): void {
+  onAdd(day: Date, time: string, endTime?: string): void {
     const profs = this.professionalsSignal();
     if (profs.length === 1) {
-      this.addAppointment.emit({ professional: profs[0], time, date: day });
+      this.addAppointment.emit({ professional: profs[0], time, date: day, endTime });
     } else if (profs.length > 1) {
       this.pendingSelection.set({
         type: 'ADD',
-        data: {},
+        data: { endTime },
         date: day,
         time: time
       });
     }
+  }
+
+  // ─── Lógica de Selección de Rango ──────────────────────────────────────
+
+  onCellPointerDown(dayIndex: number, slot: string, event: PointerEvent): void {
+    if (event.button !== 0 || this.sidebarService.isMobile() || this.agendaService.isDragging()) return;
+
+    this.isSelectingRange.set(true);
+    this.selectionStartSlot.set(slot);
+    this.selectionEndSlot.set(slot);
+    this.selectionDayIndex.set(dayIndex);
+    
+    document.body.classList.add('dragging-active');
+  }
+
+  onCellPointerEnter(slot: string): void {
+    this.hoveredSlot.set(slot);
+    // Ya no actualizamos el rango aquí, lo hacemos por coordenadas
+  }
+
+  private updateRangeSelectionFromCoords(x: number, y: number): void {
+    const gridEl = this.el.nativeElement.querySelector('.grid');
+    if (!gridEl) return;
+    
+    const rect = gridEl.getBoundingClientRect();
+    const isMobile = this.sidebarService.isMobile();
+    const headerHeight = isMobile ? 32 : 40;
+    
+    const relativeY = y - rect.top;
+    
+    if (relativeY < headerHeight || relativeY > rect.height) return;
+    
+    const h = this.slotHeight();
+    const rowIndex = Math.floor((relativeY - headerHeight) / h);
+    
+    if (rowIndex >= 0 && rowIndex < this.timeSlots().length) {
+      const slot = this.timeSlots()[rowIndex];
+      if (this.selectionEndSlot() !== slot) {
+        this.selectionEndSlot.set(slot);
+      }
+    }
+  }
+
+  private handleRangeSelectionDrop(): void {
+    const startSlot = this.selectionStartSlot();
+    const endSlot = this.selectionEndSlot();
+    const dayIndex = this.selectionDayIndex();
+
+    if (!startSlot || !endSlot || dayIndex === null) {
+      this.onRangeSelectionEnd();
+      return;
+    }
+
+    const slots = this.timeSlots();
+    const startIndex = slots.indexOf(startSlot);
+    const endIndex = slots.indexOf(endSlot);
+
+    if (startIndex === -1 || endIndex === -1) {
+      this.onRangeSelectionEnd();
+      return;
+    }
+
+    const minIndex = Math.min(startIndex, endIndex);
+    const maxIndex = Math.max(startIndex, endIndex);
+
+    const finalStartSlot = slots[minIndex];
+    
+    // Calcular el endTime basado en el último slot + 15 min
+    let endTimeStr = '';
+    if (maxIndex + 1 < slots.length) {
+      endTimeStr = slots[maxIndex + 1];
+    } else {
+      const [h, m] = slots[maxIndex].split(':').map(Number);
+      const totalMins = h * 60 + m + 15;
+      const endH = Math.floor(totalMins / 60);
+      const endM = totalMins % 60;
+      endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+    }
+
+    const day = this.weekDaysSignal()[dayIndex];
+
+    // Reutilizamos onAdd para manejar la selección de profesional si es necesario
+    this.onAdd(day, finalStartSlot, endTimeStr);
+
+    this.wasDragging = true;
+    this.onRangeSelectionEnd();
+  }
+
+  onRangeSelectionEnd(): void {
+    this.isSelectingRange.set(false);
+    this.selectionStartSlot.set(null);
+    this.selectionEndSlot.set(null);
+    this.selectionDayIndex.set(null);
+    document.body.classList.remove('dragging-active');
   }
 }

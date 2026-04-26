@@ -50,15 +50,16 @@
         <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
              [style.grid-row]="rowIndex + 2"
              [style.grid-column]="colIndex + 2"
-             [class.hover:bg-primary/10]="!agendaService.isDragging()"
-             (mouseenter)="onCellEnter(slot)"
+             [class.hover:bg-primary/10]="!agendaService.isDragging() && !isSelectingRange()"
+             (mouseenter)="onCellPointerEnter(slot)"
              (mouseleave)="onCellLeave()"
+             (pointerdown)="onCellPointerDown(prof, slot, $event)"
              (click)="onCellClick(prof, slot)">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {
             <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>
           } @else {
-            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging()"></div>
+            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging() || isSelectingRange()"></div>
           }
           
           @if (blockedMap()[prof.id + '-' + slot]) {
@@ -82,6 +83,21 @@
                  [style.height.px]="preview.height">
                <div class="w-full h-full flex items-center justify-center">
                   <div class="w-full h-full bg-gradient-to-b from-primary/20 to-transparent opacity-50 animate-pulse"></div>
+               </div>
+            </div>
+          }
+        }
+
+        <!-- Vista previa de la selección de rango -->
+        @if (selectionPreview(); as preview) {
+          @if (preview.professionalId === prof.id) {
+            <div class="absolute left-1 right-1 rounded-lg border-2 border-primary bg-primary/20 backdrop-blur-sm pointer-events-none z-20 transition-all duration-75"
+                 [style.top.px]="preview.top"
+                 [style.height.px]="preview.height">
+               <div class="w-full h-full flex flex-col items-center justify-center text-white text-[10px] font-bold">
+                  <div class="bg-primary px-2 py-0.5 rounded shadow-lg animate-in fade-in zoom-in duration-200">
+                    NUEVO TURNO
+                  </div>
                </div>
             </div>
           }
