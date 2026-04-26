@@ -19,8 +19,10 @@
 
   <!-- Fila Principal: Nombre del Cliente y Hora -->
   <div class="flex items-center gap-1 min-w-0" [class.justify-between]="height < 60">
-    <div class="flex flex-col min-w-0 flex-1">
-      <span class="text-[10px] font-bold text-text-main truncate leading-none py-0.5">
+    <div class="flex items-center min-w-0 flex-1 gap-1">
+      <span class="text-[10px] font-bold text-text-main truncate leading-none py-0.5"
+            [class.line-through]="isCancelled()"
+            [class.opacity-50]="isCancelled()">
         {{ appointment.client.firstName }} {{ appointment.client.lastName }}
       </span>
     </div>
@@ -36,9 +38,17 @@
   <!-- Fila Inferior: Hora (Solo en tarjetas grandes) -->
   @if (height >= 60) {
     <div class="flex items-center justify-between mt-auto">
-      <span class="text-[9px] font-mono opacity-60">
-        {{ appointment.startTime | date:'HH:mm' }}
-      </span>
+      <div class="flex items-center gap-1">
+        <span class="text-[9px] font-mono opacity-60">
+          {{ appointment.startTime | date:'HH:mm' }}
+        </span>
+        <!-- Label de Estado (Solo si hay mucho espacio) -->
+        @if (height >= 100) {
+          <span class="text-[7px] px-1 rounded bg-white/10 text-text-dim uppercase font-bold tracking-tighter">
+            {{ statusInfo().label }}
+          </span>
+        }
+      </div>
       @if (height >= 90) {
         <span class="text-[8px] font-mono opacity-40">
           {{ appointment.endTime | date:'HH:mm' }}
@@ -46,4 +56,8 @@
       }
     </div>
   }
+
+  <!-- Barra Lateral de Estado -->
+  <div class="absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300"
+       [class]="statusInfo().color"></div>
 </div>

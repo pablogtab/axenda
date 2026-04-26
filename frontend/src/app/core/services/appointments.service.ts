@@ -6,9 +6,11 @@ import { environment } from '@env/environment';
 export enum AppointmentStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
+  WAITING = 'WAITING',
+  IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
-  NOSHOW = 'NOSHOW'
+  NO_SHOW = 'NO_SHOW'
 }
 
 export interface Appointment {
@@ -56,12 +58,16 @@ export class AppointmentsService {
     endDate?: string; 
     professionalId?: string; 
     branchId?: string; 
+    statuses?: string[];
   }): Observable<Appointment[]> {
     let params = new HttpParams();
     if (filters?.startDate) params = params.set('startDate', filters.startDate);
     if (filters?.endDate) params = params.set('endDate', filters.endDate);
     if (filters?.professionalId) params = params.set('professionalId', filters.professionalId);
     if (filters?.branchId) params = params.set('branchId', filters.branchId);
+    if (filters?.statuses && filters.statuses.length > 0) {
+      filters.statuses.forEach(s => params = params.append('statuses[]', s));
+    }
 
     return this.http.get<Appointment[]>(this.apiUrl, { params });
   }

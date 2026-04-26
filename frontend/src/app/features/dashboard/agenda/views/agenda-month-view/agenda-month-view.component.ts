@@ -41,6 +41,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
+  @Input() selectedStatuses: string[] = [];
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date: Date }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
@@ -86,6 +87,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
     const addToMap = (app: Appointment, dateStr: string) => {
       if (!profIds.has(app.professional.id)) return;
+      if (this.selectedStatuses.length > 0 && !this.selectedStatuses.includes(app.status)) return;
       const list = map.get(dateStr) || [];
       if (!list.some(a => a.id === app.id)) {
         list.push(app);
@@ -123,7 +125,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     if (changes['professionals']) {
       this.professionalsSignal.set(this.professionals);
     }
-    if (changes['date'] || changes['branchId'] || changes['professionals']) {
+    if (changes['date'] || changes['branchId'] || changes['professionals'] || changes['selectedStatuses']) {
       this.loadAppointments();
     }
   }
@@ -144,7 +146,8 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     this.appointmentsService.findAll({
       startDate,
       endDate,
-      branchId: this.branchId
+      branchId: this.branchId,
+      statuses: this.selectedStatuses
     }).subscribe({
       next: (data) => {
         this.rawAppointments.set(data);
@@ -318,5 +321,16 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
       return;
     }
     this.onEditApp(app, event);
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'PENDING': return '#fbbf24';
+      case 'CONFIRMED': return '#60a5fa';
+      case 'COMPLETED': return '#c084fc';
+      case 'NO_SHOW': return '#f87171';
+      case 'CANCELLED': return '#475569';
+      default: return '#fbbf24';
+    }
   }
 }

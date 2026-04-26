@@ -25,7 +25,7 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] Setup de proyecto Frontend (Angular).
 - [x] Integración de Auth en UI.
 - [x] Calendario interactivo (Vista diaria/semanal, drag & drop).
-- [ ] **Carga rápida de clientes**: Crear un cliente nuevo directamente desde el buscador del modal de turnos.
+- [x] **Carga rápida de clientes**: Crear un cliente nuevo directamente desde el buscador del modal de turnos.
 - [ ] **Estados detallados de reserva**: Implementar flujo *Confirmado, En Espera, Asiste, No asistió*.
 - [ ] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
 - [ ] **Sobreturnos (Overbooking)**: Permitir solapamientos manuales forzados por el administrador.
@@ -34,7 +34,7 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 ## 🔴 Fase 5: Reglas de Negocio y Lógica Avanzada
 - [ ] **Políticas de Anticipación**: Configurar límites mínimos y máximos para reservas.
 - [ ] **Modalidad Presencial/Virtual**: Definir tipo de servicio y links de reunión automáticos.
-- [ ] **Horarios por Servicio**: Restricción de disponibilidad según el servicio seleccionado.
+- [ ] **Horarios por Servicio**: Restricción de disponibilidad y filtrado en agenda según el servicio seleccionado.
 - [ ] **Turnos Genéricos**: Bloqueos de tiempo sin servicio específico.
 - [ ] **Reservas Recurrentes**: Soporte para citas que se repiten en el tiempo.
 

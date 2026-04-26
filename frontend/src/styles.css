@@ -76,6 +76,7 @@
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Definición de utilidades personalizadas (v4 syntax) */

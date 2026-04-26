@@ -18,6 +18,7 @@ export class UserConfigurationService {
   private _agendaSelectedBranchId = signal<string | null>(this.storage.get('agenda_selected_branch_id', null));
   private _agendaSelectedProfessionalIds = signal<string[]>(this.storage.get('agenda_selected_professional_ids', []));
   private _agendaView = signal<'day' | 'week' | 'month'>(this.storage.get('agenda_view', 'day'));
+  private _agendaSelectedStatuses = signal<string[]>(this.storage.get('agenda_selected_statuses', ['PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW']));
 
   // Exponemos como readonly para fomentar el uso de setters
   agendaZoom = this._agendaZoom.asReadonly();
@@ -26,6 +27,7 @@ export class UserConfigurationService {
   agendaSelectedBranchId = this._agendaSelectedBranchId.asReadonly();
   agendaSelectedProfessionalIds = this._agendaSelectedProfessionalIds.asReadonly();
   agendaView = this._agendaView.asReadonly();
+  agendaSelectedStatuses = this._agendaSelectedStatuses.asReadonly();
 
   constructor() {
     // Efecto para persistir automáticamente cualquier cambio en la configuración
@@ -36,6 +38,7 @@ export class UserConfigurationService {
       this.storage.set('agenda_selected_branch_id', this._agendaSelectedBranchId());
       this.storage.set('agenda_selected_professional_ids', this._agendaSelectedProfessionalIds());
       this.storage.set('agenda_view', this._agendaView());
+      this.storage.set('agenda_selected_statuses', this._agendaSelectedStatuses());
     });
   }
 
@@ -65,5 +68,9 @@ export class UserConfigurationService {
 
   updateAgendaView(view: 'day' | 'week' | 'month'): void {
     this._agendaView.set(view);
+  }
+
+  updateAgendaStatuses(statuses: string[]): void {
+    this._agendaSelectedStatuses.set(statuses);
   }
 }

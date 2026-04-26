@@ -2,7 +2,7 @@ import { Component, Inject, OnInit, inject, signal, ViewChild, ElementRef } from
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DIALOG_DATA, DialogRef, Dialog } from '@angular/cdk/dialog';
-import { AppointmentsService } from '@services/appointments.service';
+import { AppointmentsService, AppointmentStatus } from '@services/appointments.service';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
@@ -59,6 +59,22 @@ export class AppointmentFormComponent implements OnInit {
     descriptionFn: (s) => `${s.duration} min - $${s.price}`,
     valueFn: (s) => s.id
   };
+  
+  statusConfig: SelectConfig<any> = {
+    label: 'Estado del Turno',
+    placeholder: 'Seleccionar estado...',
+    displayFn: (s) => s.label,
+    valueFn: (s) => s.value,
+    colorFn: (s) => s.color
+  };
+
+  statusOptions = [
+    { value: 'PENDING', label: 'Reservado', color: '#fbbf24' },
+    { value: 'CONFIRMED', label: 'Confirmado', color: '#60a5fa' },
+    { value: 'COMPLETED', label: 'Finalizado', color: '#c084fc' },
+    { value: 'NO_SHOW', label: 'No asistió', color: '#f87171' },
+    { value: 'CANCELLED', label: 'Cancelado', color: '#475569' }
+  ];
 
   constructor(
     public dialogRef: DialogRef<any>,
@@ -87,6 +103,7 @@ export class AppointmentFormComponent implements OnInit {
       date: [defaultDate, Validators.required],
       time: [defaultTime, Validators.required],
       endTime: ['', Validators.required],
+      status: [AppointmentStatus.PENDING],
       notes: [''],
       internalNotes: ['']
     });
@@ -132,6 +149,7 @@ export class AppointmentFormComponent implements OnInit {
         date: this.data.date || toLocalDateStr(startDate),
         time: toLocalTimeStr(startDate),
         endTime: toLocalTimeStr(endDate),
+        status: appointment.status,
         notes: appointment.notes,
         internalNotes: appointment.internalNotes
       });
@@ -217,6 +235,7 @@ export class AppointmentFormComponent implements OnInit {
       professionalId: val.professionalId,
       branchId: val.branchId,
       startTime: start.toISOString(),
+      status: val.status,
       notes: val.notes,
       internalNotes: val.internalNotes
     };

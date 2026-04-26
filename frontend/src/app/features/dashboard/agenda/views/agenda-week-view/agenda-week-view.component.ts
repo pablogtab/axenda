@@ -49,6 +49,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
+  @Input() selectedStatuses: string[] = [];
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
@@ -140,7 +141,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const profIds = new Set(profs.map(p => p.id));
 
     return this.rawAppointments()
-      .filter(app => profIds.has(app.professional.id))
+      .filter(app => 
+        profIds.has(app.professional.id) && 
+        (this.selectedStatuses.length === 0 || this.selectedStatuses.includes(app.status))
+      )
       .map(app => {
         const dragging = this.draggedApp();
         if (dragging && dragging.id === app.id) {
@@ -202,7 +206,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
       this.weekDaysSignal.set(days);
     }
-    if (changes['date'] || changes['branchId'] || changes['professionals']) {
+    if (changes['date'] || changes['branchId'] || changes['professionals'] || changes['selectedStatuses']) {
       this.loadAppointments();
       this.computeGridStatus();
     }
@@ -245,7 +249,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.appointmentsService.findAll({
       startDate,
       endDate,
-      branchId: this.branchId
+      branchId: this.branchId,
+      statuses: this.selectedStatuses
     }).subscribe({
       next: (data) => {
         setTimeout(() => {

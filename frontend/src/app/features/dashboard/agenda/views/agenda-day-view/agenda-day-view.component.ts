@@ -48,6 +48,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
+  @Input() selectedStatuses: string[] = [];
 
   @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
@@ -95,7 +96,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const height = this.slotHeight();
     const slots = this.timeSlots();
 
-    return this.rawAppointments().map(app => {
+    const filteredRaw = this.rawAppointments().filter(app => 
+      this.selectedStatuses.length === 0 || this.selectedStatuses.includes(app.status)
+    );
+
+    return filteredRaw.map(app => {
       const start = new Date(app.startTime);
       const end = new Date(app.endTime);
       const startStr = format(start, 'HH:mm');
@@ -162,7 +167,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['date'] || changes['branchId'] || changes['professionals']) {
+    if (changes['date'] || changes['branchId'] || changes['professionals'] || changes['selectedStatuses']) {
       this.loadAppointments();
       this.computeGridStatus();
     }
@@ -200,7 +205,8 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.appointmentsService.findAll({ 
       startDate, 
       endDate,
-      branchId: this.branchId
+      branchId: this.branchId,
+      statuses: this.selectedStatuses
     }).subscribe({
       next: (data) => {
         setTimeout(() => {

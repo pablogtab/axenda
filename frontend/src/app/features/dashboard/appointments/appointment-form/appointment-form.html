@@ -59,6 +59,15 @@
       </div>
     </div>
 
+    <!-- Sección: Estado (Solo en Edición) -->
+    @if (isEditMode()) {
+      <app-select
+        formControlName="status"
+        [options]="statusOptions"
+        [config]="statusConfig"
+      ></app-select>
+    }
+
     <!-- Notas -->
     <div class="space-y-2">
       <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Notas del turno</label>

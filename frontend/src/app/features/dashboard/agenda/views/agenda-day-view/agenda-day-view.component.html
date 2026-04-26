@@ -91,7 +91,7 @@
         @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
           <div (pointerdown)="onPointerDown(app, $event)"
                 (click)="onAppClick(app, $event)"
-                class="absolute left-0.5 right-0.5 sm:left-1 sm:right-1 rounded-md sm:rounded-lg p-1 sm:p-2 shadow-xl cursor-pointer group/appt overflow-hidden border border-white/5 z-10 pointer-events-auto touch-none"
+                class="absolute left-0.5 right-0.5 sm:left-1 sm:right-1 rounded-md sm:rounded-lg p-1 sm:p-2 shadow-xl cursor-pointer group/appt overflow-hidden z-10 pointer-events-auto touch-none"
                 [class.opacity-40]="agendaService.draggedApp()?.id === app.id && isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.opacity-0]="agendaService.draggedApp()?.id === app.id && !isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
@@ -99,7 +99,6 @@
                 [style.height.px]="app.height"
                 [ngStyle]="{
                   'background-color': app.service.color + '20',
-                  'border-left': (sidebarService.isMobile() ? '2px' : '4px') + ' solid ' + app.service.color,
                   'color': app.service.color
                 }">
             

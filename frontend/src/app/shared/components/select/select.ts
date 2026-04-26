@@ -10,6 +10,8 @@ export interface SelectConfig<T = any> {
   displayFn: (item: T) => string;
   descriptionFn?: (item: T) => string;
   valueFn?: (item: T) => any;
+  colorFn?: (item: T) => string;
+  iconFn?: (item: T) => string;
 }
 
 @Component({
@@ -37,6 +39,8 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
   get placeholder() { return this.config?.placeholder ?? 'Seleccionar...'; }
   get displayFn() { return this.config?.displayFn; }
   get descriptionFn() { return this.config?.descriptionFn; }
+  get colorFn() { return this.config?.colorFn; }
+  get iconFn() { return this.config?.iconFn; }
   private get valueFn() { return this.config?.valueFn; }
 
   searchControl = new FormControl('');

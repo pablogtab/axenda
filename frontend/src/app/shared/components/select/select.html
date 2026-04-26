@@ -36,21 +36,30 @@
     <!-- Item Seleccionado -->
     @if (selectedItem()) {
       <div class="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-xl px-4 py-2 animate-in fade-in duration-200">
-        <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        @if (colorFn) {
+          <div class="w-1 h-4 rounded-full" [style.background-color]="colorFn(selectedItem()!)"></div>
+        } @else {
           <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
             {{ displayFn ? displayFn(selectedItem()!)[0] : '?' }}
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm font-bold text-text-main truncate">
-              {{ displayFn ? displayFn(selectedItem()!) : '' }}
+        }
+        
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-bold truncate" [style.color]="colorFn ? colorFn(selectedItem()!) : ''">
+            {{ displayFn ? displayFn(selectedItem()!) : '' }}
+          </span>
+          @if (descriptionFn) {
+            <span class="text-[11px] text-text-dim truncate">
+              {{ descriptionFn(selectedItem()!) }}
             </span>
-            @if (descriptionFn) {
-              <span class="text-[11px] text-text-dim truncate">
-                {{ descriptionFn(selectedItem()!) }}
-              </span>
-            }
-          </div>
+          }
         </div>
+
+        @if (iconFn) {
+          <span class="ml-auto text-sm opacity-60">{{ iconFn(selectedItem()!) }}</span>
+        }
+      </div>
         <button type="button" (click)="clearSelection($event)" class="text-xs text-text-dim hover:text-red-400 font-bold p-2 transition-colors">
           Cambiar
         </button>
@@ -74,12 +83,24 @@
                       (mousedown)="selectItem(item)"
                       [class.bg-white/10]="i === selectedIndex()"
                       class="w-full px-4 py-2.5 text-left hover:bg-white/5 flex items-center justify-between border-b border-white/5 last:border-0 group transition-colors overflow-hidden">
-                <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-sm font-bold text-text-main group-hover:text-primary transition-colors truncate" [class.text-primary]="i === selectedIndex()">
-                    {{ displayFn ? displayFn(item) : '' }}
-                  </span>
-                  @if (descriptionFn) {
-                    <span class="text-[11px] text-text-dim truncate">{{ descriptionFn(item) }}</span>
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  @if (colorFn) {
+                    <div class="w-1 h-4 rounded-full" [style.background-color]="colorFn(item)"></div>
+                  }
+                  
+                  <div class="flex flex-col min-w-0 flex-1">
+                    <span class="text-sm font-bold truncate group-hover:text-primary transition-colors"
+                          [style.color]="colorFn ? colorFn(item) : ''"
+                          [class.text-primary]="i === selectedIndex()">
+                      {{ displayFn ? displayFn(item) : '' }}
+                    </span>
+                    @if (descriptionFn) {
+                      <span class="text-[11px] text-text-dim truncate">{{ descriptionFn(item) }}</span>
+                    }
+                  </div>
+
+                  @if (iconFn) {
+                    <span class="text-sm opacity-60">{{ iconFn(item) }}</span>
                   }
                 </div>
                 <span class="text-xs text-primary font-bold transition-all flex-shrink-0 ml-2" [class.opacity-100]="i === selectedIndex()" [class.opacity-0]="i !== selectedIndex()">

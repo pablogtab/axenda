@@ -54,6 +54,9 @@ export class AgendaComponent implements OnInit {
     effect(() => {
       this.userConfig.updateAgendaView(this.selectedView());
     });
+    effect(() => {
+      this.userConfig.updateAgendaStatuses(this.selectedStatuses());
+    });
   }
 
   // Estado Global de la Agenda (Inicializado desde la configuración persistida)
@@ -61,6 +64,15 @@ export class AgendaComponent implements OnInit {
   selectedBranchId = signal<string | null>(this.userConfig.agendaSelectedBranchId());
   selectedView = signal<AgendaViewType>(this.userConfig.agendaView());
   selectedProfessionalIds = signal<string[]>(this.userConfig.agendaSelectedProfessionalIds());
+  selectedStatuses = signal<string[]>(this.userConfig.agendaSelectedStatuses()); // Ahora cargado desde config
+
+  statusFilterOptions = [
+    { value: 'PENDING', label: 'Reservado', color: '#fbbf24' },
+    { value: 'CONFIRMED', label: 'Confirmado', color: '#60a5fa' },
+    { value: 'COMPLETED', label: 'Finalizado', color: '#c084fc' },
+    { value: 'NO_SHOW', label: 'No asistió', color: '#f87171' },
+    { value: 'CANCELLED', label: 'Cancelado', color: '#475569' }
+  ];
   
   professionals = signal<Professional[]>([]);
   branches = signal<Branch[]>([]);
@@ -116,7 +128,6 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('window:wheel', ['$event'])
   handleGlobalWheel(event: WheelEvent) {
-    console.log("Wheel captured")
     if (this.showFilters() || this.showViewSelector()) return;
     
     // Solo permitimos navegación por rueda en vista mes o si estamos arrastrando
@@ -149,7 +160,6 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('document:mouseup', ['$event'])
   handleGlobalMouseUp(event: MouseEvent) {
-    console.log('aca mouse up')
     if (this.agendaService.isDragging()) {
       // Si estamos navegando (cambio de mes), ignoramos el mouseup global por completo
       // porque el navegador suele disparar eventos falsos al reconstruir el DOM.
@@ -353,6 +363,24 @@ export class AgendaComponent implements OnInit {
 
   selectAllProfessionals(): void {
     this.selectedProfessionalIds.set([]);
+  }
+
+  toggleStatus(status: string): void {
+    const current = this.selectedStatuses();
+    if (current.includes(status)) {
+      if (current.length > 1) {
+        this.selectedStatuses.set(current.filter(s => s !== status));
+      } else {
+        // Si es el último, activamos todos
+        this.selectedStatuses.set(['PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW', 'CANCELLED']);
+      }
+    } else {
+      this.selectedStatuses.set([...current, status]);
+    }
+  }
+
+  isStatusSelected(status: string): boolean {
+    return this.selectedStatuses().includes(status);
   }
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────

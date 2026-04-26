@@ -45,7 +45,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Listar turnos del tenant con filtros' })
   findAll(
     @CurrentUser() user: JwtPayload,
-    @Query() query: { startDate?: string; endDate?: string; branchId?: string }
+    @Query() query: { startDate?: string; endDate?: string; branchId?: string; statuses?: string[] }
   ) {
     return this.appointmentsService.findAll(user.tenantId, query)
   }
