@@ -48,7 +48,7 @@
         </div>
 
         <!-- Celdas de Fondo -->
-      @for (day of weekDaysSignal(); track day; let dayIndex = $index) {
+      @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
         <div class="border-r border-b border-white/[0.02] relative group cursor-pointer transition-colors"
              [style.grid-row]="rowIndex + 2"
              [style.grid-column]="dayIndex + 2"
@@ -72,7 +72,7 @@
     }
 
     <!-- Capas de Turnos -->
-    @for (day of weekDaysSignal(); track day; let dayIndex = $index) {
+    @for (day of weekDaysSignal(); track $index; let dayIndex = $index) {
       <div class="relative transition-colors duration-300 pointer-events-none"
            [style.grid-column]="dayIndex + 2"
            [style.grid-row]="'2 / span ' + timeSlots().length">

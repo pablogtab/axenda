@@ -8,6 +8,7 @@ import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
 import { format } from 'date-fns';
 import { createLocalDate, toLocalDateStr, toLocalTimeStr } from '@core/utils/date-utils';
+import { forkJoin } from 'rxjs';
 
 export interface AppointmentFormData {
   appointmentId?: string;
@@ -85,11 +86,14 @@ export class AppointmentFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadInitialData();
     if (this.data.appointmentId) {
       this.isEditMode.set(true);
-      this.loadAppointment(this.data.appointmentId);
     }
+    this.loadInitialData(() => {
+      if (this.data.appointmentId) {
+        this.loadAppointment(this.data.appointmentId);
+      }
+    });
   }
 
   private initForm(): void {
@@ -158,22 +162,25 @@ export class AppointmentFormComponent implements OnInit {
     });
   }
 
-  private loadInitialData(): void {
-    this.professionalsService.findAll().subscribe(profs => {
+  private loadInitialData(callback?: () => void): void {
+    forkJoin({
+      profs: this.professionalsService.findAll(),
+      services: this.servicesService.findAll()
+    }).subscribe(({ profs, services }) => {
       this.professionals.set(profs.filter(p => p.active));
-    });
 
-    this.servicesService.findAll().subscribe(services => {
       const activeServices = services.filter(s => s.active);
       this.allServices.set(activeServices);
       
-      // Aplicar filtro inicial si ya hay un profesional seleccionado (ej: modo edición)
+      // Aplicar filtro inicial si ya hay un profesional seleccionado
       const currentProfId = this.form.get('professionalId')?.value;
       if (currentProfId) {
         this.filterServicesByProfessional(currentProfId);
       } else {
         this.services.set(activeServices);
       }
+
+      if (callback) callback();
     });
   }
 
