@@ -57,13 +57,13 @@
              (click)="onCellClick(prof, slot)">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {
-            <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>
+            <div class="absolute inset-0 bg-available-cell" [style.background-color]="prof.color + '08'"></div>
           } @else {
-            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging() || isSelectingRange()"></div>
+            <div class="absolute inset-0 bg-unavailable-cell" [class.bg-red-500/10]="agendaService.isDragging() || isSelectingRange()"></div>
           }
           
           @if (blockedMap()[prof.id + '-' + slot]) {
-            <div class="absolute inset-0 bg-stripe-pattern opacity-30"></div>
+            <div class="absolute inset-0 bg-black/60 bg-stripe-pattern"></div>
           }
         </div>
       }

@@ -107,7 +107,7 @@ export class AppointmentsService {
           endTime: end,
           notes: dto.notes,
           internalNotes: dto.internalNotes,
-          status: 'PENDING',
+          status: dto.status || 'PENDING',
         },
       })
 
@@ -115,7 +115,7 @@ export class AppointmentsService {
         data: {
           appointmentId: appointment.id,
           changedBy: userId,
-          newStatus: 'PENDING',
+          newStatus: appointment.status,
           notes: 'Turno creado',
         },
       })

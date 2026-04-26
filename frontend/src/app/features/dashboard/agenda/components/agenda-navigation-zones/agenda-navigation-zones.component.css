@@ -41,14 +41,14 @@
 
 .left-zone {
   left: 0;
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.15), transparent);
-  border-left: 2px solid rgba(99, 102, 241, 0.3);
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.25), transparent);
+  border-left: 4px solid rgba(99, 102, 241, 0.5);
 }
 
 .right-zone {
   right: 0;
-  background: linear-gradient(to left, rgba(99, 102, 241, 0.15), transparent);
-  border-right: 2px solid rgba(99, 102, 241, 0.3);
+  background: linear-gradient(to left, rgba(99, 102, 241, 0.25), transparent);
+  border-right: 4px solid rgba(99, 102, 241, 0.5);
 }
 
 .day-change-zone:hover,
@@ -58,12 +58,12 @@
 
 .left-zone:hover,
 .left-zone.navigating {
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.3), transparent);
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.45), transparent);
 }
 
 .right-zone:hover,
 .right-zone.navigating {
-  background: linear-gradient(to left, rgba(99, 102, 241, 0.3), transparent);
+  background: linear-gradient(to left, rgba(99, 102, 241, 0.45), transparent);
 }
 .zone-content {
   display: flex;

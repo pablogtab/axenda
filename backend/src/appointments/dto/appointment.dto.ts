@@ -32,6 +32,11 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsString()
   internalNotes?: string
+
+  @ApiPropertyOptional({ enum: AppointmentStatus, example: AppointmentStatus.PENDING })
+  @IsOptional()
+  @IsEnum(AppointmentStatus)
+  status?: AppointmentStatus
 }
 
 export class UpdateAppointmentStatusDto {

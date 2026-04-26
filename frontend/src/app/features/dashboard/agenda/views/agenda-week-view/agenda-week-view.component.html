@@ -59,13 +59,13 @@
              (click)="onCellClick(day, slot)">
           
           @if (availabilityMap()[dayIndex + '-' + slot]) {
-            <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="absolute inset-0 bg-available-cell opacity-0 group-hover:opacity-100 transition-opacity"></div>
           } @else {
-            <div class="absolute inset-0 bg-black/20" [class.bg-red-500/5]="agendaService.isDragging() || isSelectingRange()"></div>
+            <div class="absolute inset-0 bg-unavailable-cell" [class.bg-red-500/10]="agendaService.isDragging() || isSelectingRange()"></div>
           }
 
           @if (blockedMap()[dayIndex + '-' + slot]) {
-            <div class="absolute inset-0 bg-stripe-pattern opacity-30"></div>
+            <div class="absolute inset-0 bg-black/60 bg-stripe-pattern"></div>
           }
         </div>
       }

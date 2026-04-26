@@ -11,8 +11,8 @@ import { SidebarService } from '@core/services/sidebar.service';
     <!-- Zona Izquierda -->
     <div class="day-change-zone left-zone" 
          [style.left]="offsetLeft"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating() && sidebarService.isCollapsed()"
-         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile()) && sidebarService.isCollapsed()"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile())"
          (click)="navigate.emit('prev')">
       <div class="zone-content">
         <span class="text-2xl">‹</span>
@@ -22,8 +22,8 @@ import { SidebarService } from '@core/services/sidebar.service';
 
     <!-- Zona Derecha -->
     <div class="day-change-zone right-zone"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating() && sidebarService.isCollapsed()"
-         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile()) && sidebarService.isCollapsed()"
+         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
+         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile())"
          (click)="navigate.emit('next')">
       <div class="zone-content">
         <span class="text-2xl">›</span>
