@@ -46,5 +46,9 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./features/dashboard/settings/settings.component').then(m => m.SettingsComponent)
       }
     ]
+  },
+  {
+    path: ':publicSlug',
+    loadComponent: () => import('./features/public/booking/booking.component').then(m => m.BookingComponent)
   }
 ];

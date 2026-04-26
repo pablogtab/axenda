@@ -28,6 +28,7 @@ async function main() {
     data: {
       name: 'Barbería Axenda',
       slug: 'barberia-axenda',
+      publicSlug: 'barberia-axenda',
       mode: TenantMode.BARBERSHOP,
       active: true,
       
@@ -71,6 +72,27 @@ async function main() {
   const palermoBranch = tenant.branches.find(b => b.name === 'Sede Palermo')!
   const cortesCat = tenant.serviceCategories.find(c => c.name === 'Cortes')!
   const barbaCat = tenant.serviceCategories.find(c => c.name === 'Barbería')!
+
+  console.log('🌸 Creando segundo Tenant (Estética Bella)...')
+  await prisma.tenant.create({
+    data: {
+      name: 'Estética Bella',
+      slug: 'estetica-bella',
+      publicSlug: 'estetica-bella',
+      mode: TenantMode.GENERIC,
+      users: {
+        create: [
+          {
+            firstName: 'Maria',
+            lastName: 'Estetica',
+            email: 'maria@estetica.com',
+            passwordHash,
+            role: UserRole.ADMIN,
+          }
+        ]
+      }
+    }
+  })
 
   console.log('✂️ Creando Servicios...')
   const corteClasico = await prisma.service.create({

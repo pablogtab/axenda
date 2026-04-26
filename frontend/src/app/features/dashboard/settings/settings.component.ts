@@ -1,12 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, switchMap, of, catchError, tap } from 'rxjs';
 import { SelectComponent, SelectConfig } from '../../../shared/components/select/select';
 
 import { ProfessionalsListComponent } from '../professionals/professionals-list/professionals-list.component';
 import { BranchesListComponent } from '../branches/branches-list/branches-list.component';
 import { ServicesListComponent } from '../services/services-list/services-list.component';
+import { TenantsService } from '../../../core/services/tenants.service';
+import { SnackbarService } from '../../../core/services/snackbar.service';
 
 @Component({
   selector: 'app-settings',
@@ -23,7 +26,7 @@ import { ServicesListComponent } from '../services/services-list/services-list.c
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnInit {
   settingsForm: FormGroup;
 
   sections = [
@@ -96,6 +99,13 @@ export class SettingsComponent {
     { label: 'No permitir cancelación online', value: 'never' }
   ];
 
+  private tenantsService = inject(TenantsService);
+  private snackbar = inject(SnackbarService);
+  private cdr = inject(ChangeDetectorRef);
+
+  slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  originalSlug = signal<string>('');
+
   constructor(private fb: FormBuilder) {
     this.settingsForm = this.fb.group({
       name: [''],
@@ -103,6 +113,7 @@ export class SettingsComponent {
       phone: [''],
       email: [''],
       address: [''],
+      publicSlug: ['', { updateOn: 'change' }],
       anticipationMin: ['1h'],
       anticipationMax: ['1m'],
       cancellationLimit: ['24h'],
@@ -112,11 +123,133 @@ export class SettingsComponent {
     });
   }
 
+  ngOnInit() {
+    this.loadTenantData();
+    this.setupSlugValidation();
+  }
+
+  onSlugInput() {
+    const slug = this.settingsForm.get('publicSlug')?.value;
+    if (slug === this.originalSlug()) {
+      this.slugStatus.set('idle');
+    } else if (slug && slug.length > 0) {
+      this.slugStatus.set('checking');
+    } else {
+      this.slugStatus.set('idle');
+    }
+    this.cdr.detectChanges();
+  }
+
+  private setupSlugValidation() {
+    const control = this.settingsForm.get('publicSlug');
+    if (!control) return;
+
+    control.valueChanges.pipe(
+      tap(slug => {
+        if (slug === this.originalSlug()) {
+          this.slugStatus.set('idle');
+        } else if (slug && slug.length > 0) {
+          this.slugStatus.set('checking');
+        } else {
+          this.slugStatus.set('idle');
+        }
+        this.cdr.detectChanges();
+      }),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(slug => {
+        if (!slug || slug === this.originalSlug()) {
+          return of({ available: true, skip: true });
+        }
+
+        // Basic format validation
+        const slugRegex = /^[a-z0-9-]+$/;
+        if (!slugRegex.test(slug)) {
+          this.slugStatus.set('invalid');
+          this.cdr.detectChanges();
+          return of({ available: false, skip: true });
+        }
+
+        return this.tenantsService.checkSlugAvailability(slug).pipe(
+          catchError(() => {
+            this.slugStatus.set('idle');
+            this.cdr.detectChanges();
+            return of({ available: false, skip: true });
+          })
+        );
+      })
+    ).subscribe({
+      next: (res: any) => {
+        if (res.skip) return;
+        this.slugStatus.set(res.available ? 'available' : 'taken');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.slugStatus.set('idle');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private loadTenantData() {
+    this.tenantsService.getMe().subscribe({
+      next: (tenant) => {
+        this.originalSlug.set(tenant.publicSlug || '');
+        this.settingsForm.patchValue({
+          name: tenant.name,
+          publicSlug: tenant.publicSlug || '',
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.snackbar.error('Error al cargar la configuración');
+      }
+    });
+  }
+
   setActiveSection(sectionId: string) {
     this.activeSection = sectionId;
   }
 
   save() {
-    console.log('Settings saved:', this.settingsForm.value);
+    if (this.settingsForm.invalid) return;
+
+    const values = this.settingsForm.value;
+    this.tenantsService.updateMe({
+      name: values.name,
+      publicSlug: values.publicSlug
+    }).subscribe({
+      next: () => {
+        this.snackbar.success('Configuración guardada correctamente');
+        this.originalSlug.set(values.publicSlug);
+        this.slugStatus.set('idle');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        if (err.status === 409) {
+          this.snackbar.error('El link público ya está en uso por otro negocio');
+        } else {
+          this.snackbar.error('Error al guardar la configuración');
+        }
+      }
+    });
+  }
+
+  copyToClipboard() {
+    const slug = this.settingsForm.get('publicSlug')?.value;
+    if (!slug) return;
+
+    const url = `axenda.com/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.snackbar.success('Link copiado al portapapeles');
+    });
+  }
+
+  visitPublicPage() {
+    const slug = this.settingsForm.get('publicSlug')?.value;
+    if (!slug) return;
+    
+    const url = `${window.location.origin}/${slug}`;
+    window.open(url, '_blank');
   }
 }

@@ -27,4 +27,9 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsString()
   logoUrl?: string
+
+  @ApiPropertyOptional({ example: 'mi-negocio' })
+  @IsOptional()
+  @IsString()
+  publicSlug?: string
 }

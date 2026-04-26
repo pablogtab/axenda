@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { UpdateTenantDto } from './dto/update-tenant.dto'
 import { CreateBranchDto } from './dto/create-branch.dto'
@@ -19,7 +19,49 @@ export class TenantsService {
     return tenant
   }
 
+  async findByPublicSlug(publicSlug: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { publicSlug },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+        mode: true,
+        // Add other public fields
+      }
+    })
+    if (!tenant) throw new NotFoundException('Negocio no encontrado')
+    return tenant
+  }
+
+  async isSlugAvailable(slug: string): Promise<boolean> {
+    const reservedSlugs = ['login', 'dashboard', 'admin', 'api', 'p', 'auth', 'settings', 'home', 'agenda', 'clients', 'services', 'branches', 'professionals']
+    if (reservedSlugs.includes(slug.toLowerCase())) return false
+
+    const count = await this.prisma.tenant.count({
+      where: { publicSlug: slug }
+    })
+    return count === 0
+  }
+
   async update(tenantId: string, dto: UpdateTenantDto) {
+    if (dto.publicSlug) {
+      const reservedSlugs = ['login', 'dashboard', 'admin', 'api', 'p', 'auth', 'settings', 'home', 'agenda', 'clients', 'services', 'branches', 'professionals']
+      if (reservedSlugs.includes(dto.publicSlug.toLowerCase())) {
+        throw new ConflictException(`El nombre "${dto.publicSlug}" no está permitido como link`)
+      }
+
+      const existing = await this.prisma.tenant.findFirst({
+        where: {
+          publicSlug: dto.publicSlug,
+          id: { not: tenantId },
+        },
+      })
+      if (existing) {
+        throw new ConflictException('El link público ya está en uso por otro negocio')
+      }
+    }
+
     return this.prisma.tenant.update({
       where: { id: tenantId },
       data: dto,
