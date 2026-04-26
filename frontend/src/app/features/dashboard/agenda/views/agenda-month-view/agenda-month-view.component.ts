@@ -17,7 +17,7 @@ import {
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { Professional } from '@services/professionals.service';
-import { startOfLocalDate, endOfLocalDate, toLocalDateStr } from '@core/utils/date-utils';
+import { startOfLocalDate, endOfLocalDate, toLocalDateStr, parseISODateToLocal } from '@core/utils/date-utils';
 
 import { AgendaService } from '../../agenda.service';
 import { SidebarService } from '@core/services/sidebar.service';
@@ -43,7 +43,7 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date: Date }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date: Date, type?: 'APPOINTMENT' | 'EXCEPTION' }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
   @Output() dateChange = new EventEmitter<Date>();
   @Output() dayClick = new EventEmitter<Date>();
@@ -179,6 +179,24 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     this.dayClick.emit(day);
   }
 
+  getBlocksForDay(day: Date): any[] {
+    const blocks: any[] = [];
+    const profs = this.professionalsSignal();
+    
+    profs.forEach(prof => {
+      (prof.exceptions || []).forEach(ex => {
+        if (ex.type === 'BLOCK') {
+          const exDate = parseISODateToLocal(ex.date);
+          if (isSameDay(exDate, day)) {
+            blocks.push({ ...ex, professional: prof });
+          }
+        }
+      });
+    });
+    
+    return blocks;
+  }
+
   onAddAppointment(day: Date, event: Event): void {
     event.stopPropagation();
     if (this.wasDragging) {
@@ -191,7 +209,8 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
       this.addAppointment.emit({
         professional: this.professionals[0],
         time: '09:00',
-        date: day
+        date: day,
+        type: 'APPOINTMENT'
       });
     }
   }
@@ -304,6 +323,12 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
     this.agendaService.stopDragging();
     this.dropPreviewDate.set(null);
     document.body.classList.remove('dragging-active');
+  }
+
+  onExceptionClick(exception: any, event: Event): void {
+    event.stopPropagation();
+    // En vista mensual no editamos excepciones por ahora, 
+    // pero mantenemos el método para evitar errores de template
   }
 
   formatTime(isoString: string): string {
