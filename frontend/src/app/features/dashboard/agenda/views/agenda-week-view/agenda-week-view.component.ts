@@ -3,15 +3,17 @@ import { CommonModule } from '@angular/common';
 import { format, addDays, startOfWeek, endOfWeek, startOfDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
-import { Professional } from '@services/professionals.service';
+import { AvailabilityException, Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate, toLocalDateStr } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
 import { AgendaAppointmentCardComponent } from '../../components/agenda-appointment-card/agenda-appointment-card.component';
+import { AgendaActionSelectorComponent } from '../../components/agenda-action-selector/agenda-action-selector.component';
 import { AgendaService } from '../../agenda.service';
 import { SidebarService } from '@core/services/sidebar.service';
+import { ModalService } from '@core/services/modal.service';
 
 interface AppointmentUI extends Appointment {
   top: number;
@@ -45,14 +47,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private el = inject(ElementRef);
   public agendaService = inject(AgendaService);
   public sidebarService = inject(SidebarService);
+  private modal = inject(ModalService);
 
   date = input.required<Date>();
   @Input({ required: true }) branchId: string | null = null;
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number, type?: 'APPOINTMENT' | 'EXCEPTION' }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
+  @Output() editException = new EventEmitter<AvailabilityException>();
   @Output() dateChange = new EventEmitter<Date>();
 
   rawAppointments = signal<Appointment[]>([]);
@@ -115,7 +119,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     type: 'ADD' | 'MOVE',
     data: any,
     date?: Date,
-    time?: string
+    time?: string,
+    actionType?: 'APPOINTMENT' | 'EXCEPTION'
   } | null>(null);
 
   selectedProfessionalId = signal<string | null>(null);
@@ -203,6 +208,48 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       list.push(app);
       map.set(app.dayIndex, list);
     });
+    return map;
+  });
+
+  blockedBlocksByDay = computed(() => {
+    const map = new Map<number, any[]>();
+    const height = this.slotHeight();
+    const slots = this.timeSlots();
+    const days = this.weekDaysSignal();
+    const profs = this.professionalsSignal();
+
+    // Solo mostramos bloques si hay un solo profesional seleccionado para no saturar
+    if (profs.length !== 1) return map;
+
+    const prof = profs[0];
+    const exceptions = prof.exceptions || [];
+
+    days.forEach((day, dayIndex) => {
+      const dayBlocks: any[] = [];
+      exceptions.forEach(ex => {
+        const exceptionDate = new Date(ex.date);
+
+        if (isSameDay(exceptionDate, day) && ex.type === 'BLOCK') {
+          const startIndex = slots.findIndex(s => s === ex.startTime);
+          
+          if (startIndex !== -1 && ex.startTime && ex.endTime) {
+            const startParts = ex.startTime.split(':').map(Number);
+            const endParts = ex.endTime.split(':').map(Number);
+            const duration = (endParts[0] * 60 + endParts[1]) - (startParts[0] * 60 + startParts[1]);
+
+            dayBlocks.push({
+              id: ex.id,
+              top: startIndex * height,
+              height: (duration * height) / 15,
+              reason: ex.reason || 'Bloqueado',
+              exception: ex
+            });
+          }
+        }
+      });
+      map.set(dayIndex, dayBlocks);
+    });
+
     return map;
   });
 
@@ -550,7 +597,8 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         date: pending.date,
         endTime: pending.data.endTime,
         x: pending.data.x,
-        y: pending.data.y
+        y: pending.data.y,
+        type: pending.actionType
       });
     }
 
@@ -583,6 +631,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     setTimeout(() => this.rawAppointments.set(current), 0);
   }
 
+  onExceptionClick(exception: AvailabilityException, event: MouseEvent): void {
+    event.stopPropagation();
+    this.editException.emit(exception);
+  }
+
   onAppClick(app: Appointment, event: Event): void {
     event.stopPropagation();
     if (this.wasDragging) {
@@ -593,17 +646,54 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onAdd(day: Date, time: string, endTime?: string, x?: number, y?: number): void {
-    const profs = this.professionalsSignal();
-    if (profs.length === 1) {
-      this.addAppointment.emit({ professional: profs[0], time, date: day, endTime, x, y });
-    } else if (profs.length > 1) {
-      this.pendingSelection.set({
-        type: 'ADD',
-        data: { endTime, x, y },
-        date: day,
-        time: time
-      });
+    const isMobile = this.sidebarService.isMobile();
+
+    if (isMobile) {
+      const profs = this.professionalsSignal();
+      if (profs.length === 1) {
+        this.addAppointment.emit({ professional: profs[0], time, date: day, endTime });
+      } else {
+        this.pendingSelection.set({ type: 'ADD', data: { endTime }, date: day, time });
+      }
+      return;
     }
+
+    const dialogRef = this.modal.open(AgendaActionSelectorComponent, {
+      width: '260px',
+      data: { x, y },
+      hasBackdrop: false,
+      panelClass: 'modal-panel-dropdown'
+    });
+
+    dialogRef.closed.subscribe(action => {
+      if (!action) {
+        this.onRangeSelectionEnd();
+        return;
+      }
+
+      const profs = this.professionalsSignal();
+      if (profs.length === 1) {
+        this.addAppointment.emit({
+          professional: profs[0],
+          time,
+          date: day,
+          endTime,
+          x,
+          y,
+          type: action
+        });
+        this.onRangeSelectionEnd();
+      } else if (profs.length > 1) {
+        this.pendingSelection.set({
+          type: 'ADD',
+          actionType: action,
+          data: { endTime, x, y },
+          date: day,
+          time: time
+        });
+        // No cerramos el rango aún, se cerrará en confirmSelection o cancelSelection
+      }
+    });
   }
 
   // ─── Lógica de Selección de Rango ──────────────────────────────────────

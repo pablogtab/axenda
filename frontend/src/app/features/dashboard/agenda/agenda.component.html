@@ -271,6 +271,7 @@
         [selectedStatuses]="selectedStatuses()"
         (addAppointment)="onAddAppointment($event)"
         (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+        (editException)="onEditException($event)"
         (dateChange)="selectedDate.set($event)"></app-agenda-day-view>
       }
       @case ('week') {
@@ -281,6 +282,7 @@
         [selectedStatuses]="selectedStatuses()"
         (addAppointment)="onAddAppointment($event)"
         (editAppointment)="onEditAppointment($event.appointment, $event.newDate)"
+        (editException)="onEditException($event)"
         (dateChange)="selectedDate.set($event)"></app-agenda-week-view>
       }
       @case ('month') {

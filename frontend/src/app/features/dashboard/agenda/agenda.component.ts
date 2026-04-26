@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, effect, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProfessionalsService, Professional } from '@services/professionals.service';
+import { ProfessionalsService, Professional, AvailabilityException } from '@services/professionals.service';
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
@@ -389,8 +389,18 @@ export class AgendaComponent implements OnInit {
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────
 
-  onAddAppointment(event: { professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }): void {
+  onAddAppointment(event: { professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number, type?: 'APPOINTMENT' | 'EXCEPTION' }): void {
     const isMobile = this.sidebarService.isMobile();
+
+    // Si ya viene con el tipo (desde vista semanal con varios profs), vamos directo
+    if (event.type) {
+      if (event.type === 'APPOINTMENT') {
+        this.openAppointmentForm(event);
+      } else {
+        this.openExceptionForm(event);
+      }
+      return;
+    }
 
     if (isMobile) {
       this.openAppointmentForm(event);
@@ -415,6 +425,30 @@ export class AgendaComponent implements OnInit {
         this.openAppointmentForm(event);
       } else if (action === 'EXCEPTION') {
         this.openExceptionForm(event);
+      }
+    });
+  }
+
+  onEditException(exception: AvailabilityException): void {
+    // Buscar a qué profesional pertenece esta excepción
+    const prof = this.professionals().find(p => p.exceptions?.some(e => e.id === exception.id));
+    if (!prof) return;
+
+    const dialogRef = this.modal.open(ProfessionalExceptionFormComponent, {
+      data: {
+        id: exception.id,
+        professionalId: prof.id,
+        date: exception.date,
+        startTime: exception.startTime,
+        endTime: exception.endTime,
+        type: exception.type,
+        reason: exception.reason
+      }
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) {
+        this.loadProfessionals();
       }
     });
   }

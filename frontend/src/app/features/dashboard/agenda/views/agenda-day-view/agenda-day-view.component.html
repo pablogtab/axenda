@@ -103,6 +103,20 @@
           }
         }
         
+        <!-- Bloqueos / Excepciones (Evidentes - Glass Red) -->
+        @for (block of blockedBlocksByProfessional().get(prof.id) || []; track block.id) {
+          <div class="absolute left-0 right-0 z-[15] cursor-pointer group/block pointer-events-auto"
+               (click)="onExceptionClick(block.exception, $event)"
+               [style.top.px]="block.top"
+               [style.height.px]="block.height">
+            <div class="w-full h-full backdrop-blur-[2px] bg-red-500/15 group-hover/block:bg-red-500/25 transition-all bg-stripe-pattern-heavy border-y border-red-500/30 flex items-center justify-center overflow-hidden">
+               <span class="text-[9px] font-black text-red-500/60 uppercase tracking-widest rotate-[-12deg] whitespace-nowrap drop-shadow-sm group-hover/block:text-red-500/80 transition-colors">
+                 {{ block.reason }}
+               </span>
+            </div>
+          </div>
+        }
+        
         @for (app of appointmentsByProfessional().get(prof.id) || []; track app.id) {
           <div (pointerdown)="onPointerDown(app, $event)"
                 (click)="onAppClick(app, $event)"

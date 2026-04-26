@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { format, startOfDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
-import { Professional } from '@services/professionals.service';
+import { AvailabilityException, Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate } from '@core/utils/date-utils';
@@ -50,8 +50,9 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number, type?: 'APPOINTMENT' | 'EXCEPTION' }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
+  @Output() editException = new EventEmitter<AvailabilityException>();
 
   rawAppointments = signal<Appointment[]>([]);
   private zoomLevel = this.userConfig.agendaZoom;
@@ -175,6 +176,43 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       const list = map.get(app.professional.id) || [];
       list.push(app);
       map.set(app.professional.id, list);
+    });
+    return map;
+  });
+
+  blockedBlocksByProfessional = computed(() => {
+    const map = new Map<string, any[]>();
+    const height = this.slotHeight();
+    const slots = this.timeSlots();
+    const viewDate = this.date();
+
+    this.professionals.forEach(prof => {
+      const blocks: any[] = [];
+      const exceptions = prof.exceptions || [];
+
+      exceptions.forEach(ex => {
+        const exceptionDate = new Date(ex.date);
+
+        // Verificar si la excepción es para el día actual y es un bloqueo
+        if (isSameDay(exceptionDate, viewDate) && ex.type === 'BLOCK') {
+          const startIndex = slots.findIndex(s => s === ex.startTime);
+          
+          if (startIndex !== -1 && ex.startTime && ex.endTime) {
+            const startParts = ex.startTime.split(':').map(Number);
+            const endParts = ex.endTime.split(':').map(Number);
+            const duration = (endParts[0] * 60 + endParts[1]) - (startParts[0] * 60 + startParts[1]);
+
+            blocks.push({
+              id: ex.id,
+              top: startIndex * height,
+              height: (duration * height) / 15,
+              reason: ex.reason || 'Bloqueado',
+              exception: ex
+            });
+          }
+        }
+      });
+      map.set(prof.id, blocks);
     });
     return map;
   });
@@ -587,6 +625,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     const current = this.rawAppointments();
     this.rawAppointments.set(current.filter(a => a.id !== app.id));
     setTimeout(() => this.rawAppointments.set(current), 0);
+  }
+
+  onExceptionClick(exception: AvailabilityException, event: MouseEvent): void {
+    event.stopPropagation();
+    this.editException.emit(exception);
   }
 
   onAppClick(app: Appointment, event: Event): void {

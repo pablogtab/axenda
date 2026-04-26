@@ -7,10 +7,13 @@ import { SnackbarService } from '@services/snackbar.service';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 
 export interface ExceptionFormData {
+  id?: string;
   professionalId: string;
   date: string;
   startTime: string;
   endTime: string;
+  type?: string;
+  reason?: string;
 }
 
 @Component({
@@ -23,7 +26,7 @@ export interface ExceptionFormData {
       <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5">
         <h3 class="text-lg font-bold text-text-main flex items-center gap-2">
           <i class="fa-solid fa-ban text-red-500"></i>
-          Nuevo Bloqueo
+          {{ isEdit ? 'Editar Bloqueo' : 'Nuevo Bloqueo' }}
         </h3>
         <button (click)="close()" class="text-text-dim hover:text-white transition-colors">
           <i class="fa-solid fa-xmark"></i>
@@ -80,21 +83,30 @@ export interface ExceptionFormData {
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-3 pt-2">
-          <button type="button" (click)="close()"
-                  class="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-text-main font-bold hover:bg-white/5 transition-all">
-            Cancelar
-          </button>
-          <button type="submit" [disabled]="form.invalid || isSubmitting()"
-                  class="flex-[2] bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-red-500 text-white font-bold py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2">
-            @if (isSubmitting()) {
-              <i class="fa-solid fa-circle-notch animate-spin"></i>
-              Guardando...
-            } @else {
-              <i class="fa-solid fa-lock"></i>
-              Bloquear Horario
-            }
-          </button>
+        <div class="flex flex-col gap-3 pt-2">
+          <div class="flex gap-3">
+            <button type="button" (click)="close()"
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-text-main font-bold hover:bg-white/5 transition-all">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="form.invalid || isSubmitting()"
+                    class="flex-[2] bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-red-500 text-white font-bold py-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2">
+              @if (isSubmitting()) {
+                <i class="fa-solid fa-circle-notch animate-spin"></i>
+                Guardando...
+              } @else {
+                <i class="fa-solid fa-lock"></i>
+                {{ isEdit ? 'Guardar Cambios' : 'Bloquear Horario' }}
+              }
+            </button>
+          </div>
+
+          @if (isEdit) {
+            <button type="button" (click)="onDelete()" [disabled]="isSubmitting()"
+                    class="w-full py-2.5 text-xs font-bold text-red-400 hover:text-red-300 transition-colors uppercase tracking-widest">
+              Eliminar Bloqueo
+            </button>
+          }
         </div>
       </form>
     </div>
@@ -111,6 +123,7 @@ export class ProfessionalExceptionFormComponent implements OnInit {
   form!: FormGroup;
   professional = signal<Professional | null>(null);
   isSubmitting = signal(false);
+  isEdit = false;
 
   typeOptions = [
     { value: 'BLOCK', label: 'Bloqueo Puntual', color: '#f87171' },
@@ -130,12 +143,13 @@ export class ProfessionalExceptionFormComponent implements OnInit {
     public dialogRef: DialogRef<any>,
     @Inject(DIALOG_DATA) public data: ExceptionFormData
   ) {
+    this.isEdit = !!this.data.id;
     this.form = this.fb.group({
       date: [this.data.date, Validators.required],
       startTime: [this.data.startTime, Validators.required],
       endTime: [this.data.endTime, Validators.required],
-      type: ['BLOCK', Validators.required],
-      reason: ['']
+      type: [this.data.type || 'BLOCK', Validators.required],
+      reason: [this.data.reason || '']
     });
   }
 
@@ -149,14 +163,50 @@ export class ProfessionalExceptionFormComponent implements OnInit {
     if (this.form.invalid) return;
 
     this.isSubmitting.set(true);
+
+    if (this.isEdit) {
+      // Como no hay endpoint de update directo en service, borramos y creamos
+      // O si el backend soporta PATCH en el futuro, se cambia aquí.
+      // Por ahora, simularemos la edición borrando y creando uno nuevo para mayor simplicidad dado el service actual
+      this.professionalsService.removeException(this.data.professionalId, this.data.id!).subscribe({
+        next: () => {
+          this.createNewException();
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.snackbar.error('Error al actualizar el bloqueo');
+        }
+      });
+    } else {
+      this.createNewException();
+    }
+  }
+
+  private createNewException(): void {
     this.professionalsService.addException(this.data.professionalId, this.form.value).subscribe({
       next: (res) => {
-        this.snackbar.success('Bloqueo creado con éxito');
+        this.snackbar.success(this.isEdit ? 'Bloqueo actualizado' : 'Bloqueo creado');
         this.dialogRef.close(res);
       },
       error: () => {
         this.isSubmitting.set(false);
-        this.snackbar.error('Error al crear el bloqueo');
+        this.snackbar.error('Error al procesar el bloqueo');
+      }
+    });
+  }
+
+  onDelete(): void {
+    if (!confirm('¿Estás seguro de eliminar este bloqueo?')) return;
+
+    this.isSubmitting.set(true);
+    this.professionalsService.removeException(this.data.professionalId, this.data.id!).subscribe({
+      next: () => {
+        this.snackbar.success('Bloqueo eliminado');
+        this.dialogRef.close(true);
+      },
+      error: () => {
+        this.isSubmitting.set(false);
+        this.snackbar.error('Error al eliminar el bloqueo');
       }
     });
   }
