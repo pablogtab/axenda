@@ -12,6 +12,7 @@ export interface Tenant {
   timezone: string;
   currency: string;
   logoUrl?: string;
+  bannerUrl?: string;
   address?: string;
   active: boolean;
   services?: any[];
@@ -25,6 +26,7 @@ export interface UpdateTenantDto {
   timezone?: string;
   currency?: string;
   logoUrl?: string;
+  bannerUrl?: string;
 }
 
 @Injectable({

@@ -8,6 +8,7 @@ model Tenant {
   timezone  String     @default("America/Argentina/Buenos_Aires")
   currency  String     @default("ARS")
   logoUrl   String?
+  bannerUrl String?
   active     Boolean    @default(true)
   publicSlug String?    @unique
   createdAt  DateTime   @default(now())

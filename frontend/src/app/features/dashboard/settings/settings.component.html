@@ -46,16 +46,17 @@
           </div>
 
           <div class="flex flex-col md:flex-row gap-6 items-start">
-            <div class="flex flex-col items-center gap-3">
-              <div class="w-24 h-24 rounded-2xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-1 group hover:border-primary/50 transition-all cursor-pointer overflow-hidden relative">
-                <span class="text-2xl">🖼️</span>
-                <span class="text-[8px] font-bold text-text-muted uppercase tracking-wider group-hover:text-primary transition-colors">Subir Logo</span>
-                <!-- Hover Overlay -->
-                <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span class="text-primary text-lg">➕</span>
-                </div>
-              </div>
-              <p class="text-[8px] text-text-muted text-center max-w-[100px]">PNG, JPG. Máx 2MB.</p>
+            <div class="flex flex-col items-center">
+              <app-image-uploader 
+                label="Logo del Negocio"
+                [currentImageUrl]="settingsForm.get('logoUrl')?.value"
+                [tenantId]="tenantId()"
+                category="logos"
+                shape="square"
+                dimensions="w-28 h-28"
+                (imageUploaded)="settingsForm.get('logoUrl')?.setValue($event)"
+              ></app-image-uploader>
+              <p class="text-[8px] text-text-muted text-center mt-2 max-w-[120px]">PNG, JPG. Máx 2MB.</p>
             </div>
 
             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
@@ -80,67 +81,82 @@
             </div>
           </div>
 
+          <!-- Public Link Customization -->
+          <div class="pt-6 border-t border-white/5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
+                <span>🔗</span> Link Público de Reservas
+              </h3>
+              <span *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')"
+                class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
+            </div>
+          
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Personalizar Link</label>
+              <div class="flex items-stretch group relative">
+                <div
+                  class="bg-white/5 border border-white/10 border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary/5">
+                  axenda.com/
+                </div>
+                <input
+                  type="text"
+                  formControlName="publicSlug"
+                  class="flex-1 bg-white/5 border border-white/10 rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  placeholder="mi-negocio-increible"
+                  [class.border-red-500\/50]="slugStatus() === 'taken' || slugStatus() === 'invalid'"
+                  [class.border-green-500\/50]="slugStatus() === 'available'">
+                <!-- Status Icons -->
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <div *ngIf="slugStatus() === 'checking'" class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                  <span *ngIf="slugStatus() === 'available'" class="text-green-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                    <span class="text-base">✓</span> Disponible
+                  </span>
+                  <span *ngIf="slugStatus() === 'taken'" class="text-red-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                    <span class="text-base">✕</span> No disponible
+                  </span>
+                  <span *ngIf="slugStatus() === 'invalid'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                    Formato inválido
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-4 ml-1">
+                <p class="text-[10px] text-text-muted italic">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
+                <div class="flex items-center gap-3">
+                  <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="copyToClipboard()"
+                    class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                    <span>📋</span> Copiar link
+                  </button>
+                  <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="visitPublicPage()"
+                    class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                    <span>🚀</span> Ver mi página
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 gap-4">
             <div class="space-y-1">
               <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Dirección</label>
               <input type="text" formControlName="address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                 placeholder="">
-              </div>
-              </div>
-              
-              <!-- Public Link Customization -->
-              <div class="pt-6 border-t border-white/5 space-y-4">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
-                    <span>🔗</span> Link Público de Reservas
-                  </h3>
-                  <span *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')"
-                    class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
-                </div>
-              
-                <div class="space-y-2">
-                  <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Personalizar Link</label>
-                  <div class="flex items-stretch group relative">
-                    <div
-                      class="bg-white/5 border border-white/10 border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary/5">
-                      axenda.com/
-                    </div>
-                    <input
-                      type="text"
-                      formControlName="publicSlug"
-                      class="flex-1 bg-white/5 border border-white/10 rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                      placeholder="mi-negocio-increible"
-                      [class.border-red-500\/50]="slugStatus() === 'taken' || slugStatus() === 'invalid'"
-                      [class.border-green-500\/50]="slugStatus() === 'available'">
-                    <!-- Status Icons -->
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                      <div *ngIf="slugStatus() === 'checking'" class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                      <span *ngIf="slugStatus() === 'available'" class="text-green-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                        <span class="text-base">✓</span> Disponible
-                      </span>
-                      <span *ngIf="slugStatus() === 'taken'" class="text-red-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                        <span class="text-base">✕</span> No disponible
-                      </span>
-                      <span *ngIf="slugStatus() === 'invalid'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                        Formato inválido
-                      </span>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-4 ml-1">
-                    <p class="text-[10px] text-text-muted italic">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
-                    <div class="flex items-center gap-3">
-                      <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="copyToClipboard()"
-                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
-                        <span>📋</span> Copiar link
-                      </button>
-                      <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="visitPublicPage()"
-                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
-                        <span>🚀</span> Ver mi página
-                      </button>
-                    </div>
-                  </div>
             </div>
           </div>
+
+          <!-- Banner Uploader -->
+          <div class="w-full pt-4 border-t border-white/5">
+            <app-image-uploader 
+              label="Banner del Negocio"
+              [currentImageUrl]="settingsForm.get('bannerUrl')?.value"
+              [tenantId]="tenantId()"
+              category="banners"
+              shape="square"
+              dimensions="w-full h-40 md:h-52"
+              (imageUploaded)="settingsForm.get('bannerUrl')?.setValue($event)"
+            ></app-image-uploader>
+            <p class="text-[10px] text-text-muted mt-2 italic text-right">Recomendado: 1200x400px o similar.</p>
+          </div>
+              
         </div>
 
         <!-- Booking Settings Section -->

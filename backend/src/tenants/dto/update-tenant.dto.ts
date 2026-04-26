@@ -28,6 +28,11 @@ export class UpdateTenantDto {
   @IsString()
   logoUrl?: string
 
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/banner.png' })
+  @IsOptional()
+  @IsString()
+  bannerUrl?: string
+
   @ApiPropertyOptional({ example: 'mi-negocio' })
   @IsOptional()
   @IsString()

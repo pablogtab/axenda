@@ -2,6 +2,9 @@
   
   <!-- Banner / Header -->
   <header class="banner-container">
+    @if (tenant()?.bannerUrl) {
+      <img [src]="tenant()!.bannerUrl | storage" class="absolute inset-0 w-full h-full object-cover" alt="Banner">
+    }
     <div class="absolute inset-0 bg-black/10"></div>
   </header>
 
@@ -9,7 +12,7 @@
   <section class="profile-section">
     <div class="profile-image-wrapper">
       @if (tenant()?.logoUrl) {
-        <img [src]="tenant()!.logoUrl" class="profile-image" alt="Logo">
+        <img [src]="tenant()!.logoUrl | storage" class="profile-image" alt="Logo">
       } @else {
         <div class="profile-image placeholder-gradient">
           {{ tenant()?.name?.charAt(0) || 'A' }}

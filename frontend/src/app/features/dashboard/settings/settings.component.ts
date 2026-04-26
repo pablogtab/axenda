@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, tap } from 'rxjs';
 import { SelectComponent, SelectConfig } from '../../../shared/components/select/select';
+import { ImageUploaderComponent } from '../../../shared/components/image-uploader/image-uploader.component';
 
 import { ProfessionalsListComponent } from '../professionals/professionals-list/professionals-list.component';
 import { BranchesListComponent } from '../branches/branches-list/branches-list.component';
@@ -21,7 +22,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
     SelectComponent,
     ProfessionalsListComponent,
     BranchesListComponent,
-    ServicesListComponent
+    ServicesListComponent,
+    ImageUploaderComponent
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -105,6 +107,7 @@ export class SettingsComponent implements OnInit {
 
   slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   originalSlug = signal<string>('');
+  tenantId = signal<string>('');
 
   constructor(private fb: FormBuilder) {
     this.settingsForm = this.fb.group({
@@ -119,13 +122,25 @@ export class SettingsComponent implements OnInit {
       cancellationLimit: ['24h'],
       allowReschedule: [true],
       confirmEmail: [true],
-      whatsappReminder: [false]
+      whatsappReminder: [false],
+      logoUrl: [null],
+      bannerUrl: [null]
     });
   }
 
   ngOnInit() {
     this.loadTenantData();
     this.setupSlugValidation();
+    this.setupAutosave();
+  }
+
+  private setupAutosave() {
+    this.settingsForm.valueChanges.pipe(
+      debounceTime(1000),
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+    ).subscribe(() => {
+      this.save(true);
+    });
   }
 
   onSlugInput() {
@@ -195,9 +210,12 @@ export class SettingsComponent implements OnInit {
     this.tenantsService.getMe().subscribe({
       next: (tenant) => {
         this.originalSlug.set(tenant.publicSlug || '');
+        this.tenantId.set(tenant.id);
         this.settingsForm.patchValue({
           name: tenant.name,
           publicSlug: tenant.publicSlug || '',
+          logoUrl: tenant.logoUrl,
+          bannerUrl: tenant.bannerUrl
         });
         this.cdr.detectChanges();
       },
@@ -211,25 +229,29 @@ export class SettingsComponent implements OnInit {
     this.activeSection = sectionId;
   }
 
-  save() {
-    if (this.settingsForm.invalid) return;
+  save(silent = false) {
+    if (this.settingsForm.invalid || this.slugStatus() === 'taken' || this.slugStatus() === 'invalid') return;
 
-    const values = this.settingsForm.value;
+    const values = this.settingsForm.getRawValue();
     this.tenantsService.updateMe({
       name: values.name,
-      publicSlug: values.publicSlug
+      publicSlug: values.publicSlug,
+      logoUrl: values.logoUrl,
+      bannerUrl: values.bannerUrl
     }).subscribe({
       next: () => {
-        this.snackbar.success('Configuración guardada correctamente');
+        if (!silent) this.snackbar.success('Configuración guardada correctamente');
         this.originalSlug.set(values.publicSlug);
         this.slugStatus.set('idle');
         this.cdr.detectChanges();
       },
       error: (err) => {
-        if (err.status === 409) {
-          this.snackbar.error('El link público ya está en uso por otro negocio');
-        } else {
-          this.snackbar.error('Error al guardar la configuración');
+        if (!silent) {
+          if (err.status === 409) {
+            this.snackbar.error('El link público ya está en uso por otro negocio');
+          } else {
+            this.snackbar.error('Error al guardar la configuración');
+          }
         }
       }
     });

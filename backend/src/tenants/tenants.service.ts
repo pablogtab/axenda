@@ -26,6 +26,7 @@ export class TenantsService {
         id: true,
         name: true,
         logoUrl: true,
+        bannerUrl: true,
         mode: true,
         services: {
           where: { active: true },

@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TenantsService, Tenant } from '../../../core/services/tenants.service';
+import { StoragePipe } from '../../../shared/pipes/storage.pipe';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StoragePipe],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })

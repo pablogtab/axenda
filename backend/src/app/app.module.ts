@@ -1,6 +1,8 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { ServeStaticModule } from '@nestjs/serve-static'
+import { join } from 'path'
 import { validateConfig } from '../config/app.config'
 import { PrismaModule } from '../prisma/prisma.module'
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter'
@@ -13,6 +15,7 @@ import { ProfessionalsModule } from '../professionals/professionals.module'
 import { ServicesModule } from '../services/services.module'
 import { ClientsModule } from '../clients/clients.module'
 import { AppointmentsModule } from '../appointments/appointments.module'
+import { StorageModule } from '../common/storage/storage.module'
 
 @Module({
   imports: [
@@ -23,8 +26,17 @@ import { AppointmentsModule } from '../appointments/appointments.module'
       validate: validateConfig,
     }),
 
+    // ─── Static Files ───────────────────────────────────────────────────
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
+
     // ─── Database ───────────────────────────────────────────────────────
     PrismaModule,
+
+    // ─── Shared Modules ──────────────────────────────────────────────────
+    StorageModule,
 
     // ─── Auth ────────────────────────────────────────────────────────────
     AuthModule,
