@@ -39,6 +39,18 @@ export class BookingComponent implements OnInit {
   availableServices = computed(() => this.tenant()?.services || []);
   availableBranches = computed(() => this.tenant()?.branches || []);
 
+  brandStyles = computed(() => {
+    const t = this.tenant();
+    if (!t) return {};
+    return {
+      '--color-primary': t.primaryColor || '#6366f1',
+      '--color-primary-hover': t.primaryHoverColor || '#4f46e5',
+      '--color-accent': t.accentColor || '#a855f7',
+      '--color-bg-primary': t.backgroundColor || '#0a0b14',
+      '--color-text-main': t.textColor || '#f8fafc'
+    };
+  });
+
   ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('publicSlug');
     if (slug) {

@@ -27,6 +27,11 @@ export class TenantsService {
         name: true,
         logoUrl: true,
         bannerUrl: true,
+        primaryColor: true,
+        primaryHoverColor: true,
+        accentColor: true,
+        backgroundColor: true,
+        textColor: true,
         mode: true,
         services: {
           where: { active: true },

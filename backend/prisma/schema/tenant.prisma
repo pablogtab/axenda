@@ -8,7 +8,12 @@ model Tenant {
   timezone  String     @default("America/Argentina/Buenos_Aires")
   currency  String     @default("ARS")
   logoUrl   String?
-  bannerUrl String?
+  bannerUrl         String?
+  primaryColor      String?    @default("#6366f1")
+  primaryHoverColor String?    @default("#4f46e5")
+  accentColor       String?    @default("#a855f7")
+  backgroundColor   String?    @default("#0a0b14")
+  textColor         String?    @default("#f8fafc")
   active     Boolean    @default(true)
   publicSlug String?    @unique
   createdAt  DateTime   @default(now())

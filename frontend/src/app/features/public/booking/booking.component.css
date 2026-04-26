@@ -1,16 +1,18 @@
 .public-booking-container {
-  /* Default variables that can be overridden by user settings */
-  --booking-primary: #6366f1;
-  --booking-primary-hover: #4f46e5;
-  --booking-primary-soft: rgba(99, 102, 241, 0.1);
-  --booking-bg: #f8fafc;
-  --booking-surface: #ffffff;
-  --booking-border: #e2e8f0;
-  --booking-text-main: #0f172a;
-  --booking-text-muted: #64748b;
+  /* Map the dynamic theme variables to our internal booking variables */
+  --booking-primary: var(--color-primary, #6366f1);
+  --booking-primary-hover: var(--color-primary-hover, #4f46e5);
+  --booking-primary-soft: rgba(var(--color-primary), 0.1); 
+  --booking-bg: var(--color-bg-primary, #f8fafc);
+  --booking-surface: rgba(255, 255, 255, 0.05); 
+  --booking-border: rgba(255, 255, 255, 0.1);
+  --booking-text-main: var(--color-text-main, #0f172a);
+  --booking-text-muted: var(--color-text-muted, #64748b);
+  --booking-accent: var(--color-accent, #a855f7);
+  
   --booking-radius-lg: 1.5rem;
   --booking-radius-md: 1rem;
-  --booking-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --booking-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   min-height: 100vh;
   background-color: var(--booking-bg);

@@ -1,4 +1,4 @@
-<div class="public-booking-container" *ngIf="tenant(); else loadingOrError">
+<div class="public-booking-container" *ngIf="tenant(); else loadingOrError" [ngStyle]="brandStyles()">
   
   <!-- Banner / Header -->
   <header class="banner-container">

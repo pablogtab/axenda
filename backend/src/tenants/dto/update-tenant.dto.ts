@@ -37,4 +37,29 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsString()
   publicSlug?: string
+
+  @ApiPropertyOptional({ example: '#6366f1' })
+  @IsOptional()
+  @IsString()
+  primaryColor?: string
+
+  @ApiPropertyOptional({ example: '#4f46e5' })
+  @IsOptional()
+  @IsString()
+  primaryHoverColor?: string
+
+  @ApiPropertyOptional({ example: '#a855f7' })
+  @IsOptional()
+  @IsString()
+  accentColor?: string
+
+  @ApiPropertyOptional({ example: '#0a0b14' })
+  @IsOptional()
+  @IsString()
+  backgroundColor?: string
+
+  @ApiPropertyOptional({ example: '#f8fafc' })
+  @IsOptional()
+  @IsString()
+  textColor?: string
 }

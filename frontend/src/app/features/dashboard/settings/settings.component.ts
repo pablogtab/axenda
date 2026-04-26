@@ -11,6 +11,7 @@ import { BranchesListComponent } from '../branches/branches-list/branches-list.c
 import { ServicesListComponent } from '../services/services-list/services-list.component';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
+import { StoragePipe } from '@shared/pipes/storage.pipe';
 
 @Component({
   selector: 'app-settings',
@@ -23,7 +24,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
     ProfessionalsListComponent,
     BranchesListComponent,
     ServicesListComponent,
-    ImageUploaderComponent
+    ImageUploaderComponent,
+    StoragePipe
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -33,6 +35,7 @@ export class SettingsComponent implements OnInit {
 
   sections = [
     { id: 'business-info', title: 'Información del Negocio', icon: '🏢', description: 'Nombre, contacto y ubicación' },
+    { id: 'appearance', title: 'Apariencia', icon: '🎨', description: 'Colores y estilo de tu marca' },
     { id: 'booking-settings', title: 'Configuración de Reservas', icon: '📅', description: 'Antelación, intervalos y cancelaciones' },
     { id: 'notifications', title: 'Notificaciones', icon: '🔔', description: 'Mensajes automáticos y recordatorios' },
     { id: 'professionals', title: 'Profesionales', icon: '👨‍⚕️', description: 'Gestiona tu equipo de trabajo' },
@@ -124,7 +127,12 @@ export class SettingsComponent implements OnInit {
       confirmEmail: [true],
       whatsappReminder: [false],
       logoUrl: [null],
-      bannerUrl: [null]
+      bannerUrl: [null],
+      primaryColor: ['#6366f1'],
+      primaryHoverColor: ['#4f46e5'],
+      accentColor: ['#a855f7'],
+      backgroundColor: ['#0a0b14'],
+      textColor: ['#f8fafc']
     });
   }
 
@@ -215,7 +223,12 @@ export class SettingsComponent implements OnInit {
           name: tenant.name,
           publicSlug: tenant.publicSlug || '',
           logoUrl: tenant.logoUrl,
-          bannerUrl: tenant.bannerUrl
+          bannerUrl: tenant.bannerUrl,
+          primaryColor: tenant.primaryColor || '#6366f1',
+          primaryHoverColor: tenant.primaryHoverColor || '#4f46e5',
+          accentColor: tenant.accentColor || '#a855f7',
+          backgroundColor: tenant.backgroundColor || '#0a0b14',
+          textColor: tenant.textColor || '#f8fafc'
         });
         this.cdr.detectChanges();
       },
@@ -237,7 +250,12 @@ export class SettingsComponent implements OnInit {
       name: values.name,
       publicSlug: values.publicSlug,
       logoUrl: values.logoUrl,
-      bannerUrl: values.bannerUrl
+      bannerUrl: values.bannerUrl,
+      primaryColor: values.primaryColor,
+      primaryHoverColor: values.primaryHoverColor,
+      accentColor: values.accentColor,
+      backgroundColor: values.backgroundColor,
+      textColor: values.textColor
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');

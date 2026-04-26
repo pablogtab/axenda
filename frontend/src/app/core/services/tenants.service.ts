@@ -13,6 +13,11 @@ export interface Tenant {
   currency: string;
   logoUrl?: string;
   bannerUrl?: string;
+  primaryColor?: string;
+  primaryHoverColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
   address?: string;
   active: boolean;
   services?: any[];
@@ -27,6 +32,11 @@ export interface UpdateTenantDto {
   currency?: string;
   logoUrl?: string;
   bannerUrl?: string;
+  primaryColor?: string;
+  primaryHoverColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 @Injectable({
