@@ -40,7 +40,7 @@ import { AgendaNavigationZonesComponent } from './components/agenda-navigation-z
 export class AgendaComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
   private branchesService = inject(BranchesService);
-  private modal = inject(ModalService);
+  public modal = inject(ModalService);
   private userConfig = inject(UserConfigurationService);
   public agendaService = inject(AgendaService);
   public sidebarService = inject(SidebarService);
@@ -89,14 +89,16 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleGlobalKeyDown(event: KeyboardEvent) {
-    if (this.showFilters()) {
-      if (event.key === 'Escape') this.showFilters.set(false);
+    if (this.showFilters() || this.showViewSelector() || this.modal.hasOpenDialogs) {
+      if (event.key === 'Escape') {
+        this.showFilters.set(false);
+        this.showViewSelector.set(false);
+      }
       return;
     }
-    if (this.showViewSelector()) {
-      if (event.key === 'Escape') this.showViewSelector.set(false);
-      return;
-    }
+
+    const target = event.target as HTMLElement;
+    if (target?.closest('.cdk-overlay-container')) return;
 
     // Navegación con Flechas
     const activeElement = document.activeElement;
@@ -132,7 +134,10 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('window:wheel', ['$event'])
   handleGlobalWheel(event: WheelEvent) {
-    if (this.showFilters() || this.showViewSelector()) return;
+    if (this.showFilters() || this.showViewSelector() || this.modal.hasOpenDialogs) return;
+    
+    const target = event.target as HTMLElement;
+    if (target?.closest('.cdk-overlay-container')) return;
     
     // Solo permitimos navegación por rueda en vista mes o si estamos arrastrando
     if (this.selectedView() !== 'month' && !this.agendaService.isDragging()) return;

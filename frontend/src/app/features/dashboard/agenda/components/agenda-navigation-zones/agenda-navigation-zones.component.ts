@@ -102,6 +102,10 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @HostListener('document:touchstart', ['$event'])
   onTouchStart(event: TouchEvent): void {
     if (!this.sidebarService.isMobile() || this.disabled) return;
+    
+    // Ignorar si el evento viene de un modal/overlay
+    const target = event.target as HTMLElement;
+    if (target?.closest('.cdk-overlay-container')) return;
     if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
     
     const touch = event.touches[0];

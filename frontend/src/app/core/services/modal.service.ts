@@ -7,6 +7,10 @@ import { Dialog, DialogConfig, DialogRef } from '@angular/cdk/dialog';
 export class ModalService {
   private dialog = inject(Dialog);
 
+  get hasOpenDialogs(): boolean {
+    return this.dialog.openDialogs.length > 0;
+  }
+
   open<T, D = any, R = any>(
     component: Type<T>,
     config?: DialogConfig<D, DialogRef<R, T>>

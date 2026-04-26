@@ -303,7 +303,7 @@
       [prevLabel]="navLabels().prev" 
       [nextLabel]="navLabels().next"
       [offsetLeft]="navLabels().offset"
-      [disabled]="showFilters() || showViewSelector()"
+      [disabled]="showFilters() || showViewSelector() || modal.hasOpenDialogs"
       [currentView]="selectedView()"
       (navigate)="changeDate($event === 'prev' ? -1 : 1)">
     </app-agenda-navigation-zones>
