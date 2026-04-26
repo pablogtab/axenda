@@ -1,107 +1,119 @@
-<div class="flex flex-col gap-6 p-8">
-  <!-- Header -->
-  <header class="flex justify-between items-center">
-    <div>
-      <h1 class="text-4xl font-extrabold tracking-tight text-text-main">Profesionales</h1>
-      <p class="text-text-muted mt-1 text-lg">Gestiona el equipo de trabajo y sus especialidades</p>
+<div class="flex flex-col gap-4 p-4 h-full overflow-y-auto custom-scrollbar">
+  @if (!isFormOpen()) {
+    <!-- Header -->
+    <header class="flex justify-between items-center">
+      <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
+        <span>👨‍⚕️</span> Profesionales
+      </h2>
+      <button (click)="openCreateForm()" class="px-4 py-1.5 text-xs bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+        + Nuevo Profesional
+      </button>
+    </header>
+
+    <!-- Filtros -->
+    <div class="relative w-full max-w-xs">
+      <span class="absolute left-3 top-2 text-xs opacity-40">🔍</span>
+      <input 
+        type="text" 
+        [ngModel]="searchTerm()" 
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Buscar..." 
+        class="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-4 py-1.5 text-xs text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+      >
     </div>
-    <button (click)="openCreateForm()" class="btn-primary flex items-center gap-2">
-      <span class="text-xl">+</span> Nuevo Profesional
-    </button>
-  </header>
 
-  <!-- Filtros -->
-  <div class="search-box-container w-full max-w-md">
-    <span class="text-text-dim">🔍</span>
-    <input 
-      type="text" 
-      [ngModel]="searchTerm()" 
-      (ngModelChange)="onSearchChange($event)"
-      placeholder="Buscar por nombre o apellido..." 
-      class="search-box-input"
-    >
-  </div>
-
-  <!-- Tabla -->
-  <div class="card-glass !p-0 overflow-hidden">
-    @if (isLoading()) {
-      <div class="flex justify-center items-center py-20">
-        <div class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    } @else {
-      <app-data-table 
-        [data]="filteredProfessionals()" 
-        [columns]="['name', 'branches', 'services', 'status', 'actions']"
-        [headers]="['Profesional', 'Sucursales', 'Especialidades', 'Estado', 'Acciones']">
-        
-        <!-- Nombre del Profesional -->
-        <ng-template appTableCell="name" let-item>
-          <div class="flex items-center gap-3">
-            <div 
-              class="row-icon-circle text-white" 
-              [style.background-color]="item.color || '#6366f1'">
-              {{ item.firstName[0] }}{{ item.lastName[0] }}
-            </div>
-            <div>
-              <div class="font-bold text-text-main">{{ item.firstName }} {{ item.lastName }}</div>
-              <div class="text-xs text-text-dim">{{ item.bio || 'Sin biografía' }}</div>
-            </div>
-          </div>
-        </ng-template>
-
-        <!-- Sucursales -->
-        <ng-template appTableCell="branches" let-item>
-          <div class="flex flex-wrap gap-1">
-            @for (pb of item.branches; track pb.branch.id) {
-              @if (pb.branch.active) {
-                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-text-muted">
-                  {{ pb.branch.name }}
-                </span>
-              }
-            } @empty {
-              <span class="text-xs text-text-dim italic">Sin sucursales</span>
-            }
-          </div>
-        </ng-template>
-
-        <!-- Servicios -->
-        <ng-template appTableCell="services" let-item>
-          <div class="flex flex-wrap gap-1">
-            @for (ps of item.services; track ps.service.id) {
-              @if (ps.service.active) {
-                <span class="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-primary">
-                  {{ ps.service.name }}
-                </span>
-              }
-            } @empty {
-              <span class="text-xs text-text-dim italic">Sin especialidades</span>
-            }
-          </div>
-        </ng-template>
-
-        <!-- Estado -->
-        <ng-template appTableCell="status" let-item>
-          <div class="status-indicator" [class.active]="item.active">
-            {{ item.active ? 'Activo' : 'Inactivo' }}
-          </div>
-        </ng-template>
-
-        <!-- Acciones -->
-        <ng-template appTableCell="actions" let-item>
-          <div class="row-actions">
-            <button (click)="openAvailabilityModal(item)" class="btn-icon-small" title="Gestionar Horarios">📅</button>
-            <button (click)="openEditForm(item)" class="btn-icon-small" title="Editar">✏️</button>
-            <button (click)="deleteProfessional(item.id)" class="btn-icon-small btn-icon-delete" title="Eliminar permanentemente">🗑️</button>
-          </div>
-        </ng-template>
-      </app-data-table>
-
-      @if (filteredProfessionals().length === 0) {
-        <div class="empty-state">
-          <span class="text-4xl mb-2">👤</span>
-          <p>No se encontraron profesionales</p>
+    <!-- Tabla -->
+    <div class="overflow-hidden border-t border-white/5">
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-10">
+          <div class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
+      } @else {
+        <app-data-table 
+          [data]="filteredProfessionals()" 
+          [columns]="['name', 'branches', 'services', 'status', 'actions']"
+          [headers]="['Profesional', 'Sucursales', 'Especialidades', 'Estado', 'Acciones']"
+          density="compact">
+          
+          <!-- Nombre del Profesional -->
+          <ng-template appTableCell="name" let-item>
+            <div class="flex items-center gap-2">
+              <div 
+                class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm" 
+                [style.background-color]="item.color || '#6366f1'">
+                {{ item.firstName[0] }}{{ item.lastName[0] }}
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-text-main truncate">{{ item.firstName }} {{ item.lastName }}</div>
+                <div class="text-[9px] text-text-dim truncate opacity-70">{{ item.bio || 'Profesional' }}</div>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Sucursales -->
+          <ng-template appTableCell="branches" let-item>
+            <div class="flex flex-wrap gap-1">
+              @for (pb of item.branches; track pb.branch.id) {
+                @if (pb.branch.active) {
+                  <span class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-text-muted">
+                    {{ pb.branch.name }}
+                  </span>
+                }
+              } @empty {
+                <span class="text-[9px] text-text-dim italic">Sin sucursales</span>
+              }
+            </div>
+          </ng-template>
+
+          <!-- Servicios -->
+          <ng-template appTableCell="services" let-item>
+            <div class="flex flex-wrap gap-1">
+              @for (ps of item.services; track ps.service.id) {
+                @if (ps.service.active) {
+                  <span class="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-[9px] text-primary">
+                    {{ ps.service.name }}
+                  </span>
+                }
+              } @empty {
+                <span class="text-[9px] text-text-dim italic">Sin especialidades</span>
+              }
+            </div>
+          </ng-template>
+
+          <!-- Estado -->
+          <ng-template appTableCell="status" let-item>
+            <div class="flex items-center gap-1.5">
+              <div class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="item.active" [class.bg-text-dim]="!item.active"></div>
+              <span class="text-[10px] font-medium" [class.text-green-400]="item.active" [class.text-text-dim]="!item.active">
+                {{ item.active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+          </ng-template>
+
+          <!-- Acciones -->
+          <ng-template appTableCell="actions" let-item>
+            <div class="flex items-center gap-1">
+              <button (click)="openAvailabilityModal(item)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-xs" title="Horarios">📅</button>
+              <button (click)="openEditForm(item)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-xs" title="Editar">✏️</button>
+              <button (click)="deleteProfessional(item.id)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400/70 hover:text-red-400 transition-colors text-xs" title="Eliminar">🗑️</button>
+            </div>
+          </ng-template>
+        </app-data-table>
+
+        @if (filteredProfessionals().length === 0) {
+          <div class="flex flex-col items-center justify-center py-12 text-center opacity-40">
+            <span class="text-2xl mb-2">👤</span>
+            <p class="text-xs">No se encontraron profesionales</p>
+          </div>
+        }
       }
-    }
-  </div>
+    </div>
+  } @else {
+    <div class="animate-in slide-in-from-right duration-300">
+      <app-professional-form 
+        [professionalData]="editingProfessional()" 
+        (closed)="onFormClosed($event)">
+      </app-professional-form>
+    </div>
+  }
 </div>

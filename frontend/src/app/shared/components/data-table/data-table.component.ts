@@ -11,17 +11,18 @@ import { TableCellDirective } from './table-cell.directive';
   styleUrl: './data-table.component.css'
 })
 export class DataTableComponent {
-  data = input.required<any[]>();
-  columns = input.required<string[]>();
-  headers = input.required<string[]>();
+  data = input<any[]>([]);
+  columns = input<string[]>([]);
+  headers = input<string[]>([]);
+  density = input<'normal' | 'compact'>('normal');
   
-  cellTemplates = contentChildren(TableCellDirective);
+  templates = contentChildren(TableCellDirective);
 
   // Garantizar que data siempre sea un array iterable para el template
   safeData = computed(() => Array.isArray(this.data()) ? this.data() : []);
 
   getTemplateForColumn(columnName: string): TemplateRef<any> | null {
-    const directive = this.cellTemplates().find(t => t.column() === columnName);
+    const directive = this.templates().find(t => t.column() === columnName);
     return directive ? directive.template : null;
   }
 }

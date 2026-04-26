@@ -1,0 +1,195 @@
+<div class="h-full flex flex-col p-2 md:p-4 overflow-hidden bg-bg-primary">
+  <div class="mb-4">
+    <h1 class="text-2xl font-bold text-text-main tracking-tight">Configuración del Negocio</h1>
+    <p class="text-text-muted text-sm mt-1">Gestiona los detalles y preferencias de tu negocio.</p>
+  </div>
+
+  <div class="flex-1 flex gap-4 overflow-hidden" [formGroup]="settingsForm">
+    <!-- Section Sidebar -->
+    <aside class="w-64 shrink-0 flex flex-col gap-1 overflow-y-auto custom-scrollbar pr-2">
+      <button 
+        *ngFor="let section of sections"
+        (click)="setActiveSection(section.id)"
+        [class.bg-white\/10]="activeSection === section.id"
+        [class.text-text-main]="activeSection === section.id"
+        [class.border-l-4]="activeSection === section.id"
+        [class.border-primary]="activeSection === section.id"
+        class="flex items-center gap-3 p-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white\/5 hover:text-text-main text-left group border-l-4 border-transparent"
+      >
+        <span class="text-xl transition-transform group-hover:scale-110">{{ section.icon }}</span>
+        <div class="flex flex-col min-w-0">
+          <span class="font-bold truncate text-sm">{{ section.title }}</span>
+          <span class="text-[10px] opacity-60 truncate">{{ section.description }}</span>
+        </div>
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="flex-1 glass rounded-2xl overflow-hidden flex flex-col border border-white/10">
+      <div class="h-full overflow-y-auto custom-scrollbar" 
+           [class.p-4]="!['professionals', 'branches', 'services'].includes(activeSection)"
+           [class.md:p-6]="!['professionals', 'branches', 'services'].includes(activeSection)"
+           [class.p-0]="['professionals', 'branches', 'services'].includes(activeSection)">
+        
+        <!-- Business Info Section -->
+        <div *ngIf="activeSection === 'business-info'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+              <span>🏢</span> Información General
+            </h2>
+            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+              Guardar
+            </button>
+          </div>
+
+          <div class="flex flex-col md:flex-row gap-6 items-start">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-24 h-24 rounded-2xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-1 group hover:border-primary/50 transition-all cursor-pointer overflow-hidden relative">
+                <span class="text-2xl">🖼️</span>
+                <span class="text-[8px] font-bold text-text-muted uppercase tracking-wider group-hover:text-primary transition-colors">Subir Logo</span>
+                <!-- Hover Overlay -->
+                <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span class="text-primary text-lg">➕</span>
+                </div>
+              </div>
+              <p class="text-[8px] text-text-muted text-center max-w-[100px]">PNG, JPG. Máx 2MB.</p>
+            </div>
+
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Nombre del Negocio</label>
+                <input type="text" formControlName="name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Ej. Mi Peluquería">
+              </div>
+              <app-select 
+                [config]="categoryConfig" 
+                [options]="categories" 
+                formControlName="category">
+              </app-select>
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Teléfono</label>
+                <input type="tel" formControlName="phone" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="+54 11 ...">
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Email de Contacto</label>
+                <input type="email" formControlName="email" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="hola@tunegocio.com">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Dirección</label>
+              <input type="text" formControlName="address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Calle Falsa 123, CABA">
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Settings Section -->
+        <div *ngIf="activeSection === 'booking-settings'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+              <span>📅</span> Configuración de Reservas
+            </h2>
+            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+              Guardar
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Anticipación</h3>
+              <app-select 
+                [config]="anticipationMinConfig" 
+                [options]="anticipationMinOptions" 
+                formControlName="anticipationMin">
+              </app-select>
+              <app-select 
+                [config]="anticipationMaxConfig" 
+                [options]="anticipationMaxOptions" 
+                formControlName="anticipationMax">
+              </app-select>
+            </div>
+
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Cancelaciones</h3>
+              <app-select 
+                [config]="cancellationConfig" 
+                [options]="cancellationOptions" 
+                formControlName="cancellationLimit">
+              </app-select>
+              <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <span class="text-sm font-bold text-text-main">Permitir reprogramar</span>
+                <label class="relative inline-flex items-center cursor-pointer scale-90">
+                  <input type="checkbox" formControlName="allowReschedule" class="sr-only peer">
+                  <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div *ngIf="activeSection === 'notifications'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+              <span>🔔</span> Notificaciones
+            </h2>
+            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+              Guardar
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
+              <div class="flex flex-col gap-0.5">
+                <span class="font-bold text-sm text-text-main">Email de Confirmación</span>
+                <span class="text-xs text-text-muted">Se envía al reservar un turno.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer scale-90">
+                <input type="checkbox" formControlName="confirmEmail" class="sr-only peer">
+                <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group">
+              <div class="flex flex-col gap-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-text-main">Recordatorio por WhatsApp</span>
+                  <span class="text-[8px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">✨ Premium</span>
+                </div>
+                <span class="text-xs text-text-muted">Se envía 24 horas antes.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer scale-90">
+                <input type="checkbox" formControlName="whatsappReminder" class="sr-only peer">
+                <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Professionals Section -->
+        <div *ngIf="activeSection === 'professionals'" class="animate-in fade-in duration-500">
+          <app-professionals-list></app-professionals-list>
+        </div>
+
+        <!-- Branches Section -->
+        <div *ngIf="activeSection === 'branches'" class="animate-in fade-in duration-500">
+          <app-branches-list></app-branches-list>
+        </div>
+
+        <!-- Services Section -->
+        <div *ngIf="activeSection === 'services'" class="animate-in fade-in duration-500">
+          <app-services-list></app-services-list>
+        </div>
+
+        <!-- Placeholder for other sections (if any added later) -->
+        <div *ngIf="!['business-info', 'booking-settings', 'notifications', 'professionals', 'branches', 'services'].includes(activeSection)" class="h-full flex flex-col items-center justify-center text-center p-12">
+          <span class="text-6xl mb-4 opacity-20">⚙️</span>
+          <h3 class="text-xl font-bold text-text-main">Próximamente</h3>
+          <p class="text-text-muted max-w-xs">Estamos trabajando en esta sección para que puedas configurar cada detalle de tu negocio.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>

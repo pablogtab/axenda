@@ -35,25 +35,11 @@
         <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Clientes</span>
       </a>
 
-      <a routerLink="/dashboard/services" 
+      <a routerLink="/dashboard/settings" 
          routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
          class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
-        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">✂️</span>
-        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Servicios</span>
-      </a>
-
-      <a routerLink="/dashboard/professionals" 
-         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
-        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">👨‍⚕️</span>
-        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Profesionales</span>
-      </a>
-
-      <a routerLink="/dashboard/branches" 
-         routerLinkActive="bg-white/10 text-text-main border-l-4 border-primary !rounded-l-none" 
-         class="flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main group overflow-hidden">
-        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">🏢</span>
-        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Sucursales</span>
+        <span class="text-xl transition-transform group-hover:scale-110 shrink-0">⚙️</span>
+        <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap">Configuración</span>
       </a>
     </nav>
 

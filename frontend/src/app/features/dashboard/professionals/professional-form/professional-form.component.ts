@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
@@ -7,11 +7,12 @@ import { ServicesService, BusinessService } from '@services/services.service';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { SnackbarService } from '@services/snackbar.service';
 import { forkJoin } from 'rxjs';
+import { ProfessionalAvailabilityComponent } from '../professional-availability/professional-availability.component';
 
 @Component({
   selector: 'app-professional-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ProfessionalAvailabilityComponent],
   templateUrl: './professional-form.component.html'
 })
 export class ProfessionalFormComponent implements OnInit {
@@ -20,36 +21,57 @@ export class ProfessionalFormComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private servicesService = inject(ServicesService);
   private snackbar = inject(SnackbarService);
-  public dialogRef = inject(DialogRef);
-  public data = inject<Professional>(DIALOG_DATA, { optional: true });
+  
+  public dialogRef = inject(DialogRef, { optional: true });
+  public dialogData = inject<Professional>(DIALOG_DATA, { optional: true });
 
-  professionalForm: FormGroup;
+  @Input() set professionalData(data: Professional | null) {
+    if (data) {
+      this.initForm(data);
+    } else if (!this.dialogData) {
+      this.initForm(null);
+    }
+  }
+
+  @Output() closed = new EventEmitter<boolean>();
+
+  professionalForm!: FormGroup;
   isEditing = false;
   isSubmitting = false;
+  activeTab = signal<'basic' | 'availability'>('basic');
 
   allBranches = signal<Branch[]>([]);
   allServices = signal<BusinessService[]>([]);
   selectedBranches = signal<string[]>([]);
   selectedServices = signal<string[]>([]);
 
-  constructor() {
-    this.isEditing = !!this.data;
-    this.professionalForm = this.fb.group({
-      firstName: [this.data?.firstName || '', [Validators.required]],
-      lastName: [this.data?.lastName || '', [Validators.required]],
-      bio: [this.data?.bio || ''],
-      color: [this.data?.color || '#6366f1'],
-      active: [this.data?.active ?? true]
-    });
-
-    if (this.isEditing && this.data) {
-      this.selectedBranches.set(this.data.branches?.filter(b => b.branch.active).map(b => b.branch.id) || []);
-      this.selectedServices.set(this.data.services?.filter(s => s.service.active).map(s => s.service.id) || []);
-    }
+  setTab(tab: 'basic' | 'availability') {
+    this.activeTab.set(tab);
   }
 
   ngOnInit(): void {
+    if (this.dialogData) {
+      this.initForm(this.dialogData);
+    } else if (!this.professionalForm) {
+      this.initForm(null);
+    }
     this.loadOptions();
+  }
+
+  private initForm(data: Professional | null): void {
+    this.isEditing = !!data;
+    this.professionalForm = this.fb.group({
+      firstName: [data?.firstName || '', [Validators.required]],
+      lastName: [data?.lastName || '', [Validators.required]],
+      bio: [data?.bio || ''],
+      color: [data?.color || '#6366f1'],
+      active: [data?.active ?? true]
+    });
+
+    if (this.isEditing && data) {
+      this.selectedBranches.set(data.branches?.filter(b => b.branch.active).map(b => b.branch.id) || []);
+      this.selectedServices.set(data.services?.filter(s => s.service.active).map(s => s.service.id) || []);
+    }
   }
 
   loadOptions(): void {
@@ -89,8 +111,10 @@ export class ProfessionalFormComponent implements OnInit {
     this.isSubmitting = true;
     const val = this.professionalForm.value;
 
-    const request = this.isEditing 
-      ? this.professionalsService.update(this.data!.id, val)
+    const profId = this.isEditing ? (this.professionalData?.id || this.dialogData?.id) : null;
+
+    const request = this.isEditing && profId
+      ? this.professionalsService.update(profId, val)
       : this.professionalsService.create(val);
 
     request.subscribe({
@@ -102,11 +126,11 @@ export class ProfessionalFormComponent implements OnInit {
         }).subscribe({
           next: () => {
             this.snackbar.success(this.isEditing ? 'Profesional actualizado' : 'Profesional creado');
-            this.dialogRef.close(true);
+            this.emitClose(true);
           },
           error: () => {
             this.snackbar.error('Profesional guardado, pero hubo un error con las relaciones');
-            this.dialogRef.close(true);
+            this.emitClose(true);
           }
         });
       },
@@ -117,7 +141,12 @@ export class ProfessionalFormComponent implements OnInit {
     });
   }
 
+  private emitClose(refresh: boolean): void {
+    this.closed.emit(refresh);
+    this.dialogRef?.close(refresh);
+  }
+
   onCancel(): void {
-    this.dialogRef.close();
+    this.emitClose(false);
   }
 }

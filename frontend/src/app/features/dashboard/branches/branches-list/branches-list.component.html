@@ -1,67 +1,70 @@
-<div class="p-8 flex flex-col gap-6">
+<div class="p-4 flex flex-col gap-4">
   <header class="flex justify-between items-center">
-    <div class="header-info">
-      <h1 class="text-4xl font-bold mb-1 text-gradient">Sucursales</h1>
-      <p class="text-text-muted">Administra las diferentes sedes de tu organización.</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn-primary" (click)="openCreateForm()">+ Nueva Sucursal</button>
-    </div>
+    <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
+      <span>📍</span> Sucursales
+    </h2>
+    <button (click)="openCreateForm()" class="px-4 py-1.5 text-xs bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+      + Nueva Sucursal
+    </button>
   </header>
 
-  <div class="search-box-container max-w-md">
-    <span class="text-lg opacity-70">🔍</span>
+  <div class="relative w-full max-w-xs">
+    <span class="absolute left-3 top-2 text-xs opacity-40">🔍</span>
     <input
       type="text"
       [value]="searchTerm()"
       (input)="onSearchChange(search.value)"
       #search
-      class="search-box-input"
-      placeholder="Buscar por nombre o dirección...">
+      class="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-4 py-1.5 text-xs text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+      placeholder="Buscar...">
   </div>
 
-  <div class="card-glass !p-0 overflow-hidden">
+  <div class="overflow-hidden border-t border-white/5">
     <app-data-table
       [data]="filteredBranches()"
       [columns]="['branch', 'contact', 'active', 'actions']"
-      [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']">
+      [headers]="['Sucursal', 'Contacto', 'Estado', 'Acciones']"
+      density="compact">
       
       <ng-template appTableCell="branch" let-branch>
-        <div class="flex items-center gap-4 py-2">
-          <div class="row-icon-circle bg-gradient-to-br from-indigo-600 to-primary text-white">
-            🏢
+        <div class="flex items-center gap-3 py-1">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-primary text-white flex items-center justify-center text-xs shadow-sm">
+            📍
           </div>
-          <div class="flex flex-col">
-            <span class="font-semibold text-text-main">{{ branch.name }}</span>
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-bold text-text-main truncate">{{ branch.name }}</span>
             @if (branch.address) {
-              <span class="text-xs text-text-dim">{{ branch.address }}</span>
+              <span class="text-[9px] text-text-dim truncate opacity-70">{{ branch.address }}</span>
             }
           </div>
         </div>
       </ng-template>
 
       <ng-template appTableCell="contact" let-branch>
-        <span class="text-sm text-text-muted">{{ branch.phone || 'Sin teléfono' }}</span>
+        <span class="text-[10px] text-text-muted">{{ branch.phone || 'Sin teléfono' }}</span>
       </ng-template>
 
       <ng-template appTableCell="active" let-branch>
-        <span class="status-indicator" [class.active]="branch.active">
-          {{ branch.active ? 'Activo' : 'Inactivo' }}
-        </span>
+        <div class="flex items-center gap-1.5">
+          <div class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="branch.active" [class.bg-text-dim]="!branch.active"></div>
+          <span class="text-[10px] font-medium" [class.text-green-400]="branch.active" [class.text-text-dim]="!branch.active">
+            {{ branch.active ? 'Activa' : 'Inactiva' }}
+          </span>
+        </div>
       </ng-template>
 
       <ng-template appTableCell="actions" let-branch>
-        <div class="row-actions">
-          <button class="btn-icon-small" title="Editar" (click)="openEditForm(branch)">✏️</button>
-          <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteBranch(branch.id)">🗑️</button>
+        <div class="flex items-center gap-1">
+          <button (click)="openEditForm(branch)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-xs" title="Editar">✏️</button>
+          <button (click)="deleteBranch(branch.id)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400/70 hover:text-red-400 transition-colors text-xs" title="Eliminar">🗑️</button>
         </div>
       </ng-template>
     </app-data-table>
 
     @if (filteredBranches().length === 0 && !isLoading()) {
-      <div class="empty-state">
-        <span class="text-4xl mb-4 opacity-20">🏢</span>
-        <p>No se encontraron sucursales.</p>
+      <div class="flex flex-col items-center justify-center py-12 text-center opacity-40">
+        <span class="text-2xl mb-4 opacity-20">🏢</span>
+        <p class="text-xs">No se encontraron sucursales.</p>
       </div>
     }
   </div>

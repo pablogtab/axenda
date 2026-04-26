@@ -2,7 +2,11 @@
   <thead>
     <tr class="bg-white/[0.02] border-b border-white/10">
       @for (header of headers(); track $index) {
-        <th class="px-6 py-4 text-[0.75rem] font-bold text-text-dim uppercase tracking-widest">
+        <th [class.px-6]="density() === 'normal'"
+            [class.py-4]="density() === 'normal'"
+            [class.px-4]="density() === 'compact'"
+            [class.py-2]="density() === 'compact'"
+            class="text-[0.75rem] font-bold text-text-dim uppercase tracking-widest">
           {{ header }}
         </th>
       }
@@ -12,7 +16,11 @@
     @for (item of safeData(); track $index) {
       <tr class="transition-colors hover:bg-white/[0.03] group">
         @for (column of columns(); track column) {
-          <td class="px-6 py-4 align-middle text-text-main">
+          <td [class.px-6]="density() === 'normal'"
+              [class.py-4]="density() === 'normal'"
+              [class.px-4]="density() === 'compact'"
+              [class.py-1.5]="density() === 'compact'"
+              class="align-middle text-text-main">
             @if (getTemplateForColumn(column)) {
               <ng-container [ngTemplateOutlet]="getTemplateForColumn(column)!" [ngTemplateOutletContext]="{ $implicit: item }"></ng-container>
             } @else {

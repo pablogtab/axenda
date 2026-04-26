@@ -1,151 +1,111 @@
-<div class="flex flex-col h-full bg-bg-primary">
-  <!-- Header de Navegación -->
-  <header class="p-6 border-b border-white/10 bg-white/5 backdrop-blur-md flex justify-between items-center">
-    <div class="flex items-center gap-4">
-      <button (click)="goBack()" class="p-2 hover:bg-white/10 rounded-xl text-text-dim hover:text-text-main transition-all">
-        ← Volver
-      </button>
-      <div>
-        <h1 class="text-2xl font-bold text-text-main">Disponibilidad Horaria</h1>
-        <p class="text-sm text-text-dim" *ngIf="professional()">
-          {{ professional()?.firstName }} {{ professional()?.lastName }}
-        </p>
-      </div>
-    </div>
-  </header>
-
-  <!-- Contenido Principal -->
-  <main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-8">
-      
-      <!-- Columna Izquierda: Configuración de Horarios Recurrentes -->
-      <div class="xl:col-span-2 space-y-8">
-        <section class="card-glass p-8">
-          <h2 class="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
-            <span class="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm">+</span>
-            Añadir Horario Semanal
-          </h2>
-          
-          <form [formGroup]="addForm" (ngSubmit)="addSlot()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-            <div>
-              <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Día</label>
-              <select formControlName="dayOfWeek" class="input-field">
-                @for (day of days; track day.value) {
-                  <option [value]="day.value">{{ day.label }}</option>
-                }
-              </select>
+<div class="flex flex-col gap-6">
+  <!-- Grid de Días Semanales y Excepciones -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    
+    <!-- Horarios Recurrentes -->
+    <div class="space-y-4">
+      <section class="bg-white/5 border border-white/10 rounded-2xl p-4">
+        <h2 class="text-xs font-bold text-text-dim uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span>⏰</span> Horario Semanal
+        </h2>
+        
+        <form [formGroup]="addForm" (ngSubmit)="addSlot()" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end mb-6">
+          <div class="sm:col-span-1">
+            <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Día</label>
+            <select formControlName="dayOfWeek" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
+              @for (day of days; track day.value) {
+                <option [value]="day.value">{{ day.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex gap-2 sm:col-span-2">
+            <div class="flex-1">
+              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Desde</label>
+              <input type="time" formControlName="startTime" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
             </div>
-            <div>
-              <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Inicio</label>
-              <input type="time" formControlName="startTime" class="input-field">
+            <div class="flex-1">
+              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Hasta</label>
+              <input type="time" formControlName="endTime" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
             </div>
-            <div>
-              <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Fin</label>
-              <input type="time" formControlName="endTime" class="input-field">
-            </div>
-            <button type="submit" class="btn-primary h-[50px]" [disabled]="addForm.invalid">
-              Añadir
+            <button type="submit" class="bg-primary text-white p-2 rounded-lg hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 self-end mb-[2px]" [disabled]="addForm.invalid">
+              <span class="text-xs font-bold">+</span>
             </button>
-          </form>
-        </section>
+          </div>
+        </form>
 
-        <!-- Grid de Días Semanales -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
           @for (day of days; track day.value) {
-            <div class="card-glass p-6 hover:border-primary/30 transition-all group">
-              <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-3">
-                  <div class="w-2 h-8 rounded-full bg-primary/20 group-hover:bg-primary transition-all"></div>
-                  <h3 class="font-bold text-text-main text-lg">{{ day.label }}</h3>
-                </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-text-main">{{ day.label }}</span>
                 @if (getAvailabilityForDay(day.value).length === 0) {
-                  <span class="px-3 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider">No laborable</span>
+                  <span class="text-[8px] font-bold text-text-dim uppercase">No laborable</span>
                 }
               </div>
-
-              <div class="flex flex-col gap-3">
+              <div class="flex flex-wrap gap-2">
                 @for (slot of getAvailabilityForDay(day.value); track slot.id) {
-                  <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
-                    <span class="font-bold text-primary">{{ slot.startTime }} — {{ slot.endTime }}</span>
-                    <button (click)="removeSlot(slot.id)" class="p-2 text-text-dim hover:text-error transition-all">🗑️</button>
+                  <div class="flex items-center gap-2 px-2 py-1 rounded bg-primary/10 border border-primary/20">
+                    <span class="text-[10px] font-bold text-primary">{{ slot.startTime }} - {{ slot.endTime }}</span>
+                    <button (click)="removeSlot(slot.id)" class="text-[10px] text-primary/40 hover:text-red-400 transition-colors">✕</button>
                   </div>
                 }
               </div>
             </div>
           }
         </div>
-      </div>
+      </section>
+    </div>
 
-      <!-- Columna Derecha: Excepciones (Bloqueos/Vacaciones) -->
-      <div class="space-y-8">
-        <section class="card-glass p-8">
-          <h2 class="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
-            <span class="w-8 h-8 rounded-lg bg-accent/20 text-accent flex items-center justify-center text-sm">📅</span>
-            Bloqueos y Excepciones
-          </h2>
-          
-          <form [formGroup]="exceptionForm" (ngSubmit)="addException()" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Fecha Inicio</label>
-                <input type="date" formControlName="date" class="input-field">
-              </div>
-              <div>
-                <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Fecha Fin (Opcional)</label>
-                <input type="date" formControlName="endDate" class="input-field">
-              </div>
+    <!-- Excepciones -->
+    <div class="space-y-4">
+      <section class="bg-white/5 border border-white/10 rounded-2xl p-4">
+        <h2 class="text-xs font-bold text-text-dim uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span>📅</span> Bloqueos y Excepciones
+        </h2>
+        
+        <form [formGroup]="exceptionForm" (ngSubmit)="addException()" class="space-y-3 mb-6">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Fecha</label>
+              <input type="date" formControlName="date" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
             </div>
             <div>
-              <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Tipo de Bloqueo</label>
-              <select formControlName="type" class="input-field">
+              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Tipo</label>
+              <select formControlName="type" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
                 @for (type of exceptionTypes; track type.value) {
                   <option [value]="type.value">{{ type.label }}</option>
                 }
               </select>
             </div>
-            <div>
-              <label class="text-[10px] uppercase font-bold text-text-dim mb-2 block">Motivo (Opcional)</label>
-              <input type="text" formControlName="reason" class="input-field" placeholder="Ej: Médico, Vacaciones...">
-            </div>
-            <button type="submit" class="w-full bg-white/10 hover:bg-white/20 text-text-main py-3 rounded-xl font-bold transition-all border border-white/10" [disabled]="exceptionForm.invalid">
-              Registrar Bloqueo
-            </button>
-          </form>
-
-          <!-- Lista de Excepciones Activas -->
-          <div class="mt-8 space-y-4">
-            <h3 class="text-xs font-bold text-text-dim uppercase tracking-widest">Próximos Bloqueos</h3>
-            
-            @if (exceptions().length === 0) {
-              <div class="p-6 text-center border-2 border-dashed border-white/5 rounded-2xl text-text-dim text-sm">
-                No hay bloqueos programados
-              </div>
-            }
-
-            @for (ex of exceptions(); track ex.id) {
-              <div class="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-start animate-in fade-in zoom-in-95">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 rounded-full bg-accent"></span>
-                    <span class="font-bold text-sm text-text-main">
-                      {{ ex.date | date:'dd/MM/yy' }} 
-                      @if (ex.endDate) {
-                        — {{ ex.endDate | date:'dd/MM/yy' }}
-                      }
-                    </span>
-                  </div>
-                  <p class="text-xs text-text-dim mb-2">{{ ex.reason || 'Sin motivo' }}</p>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-accent/20 text-accent font-bold inline-block">
-                    {{ ex.type }}
-                  </span>
-                </div>
-                <button (click)="removeException(ex.id)" class="p-2 text-text-dim hover:text-error transition-all">✕</button>
-              </div>
-            }
           </div>
-        </section>
-      </div>
+          <div class="flex gap-2">
+            <input type="text" formControlName="reason" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50" placeholder="Motivo (opcional)...">
+            <button type="submit" class="bg-accent text-white px-4 py-1.5 rounded-lg hover:bg-accent/80 transition-colors shadow-lg shadow-accent/20" [disabled]="exceptionForm.invalid">
+              <span class="text-xs font-bold">Bloquear</span>
+            </button>
+          </div>
+        </form>
 
+        <div class="space-y-2 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+          @if (exceptions().length === 0) {
+            <div class="py-10 text-center opacity-30 text-xs italic">Sin bloqueos programados</div>
+          }
+          @for (ex of exceptions(); track ex.id) {
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex justify-between items-center group">
+              <div class="flex flex-col gap-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-text-main">{{ ex.date | date:'dd MMM, yyyy' }}</span>
+                  <span class="text-[8px] px-1.5 py-0.5 rounded bg-accent/20 text-accent font-bold uppercase">{{ ex.type }}</span>
+                </div>
+                @if (ex.reason) {
+                  <span class="text-[9px] text-text-dim">{{ ex.reason }}</span>
+                }
+              </div>
+              <button (click)="removeException(ex.id)" class="text-text-dim opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all">✕</button>
+            </div>
+          }
+        </div>
+      </section>
     </div>
-  </main>
+  </div>
 </div>

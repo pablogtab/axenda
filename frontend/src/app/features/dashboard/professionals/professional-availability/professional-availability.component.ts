@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -17,6 +17,12 @@ export class ProfessionalAvailabilityComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  @Input() set professionalId(id: string | null) {
+    if (id) {
+      this.loadProfessional(id);
+    }
+  }
 
   professional = signal<Professional | null>(null);
   availability = signal<Availability[]>([]);
@@ -61,10 +67,8 @@ export class ProfessionalAvailabilityComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
+    if (id && !this.professional()) {
       this.loadProfessional(id);
-    } else {
-      this.router.navigate(['/dashboard/professionals']);
     }
   }
 

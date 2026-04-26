@@ -15,19 +15,22 @@ import { ProfessionalAvailabilityComponent } from '../professional-availability/
 @Component({
   selector: 'app-professionals-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective],
+  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective, ProfessionalFormComponent],
   templateUrl: './professionals-list.component.html'
 })
 export class ProfessionalsListComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
   private snackbar = inject(SnackbarService);
   private dialog = inject(DialogService);
-  private modal = inject(ModalService);
   private router = inject(Router);
 
   professionals = signal<Professional[]>([]);
   searchTerm = signal('');
   isLoading = signal(true);
+
+  // Form State
+  isFormOpen = signal(false);
+  editingProfessional = signal<Professional | null>(null);
 
   filteredProfessionals = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -55,17 +58,21 @@ export class ProfessionalsListComponent implements OnInit {
   }
 
   openCreateForm(): void {
-    const ref = this.modal.open(ProfessionalFormComponent);
-    ref.closed.subscribe(result => {
-      if (result) this.loadProfessionals();
-    });
+    this.editingProfessional.set(null);
+    this.isFormOpen.set(true);
   }
 
   openEditForm(professional: Professional): void {
-    const ref = this.modal.open(ProfessionalFormComponent, { data: professional });
-    ref.closed.subscribe(result => {
-      if (result) this.loadProfessionals();
-    });
+    this.editingProfessional.set(professional);
+    this.isFormOpen.set(true);
+  }
+
+  onFormClosed(refresh: boolean): void {
+    this.isFormOpen.set(false);
+    this.editingProfessional.set(null);
+    if (refresh) {
+      this.loadProfessionals();
+    }
   }
 
   openAvailabilityModal(professional: Professional): void {

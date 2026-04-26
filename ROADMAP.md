@@ -28,8 +28,6 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] **Carga rápida de clientes**: Crear un cliente nuevo directamente desde el buscador del modal de turnos.
 - [x] **Estados detallados de reserva**: Implementar flujo *Confirmado, En Espera, Asiste, No asistió*.
 - [x] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
-- [ ] **Sobreturnos (Overbooking)**: Permitir solapamientos manuales forzados por el administrador.
-- [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
 
 ## 🔴 Fase 5: Reglas de Negocio y Lógica Avanzada
 - [ ] **Políticas de Anticipación**: Configurar límites mínimos y máximos para reservas.
@@ -55,3 +53,12 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [ ] **Guía de Configuración**: Onboarding guiado para nuevos negocios.
 - [ ] **Tutoriales y Cursos**: Centro de ayuda integrado.
 - [ ] **Generación Automática de Servicios**: Templates por rubro al registrarse.
+
+
+
+
+
+
+
+
+- [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
