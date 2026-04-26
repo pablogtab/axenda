@@ -383,9 +383,11 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onCellClick(prof: Professional, slot: string): void {
-    if (this.sidebarService.isMobile()) {
-      this.addAppointment.emit({ professional: prof, time: slot });
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      return;
     }
+    this.addAppointment.emit({ professional: prof, time: slot });
   }
 
   onDragEnd(): void {

@@ -55,8 +55,7 @@
                [class.hover:bg-primary/10]="!agendaService.isDragging()"
                (mouseenter)="hoveredSlot.set(slot)"
                (mouseleave)="hoveredSlot.set(null)"
-               (click)="onCellClick(day, slot)"
-               (dblclick)="onAdd(day, slot)">
+               (click)="onCellClick(day, slot)">
             
             @if (availabilityMap()[dayIndex + '-' + slot]) {
               <div class="absolute inset-0" [style.background-color]="(professionalsSignal().length === 1 ? (selectedProfessional()?.color || '#6366f1') : '#6366f1') + '08'"></div>
@@ -118,8 +117,8 @@
 
   <!-- Modal de Selección de Profesional -->
   @if (pendingSelection(); as pending) {
-    <div class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div class="bg-bg-secondary border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-sm flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+    <div (click)="cancelSelection()" class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div (click)="$event.stopPropagation()" class="bg-bg-secondary border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-sm flex flex-col gap-4 animate-in zoom-in-95 duration-200">
         <div class="flex flex-col gap-1">
           <h3 class="text-lg font-bold text-text-main">Seleccionar Profesional</h3>
           <p class="text-xs text-text-dim">

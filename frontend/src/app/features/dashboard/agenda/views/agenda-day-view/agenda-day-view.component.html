@@ -53,8 +53,7 @@
              [class.hover:bg-primary/10]="!agendaService.isDragging()"
              (mouseenter)="onCellEnter(slot)"
              (mouseleave)="onCellLeave()"
-             (click)="onCellClick(prof, slot)"
-             (dblclick)="addAppointment.emit({ professional: prof, time: slot })">
+             (click)="onCellClick(prof, slot)">
           
           @if (availabilityMap()[prof.id + '-' + slot]) {
             <div class="absolute inset-0" [style.background-color]="prof.color + '10'"></div>

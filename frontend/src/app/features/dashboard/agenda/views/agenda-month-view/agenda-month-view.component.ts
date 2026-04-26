@@ -181,6 +181,10 @@ export class AgendaMonthViewComponent implements OnChanges, OnInit {
 
   onAddAppointment(day: Date, event: Event): void {
     event.stopPropagation();
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      return;
+    }
     if (this.agendaService.isDragging()) return;
 
     if (this.professionals.length > 0) {
