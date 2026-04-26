@@ -125,13 +125,23 @@ export class AuthService {
       } as any),
     ])
 
+    // Calculate expirations for the client
+    const accessTokenExpiresIn = this.config.get<string>('JWT_EXPIRES_IN', '15m')
+    const expiresAt = this.parseExpiry(accessTokenExpiresIn)
+    
+    const refreshExpiresAt = this.parseExpiry(refreshExpiresIn)
+
     // Persist refresh token (used for revocation)
-    const expiresAt = this.parseExpiry(refreshExpiresIn)
     await this.prisma.refreshToken.create({
-      data: { userId, token: refreshToken, expiresAt },
+      data: { userId, token: refreshToken, expiresAt: refreshExpiresAt },
     })
 
-    return { accessToken, refreshToken }
+    return { 
+      accessToken, 
+      refreshToken, 
+      expiresAt: expiresAt.toISOString(),
+      refreshExpiresAt: refreshExpiresAt.toISOString()
+    }
   }
 
   /** Parses a string like "7d", "24h", "60m" into a future Date */

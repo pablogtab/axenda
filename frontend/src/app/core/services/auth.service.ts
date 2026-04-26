@@ -8,6 +8,8 @@ import { environment } from '../../../environments/environment';
 export interface AuthData {
   accessToken: string;
   refreshToken: string;
+  expiresAt?: string;
+  refreshExpiresAt?: string;
 }
 
 @Injectable({
@@ -18,6 +20,7 @@ export class AuthService {
   private router: Router = inject(Router);
   private readonly ACCESS_TOKEN_KEY = 'axenda_access_token';
   private readonly REFRESH_TOKEN_KEY = 'axenda_refresh_token';
+  private readonly EXPIRES_AT_KEY = 'axenda_expires_at';
   
   private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
@@ -48,6 +51,7 @@ export class AuthService {
     }
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(this.EXPIRES_AT_KEY);
     this.isLoggedInSubject.next(false);
     this.router.navigate(['/login']);
   }
@@ -60,9 +64,26 @@ export class AuthService {
     return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
+  getExpiresAt(): string | null {
+    return localStorage.getItem(this.EXPIRES_AT_KEY);
+  }
+
+  isTokenExpired(): boolean {
+    const expiresAt = this.getExpiresAt();
+    if (!expiresAt) return true;
+    
+    // Consideramos expirado si falta menos de 1 minuto para prevenir fallos en peticiones en curso
+    const expiryDate = new Date(expiresAt);
+    const now = new Date();
+    return now.getTime() > (expiryDate.getTime() - 60000);
+  }
+
   private handleAuthentication(data: AuthData): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, data.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, data.refreshToken);
+    if (data.expiresAt) {
+      localStorage.setItem(this.EXPIRES_AT_KEY, data.expiresAt);
+    }
     this.isLoggedInSubject.next(true);
   }
 

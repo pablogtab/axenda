@@ -5,7 +5,7 @@ import { BehaviorSubject, catchError, filter, map, switchMap, take, throwError }
 
 // Estado global para manejar múltiples peticiones 401 simultáneas
 let isRefreshing = false;
-const refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -19,20 +19,35 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     authReq = addToken(req, token);
   }
 
+  // Acción preventiva: si el token está por expirar o ya expiró, refrescamos antes de la petición
+  if (token && !isAuthRequest && authService.isTokenExpired()) {
+    return handle401Error(req, next, authService);
+  }
+
   return next(authReq).pipe(
-    map(event => {
-      // Desenvolver el wrapper 'data' de la respuesta si existe
-      if (event instanceof HttpResponse && event.body && typeof event.body === 'object' && 'data' in event.body) {
-        return event.clone({ body: event.body.data });
-      }
-      return event;
-    }),
     catchError((error: HttpErrorResponse) => {
-      // Si el error es 401 y no es login o el propio refresh
-      if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
+      // Si el error es 401 y no es login, refresh o logout
+      const isExcluded = req.url.includes('/auth/login') || 
+                        req.url.includes('/auth/refresh') || 
+                        req.url.includes('/auth/logout');
+
+      if (error.status === 401 && !isExcluded) {
         return handle401Error(req, next, authService);
       }
       return throwError(() => error);
+    }),
+    map(event => {
+      // Desenvolver el wrapper 'data' de la respuesta si existe
+      // Se hace después del catchError para que aplique también a las peticiones reintentadas
+      if (
+        event instanceof HttpResponse && 
+        event.body !== null && 
+        typeof event.body === 'object' && 
+        'data' in event.body
+      ) {
+        return event.clone({ body: event.body.data });
+      }
+      return event;
     })
   );
 };
@@ -54,6 +69,14 @@ function addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
 function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, authService: AuthService) {
   if (!isRefreshing) {
     isRefreshing = true;
+    
+    // Si el subject tenía un error de un intento fallido anterior, lo reseteamos
+    if (refreshTokenSubject.hasError) {
+      // No se puede resetear un BehaviorSubject que ha fallado, así que usamos next(null) 
+      // si fuera posible, pero en realidad lo mejor es manejarlo con cuidado.
+      // En Angular, los interceptores son funciones, pero las variables de módulo persisten.
+    }
+    
     refreshTokenSubject.next(null);
 
     return authService.refreshToken().pipe(
@@ -66,6 +89,11 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, authServ
       }),
       catchError((err) => {
         isRefreshing = false;
+        // Notificar a otros que están esperando que el refresco falló
+        const subjectToError = refreshTokenSubject;
+        refreshTokenSubject = new BehaviorSubject<string | null>(null);
+        subjectToError.error(err);
+        
         authService.logout();
         return throwError(() => err);
       })
