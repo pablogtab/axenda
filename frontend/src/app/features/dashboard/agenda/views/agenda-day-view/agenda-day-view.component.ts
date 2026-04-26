@@ -50,7 +50,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
 
   rawAppointments = signal<Appointment[]>([]);
@@ -87,7 +87,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   selectionProfessional = signal<Professional | null>(null);
 
   selectionPreview = computed(() => {
-    if (!this.isSelectingRange() || !this.selectionStartSlot() || !this.selectionEndSlot() || !this.selectionProfessional()) return null;
+    if (!this.selectionStartSlot() || !this.selectionEndSlot() || !this.selectionProfessional()) return null;
     
     const slots = this.timeSlots();
     const startIndex = slots.indexOf(this.selectionStartSlot()!);
@@ -211,12 +211,13 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
   computeGridStatus(): void {
     const avail: Record<string, boolean> = {};
     const block: Record<string, boolean> = {};
+    const isSingleProf = this.professionals.length === 1;
 
     this.professionals.forEach(prof => {
       this.timeSlots().forEach(slot => {
         const key = `${prof.id}-${slot}`;
         avail[key] = this.isProfessionalAvailableAt(prof, slot);
-        block[key] = this.isProfessionalBlockedAt(prof, slot);
+        block[key] = isSingleProf ? this.isProfessionalBlockedAt(prof, slot) : false;
       });
     });
 
@@ -314,7 +315,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     if (this.isSelectingRange()) {
-      this.handleRangeSelectionDrop();
+      this.handleRangeSelectionDrop(event);
       return;
     }
 
@@ -488,7 +489,7 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  private handleRangeSelectionDrop(): void {
+  private handleRangeSelectionDrop(event: PointerEvent): void {
     const startSlot = this.selectionStartSlot();
     const endSlot = this.selectionEndSlot();
     const prof = this.selectionProfessional();
@@ -497,6 +498,9 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
       this.onRangeSelectionEnd();
       return;
     }
+
+    // Bloqueamos la selección para que no se mueva mientras elegimos en el menú
+    this.isSelectingRange.set(false);
 
     const slots = this.timeSlots();
     const startIndex = slots.indexOf(startSlot);
@@ -527,10 +531,16 @@ export class AgendaDayViewComponent implements OnChanges, OnInit, OnDestroy {
     this.addAppointment.emit({ 
       professional: prof, 
       time: finalStartSlot,
-      endTime: endTimeStr
+      endTime: endTimeStr,
+      x: event.clientX,
+      y: event.clientY
     });
 
     this.wasDragging = true;
+    // No limpiamos inmediatamente para que el usuario vea qué está configurando
+  }
+
+  clearSelection(): void {
     this.onRangeSelectionEnd();
   }
 

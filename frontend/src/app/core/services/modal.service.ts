@@ -12,12 +12,11 @@ export class ModalService {
     config?: DialogConfig<D, DialogRef<R, T>>
   ): DialogRef<R, T> {
     return this.dialog.open<R, D, T>(component, {
-      ...config,
       backdropClass: 'modal-backdrop',
       panelClass: 'modal-panel',
-      // Animación y comportamiento base
-      maxWidth: config?.maxWidth || '95vw',
-      disableClose: config?.disableClose ?? false,
+      maxWidth: '95vw',
+      disableClose: false,
+      ...config
     });
   }
 }

@@ -19,7 +19,6 @@ export class AppointmentsService {
   // ─── Turnos (Appointments) ────────────────────────────────────────────────
 
   async findAll(tenantId: string, query: { startDate?: string; endDate?: string; branchId?: string; statuses?: string[] }) {
-    console.log(`[Backend] Buscando turnos - Tenant: ${tenantId}, Branch: ${query.branchId}, Start: ${query.startDate}`);
     const where: any = { tenantId }
 
     if (query.branchId) {

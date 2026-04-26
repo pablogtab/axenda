@@ -51,7 +51,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   @Input({ required: true }) professionals: Professional[] = [];
   @Input() selectedStatuses: string[] = [];
 
-  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string }>();
+  @Output() addAppointment = new EventEmitter<{ professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }>();
   @Output() editAppointment = new EventEmitter<{ appointment: Appointment, newDate?: Date }>();
   @Output() dateChange = new EventEmitter<Date>();
 
@@ -92,7 +92,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   selectionDayIndex = signal<number | null>(null);
 
   selectionPreview = computed(() => {
-    if (!this.isSelectingRange() || !this.selectionStartSlot() || !this.selectionEndSlot() || this.selectionDayIndex() === null) return null;
+    if (!this.selectionStartSlot() || !this.selectionEndSlot() || this.selectionDayIndex() === null) return null;
     
     const slots = this.timeSlots();
     const startIndex = slots.indexOf(this.selectionStartSlot()!);
@@ -379,7 +379,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     if (this.isSelectingRange()) {
-      this.handleRangeSelectionDrop();
+      this.handleRangeSelectionDrop(event);
       return;
     }
 
@@ -548,7 +548,9 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         professional: prof,
         time: pending.time!,
         date: pending.date,
-        endTime: pending.data.endTime
+        endTime: pending.data.endTime,
+        x: pending.data.x,
+        y: pending.data.y
       });
     }
 
@@ -590,14 +592,14 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.editAppointment.emit({ appointment: app });
   }
 
-  onAdd(day: Date, time: string, endTime?: string): void {
+  onAdd(day: Date, time: string, endTime?: string, x?: number, y?: number): void {
     const profs = this.professionalsSignal();
     if (profs.length === 1) {
-      this.addAppointment.emit({ professional: profs[0], time, date: day, endTime });
+      this.addAppointment.emit({ professional: profs[0], time, date: day, endTime, x, y });
     } else if (profs.length > 1) {
       this.pendingSelection.set({
         type: 'ADD',
-        data: { endTime },
+        data: { endTime, x, y },
         date: day,
         time: time
       });
@@ -645,7 +647,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  private handleRangeSelectionDrop(): void {
+  private handleRangeSelectionDrop(event: PointerEvent): void {
     const startSlot = this.selectionStartSlot();
     const endSlot = this.selectionEndSlot();
     const dayIndex = this.selectionDayIndex();
@@ -654,6 +656,9 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
       this.onRangeSelectionEnd();
       return;
     }
+
+    // Bloqueamos la selección para que no se mueva mientras elegimos en el menú
+    this.isSelectingRange.set(false);
 
     const slots = this.timeSlots();
     const startIndex = slots.indexOf(startSlot);
@@ -684,9 +689,13 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const day = this.weekDaysSignal()[dayIndex];
 
     // Reutilizamos onAdd para manejar la selección de profesional si es necesario
-    this.onAdd(day, finalStartSlot, endTimeStr);
+    this.onAdd(day, finalStartSlot, endTimeStr, event.clientX, event.clientY);
 
     this.wasDragging = true;
+    // No limpiamos inmediatamente
+  }
+
+  clearSelection(): void {
     this.onRangeSelectionEnd();
   }
 

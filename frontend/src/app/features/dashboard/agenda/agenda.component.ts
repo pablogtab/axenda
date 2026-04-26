@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
@@ -16,9 +16,11 @@ import { AgendaViewType } from './agenda.types';
 import { Appointment } from '@services/appointments.service';
 import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
-import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones/agenda-navigation-zones.component';
 import { AgendaService } from './agenda.service';
 import { AgendaAppointmentCardComponent } from './components/agenda-appointment-card/agenda-appointment-card.component';
+import { AgendaActionSelectorComponent } from './components/agenda-action-selector/agenda-action-selector.component';
+import { ProfessionalExceptionFormComponent } from '../professionals/professional-exception-form/professional-exception-form';
+import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones/agenda-navigation-zones.component';
 
 @Component({
   selector: 'app-agenda',
@@ -42,6 +44,9 @@ export class AgendaComponent implements OnInit {
   private userConfig = inject(UserConfigurationService);
   public agendaService = inject(AgendaService);
   public sidebarService = inject(SidebarService);
+
+  @ViewChild(AgendaDayViewComponent) dayView?: AgendaDayViewComponent;
+  @ViewChild(AgendaWeekViewComponent) weekView?: AgendaWeekViewComponent;
 
   constructor() {
     // Sincronizar cambios de vuelta a la configuración de usuario para persistencia
@@ -84,7 +89,6 @@ export class AgendaComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleGlobalKeyDown(event: KeyboardEvent) {
-    console.log("captured")
     if (this.showFilters()) {
       if (event.key === 'Escape') this.showFilters.set(false);
       return;
@@ -385,7 +389,37 @@ export class AgendaComponent implements OnInit {
 
   // ─── Diálogos ──────────────────────────────────────────────────────────────
 
-  onAddAppointment(event: { professional: Professional, time: string, date?: Date, endTime?: string }): void {
+  onAddAppointment(event: { professional: Professional, time: string, date?: Date, endTime?: string, x?: number, y?: number }): void {
+    const isMobile = this.sidebarService.isMobile();
+
+    if (isMobile) {
+      this.openAppointmentForm(event);
+      return;
+    }
+
+    const dialogRef = this.modal.open(AgendaActionSelectorComponent, {
+      width: '260px',
+      data: { x: event.x, y: event.y },
+      hasBackdrop: false,
+      panelClass: 'modal-panel-dropdown'
+    });
+
+    dialogRef.closed.subscribe(action => {
+      // Limpiar selecciones en las vistas al cerrar el selector
+      this.dayView?.clearSelection();
+      this.weekView?.clearSelection();
+
+      if (!action) return;
+
+      if (action === 'APPOINTMENT') {
+        this.openAppointmentForm(event);
+      } else if (action === 'EXCEPTION') {
+        this.openExceptionForm(event);
+      }
+    });
+  }
+
+  private openAppointmentForm(event: { professional: Professional, time: string, date?: Date, endTime?: string }): void {
     const appointmentDate = event.date || this.selectedDate();
     const dialogRef = this.modal.open(AppointmentFormComponent, {
       data: {
@@ -396,6 +430,23 @@ export class AgendaComponent implements OnInit {
         branchId: this.selectedBranchId()
       },
       width: '500px'
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) this.refreshView();
+    });
+  }
+
+  private openExceptionForm(event: { professional: Professional, time: string, date?: Date, endTime?: string }): void {
+    const exceptionDate = event.date || this.selectedDate();
+    const dialogRef = this.modal.open(ProfessionalExceptionFormComponent, {
+      data: {
+        professionalId: event.professional.id,
+        startTime: event.time,
+        endTime: event.endTime || '',
+        date: format(exceptionDate, 'yyyy-MM-dd')
+      },
+      width: '450px'
     });
 
     dialogRef.closed.subscribe(result => {

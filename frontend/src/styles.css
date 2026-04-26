@@ -162,3 +162,26 @@
     background: rgba(255, 255, 255, 0.2);
   }
 }
+
+/* MODAL / DIALOG GLOBAL STYLES */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal-backdrop-transparent {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.modal-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.modal-panel-dropdown {
+  outline: none;
+  z-index: 1000;
+}
