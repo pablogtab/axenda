@@ -1,432 +1,437 @@
 <div class="h-full flex flex-col p-2 md:p-4 overflow-hidden bg-bg-primary">
-  <div class="mb-4">
-    <h1 class="text-2xl font-bold text-text-main tracking-tight">Configuración del Negocio</h1>
-    <p class="text-text-muted text-sm mt-1">Gestiona los detalles y preferencias de tu negocio.</p>
-  </div>
+    <div class="mb-4">
+        <h1 class="text-2xl font-bold text-text-main tracking-tight">Configuración del Negocio</h1>
+        <p class="text-text-muted text-sm mt-1">Gestiona los detalles y preferencias de tu negocio.</p>
+    </div>
 
-  <div class="flex-1 flex gap-4 overflow-hidden" [formGroup]="settingsForm">
-    <!-- Section Sidebar -->
-    <aside class="w-64 shrink-0 flex flex-col gap-1 overflow-y-auto custom-scrollbar pr-2">
-      <button 
-        *ngFor="let section of sections"
-        (click)="setActiveSection(section.id)"
-        [class.bg-white\/10]="activeSection === section.id"
-        [class.text-text-main]="activeSection === section.id"
-        [class.border-l-4]="activeSection === section.id"
-        [class.border-primary]="activeSection === section.id"
-        class="flex items-center gap-3 p-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white\/5 hover:text-text-main text-left group border-l-4 border-transparent"
-      >
-        <span class="text-xl transition-transform group-hover:scale-110">{{ section.icon }}</span>
-        <div class="flex flex-col min-w-0">
-          <span class="font-bold truncate text-sm">{{ section.title }}</span>
-          <span class="text-[10px] opacity-60 truncate">{{ section.description }}</span>
-        </div>
-      </button>
-    </aside>
-
-    <!-- Content Area -->
-    <main class="flex-1 glass rounded-2xl overflow-hidden flex flex-col border border-white/10">
-      <div class="h-full overflow-y-auto custom-scrollbar" 
-           [class.p-4]="!['professionals', 'branches', 'services'].includes(activeSection)"
-           [class.md:p-6]="!['professionals', 'branches', 'services'].includes(activeSection)"
-           [class.p-0]="['professionals', 'branches', 'services'].includes(activeSection)">
-        
-        <!-- Business Info Section -->
-        <div *ngIf="activeSection === 'business-info'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-              <span>🏢</span> Información General
-            </h2>
+    <div class="flex-1 flex gap-4 overflow-hidden" [formGroup]="settingsForm">
+        <!-- Section Sidebar -->
+        <aside class="w-64 shrink-0 flex flex-col gap-1 overflow-y-auto custom-scrollbar pr-2">
             <button
-              (click)="save()"
-              [disabled]="settingsForm.invalid || slugStatus() === 'taken' || slugStatus() === 'invalid'"
-              class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary">
-              Guardar
+                *ngFor="let section of sections"
+                (click)="setActiveSection(section.id)"
+                [class.bg-white/10]="activeSection === section.id"
+                [class.text-text-main]="activeSection === section.id"
+                [class.border-l-4]="activeSection === section.id"
+                [class.border-primary]="activeSection === section.id"
+                class="flex items-center gap-3 p-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main text-left group border-l-4 border-transparent">
+                <span class="text-xl transition-transform group-hover:scale-110">{{ section.icon }}</span>
+                <div class="flex flex-col min-w-0">
+                    <span class="font-bold truncate text-sm">{{ section.title }}</span>
+                    <span class="text-[10px] opacity-60 truncate">{{ section.description }}</span>
+                </div>
             </button>
-          </div>
+        </aside>
 
-          <div class="flex flex-col md:flex-row gap-6 items-start">
-            <div class="flex flex-col items-center">
-              <app-image-uploader 
-                label="Logo del Negocio"
-                [currentImageUrl]="settingsForm.get('logoUrl')?.value"
-                [tenantId]="tenantId()"
-                category="logos"
-                shape="square"
-                dimensions="w-28 h-28"
-                (imageUploaded)="settingsForm.get('logoUrl')?.setValue($event)"
-              ></app-image-uploader>
-              <p class="text-[8px] text-text-muted text-center mt-2 max-w-[120px]">PNG, JPG. Máx 2MB.</p>
-            </div>
+        <!-- Content Area -->
+        <main class="flex-1 glass rounded-2xl overflow-hidden flex flex-col border border-white/10">
+            <div class="h-full overflow-y-auto custom-scrollbar"
+                [class.p-4]="!['professionals', 'branches', 'services', 'appearance'].includes(activeSection)"
+                [class.md:p-6]="!['professionals', 'branches', 'services', 'appearance'].includes(activeSection)"
+                [class.p-0]="['professionals', 'branches', 'services'].includes(activeSection)"
+                [class.p-6]="activeSection === 'appearance'">
 
-            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              <div class="space-y-1">
-                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Nombre del Negocio</label>
-                <input type="text" formControlName="name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Ej. Mi Peluquería">
-              </div>
-              <app-select 
-                [config]="categoryConfig" 
-                [options]="categories" 
-                formControlName="category">
-              </app-select>
-              <div class="space-y-1">
-                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Teléfono</label>
-                <input type="tel" formControlName="phone" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="+54 11 ...">
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Email de Contacto</label>
-                <input type="email" formControlName="email" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                  placeholder="tunegocio@axenda.ar">
-              </div>
-            </div>
-          </div>
-
-          <!-- Public Link Customization -->
-          <div class="pt-6 border-t border-white/5 space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
-                <span>🔗</span> Link Público de Reservas
-              </h3>
-              <span *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')"
-                class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
-            </div>
-          
-            <div class="space-y-2">
-              <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Personalizar Link</label>
-              <div class="flex items-stretch group relative">
-                <div
-                  class="bg-white/5 border border-white/10 border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary/5">
-                  axenda.com/
-                </div>
-                <input
-                  type="text"
-                  formControlName="publicSlug"
-                  class="flex-1 bg-white/5 border border-white/10 rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                  placeholder="mi-negocio-increible"
-                  [class.border-red-500\/50]="slugStatus() === 'taken' || slugStatus() === 'invalid'"
-                  [class.border-green-500\/50]="slugStatus() === 'available'">
-                <!-- Status Icons -->
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <div *ngIf="slugStatus() === 'checking'" class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                  <span *ngIf="slugStatus() === 'available'" class="text-green-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                    <span class="text-base">✓</span> Disponible
-                  </span>
-                  <span *ngIf="slugStatus() === 'taken'" class="text-red-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                    <span class="text-base">✕</span> No disponible
-                  </span>
-                  <span *ngIf="slugStatus() === 'invalid'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                    Formato inválido
-                  </span>
-                </div>
-              </div>
-              <div class="flex items-center gap-4 ml-1">
-                <p class="text-[10px] text-text-muted italic">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
-                <div class="flex items-center gap-3">
-                  <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="copyToClipboard()"
-                    class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
-                    <span>📋</span> Copiar link
-                  </button>
-                  <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="visitPublicPage()"
-                    class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
-                    <span>🚀</span> Ver mi página
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4">
-            <div class="space-y-1">
-              <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Dirección</label>
-              <input type="text" formControlName="address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                placeholder="">
-            </div>
-          </div>
-
-          <!-- Banner Uploader -->
-          <div class="w-full pt-4 border-t border-white/5">
-            <app-image-uploader 
-              label="Banner del Negocio"
-              [currentImageUrl]="settingsForm.get('bannerUrl')?.value"
-              [tenantId]="tenantId()"
-              category="banners"
-              shape="square"
-              dimensions="w-full h-40 md:h-52"
-              (imageUploaded)="settingsForm.get('bannerUrl')?.setValue($event)"
-            ></app-image-uploader>
-            <p class="text-[10px] text-text-muted mt-2 italic text-right">Recomendado: 1200x400px o similar.</p>
-          </div>
-              
-        </div>
-
-        <!-- Appearance Section -->
-        <div *ngIf="activeSection === 'appearance'" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-              <span>🎨</span> Personalización de Marca
-            </h2>
-            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
-              Guardar
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Brand Colors -->
-            <div class="space-y-6">
-              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Colores de Marca</h3>
-              
-              <div class="grid grid-cols-1 gap-4">
-                <!-- Primary Color -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-text-main">Color Primario</span>
-                    <span class="text-[10px] text-text-muted">Botones y elementos principales</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('primaryColor')?.value }}</span>
-                    <input type="color" formControlName="primaryColor" class="w-10 h-10 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
-                  </div>
-                </div>
-
-                <!-- Primary Hover Color -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-text-main">Color Primario (Hover)</span>
-                    <span class="text-[10px] text-text-muted">Estado interactivo de botones</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('primaryHoverColor')?.value }}</span>
-                    <input type="color" formControlName="primaryHoverColor" class="w-10 h-10 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
-                  </div>
-                </div>
-
-                <!-- Accent Color -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-text-main">Color de Acento</span>
-                    <span class="text-[10px] text-text-muted">Destacados y gradientes</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('accentColor')?.value }}</span>
-                    <input type="color" formControlName="accentColor" class="w-10 h-10 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Page Style -->
-            <div class="space-y-6">
-              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Estilo de Página</h3>
-              
-              <div class="grid grid-cols-1 gap-4">
-                <!-- Background Color -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-text-main">Color de Fondo</span>
-                    <span class="text-[10px] text-text-muted">Base de la página pública</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('backgroundColor')?.value }}</span>
-                    <input type="color" formControlName="backgroundColor" class="w-10 h-10 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
-                  </div>
-                </div>
-
-                <!-- Text Color -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-text-main">Color de Texto</span>
-                    <span class="text-[10px] text-text-muted">Texto principal y títulos</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('textColor')?.value }}</span>
-                    <input type="color" formControlName="textColor" class="w-10 h-10 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Live Mobile Mockup Preview -->
-              <div class="mt-6">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-text-dim mb-4 ml-1">Vista previa (Móvil)</p>
-                
-                <div class="relative mx-auto w-full max-w-[280px] aspect-[9/16] rounded-[3rem] border-[8px] border-bg-secondary shadow-2xl overflow-hidden transition-all duration-500"
-                     [style.backgroundColor]="settingsForm.get('backgroundColor')?.value"
-                     [style.borderColor]="'rgba(255,255,255,0.05)'">
-                  
-                  <!-- Internal Content (Mini Public Page) -->
-                  <div class="h-full overflow-y-auto custom-scrollbar relative">
-                    
-                    <!-- Mini Banner -->
-                    <div class="h-24 w-full relative overflow-hidden bg-gradient-to-br from-primary to-accent">
-                      <img *ngIf="settingsForm.get('bannerUrl')?.value" [src]="settingsForm.get('bannerUrl')?.value | storage" class="w-full h-full object-cover">
-                      <div class="absolute inset-0 bg-black/20"></div>
+                <!-- Business Info Section -->
+                <div *ngIf="activeSection === 'business-info'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+                            <span>🏢</span> Información General
+                        </h2>
                     </div>
 
-                    <!-- Mini Profile Section -->
-                    <div class="px-4 -mt-8 relative z-10 flex flex-col items-center">
-                      <div class="w-16 h-16 rounded-full bg-surface border-2 border-white/10 shadow-lg overflow-hidden flex items-center justify-center">
-                        <img *ngIf="settingsForm.get('logoUrl')?.value" [src]="settingsForm.get('logoUrl')?.value | storage" class="w-full h-full object-cover">
-                        <span *ngIf="!settingsForm.get('logoUrl')?.value" class="text-xl font-bold opacity-30">{{ settingsForm.get('name')?.value?.charAt(0) || 'A' }}</span>
-                      </div>
-                      <h4 class="mt-2 text-sm font-bold text-center" [style.color]="settingsForm.get('textColor')?.value">
-                        {{ settingsForm.get('name')?.value || 'Tu Negocio' }}
-                      </h4>
+                    <div class="flex flex-col md:flex-row gap-6 items-start">
+                        <div class="flex flex-col items-center">
+                            <app-image-uploader
+                                label="Logo del Negocio"
+                                [currentImageUrl]="settingsForm.get('logoUrl')?.value"
+                                [tenantId]="tenantId()"
+                                category="logos"
+                                shape="square"
+                                dimensions="w-28 h-28"
+                                (imageUploaded)="settingsForm.get('logoUrl')?.setValue($event)"></app-image-uploader>
+                            <p class="text-[8px] text-text-muted text-center mt-2 max-w-[120px]">PNG, JPG. Máx 2MB.</p>
+                        </div>
+
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Nombre del Negocio</label>
+                                <input type="text" formControlName="name"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="Ej. Mi Peluquería">
+                            </div>
+                            <app-select
+                                [config]="categoryConfig"
+                                [options]="categories"
+                                formControlName="category">
+                            </app-select>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Teléfono</label>
+                                <input type="tel" formControlName="phone"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="+54 11 ...">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Email de Contacto</label>
+                                <input type="email" formControlName="email"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="tunegocio@axenda.ar">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Mini Stepper -->
-                    <div class="px-4 mt-4 flex gap-1 justify-center opacity-40">
-                      <div class="h-1 flex-1 rounded-full bg-primary" [style.backgroundColor]="settingsForm.get('primaryColor')?.value"></div>
-                      <div class="h-1 flex-1 rounded-full bg-white/20"></div>
-                      <div class="h-1 flex-1 rounded-full bg-white/20"></div>
-                    </div>
+                    <!-- Public Link Customization -->
+                    <div class="pt-6 border-t border-white/5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
+                                <span>🔗</span> Link Público de Reservas
+                            </h3>
+                            <span *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')"
+                                class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
+                        </div>
 
-                    <!-- Mini Content Card -->
-                    <div class="px-4 mt-4">
-                      <div class="p-3 rounded-2xl border border-white/5 bg-white/5 space-y-3">
-                        <div class="h-3 w-3/4 rounded bg-white/10"></div>
                         <div class="space-y-2">
-                          <div class="h-10 w-full rounded-xl border border-white/10 flex items-center px-3 gap-2">
-                            <div class="w-5 h-5 rounded bg-primary/20" [style.backgroundColor]="settingsForm.get('primaryColor')?.value + '20'"></div>
-                            <div class="h-2 w-1/2 rounded bg-white/10"></div>
-                          </div>
-                          <div class="h-10 w-full rounded-xl border border-primary/40 flex items-center px-3 gap-2" 
-                               [style.borderColor]="settingsForm.get('primaryColor')?.value + '60'"
-                               [style.backgroundColor]="settingsForm.get('primaryColor')?.value + '10'">
-                            <div class="w-5 h-5 rounded" [style.backgroundColor]="settingsForm.get('primaryColor')?.value"></div>
-                            <div class="h-2 w-1/2 rounded opacity-50" [style.backgroundColor]="settingsForm.get('textColor')?.value"></div>
-                          </div>
+                            <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Personalizar Link</label>
+                            <div class="flex items-stretch group relative">
+                                <div
+                                    class="bg-white/5 border border-white/10 border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary/5">
+                                    axenda.com/
+                                </div>
+                                <input
+                                    type="text"
+                                    formControlName="publicSlug"
+                                    class="flex-1 bg-white/5 border border-white/10 rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="mi-negocio-increible"
+                                    [class.border-red-500/50]="slugStatus() === 'taken' || slugStatus() === 'invalid'"
+                                    [class.border-green-500/50]="slugStatus() === 'available'">
+                                <!-- Status Icons -->
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                    <div *ngIf="slugStatus() === 'checking'" class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                                    <span *ngIf="slugStatus() === 'available'" class="text-green-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                                        <span class="text-base">✓</span> Disponible
+                                    </span>
+                                    <span *ngIf="slugStatus() === 'taken'" class="text-red-500 text-xs font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                                        <span class="text-base">✕</span> No disponible
+                                    </span>
+                                    <span *ngIf="slugStatus() === 'invalid'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
+                                        Formato inválido
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 ml-1">
+                                <p class="text-[10px] text-text-muted italic">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
+                                <div class="flex items-center gap-3">
+                                    <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="copyToClipboard()"
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        <span>📋</span> Copiar link
+                                    </button>
+                                    <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="visitPublicPage()"
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        <span>🚀</span> Ver mi página
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <button class="w-full py-2.5 rounded-xl text-[10px] font-bold text-white shadow-lg"
-                                [style.backgroundColor]="settingsForm.get('primaryColor')?.value"
-                                [style.boxShadow]="'0 4px 12px ' + settingsForm.get('primaryColor')?.value + '40'">
-                          Continuar
-                        </button>
-                      </div>
                     </div>
 
-                    <!-- Mini Summary -->
-                    <div class="px-4 mt-4 pb-8">
-                      <div class="p-3 rounded-2xl bg-white/5 border border-dashed border-white/10">
-                        <div class="flex justify-between items-center opacity-50 mb-2">
-                          <div class="h-2 w-12 rounded bg-white/20"></div>
-                          <div class="h-2 w-8 rounded bg-white/20"></div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Dirección</label>
+                            <input type="text" formControlName="address"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                placeholder="">
                         </div>
-                        <div class="h-3 w-2/3 rounded bg-white/10"></div>
-                      </div>
                     </div>
 
-                  </div>
+                    <!-- Banner Uploader -->
+                    <div class="w-full pt-4 border-t border-white/5">
+                        <app-image-uploader
+                            label="Banner del Negocio"
+                            [currentImageUrl]="settingsForm.get('bannerUrl')?.value"
+                            [tenantId]="tenantId()"
+                            category="banners"
+                            shape="square"
+                            dimensions="w-full h-40 md:h-52"
+                            (imageUploaded)="settingsForm.get('bannerUrl')?.setValue($event)"></app-image-uploader>
+                        <p class="text-[10px] text-text-muted mt-2 italic text-right">Recomendado: 1200x400px o similar.</p>
+                    </div>
+
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Booking Settings Section -->
-        <div *ngIf="activeSection === 'booking-settings'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-              <span>📅</span> Configuración de Reservas
-            </h2>
-            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
-              Guardar
-            </button>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            <div class="space-y-4">
-              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Anticipación</h3>
-              <app-select 
-                [config]="anticipationMinConfig" 
-                [options]="anticipationMinOptions" 
-                formControlName="anticipationMin">
-              </app-select>
-              <app-select 
-                [config]="anticipationMaxConfig" 
-                [options]="anticipationMaxOptions" 
-                formControlName="anticipationMax">
-              </app-select>
-            </div>
+                <!-- Appearance Section -->
+                <div *ngIf="activeSection === 'appearance'" class="h-[calc(100vh-160px)] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
 
-            <div class="space-y-4">
-              <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Cancelaciones</h3>
-              <app-select 
-                [config]="cancellationConfig" 
-                [options]="cancellationOptions" 
-                formControlName="cancellationLimit">
-              </app-select>
-              <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                <span class="text-sm font-bold text-text-main">Permitir reprogramar</span>
-                <label class="relative inline-flex items-center cursor-pointer scale-90">
-                  <input type="checkbox" formControlName="allowReschedule" class="sr-only peer">
-                  <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-6 shrink-0">
+                        <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+                            <span>🎨</span> Apariencia
+                        </h2>
+                        <!-- Theme Selector Dropdown -->
+                        <div class="relative">
+                            <button (click)="showThemeSelector.set(!showThemeSelector())"
+                                class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group relative z-[100]"
+                                [class.ring-2]="showThemeSelector()" [class.ring-primary]="showThemeSelector()">
+                                <span class="text-xl group-hover:scale-110 transition-transform">🎨</span>
+                                <div class="flex flex-col items-start leading-none">
+                                    <span class="text-[10px] font-black text-text-dim uppercase tracking-wider mb-1">Plantillas</span>
+                                    <span class="text-xs font-bold text-text-main">{{ activeTheme()?.name || 'Personalizado' }}</span>
+                                </div>
+                                <span class="text-[10px] opacity-40 ml-2 transition-transform" [class.rotate-180]="showThemeSelector()">▼</span>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div *ngIf="showThemeSelector()"
+                                class="absolute top-full right-0 mt-3 w-[420px] bg-[#0f111a]/95 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.8)] z-[100] p-5 animate-in fade-in slide-in-from-top-4 duration-500">
 
-        <!-- Notifications Section -->
-        <div *ngIf="activeSection === 'notifications'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-              <span>🔔</span> Notificaciones
-            </h2>
-            <button (click)="save()" class="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
-              Guardar
-            </button>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
-              <div class="flex flex-col gap-0.5">
-                <span class="font-bold text-sm text-text-main">Email de Confirmación</span>
-                <span class="text-xs text-text-muted">Se envía al reservar un turno.</span>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer scale-90">
-                <input type="checkbox" formControlName="confirmEmail" class="sr-only peer">
-                <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
+                                <div class="flex items-center justify-between mb-5 px-1">
+                                    <div>
+                                        <h4 class="text-xs font-black text-text-main uppercase tracking-widest">Estilos de Marca</h4>
+                                        <p class="text-[10px] text-text-dim mt-0.5">Elige una combinación prediseñada</p>
+                                    </div>
+                                    <div *ngIf="!activeTheme()" class="flex items-center gap-2 text-[10px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                        <span class="relative flex h-1.5 w-1.5">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                                        </span>
+                                        Personalizado
+                                    </div>
+                                </div>
 
-            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group">
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-sm text-text-main">Recordatorio por WhatsApp</span>
-                  <span class="text-[8px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">✨ Premium</span>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button *ngFor="let theme of colorPresets"
+                                        (click)="applyPreset(theme); showThemeSelector.set(false)"
+                                        class="flex flex-col gap-4 p-4 rounded-[1.5rem] border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group/card relative overflow-hidden">
+                                        <div class="flex items-center justify-between relative z-10">
+                                            <span class="text-[11px] font-black text-text-main group-hover/card:text-primary transition-colors">{{ theme.name }}</span>
+                                            <div *ngIf="activeTheme()?.name === theme.name" class="w-2 h-2 rounded-full bg-primary shadow-[0_0_15px_var(--color-primary)]"></div>
+                                        </div>
+                                        <!-- Color Preview Bar -->
+                                        <div class="flex h-6 rounded-xl overflow-hidden border border-white/10 shadow-inner">
+                                            <div class="h-full transition-all duration-500" [style.width]="'50%'" [style.backgroundColor]="theme.colors.bg"></div>
+                                            <div class="h-full transition-all duration-500" [style.width]="'35%'" [style.backgroundColor]="theme.colors.primary"></div>
+                                            <div class="h-full transition-all duration-500" [style.width]="'15%'" [style.backgroundColor]="theme.colors.accent"></div>
+                                        </div>
+                                        <!-- Hover Background Shine -->
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity"></div>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Overlay to close when clicking outside -->
+                            <div *ngIf="showThemeSelector()" (click)="showThemeSelector.set(false)" class="fixed inset-0 z-[90] cursor-default"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-hidden">
+                        <!-- Left Column: Settings (Scrollable) -->
+                        <div class="overflow-y-auto custom-scrollbar pr-4 space-y-6">
+
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-bold text-text-dim uppercase tracking-widest ml-1">Colores de Marca</h3>
+
+                                <div class="bg-white/5 border border-white/5 rounded-[2rem] overflow-hidden divide-y divide-white/5">
+                                    <!-- Primary Color -->
+                                    <div class="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                                        <span class="text-sm font-bold text-text-main">Primario</span>
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('primaryColor')?.value }}</span>
+                                            <input type="color" formControlName="primaryColor" class="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
+                                        </div>
+                                    </div>
+
+                                    <!-- Primary Hover Color -->
+                                    <div class="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                                        <span class="text-sm font-bold text-text-main">Hover</span>
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('primaryHoverColor')?.value }}</span>
+                                            <input type="color" formControlName="primaryHoverColor" class="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
+                                        </div>
+                                    </div>
+
+                                    <!-- Accent Color -->
+                                    <div class="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                                        <span class="text-sm font-bold text-text-main">Acento</span>
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('accentColor')?.value }}</span>
+                                            <input type="color" formControlName="accentColor" class="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                                        <span class="text-sm font-bold text-text-main">Fondo</span>
+                                        <div class="flex    items-center gap-4">
+                                            <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('backgroundColor')?.value }}</span>
+                                            <input type="color" formControlName="backgroundColor" class="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
+                                        </div>
+                                    </div>
+
+                                    <!-- Text Color -->
+                                    <div class="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                                        <span class="text-sm font-bold text-text-main">Texto</span>
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-xs font-mono text-text-dim">{{ settingsForm.get('textColor')?.value }}</span>
+                                            <input type="color" formControlName="textColor" class="w-8 h-8 rounded-lg overflow-hidden border-none cursor-pointer bg-transparent">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right Column: Live Mockup (Fixed height to fit) -->
+                        <div class="h-full flex flex-col items-center justify-center bg-bg-secondary/10 rounded-3xl border border-white/5 relative overflow-hidden">
+                            <!-- Mockup Container -->
+                            <div class="h-full w-full flex items-center justify-center p-4">
+                                <div
+                                    class="h-full max-h-[580px] aspect-[9/16] rounded-[2rem] border-[8px] border-[#1a1b26] shadow-[0_40px_80px_rgba(0,0,0,0.6)] overflow-hidden transition-all duration-700 relative flex flex-col"
+                                    [style.backgroundColor]="settingsForm.get('backgroundColor')?.value">
+                                    <!-- Top Notch -->
+                                    <div class="h-6 w-full shrink-0 flex items-center justify-center relative">
+                                        <div class="w-16 h-4 bg-[#1a1b26] rounded-b-xl"></div>
+                                    </div>
+
+                                    <!-- Mini Banner -->
+                                    <div class="h-24 w-full shrink-0 relative overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+                                        <img *ngIf="settingsForm.get('bannerUrl')?.value" [src]="settingsForm.get('bannerUrl')?.value | storage" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-black/10"></div>
+                                    </div>
+
+                                    <!-- Mini Profile Section -->
+                                    <div class="px-4 -mt-8 relative z-10 flex flex-col items-center shrink-0">
+                                        <div class="w-16 h-16 rounded-2xl bg-surface border-4 border-white/10 shadow-2xl overflow-hidden flex items-center justify-center"
+                                            [style.backgroundColor]="settingsForm.get('backgroundColor')?.value">
+                                            <img *ngIf="settingsForm.get('logoUrl')?.value" [src]="settingsForm.get('logoUrl')?.value | storage" class="w-full h-full object-cover">
+                                            <span *ngIf="!settingsForm.get('logoUrl')?.value" class="text-2xl font-black opacity-20" [style.color]="settingsForm.get('textColor')?.value">
+                                                {{ settingsForm.get('name')?.value?.charAt(0) || 'A' }}
+                                            </span>
+                                        </div>
+                                        <h4 class="mt-3 text-sm font-black text-center tracking-tight truncate w-full px-2" [style.color]="settingsForm.get('textColor')?.value">
+                                            {{ settingsForm.get('name')?.value || 'Tu Negocio' }}
+                                        </h4>
+                                    </div>
+
+                                    <!-- Mini Content (Simplified) -->
+                                    <div class="px-4 mt-6 flex-1 space-y-4">
+                                        <!-- Service Item -->
+                                        <div class="p-3 rounded-xl border border-white/5 bg-white/5 space-y-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="h-2 w-20 rounded-full bg-white/10"></div>
+                                                <div class="text-[10px] font-black" [style.color]="settingsForm.get('accentColor')?.value">$850</div>
+                                            </div>
+                                            <button class="w-full py-2.5 rounded-lg text-[10px] font-black text-white shadow-lg transition-all"
+                                                [style.backgroundColor]="settingsForm.get('primaryColor')?.value">
+                                                Agendar Turno
+                                            </button>
+                                        </div>
+
+                                        <!-- Placeholder list -->
+                                        <div class="space-y-2 opacity-40">
+                                            <div class="h-1.5 w-full rounded-full bg-white/10"></div>
+                                            <div class="h-1.5 w-2/3 rounded-full bg-white/10"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Bar -->
+                                    <div class="h-1.5 w-20 bg-white/10 rounded-full mx-auto mb-2 shrink-0"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span class="text-xs text-text-muted">Se envía 24 horas antes.</span>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer scale-90">
-                <input type="checkbox" formControlName="whatsappReminder" class="sr-only peer">
-                <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-              </label>
+
+                <!-- Booking Settings Section -->
+                <div *ngIf="activeSection === 'booking-settings'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+                            <span>📅</span> Configuración de Reservas
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Anticipación</h3>
+                            <app-select
+                                [config]="anticipationMinConfig"
+                                [options]="anticipationMinOptions"
+                                formControlName="anticipationMin">
+                            </app-select>
+                            <app-select
+                                [config]="anticipationMaxConfig"
+                                [options]="anticipationMaxOptions"
+                                formControlName="anticipationMax">
+                            </app-select>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-2">Cancelaciones</h3>
+                            <app-select
+                                [config]="cancellationConfig"
+                                [options]="cancellationOptions"
+                                formControlName="cancellationLimit">
+                            </app-select>
+                            <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                                <span class="text-sm font-bold text-text-main">Permitir reprogramar</span>
+                                <label class="relative inline-flex items-center cursor-pointer scale-90">
+                                    <input type="checkbox" formControlName="allowReschedule" class="sr-only peer">
+                                    <div
+                                        class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div *ngIf="activeSection === 'notifications'" class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+                            <span>🔔</span> Notificaciones
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="font-bold text-sm text-text-main">Email de Confirmación</span>
+                                <span class="text-xs text-text-muted">Se envía al reservar un turno.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer scale-90">
+                                <input type="checkbox" formControlName="confirmEmail" class="sr-only peer">
+                                <div
+                                    class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group">
+                            <div class="flex flex-col gap-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-sm text-text-main">Recordatorio por WhatsApp</span>
+                                    <span class="text-[8px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">✨ Premium</span>
+                                </div>
+                                <span class="text-xs text-text-muted">Se envía 24 horas antes.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer scale-90">
+                                <input type="checkbox" formControlName="whatsappReminder" class="sr-only peer">
+                                <div
+                                    class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professionals Section -->
+                <div *ngIf="activeSection === 'professionals'" class="animate-in fade-in duration-500">
+                    <app-professionals-list></app-professionals-list>
+                </div>
+
+                <!-- Branches Section -->
+                <div *ngIf="activeSection === 'branches'" class="animate-in fade-in duration-500">
+                    <app-branches-list></app-branches-list>
+                </div>
+
+                <!-- Services Section -->
+                <div *ngIf="activeSection === 'services'" class="animate-in fade-in duration-500">
+                    <app-services-list></app-services-list>
+                </div>
+
             </div>
-          </div>
-        </div>
-
-        <!-- Professionals Section -->
-        <div *ngIf="activeSection === 'professionals'" class="animate-in fade-in duration-500">
-          <app-professionals-list></app-professionals-list>
-        </div>
-
-        <!-- Branches Section -->
-        <div *ngIf="activeSection === 'branches'" class="animate-in fade-in duration-500">
-          <app-branches-list></app-branches-list>
-        </div>
-
-        <!-- Services Section -->
-        <div *ngIf="activeSection === 'services'" class="animate-in fade-in duration-500">
-          <app-services-list></app-services-list>
-        </div>
-
-        <!-- Placeholder for other sections (if any added later) -->
-        <div *ngIf="!['business-info', 'booking-settings', 'notifications', 'professionals', 'branches', 'services'].includes(activeSection)" class="h-full flex flex-col items-center justify-center text-center p-12">
-          <span class="text-6xl mb-4 opacity-20">⚙️</span>
-          <h3 class="text-xl font-bold text-text-main">Próximamente</h3>
-          <p class="text-text-muted max-w-xs">Estamos trabajando en esta sección para que puedas configurar cada detalle de tu negocio.</p>
-        </div>
-
-      </div>
-    </main>
-  </div>
+        </main>
+    </div>
 </div>

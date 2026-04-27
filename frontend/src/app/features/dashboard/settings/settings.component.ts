@@ -25,7 +25,7 @@ import { StoragePipe } from '@shared/pipes/storage.pipe';
     BranchesListComponent,
     ServicesListComponent,
     ImageUploaderComponent,
-    StoragePipe
+    StoragePipe,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -44,6 +44,49 @@ export class SettingsComponent implements OnInit {
   ];
 
   activeSection = 'business-info';
+
+  colorPresets = [
+    {
+      name: 'Axenda Night',
+      dark: true,
+      colors: { primary: '#6366f1', hover: '#4f46e5', accent: '#a855f7', bg: '#0a0b14', text: '#f8fafc' }
+    },
+    {
+      name: 'Midnight Gold',
+      dark: true,
+      colors: { primary: '#f59e0b', hover: '#d97706', accent: '#fbbf24', bg: '#0f172a', text: '#f8fafc' }
+    },
+    {
+      name: 'Neon Cyber',
+      dark: true,
+      colors: { primary: '#06b6d4', hover: '#0891b2', accent: '#ec4899', bg: '#020617', text: '#f8fafc' }
+    },
+    {
+      name: 'Forest Dark',
+      dark: true,
+      colors: { primary: '#10b981', hover: '#059669', accent: '#34d399', bg: '#064e3b', text: '#f1f5f9' }
+    },
+    {
+      name: 'Clean White',
+      dark: false,
+      colors: { primary: '#2563eb', hover: '#1d4ed8', accent: '#60a5fa', bg: '#ffffff', text: '#0f172a' }
+    },
+    {
+      name: 'Minimal Rose',
+      dark: false,
+      colors: { primary: '#e11d48', hover: '#be123c', accent: '#fb7185', bg: '#fff1f2', text: '#4c0519' }
+    },
+    {
+      name: 'Coffee Shop',
+      dark: false,
+      colors: { primary: '#92400e', hover: '#78350f', accent: '#d97706', bg: '#fef3c7', text: '#451a03' }
+    },
+    {
+      name: 'Ocean Light',
+      dark: false,
+      colors: { primary: '#0891b2', hover: '#0e7490', accent: '#22d3ee', bg: '#ecfeff', text: '#164e63' }
+    }
+  ];
 
   // Configs for Selects
   categoryConfig: SelectConfig = {
@@ -104,6 +147,9 @@ export class SettingsComponent implements OnInit {
     { label: 'No permitir cancelación online', value: 'never' }
   ];
 
+  activeTheme = signal<any>(null);
+  showThemeSelector = signal(false);
+
   private tenantsService = inject(TenantsService);
   private snackbar = inject(SnackbarService);
   private cdr = inject(ChangeDetectorRef);
@@ -139,17 +185,31 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     this.loadTenantData();
     this.setupSlugValidation();
-    this.setupAutosave();
+    this.setupFormLogic();
   }
 
-  private setupAutosave() {
+  private setupFormLogic() {
+    // Theme detection - Instant for UI feedback
+    this.settingsForm.valueChanges.subscribe(values => {
+      const theme = this.colorPresets.find(p =>
+        p.colors.primary === values.primaryColor &&
+        p.colors.hover === values.primaryHoverColor &&
+        p.colors.accent === values.accentColor &&
+        p.colors.bg === values.backgroundColor &&
+        p.colors.text === values.textColor
+      );
+      this.activeTheme.set(theme || null);
+    });
+
+    // Auto-save - Debounced to avoid excessive API calls
     this.settingsForm.valueChanges.pipe(
       debounceTime(1000),
-      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
     ).subscribe(() => {
       this.save(true);
     });
   }
+
 
   onSlugInput() {
     const slug = this.settingsForm.get('publicSlug')?.value;
@@ -230,6 +290,18 @@ export class SettingsComponent implements OnInit {
           backgroundColor: tenant.backgroundColor || '#0a0b14',
           textColor: tenant.textColor || '#f8fafc'
         });
+
+        // Initial theme detection
+        const values = this.settingsForm.getRawValue();
+        const theme = this.colorPresets.find(p =>
+          p.colors.primary === values.primaryColor &&
+          p.colors.hover === values.primaryHoverColor &&
+          p.colors.accent === values.accentColor &&
+          p.colors.bg === values.backgroundColor &&
+          p.colors.text === values.textColor
+        );
+        this.activeTheme.set(theme || null);
+
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -291,5 +363,17 @@ export class SettingsComponent implements OnInit {
     
     const url = `${window.location.origin}/${slug}`;
     window.open(url, '_blank');
+  }
+
+  applyPreset(preset: any) {
+    this.settingsForm.patchValue({
+      primaryColor: preset.colors.primary,
+      primaryHoverColor: preset.colors.hover,
+      accentColor: preset.colors.accent,
+      backgroundColor: preset.colors.bg,
+      textColor: preset.colors.text
+    });
+    this.snackbar.success(`Plantilla "${preset.name}" aplicada`);
+    this.cdr.detectChanges();
   }
 }

@@ -2,13 +2,15 @@
   /* Map the dynamic theme variables to our internal booking variables */
   --booking-primary: var(--color-primary, #6366f1);
   --booking-primary-hover: var(--color-primary-hover, #4f46e5);
-  --booking-primary-soft: rgba(var(--color-primary), 0.1); 
-  --booking-bg: var(--color-bg-primary, #f8fafc);
-  --booking-surface: rgba(255, 255, 255, 0.05); 
-  --booking-border: rgba(255, 255, 255, 0.1);
-  --booking-text-main: var(--color-text-main, #0f172a);
-  --booking-text-muted: var(--color-text-muted, #64748b);
   --booking-accent: var(--color-accent, #a855f7);
+  --booking-bg: var(--color-bg-primary, #0a0b14);
+  --booking-text-main: var(--color-text-main, #f8fafc);
+  
+  /* Smart derivations using color-mix for perfect contrast in any theme */
+  --booking-primary-soft: color-mix(in srgb, var(--booking-primary), transparent 90%);
+  --booking-text-muted: color-mix(in srgb, var(--booking-text-main), transparent 30%);
+  --booking-surface: color-mix(in srgb, var(--booking-bg), var(--booking-text-main) 4%);
+  --booking-border: color-mix(in srgb, var(--booking-bg), var(--booking-text-main) 10%);
   
   --booking-radius-lg: 1.5rem;
   --booking-radius-md: 1rem;
@@ -22,7 +24,7 @@
 
 .banner-container {
   height: 250px;
-  background: linear-gradient(135deg, var(--booking-primary), #a855f7);
+  background: linear-gradient(135deg, var(--booking-primary), var(--booking-accent));
   position: relative;
 }
 
@@ -47,12 +49,11 @@
 .profile-image-wrapper::after {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: 50%;
-  background: linear-gradient(45deg, #ff0080, #7928ca, #0070f3, #00dfd8);
+  background: var(--booking-primary);
   z-index: -1;
-  opacity: 0.7;
-  filter: blur(8px);
+  opacity: 0.3;
 }
 
 .profile-image {
@@ -64,7 +65,7 @@
 }
 
 .placeholder-gradient {
-  background: linear-gradient(135deg, var(--booking-primary), #a855f7, #ec4899);
+  background: linear-gradient(135deg, var(--booking-primary), var(--booking-accent));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,7 +241,7 @@
 
 .service-price {
   font-weight: 800;
-  color: var(--booking-primary);
+  color: var(--booking-accent);
 }
 
 /* Summary Details */
@@ -273,7 +274,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--booking-primary);
+  color: var(--booking-accent);
   box-shadow: 0 4px 10px rgba(0,0,0,0.03);
   font-size: 1.25rem;
 }
