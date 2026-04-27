@@ -16,8 +16,9 @@
     [class.p-8]="!sidebarService.isCollapsed()"
     [class.p-0]="sidebarService.isCollapsed()">
     
-    <div class="mb-12 px-2 flex items-center justify-between overflow-hidden">
-      <h2 *ngIf="!sidebarService.isCollapsed()" class="text-3xl font-bold tracking-tight text-gradient whitespace-nowrap">Axenda</h2>
+    <div class="mb-12 px-1 flex items-center gap-0 overflow-hidden">
+      <img src="assets/logo.svg" alt="Axenda Logo" class="w-10 h-10 shrink-0">
+      <h2 *ngIf="!sidebarService.isCollapsed()" class="text-3xl font-bold tracking-tight text-gradient whitespace-nowrap -ml-1.5">xenda</h2>
     </div>
 
     <nav class="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
@@ -59,7 +60,10 @@
       <button (click)="sidebarService.toggle()" class="p-1.5 rounded-lg hover:bg-white/5 text-text-main">
         <span class="text-lg">☰</span>
       </button>
-      <h2 class="text-lg font-bold tracking-tight text-gradient">Axenda</h2>
+      <div class="flex items-center gap-0">
+        <img src="assets/logo.svg" alt="Axenda Logo" class="w-7 h-7">
+        <h2 class="text-lg font-bold tracking-tight text-gradient -ml-1">xenda</h2>
+      </div>
     </header>
 
     <!-- Content Area -->

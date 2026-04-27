@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <mask id="x_mask">
+      <!-- White means keep, black means cut out -->
+      <rect width="512" height="512" fill="white" />
+      <!-- The X shape to cut out -->
+      <path d="M200 276L312 356M312 276L200 356" stroke="black" stroke-width="32" stroke-linecap="round" />
+    </mask>
+  </defs>
+  
+  <!-- "A" shape with the "X" cut out of it -->
+  <path d="M256 116L100 396H160L256 216L352 396H412L256 116Z" fill="url(#logo_grad)" mask="url(#x_mask)" />
+</svg>

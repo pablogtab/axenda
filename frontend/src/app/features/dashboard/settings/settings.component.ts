@@ -420,12 +420,24 @@ export class SettingsComponent implements OnInit {
         ctx.closePath();
         ctx.fill();
 
-        // Draw "A" logo
-        ctx.fillStyle = '#6366f1'; // Axenda Primary
-        ctx.font = `900 ${logoSize * 0.7}px system-ui, -apple-system, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('A', size / 2, size / 2 + (logoSize * 0.05)); // Slight offset for visual balance
+        // Load and draw the SVG logo
+        const logoImg = new Image();
+        logoImg.src = 'assets/logo.svg';
+        await new Promise((resolve) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = resolve; // Continue even if logo fails
+        });
+
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+          ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+        } else {
+          // Fallback to "A" if logo fails to load
+          ctx.fillStyle = '#6366f1';
+          ctx.font = `900 ${logoSize * 0.7}px system-ui, -apple-system, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('A', size / 2, size / 2 + (logoSize * 0.05));
+        }
       }
 
       this.qrCodeDataUrl.set(canvas.toDataURL('image/png'));
