@@ -128,6 +128,10 @@
                                         class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
                                         <span>🚀</span> Ver mi página
                                     </button>
+                                    <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="generateQR()"
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        <span>📱</span> Generar QR
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -433,5 +437,41 @@
 
             </div>
         </main>
+    </div>
+
+    <!-- QR Modal -->
+    <div *ngIf="showQRModal()" class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div (click)="showQRModal.set(false)" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        
+        <div class="relative bg-[#0f111a] border border-white/10 rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-300">
+            <!-- Header -->
+            <div class="p-6 pb-0 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-text-main flex items-center gap-2">
+                    <span>📱</span> Código QR
+                </h3>
+                <button (click)="showQRModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-text-muted hover:bg-white/10 transition-all">✕</button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-8 flex flex-col items-center gap-6">
+                <div class="bg-white p-4 rounded-3xl shadow-2xl">
+                    <img [src]="qrCodeDataUrl()" alt="QR Code" class="w-full h-auto">
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-text-main font-bold text-sm">Escaneame para reservar</p>
+                    <p class="text-text-muted text-[10px] mt-1">Comparte este código con tus clientes o imprímelo.</p>
+                </div>
+
+                <div class="flex gap-3 w-full">
+                    <button (click)="downloadQR()" class="flex-1 py-3 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">
+                        Descargar PNG
+                    </button>
+                    <button (click)="showQRModal.set(false)" class="flex-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-text-main font-bold text-sm hover:bg-white/10 transition-all">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

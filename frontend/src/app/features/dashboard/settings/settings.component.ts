@@ -12,6 +12,7 @@ import { ServicesListComponent } from '../services/services-list/services-list.c
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { StoragePipe } from '@shared/pipes/storage.pipe';
+import * as QRCode from 'qrcode';
 
 @Component({
   selector: 'app-settings',
@@ -157,6 +158,8 @@ export class SettingsComponent implements OnInit {
   slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   originalSlug = signal<string>('');
   tenantId = signal<string>('');
+  showQRModal = signal(false);
+  qrCodeDataUrl = signal<string | null>(null);
 
   constructor(private fb: FormBuilder) {
     this.settingsForm = this.fb.group({
@@ -375,5 +378,72 @@ export class SettingsComponent implements OnInit {
     });
     this.snackbar.success(`Plantilla "${preset.name}" aplicada`);
     this.cdr.detectChanges();
+  }
+
+  async generateQR() {
+    const slug = this.settingsForm.get('publicSlug')?.value;
+    if (!slug) return;
+
+    const url = `${window.location.origin}/${slug}`;
+    try {
+      const canvas = document.createElement('canvas');
+      await QRCode.toCanvas(canvas, url, {
+        width: 1000,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const size = canvas.width;
+        const logoSize = size * 0.22;
+        const x = (size - logoSize) / 2;
+        const y = (size - logoSize) / 2;
+
+        // Draw background for logo (rounded white square)
+        ctx.fillStyle = '#ffffff';
+        const radius = logoSize * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + logoSize - radius, y);
+        ctx.quadraticCurveTo(x + logoSize, y, x + logoSize, y + radius);
+        ctx.lineTo(x + logoSize, y + logoSize - radius);
+        ctx.quadraticCurveTo(x + logoSize, y + logoSize, x + logoSize - radius, y + logoSize);
+        ctx.lineTo(x + radius, y + logoSize);
+        ctx.quadraticCurveTo(x, y + logoSize, x, y + logoSize - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw "A" logo
+        ctx.fillStyle = '#6366f1'; // Axenda Primary
+        ctx.font = `900 ${logoSize * 0.7}px system-ui, -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('A', size / 2, size / 2 + (logoSize * 0.05)); // Slight offset for visual balance
+      }
+
+      this.qrCodeDataUrl.set(canvas.toDataURL('image/png'));
+      this.showQRModal.set(true);
+      this.cdr.detectChanges();
+    } catch (err) {
+      console.error(err);
+      this.snackbar.error('Error al generar el código QR');
+    }
+  }
+
+  downloadQR() {
+    const dataUrl = this.qrCodeDataUrl();
+    if (!dataUrl) return;
+
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `qr-axenda-${this.settingsForm.get('publicSlug')?.value}.png`;
+    link.click();
   }
 }
