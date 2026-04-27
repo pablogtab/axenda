@@ -3,7 +3,9 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import * as bcrypt from 'bcrypt'
 import * as dotenv from 'dotenv'
-import { resolve } from 'path'
+import { resolve, join } from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 
 dotenv.config({ path: resolve(__dirname, '../../../.env'), override: true })
 
@@ -68,6 +70,46 @@ async function main() {
       users: true
     }
   })
+
+  // Copiar archivos de desarrollo (Logo y Banner)
+  console.log('🖼️  Configurando archivos de desarrollo...')
+  const uploadsDir = path.join(__dirname, '../uploads')
+  const tenantDir = path.join(uploadsDir, 'tenants', tenant.id)
+  const logosDir = path.join(tenantDir, 'logos')
+  const bannersDir = path.join(tenantDir, 'banners')
+
+  if (!fs.existsSync(logosDir)) fs.mkdirSync(logosDir, { recursive: true })
+  if (!fs.existsSync(bannersDir)) fs.mkdirSync(bannersDir, { recursive: true })
+
+  const devLogoPath = path.join(__dirname, '../development/barberhop_logo.png')
+  const devBannerPath = path.join(__dirname, '../development/test_banner.jfif')
+
+  let logoUrl = null
+  let bannerUrl = null
+
+  if (fs.existsSync(devLogoPath)) {
+    const logoName = 'barberhop_logo.png'
+    fs.copyFileSync(devLogoPath, path.join(logosDir, logoName))
+    logoUrl = `tenants/${tenant.id}/logos/${logoName}`
+    console.log('✅ Logo copiado')
+  }
+
+  if (fs.existsSync(devBannerPath)) {
+    const bannerName = 'test_banner.jfif'
+    fs.copyFileSync(devBannerPath, path.join(bannersDir, bannerName))
+    bannerUrl = `tenants/${tenant.id}/banners/${bannerName}`
+    console.log('✅ Banner copiado')
+  }
+
+  if (logoUrl || bannerUrl) {
+    await prisma.tenant.update({
+      where: { id: tenant.id },
+      data: {
+        logoUrl: logoUrl || undefined,
+        bannerUrl: bannerUrl || undefined
+      }
+    })
+  }
 
   const palermoBranch = tenant.branches.find(b => b.name === 'Sede Palermo')!
   const cortesCat = tenant.serviceCategories.find(c => c.name === 'Cortes')!
