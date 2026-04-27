@@ -22,30 +22,55 @@
     <h1 class="business-name">{{ tenant()!.name }}</h1>
   </section>
 
-  <!-- Stepper Nav -->
-  <nav class="stepper-nav">
-    @for (step of steps; track step.id; let i = $index) {
-      <div class="step-item" [class.active]="currentStep() === i + 1">
-        <span>{{ step.label }}</span>
+  <!-- Stepper Nav (Only show if not success) -->
+  <nav class="stepper-nav" *ngIf="!success()">
+    @for (step of steps(); track step.id; let i = $index) {
+      <div class="step-item" [class.active]="currentStep() === i + 1" [class.completed]="currentStep() > i + 1">
+        <span class="step-dot" *ngIf="currentStep() <= i + 1">{{ i + 1 }}</span>
+        <span class="step-dot check" *ngIf="currentStep() > i + 1">✓</span>
+        <span class="step-label">{{ step.label }}</span>
       </div>
-      @if (i < steps.length - 1) {
-        <span class="step-separator">›</span>
+      @if (i < steps().length - 1) {
+        <span class="step-line"></span>
       }
     }
   </nav>
 
-  <main class="booking-layout">
+  <main class="booking-layout" *ngIf="!success(); else successState">
     
     <!-- Step Content -->
     <div class="step-content">
       
-      <!-- Step 1: Servicios -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 1">
-        <div class="step-title-wrapper">
-          <div class="step-number">1</div>
-          <h2 class="step-title">Servicios</h2>
+      <!-- Step: Sucursal -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'branch'">
+        <div class="step-header">
+          <h2 class="step-title">¿A qué sucursal quieres ir?</h2>
+          <p class="step-description">Elige el local que más te convenga.</p>
         </div>
-        <p class="step-description">Elija el servicio que desea reservar</p>
+        <div class="grid gap-4">
+          @for (branch of availableBranches(); track branch.id) {
+            <div class="option-card" [class.selected]="selectedBranch()?.id === branch.id" (click)="selectBranch(branch)">
+              <div class="option-info">
+                <span class="option-icon">📍</span>
+                <div>
+                  <div class="option-name">{{ branch.name }}</div>
+                  <div class="option-sub">{{ branch.address }}</div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="step-footer">
+          <button class="btn-primary" [disabled]="!selectedBranch()" (click)="nextStep()">Continuar</button>
+        </div>
+      </div>
+
+      <!-- Step: Servicios -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'services'">
+        <div class="step-header">
+          <h2 class="step-title">¿Qué servicio necesitas?</h2>
+          <p class="step-description">Selecciona una de nuestras opciones para continuar.</p>
+        </div>
 
         <div class="service-list">
           @for (service of availableServices(); track service.id) {
@@ -53,7 +78,7 @@
                  [class.selected]="selectedService()?.id === service.id"
                  (click)="selectService(service)">
               <div class="service-info">
-                <div class="service-icon">
+                <div class="service-icon" [style.background-color]="service.color + '20'">
                   <span [style.color]="service.color">★</span>
                 </div>
                 <div>
@@ -65,89 +90,151 @@
             </div>
           }
         </div>
+        <div class="step-footer">
+          <button class="btn-back" *ngIf="currentStep() > 1" (click)="prevStep()">Volver</button>
+          <button class="btn-primary" [disabled]="!selectedService()" (click)="nextStep()">Continuar</button>
+        </div>
       </div>
 
-      <!-- Step 2: Fecha -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 2">
-        <div class="step-title-wrapper">
-          <div class="step-number">2</div>
-          <h2 class="step-title">Fecha</h2>
+      <!-- Step: Profesional -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'professional'">
+        <div class="step-header">
+          <h2 class="step-title">¿Con quién quieres atenderte?</h2>
+          <p class="step-description">Nuestros profesionales están listos para ayudarte.</p>
         </div>
-        <p class="step-description">Seleccione el día de su preferencia</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @for (prof of availableProfessionals(); track prof.id) {
+            <div class="professional-card" [class.selected]="selectedProfessional()?.id === prof.id" (click)="selectProfessional(prof)">
+              <div class="prof-photo-wrapper">
+                <img *ngIf="prof.photoUrl" [src]="prof.photoUrl | storage" class="prof-photo">
+                <div *ngIf="!prof.photoUrl" class="prof-photo placeholder">{{ prof.firstName.charAt(0) }}{{ prof.lastName.charAt(0) }}</div>
+              </div>
+              <div class="prof-name">{{ prof.firstName }} {{ prof.lastName }}</div>
+            </div>
+          }
+        </div>
+        <div class="step-footer">
+          <button class="btn-back" (click)="prevStep()">Volver</button>
+          <button class="btn-primary" [disabled]="!selectedProfessional()" (click)="nextStep()">Continuar</button>
+        </div>
+      </div>
 
-        <div class="grid grid-cols-1 gap-4">
-          <input type="date" 
-                 class="w-full p-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                 (change)="onDateChange($event)">
+      <!-- Step: Fecha -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'date'">
+        <div class="step-header">
+          <h2 class="step-title">¿Cuándo quieres venir?</h2>
+          <p class="step-description">Elige el día que mejor te quede.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+          <div class="calendar-wrapper">
+            <input type="date" 
+                   class="date-input"
+                   (change)="onDateChange($event)">
+          </div>
           
-          <div class="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
-            <span class="text-2xl">💡</span>
-            <p class="text-sm text-primary font-medium">Seleccione una fecha para ver los horarios disponibles.</p>
+          <div class="info-card">
+            <span class="info-icon">📅</span>
+            <p class="info-text">Mostraremos los horarios disponibles para el día seleccionado.</p>
           </div>
         </div>
+        <div class="step-footer">
+          <button class="btn-back" (click)="prevStep()">Volver</button>
+          <button class="btn-primary" [disabled]="!selectedDate()" (click)="nextStep()">Continuar</button>
+        </div>
       </div>
 
-      <!-- Step 3: Horario -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() === 3">
-        <div class="step-title-wrapper">
-          <div class="step-number">3</div>
-          <h2 class="step-title">Horario</h2>
+      <!-- Step: Horario -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'time'">
+        <div class="step-header">
+          <h2 class="step-title">Selecciona un horario</h2>
+          <p class="step-description">Disponibilidad para el {{ selectedDate() | date:'fullDate':'':'es' }}</p>
         </div>
-        <p class="step-description">Seleccione la hora que mejor le convenga</p>
 
-        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-          @for (time of ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00']; track time) {
-            <button class="p-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all font-bold text-sm"
-                    [class.bg-primary]="selectedTime() === time"
-                    [class.text-white]="selectedTime() === time"
-                    [class.border-primary]="selectedTime() === time"
+        <div class="loading-slots" *ngIf="loadingSlots()">
+          <div class="spinner-sm"></div>
+          <span>Buscando horarios libres...</span>
+        </div>
+
+        <div class="error-slots" *ngIf="slotError() && !loadingSlots()">
+          <span class="text-4xl block mb-2">⚠️</span>
+          <p>{{ slotError() }}</p>
+          <button (click)="currentStep.set(currentStep() - 1)" class="btn-text">Elegir otra fecha</button>
+        </div>
+
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" *ngIf="!loadingSlots() && !slotError()">
+          @for (time of availableSlots(); track time) {
+            <button class="time-button"
+                    [class.selected]="selectedTime() === time"
                     (click)="selectedTime.set(time)">
               {{ time }}
             </button>
+          } @empty {
+            <div class="empty-slots">
+              <span class="text-4xl block mb-2">😴</span>
+              <p>No hay horarios disponibles para este día.</p>
+              <button (click)="currentStep.set(currentStep() - 1)" class="btn-text">Elegir otra fecha</button>
+            </div>
           }
+        </div>
+        <div class="step-footer" *ngIf="availableSlots().length > 0">
+          <button class="btn-back" (click)="prevStep()">Volver</button>
+          <button class="btn-primary" [disabled]="!selectedTime()" (click)="nextStep()">Continuar</button>
         </div>
       </div>
 
-      <!-- Steps placeholder for 4, 5... -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStep() > 3">
-        <div class="step-title-wrapper">
-          <div class="step-number">{{ currentStep() }}</div>
-          <h2 class="step-title">{{ steps[currentStep() - 1].label }}</h2>
+      <!-- Step: Datos Personales -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'personal'">
+        <div class="step-header">
+          <h2 class="step-title">Ya casi estamos</h2>
+          <p class="step-description">Completa tus datos para finalizar la reserva.</p>
         </div>
-        <div class="flex flex-col items-center justify-center py-10 text-center">
-          <div class="w-full space-y-4 text-left">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Email</label>
-              <input type="email" placeholder="tu@email.com" class="w-full p-4 rounded-xl border border-border focus:border-primary outline-none">
+
+        <div class="form-container">
+          <div class="input-group">
+            <label>Nombre Completo</label>
+            <input type="text" [(ngModel)]="clientName" placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="input-group">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="clientEmail" placeholder="tu@email.com">
             </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Nombre Completo</label>
-              <input type="text" placeholder="Ej: Juan Pérez" class="w-full p-4 rounded-xl border border-border focus:border-primary outline-none">
+            <div class="input-group">
+              <label>Teléfono / WhatsApp</label>
+              <input type="tel" [(ngModel)]="clientPhone" placeholder="Ej: +54 9 351 ...">
             </div>
           </div>
+        </div>
+        <div class="step-footer">
+          <button class="btn-back" (click)="prevStep()">Volver</button>
+          <button class="btn-primary" 
+                  [disabled]="!canContinue() || isBooking()"
+                  (click)="confirmBooking()">
+            <span *ngIf="!isBooking()">Confirmar Reserva</span>
+            <div class="spinner-sm white" *ngIf="isBooking()"></div>
+          </button>
         </div>
       </div>
 
     </div>
 
-    <!-- Summary Sidebar -->
+    <!-- Summary Sidebar (Visible on Desktop) -->
     <aside class="summary-sidebar">
       <div class="summary-card">
-        <h3 class="summary-title">Resumen de tu reserva</h3>
-        <p class="summary-subtitle">Por favor verifica que los datos sean correctos antes de confirmar.</p>
-
+        <h3 class="summary-title">Resumen</h3>
+        
         <div class="summary-details">
-          
-          <!-- Dirección -->
-          <div class="summary-item">
+          <!-- Sucursal -->
+          <div class="summary-item" *ngIf="selectedBranch()">
             <div class="summary-icon">📍</div>
             <div class="flex flex-col">
-              <span class="summary-label">Dirección</span>
-              <span class="summary-value">{{ tenant()!.address || 'a (Canals, Córdoba)' }}</span>
+              <span class="summary-label">Ubicación</span>
+              <span class="summary-value">{{ selectedBranch()!.name }}</span>
             </div>
           </div>
 
-          <!-- Servicio Seleccionado -->
+          <!-- Servicio -->
           <div class="summary-item" *ngIf="selectedService()">
             <div class="summary-icon">✂️</div>
             <div class="flex flex-col">
@@ -156,57 +243,93 @@
             </div>
           </div>
 
+          <!-- Profesional -->
+          <div class="summary-item" *ngIf="selectedProfessional()">
+            <div class="summary-icon">👤</div>
+            <div class="flex flex-col">
+              <span class="summary-label">Profesional</span>
+              <span class="summary-value">{{ selectedProfessional()!.firstName }} {{ selectedProfessional()!.lastName }}</span>
+            </div>
+          </div>
+
           <!-- Fecha y Hora -->
-          <div class="grid grid-cols-2 gap-2 mt-4">
+          <div class="grid grid-cols-2 gap-4 mt-2">
             <div class="summary-item">
               <div class="summary-icon">📅</div>
               <div class="flex flex-col">
                 <span class="summary-label">Fecha</span>
-                <span class="summary-value">{{ selectedDate() ? (selectedDate() | date:'dd/MM/yyyy') : '--' }}</span>
+                <span class="summary-value">{{ selectedDate() ? (selectedDate() | date:'dd/MM/yy') : '--' }}</span>
               </div>
             </div>
             <div class="summary-item">
               <div class="summary-icon">🕒</div>
               <div class="flex flex-col">
-                <span class="summary-label">Horario</span>
+                <span class="summary-label">Hora</span>
                 <span class="summary-value">{{ selectedTime() || '--' }}</span>
               </div>
             </div>
           </div>
-
         </div>
 
-        <div class="flex flex-col gap-3 mt-8">
-          <button class="btn-continue" 
-                  [disabled]="!canContinue()"
-                  (click)="nextStep()">
-            {{ currentStep() === steps.length ? 'Confirmar Reserva' : 'Siguiente paso' }}
-          </button>
-          
-          <button *ngIf="currentStep() > 1" 
-                  (click)="prevStep()"
-                  class="text-xs font-bold text-text-muted uppercase tracking-widest hover:text-primary transition-colors">
-            Volver atrás
-          </button>
+        <div class="summary-footer">
+          <div class="total-price" *ngIf="selectedService()">
+            <span>Total</span>
+            <span class="price">${{ selectedService()!.price }}</span>
+          </div>
         </div>
       </div>
     </aside>
 
   </main>
+
+  <ng-template #successState>
+    <div class="success-container animate-in fade-in zoom-in duration-700">
+      <div class="success-card">
+        <div class="success-icon-wrapper">
+          <div class="success-icon">✓</div>
+        </div>
+        <h2 class="success-title">¡Turno Agendado!</h2>
+        <p class="success-message">Hola <strong>{{ clientName() }}</strong>, tu reserva para <strong>{{ selectedService()?.name }}</strong> ha sido confirmada.</p>
+        
+        <div class="success-details">
+          <div class="detail-row">
+            <span>Fecha</span>
+            <strong>{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Horario</span>
+            <strong>{{ selectedTime() }} hs</strong>
+          </div>
+          <div class="detail-row">
+            <span>Lugar</span>
+            <strong>{{ selectedBranch()?.name }} - {{ selectedBranch()?.address }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Atendido por</span>
+            <strong>{{ selectedProfessional()?.firstName }} {{ selectedProfessional()?.lastName }}</strong>
+          </div>
+        </div>
+
+        <div class="success-actions">
+          <button (click)="goToHome()" class="btn-text w-full">Agendar otro turno</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
 </div>
 
 <ng-template #loadingOrError>
   <div class="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
     <div *ngIf="loading()" class="flex flex-col items-center gap-6">
-      <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-text-muted font-medium">Cargando experiencia...</p>
+      <div class="loader-ripple"><div></div><div></div></div>
+      <p class="text-text-muted font-medium">Preparando tu experiencia...</p>
     </div>
 
     <div *ngIf="!loading() && error()" class="text-center space-y-4 max-w-sm">
-      <span class="text-6xl block mb-6">🔍</span>
-      <h2 class="text-2xl font-bold text-text-main">Negocio no encontrado</h2>
-      <p class="text-text-muted">El link que ingresaste no parece ser válido o el negocio no está activo.</p>
-      <button (click)="goToHome()" class="btn-continue !mt-8">
+      <span class="text-7xl block mb-6">🏜️</span>
+      <h2 class="text-2xl font-bold text-text-main">Página no encontrada</h2>
+      <p class="text-text-muted">El link que ingresaste no es válido o el negocio ya no está disponible.</p>
+      <button (click)="goToHome()" class="btn-primary !mt-8">
         Ir al Inicio
       </button>
     </div>

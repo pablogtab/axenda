@@ -20,6 +20,8 @@ export interface Tenant {
   textColor?: string;
   address?: string;
   active: boolean;
+  publicShowBranchSelection?: boolean;
+  publicShowProfessionalSelection?: boolean;
   services?: any[];
   branches?: any[];
 }
@@ -37,6 +39,8 @@ export interface UpdateTenantDto {
   accentColor?: string;
   backgroundColor?: string;
   textColor?: string;
+  publicShowBranchSelection?: boolean;
+  publicShowProfessionalSelection?: boolean;
 }
 
 @Injectable({

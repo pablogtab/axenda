@@ -16,6 +16,11 @@ model Tenant {
   textColor         String?    @default("#f8fafc")
   active     Boolean    @default(true)
   publicSlug String?    @unique
+  
+  // Public View Configurations
+  publicShowBranchSelection       Boolean @default(true)
+  publicShowProfessionalSelection Boolean @default(true)
+
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 

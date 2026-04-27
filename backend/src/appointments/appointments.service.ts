@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service'
 import { AvailabilityEngineService } from './availability-engine.service'
 import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
+import { CreatePublicAppointmentDto } from './dto/public-appointment.dto'
+import { BookingSource } from '@prisma/client'
 
 @Injectable()
 export class AppointmentsService {
@@ -184,5 +186,73 @@ export class AppointmentsService {
 
   async cancel(tenantId: string, id: string, userId: string) {
     return this.changeStatus(tenantId, id, userId, { status: 'CANCELLED' })
+  }
+
+  async createFromPublic(tenantId: string, dto: CreatePublicAppointmentDto) {
+    // 1. Validar IDs de negocio (ya validado en controller pero doble check es sano)
+    const professional = await this.prisma.professional.findFirst({ where: { id: dto.professionalId, tenantId } })
+    if (!professional) throw new NotFoundException('Profesional no encontrado')
+
+    const service = await this.prisma.service.findFirst({ where: { id: dto.serviceId, tenantId } })
+    if (!service) throw new NotFoundException('Servicio no encontrado')
+
+    const branch = await this.prisma.branch.findFirst({ where: { id: dto.branchId, tenantId } })
+    if (!branch) throw new NotFoundException('Sucursal no encontrada')
+
+    // 2. Buscar o Crear Cliente
+    let client = await this.prisma.client.findFirst({
+      where: {
+        tenantId,
+        OR: [
+          { email: dto.clientEmail },
+          { phone: dto.clientPhone }
+        ]
+      }
+    })
+
+    if (!client) {
+      client = await this.prisma.client.create({
+        data: {
+          tenantId,
+          firstName: dto.clientName.split(' ')[0],
+          lastName: dto.clientName.split(' ').slice(1).join(' ') || '',
+          email: dto.clientEmail,
+          phone: dto.clientPhone,
+        }
+      })
+    }
+
+    // 3. Calcular EndTime
+    const start = new Date(dto.startTime)
+    const end = new Date(start.getTime() + service.duration * 60000)
+
+    // 4. Crear turno en transacción
+    return this.prisma.$transaction(async (tx) => {
+      const appointment = await tx.appointment.create({
+        data: {
+          tenantId,
+          clientId: client!.id,
+          professionalId: dto.professionalId,
+          serviceId: dto.serviceId,
+          branchId: dto.branchId,
+          startTime: start,
+          endTime: end,
+          notes: dto.notes,
+          bookedVia: BookingSource.PUBLIC_LINK,
+          status: 'PENDING', // Por defecto los públicos quedan pendientes
+        },
+      })
+
+      await tx.appointmentLog.create({
+        data: {
+          appointmentId: appointment.id,
+          changedBy: 'CLIENT',
+          newStatus: appointment.status,
+          notes: 'Turno agendado vía link público',
+        },
+      })
+
+      return appointment
+    })
   }
 }

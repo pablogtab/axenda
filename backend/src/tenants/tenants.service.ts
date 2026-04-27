@@ -25,6 +25,7 @@ export class TenantsService {
       select: {
         id: true,
         name: true,
+        publicSlug: true,
         logoUrl: true,
         bannerUrl: true,
         primaryColor: true,
@@ -33,6 +34,8 @@ export class TenantsService {
         backgroundColor: true,
         textColor: true,
         mode: true,
+        publicShowBranchSelection: true,
+        publicShowProfessionalSelection: true,
         services: {
           where: { active: true },
           select: {
@@ -40,7 +43,20 @@ export class TenantsService {
             name: true,
             duration: true,
             price: true,
-            color: true
+            color: true,
+            professionals: {
+              select: {
+                professionalId: true,
+                professional: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    photoUrl: true
+                  }
+                }
+              }
+            }
           }
         },
         branches: {

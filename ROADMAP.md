@@ -54,11 +54,5 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [ ] **Tutoriales y Cursos**: Centro de ayuda integrado.
 - [ ] **Generación Automática de Servicios**: Templates por rubro al registrarse.
 
-
-
-
-
-
-
-
 - [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
+- [ ] **Pantalla de Sala de Espera**: Mostrar la agenda en un monitor para que los clientes vean el estado de los turnos.

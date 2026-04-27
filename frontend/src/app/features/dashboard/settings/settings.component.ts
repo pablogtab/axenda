@@ -181,7 +181,9 @@ export class SettingsComponent implements OnInit {
       primaryHoverColor: ['#4f46e5'],
       accentColor: ['#a855f7'],
       backgroundColor: ['#0a0b14'],
-      textColor: ['#f8fafc']
+      textColor: ['#f8fafc'],
+      publicShowBranchSelection: [true],
+      publicShowProfessionalSelection: [true]
     });
   }
 
@@ -291,7 +293,9 @@ export class SettingsComponent implements OnInit {
           primaryHoverColor: tenant.primaryHoverColor || '#4f46e5',
           accentColor: tenant.accentColor || '#a855f7',
           backgroundColor: tenant.backgroundColor || '#0a0b14',
-          textColor: tenant.textColor || '#f8fafc'
+          textColor: tenant.textColor || '#f8fafc',
+          publicShowBranchSelection: tenant.publicShowBranchSelection ?? true,
+          publicShowProfessionalSelection: tenant.publicShowProfessionalSelection ?? true
         });
 
         // Initial theme detection
@@ -330,7 +334,9 @@ export class SettingsComponent implements OnInit {
       primaryHoverColor: values.primaryHoverColor,
       accentColor: values.accentColor,
       backgroundColor: values.backgroundColor,
-      textColor: values.textColor
+      textColor: values.textColor,
+      publicShowBranchSelection: values.publicShowBranchSelection,
+      publicShowProfessionalSelection: values.publicShowProfessionalSelection
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');
