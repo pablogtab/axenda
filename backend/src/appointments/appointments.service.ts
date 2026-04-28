@@ -222,11 +222,23 @@ export class AppointmentsService {
       })
     }
 
-    // 3. Calcular EndTime
+    // 3. Validar disponibilidad
     const start = new Date(dto.startTime)
+    const isAvailable = await this.engine.isSlotAvailable(tenantId, {
+      professionalId: dto.professionalId,
+      serviceId: dto.serviceId,
+      branchId: dto.branchId,
+      startTime: start,
+    })
+
+    if (!isAvailable) {
+      throw new BadRequestException('El horario seleccionado ya no está disponible')
+    }
+
+    // 4. Calcular EndTime
     const end = new Date(start.getTime() + service.duration * 60000)
 
-    // 4. Crear turno en transacción
+    // 5. Crear turno en transacción
     return this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
@@ -256,3 +268,4 @@ export class AppointmentsService {
     })
   }
 }
+

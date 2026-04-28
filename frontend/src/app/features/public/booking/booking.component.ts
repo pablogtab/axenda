@@ -60,7 +60,8 @@ export class BookingComponent implements OnInit {
   selectedDate = signal<Date | null>(null);
   selectedTime = signal<string | null>(null);
   
-  availableSlots = signal<string[]>([]);
+  availableSlots = signal<{ time: string; available: boolean }[]>([]);
+
   loadingSlots = signal(false);
   slotError = signal<string | null>(null);
 

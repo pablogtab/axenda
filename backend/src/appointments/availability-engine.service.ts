@@ -4,150 +4,120 @@ import { GetAvailabilityDto } from './dto/availability-query.dto'
 
 @Injectable()
 export class AvailabilityEngineService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
-   * Calcula los "slots" libres para un profesional, un servicio, y un día.
+   * Calcula todos los slots potenciales y marca cuáles están disponibles.
    */
-  async getFreeSlots(tenantId: string, dto: GetAvailabilityDto) {
+  async getFreeSlots(tenantId: string, dto: GetAvailabilityDto): Promise<{ time: string; available: boolean }[]> {
     const { professionalId, serviceId, branchId, date, duration } = dto
 
-    // 1. Obtener datos clave: duración del servicio
     const service = await this.prisma.service.findFirst({
-      where: { id: serviceId, tenantId, active: true },
+      where: { id: serviceId, tenantId },
     })
-    if (!service) throw new BadRequestException('Servicio no encontrado o inactivo')
+    const durationMins = duration || service?.duration || 30
 
-    const durationMins = duration || service.duration
-
-    // 2. Determinar el día de la semana (0 = Sunday, 1 = Monday...)
     const targetDate = new Date(date)
-    if (isNaN(targetDate.getTime())) {
-      throw new BadRequestException('Formato de fecha inválido')
-    }
-    
-    // Normalizar fechas para comparación (solo fecha, sin hora)
-    const startOfDay = new Date(targetDate)
-    startOfDay.setUTCHours(0, 0, 0, 0)
-    
-    const endOfDay = new Date(targetDate)
-    endOfDay.setUTCHours(23, 59, 59, 999)
-
     const dayOfWeek = targetDate.getUTCDay()
 
-    // 3. Buscar disponibilidad del profesional (horarios fijos de la semana)
     const availabilities = await this.prisma.availability.findMany({
-      where: {
-        professionalId,
-        dayOfWeek,
-        branchId,
-      },
+      where: { professionalId, dayOfWeek, branchId },
     })
+    if (availabilities.length === 0) return []
 
-    if (availabilities.length === 0) {
-      return [] // No trabaja este día en esta sucursal
-    }
+    const startOfDay = new Date(date)
+    const endOfDay = new Date(date)
+    endOfDay.setUTCHours(23, 59, 59, 999)
 
-    // 4. Buscar excepciones (vacaciones o bloqueos parciales) que afecten este día
-    // Ahora soportamos rangos (endDate)
-    const exceptions = await this.prisma.availabilityException.findMany({
-      where: {
-        professionalId,
-        OR: [
-          // Caso A: La excepción empieza hoy (con o sin fin)
-          { date: { gte: startOfDay, lte: endOfDay } },
-          // Caso B: El día de hoy está "atrapado" entre date y endDate
-          {
-            AND: [
-              { date: { lte: startOfDay } },
-              { endDate: { gte: startOfDay } }
-            ]
-          }
-        ]
-      },
-    })
+    const [appointments, exceptions] = await Promise.all([
+      this.prisma.appointment.findMany({
+        where: {
+          professionalId,
+          tenantId,
+          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+          startTime: { gte: startOfDay, lte: endOfDay },
+        }
+      }),
+      this.prisma.availabilityException.findMany({
+        where: {
+          professionalId,
+          date: { gte: startOfDay, lte: endOfDay }
+        }
+      })
+    ])
 
-    // Si hay una excepción de día completo, devolvemos vacío
-    // Los tipos HOLIDAY y LEAVE se consideran de día completo por defecto.
-    // BLOCK puede ser parcial si tiene startTime.
-    const fullDayTypes = ['HOLIDAY', 'LEAVE']
-    const isFullDayBlocked = exceptions.some(e => 
-      fullDayTypes.includes(e.type) || (e.type === 'BLOCK' && !e.startTime)
-    )
-    
+    const isFullDayBlocked = exceptions.some(e => e.type === 'HOLIDAY' || e.type === 'LEAVE' || (e.type === 'BLOCK' && !e.startTime))
     if (isFullDayBlocked) return []
 
-    // 5. Buscar turnos (Appointments) ya agendados
-    const appointments = await this.prisma.appointment.findMany({
-      where: {
-        professionalId,
-        tenantId,
-        status: {
-          notIn: ['CANCELLED', 'NO_SHOW'],
-        },
-        startTime: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-      select: { startTime: true, endTime: true },
-    })
+    // Offset para Argentina (UTC-3)
+    const offsetMins = -180; 
 
-    // 6. Calcular slots
-    const bookedRanges = appointments.map((app) => ({
-      start: app.startTime.getUTCHours() * 60 + app.startTime.getUTCMinutes(),
-      end: app.endTime.getUTCHours() * 60 + app.endTime.getUTCMinutes(),
+    // Obtener minutos actuales si estamos consultando para "hoy"
+    const now = new Date()
+    const todayStr = now.toISOString().split('T')[0]
+    const currentMinsNow = (now.getUTCHours() * 60 + now.getUTCMinutes()) + offsetMins
+
+    const bookedRanges = appointments.map(app => ({
+      start: (app.startTime.getUTCHours() * 60 + app.startTime.getUTCMinutes()) + offsetMins,
+      end: (app.endTime.getUTCHours() * 60 + app.endTime.getUTCMinutes()) + offsetMins,
     }))
 
-    // Agregar bloqueos parciales (excepciones BLOCK con horas)
-    exceptions.forEach((ex) => {
+    exceptions.forEach(ex => {
       if (ex.type === 'BLOCK' && ex.startTime && ex.endTime) {
         bookedRanges.push({
           start: this.timeToMins(ex.startTime),
-          end: this.timeToMins(ex.endTime),
+          end: this.timeToMins(ex.endTime)
         })
       }
     })
 
-    bookedRanges.sort((a, b) => a.start - b.start)
-
-    const freeSlots: string[] = []
+    const allSlots: { time: string; available: boolean }[] = []
+    const step = 15
 
     for (const block of availabilities) {
-      let currentMins = this.timeToMins(block.startTime)
-      const endMins = this.timeToMins(block.endTime)
-      const step = 15 
+      let current = this.timeToMins(block.startTime)
+      const limit = this.timeToMins(block.endTime)
 
-      while (currentMins + durationMins <= endMins) {
-        const slotEnd = currentMins + durationMins
-        let hasConflict = false
+      while (current + durationMins <= limit) {
+        const currentEnd = current + durationMins
         
-        for (const b of bookedRanges) {
-          if (currentMins < b.end && slotEnd > b.start) {
-            hasConflict = true
-            break
-          }
-        }
+        // 1. Verificar conflicto con turnos/bloqueos
+        const hasConflict = bookedRanges.some(b => current < b.end && currentEnd > b.start)
+        
+        // 2. Verificar si el horario ya pasó (si es hoy)
+        const isPast = date === todayStr && current <= currentMinsNow
 
-        if (!hasConflict) {
-          freeSlots.push(this.minsToTime(currentMins))
-        }
-
-        currentMins += step
+        allSlots.push({
+          time: this.minsToTime(current),
+          available: !hasConflict && !isPast
+        })
+        current += step
       }
     }
 
-    return [...new Set(freeSlots)]
+    return allSlots
   }
 
-  private timeToMins(time: string): number {
-    const [h, m] = time.split(':').map(Number)
+  async isSlotAvailable(tenantId: string, data: any): Promise<boolean> {
+    const dateStr = new Date(data.startTime).toISOString().split('T')[0]
+    const slots = await this.getFreeSlots(tenantId, { ...data, date: dateStr })
+    
+    const date = new Date(data.startTime)
+    const mins = (date.getUTCHours() * 60 + date.getUTCMinutes()) - 180
+    const timeStr = this.minsToTime(mins)
+    
+    return slots.find(s => s.time === timeStr)?.available || false
+  }
+
+
+  private timeToMins(t: string): number {
+    const [h, m] = t.split(':').map(Number)
     return h * 60 + m
   }
 
-  private minsToTime(mins: number): string {
-    const h = Math.floor(mins / 60)
-    const m = mins % 60
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+  private minsToTime(m: number): string {
+    const hh = Math.floor(m / 60).toString().padStart(2, '0')
+    const mm = (m % 60).toString().padStart(2, '0')
+    return `${hh}:${mm}`
   }
 }

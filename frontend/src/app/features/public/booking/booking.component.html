@@ -163,11 +163,13 @@
         </div>
 
         <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" *ngIf="!loadingSlots() && !slotError()">
-          @for (time of availableSlots(); track time) {
+          @for (slot of availableSlots(); track slot.time) {
             <button class="time-button"
-                    [class.selected]="selectedTime() === time"
-                    (click)="selectedTime.set(time)">
-              {{ time }}
+                    [class.selected]="selectedTime() === slot.time"
+                    [class.unavailable]="!slot.available"
+                    [disabled]="!slot.available"
+                    (click)="slot.available && selectedTime.set(slot.time)">
+              {{ slot.time }}
             </button>
           } @empty {
             <div class="empty-slots">
@@ -335,3 +337,21 @@
     </div>
   </div>
 </ng-template>
+
+<style>
+.time-button.selected {
+  background: var(--booking-primary);
+  border-color: var(--booking-primary);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+.time-button.unavailable {
+  opacity: 0.4;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--booking-border), transparent 50%);
+  border-style: dashed;
+}
+</style>
