@@ -3,7 +3,9 @@ import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { BehaviorSubject, catchError, filter, map, switchMap, take, throwError } from 'rxjs';
 
-// Estado global para manejar múltiples peticiones 401 simultáneas
+/**
+ * Global state to handle multiple simultaneous 401 requests
+ */
 let isRefreshing = false;
 let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
@@ -11,34 +13,31 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getAccessToken();
 
+  // Exclude auth endpoints from adding the token or handling refresh logic
   const isAuthRequest = req.url.includes('/auth/');
   
   let authReq = req;
-  // Solo añadimos el token si lo tenemos y no es una petición de autenticación
   if (token && !isAuthRequest) {
     authReq = addToken(req, token);
   }
 
-  // Acción preventiva: si el token está por expirar o ya expiró, refrescamos antes de la petición
-  if (token && !isAuthRequest && authService.isTokenExpired()) {
-    return handle401Error(req, next, authService);
-  }
-
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si el error es 401 y no es login, refresh o logout
-      const isExcluded = req.url.includes('/auth/login') || 
-                        req.url.includes('/auth/refresh') || 
-                        req.url.includes('/auth/logout');
-
-      if (error.status === 401 && !isExcluded) {
+      // Check if error is specifically 'TOKEN_EXPIRED' sent by the backend
+      // With our backend exception filter, errorCode can be in body.errorCode or body.error.errorCode
+      const body = error.error;
+      const errorCode = body?.errorCode || body?.error?.errorCode;
+      const isExpired = error.status === 401 && errorCode === 'TOKEN_EXPIRED';
+      
+      if (isExpired && !isAuthRequest) {
         return handle401Error(req, next, authService);
       }
+      
       return throwError(() => error);
     }),
     map(event => {
-      // Desenvolver el wrapper 'data' de la respuesta si existe
-      // Se hace después del catchError para que aplique también a las peticiones reintentadas
+      // Unwrap backend 'data' wrapper if present.
+      // This happens AFTER catchError, ensuring retried requests are also unwrapped.
       if (
         event instanceof HttpResponse && 
         event.body !== null && 
@@ -53,7 +52,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 };
 
 /**
- * Añade el token de autorización a la cabecera
+ * Adds the Authorization header to the request
  */
 function addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
   return request.clone({
@@ -64,42 +63,32 @@ function addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
 }
 
 /**
- * Maneja el error 401 renovando el token o esperando a que otra petición lo renueve
+ * Handles 401 errors by refreshing the token and retrying the request
  */
 function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, authService: AuthService) {
   if (!isRefreshing) {
     isRefreshing = true;
-    
-    // Si el subject tenía un error de un intento fallido anterior, lo reseteamos
-    if (refreshTokenSubject.hasError) {
-      // No se puede resetear un BehaviorSubject que ha fallado, así que usamos next(null) 
-      // si fuera posible, pero en realidad lo mejor es manejarlo con cuidado.
-      // En Angular, los interceptores son funciones, pero las variables de módulo persisten.
-    }
-    
     refreshTokenSubject.next(null);
 
     return authService.refreshToken().pipe(
       switchMap((response: any) => {
         isRefreshing = false;
-        // El response ya viene "limpio" (unwrapped) por el map del interceptor
-        const newToken = response.accessToken || response;
+        
+        // The response is already unwrapped by the interceptor's map
+        // so response is the actual AuthData object
+        const newToken = response.accessToken;
         refreshTokenSubject.next(newToken);
+        
         return next(addToken(request, newToken));
       }),
       catchError((err) => {
         isRefreshing = false;
-        // Notificar a otros que están esperando que el refresco falló
-        const subjectToError = refreshTokenSubject;
-        refreshTokenSubject = new BehaviorSubject<string | null>(null);
-        subjectToError.error(err);
-        
         authService.logout();
         return throwError(() => err);
       })
     );
   } else {
-    // Si ya hay un refresh en curso, esperamos a que termine
+    // If a refresh is already in progress, wait for the new token
     return refreshTokenSubject.pipe(
       filter(token => token !== null),
       take(1),
