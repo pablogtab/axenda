@@ -24,7 +24,7 @@ export class ProfessionalsService {
       include: {
         branches: { include: { branch: true } },
         services: { include: { service: true } },
-        availability: true,
+        availability: branchId ? { where: { branchId } } : true,
         exceptions: true,
         user: { select: { email: true } },
       },

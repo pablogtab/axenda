@@ -17,17 +17,20 @@ export class AvailabilityEngineService {
     })
     const durationMins = duration || service?.duration || 30
 
-    const targetDate = new Date(date)
-    const dayOfWeek = targetDate.getUTCDay()
+    const targetDate = new Date(date + 'T12:00:00Z')
+    let dayOfWeek = targetDate.getUTCDay()
+    if (dayOfWeek === 0) dayOfWeek = 7 // Domingo es 7, no 0
 
     const availabilities = await this.prisma.availability.findMany({
       where: { professionalId, dayOfWeek, branchId },
     })
+
+    console.log({ dayOfWeek, availabilities, professionalId, branchId })
+
     if (availabilities.length === 0) return []
 
-    const startOfDay = new Date(date)
-    const endOfDay = new Date(date)
-    endOfDay.setUTCHours(23, 59, 59, 999)
+    const startOfDay = new Date(date + 'T00:00:00Z')
+    const endOfDay = new Date(date + 'T23:59:59Z')
 
     const [appointments, exceptions] = await Promise.all([
       this.prisma.appointment.findMany({
@@ -58,7 +61,7 @@ export class AvailabilityEngineService {
     const offsetMins = -180;
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { 
+      select: {
         publicMaxOverlapMins: true,
         publicMaxBookingDays: true,
         publicMinBookingTime: true,
@@ -73,9 +76,12 @@ export class AvailabilityEngineService {
     const now = new Date()
     const maxDate = new Date()
     maxDate.setDate(maxDate.getDate() + maxBookingDays)
-    if (targetDate > maxDate) return []
 
-    const todayStr = now.toISOString().split('T')[0]
+    // Comparación segura de fechas (solo día)
+    const checkTarget = new Date(date + 'T12:00:00Z')
+    if (checkTarget > maxDate) return []
+
+    const todayStr = new Date(now.getTime() + (offsetMins * 60000)).toISOString().split('T')[0]
     const currentMinsNow = (now.getUTCHours() * 60 + now.getUTCMinutes()) + offsetMins
     const minBookingMins = this.parseTimeToMins(minBookingTimeStr)
 
@@ -106,9 +112,9 @@ export class AvailabilityEngineService {
           const conflict = (current < (b.end - allowedOverlap)) && (currentEnd > (b.start + allowedOverlap));
           return conflict;
         })
-        
+
         const isTooSoon = date === todayStr && current < (currentMinsNow + minBookingMins)
-        
+
         allSlots.push({
           time: this.minsToTime(current),
           available: !hasConflict && !isTooSoon
@@ -129,11 +135,14 @@ export class AvailabilityEngineService {
   }
 
   async isSlotAvailable(tenantId: string, data: any): Promise<boolean> {
-    const dateStr = new Date(data.startTime).toISOString().split('T')[0]
+    const start = new Date(data.startTime)
+    // Ajustar a la hora local de Argentina para obtener el string de fecha correcto
+    const localDate = new Date(start.getTime() + (-180 * 60000))
+    const dateStr = localDate.toISOString().split('T')[0]
+
     const slots = await this.getFreeSlots(tenantId, { ...data, date: dateStr })
 
-    const date = new Date(data.startTime)
-    const mins = (date.getUTCHours() * 60 + date.getUTCMinutes()) - 180
+    const mins = (start.getUTCHours() * 60 + start.getUTCMinutes()) - 180
     const timeStr = this.minsToTime(mins)
 
     return slots.find(s => s.time === timeStr)?.available || false

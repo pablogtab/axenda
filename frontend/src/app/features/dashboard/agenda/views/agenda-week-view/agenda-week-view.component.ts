@@ -339,7 +339,9 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   isProfessionalAvailableAt(prof: Professional, date: Date, slot: string): boolean {
-    const dayOfWeek = date.getDay();
+    let dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) dayOfWeek = 7; // Ajuste para nuestro estándar 1=Lun, 7=Dom
+
     const isOut = prof.exceptions?.some(ex => {
       const start = startOfLocalDate(parseISODateToLocal(ex.date));
       const end = ex.endDate ? startOfLocalDate(parseISODateToLocal(ex.endDate)) : start;
@@ -348,7 +350,11 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     });
     if (isOut) return false;
 
-    const blocks = prof.availability?.filter(a => a.dayOfWeek === dayOfWeek) || [];
+    const currentBranchId = this.branchId();
+    const blocks = prof.availability?.filter(a => 
+      a.dayOfWeek === dayOfWeek && 
+      (!currentBranchId || a.branchId === currentBranchId)
+    ) || [];
     return blocks.some(b => slot >= b.startTime && slot < b.endTime);
   }
 

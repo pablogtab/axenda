@@ -119,69 +119,83 @@
         </div>
       </div>
 
-      <!-- Step: Fecha -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'date'">
+      <!-- Step: Schedule (Fecha y Horario) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'schedule'">
         <div class="step-header">
           <h2 class="step-title">¿Cuándo quieres venir?</h2>
-          <p class="step-description">Elige el día que mejor te quede.</p>
+          <p class="step-description">Selecciona el día y luego el horario que prefieras.</p>
         </div>
 
-        <div class="grid grid-cols-1 gap-6">
-          <div class="calendar-wrapper">
-            <input type="date" 
-                   class="date-input"
-                   (change)="onDateChange($event)">
+        <div class="schedule-container">
+          <!-- Custom Calendar -->
+          <div class="calendar-card">
+            <div class="calendar-header">
+              <button (click)="prevMonth()" class="calendar-nav-btn">‹</button>
+              <h3 class="current-month">{{ currentMonth() | date:'MMMM yyyy':'':'es' | titlecase }}</h3>
+              <button (click)="nextMonth()" class="calendar-nav-btn">›</button>
+            </div>
+            <div class="calendar-grid">
+              <div class="weekday">Dom</div>
+              <div class="weekday">Lun</div>
+              <div class="weekday">Mar</div>
+              <div class="weekday">Mié</div>
+              <div class="weekday">Jue</div>
+              <div class="weekday">Vie</div>
+              <div class="weekday">Sáb</div>
+              
+              @for (day of calendarDays(); track day.day + day.month) {
+                <button 
+                  class="day-cell"
+                  [class.padding]="day.isPadding"
+                  [class.today]="day.isToday"
+                  [class.selected]="selectedDate()?.getTime() === day.date?.getTime()"
+                  [class.unavailable]="!day.hasAvailability && !day.isPadding && !day.isPast"
+                  [class.past]="day.isPast"
+                  [disabled]="day.isPadding || day.isPast || (!day.hasAvailability && !day.isPadding)"
+                  (click)="day.date && selectDate(day.date)">
+                  {{ day.day }}
+                </button>
+              }
+            </div>
           </div>
-          
-          <div class="info-card">
-            <span class="info-icon">📅</span>
-            <p class="info-text">Mostraremos los horarios disponibles para el día seleccionado.</p>
+
+          <!-- Time Slots -->
+          <div class="slots-card">
+            <div class="slots-header" *ngIf="selectedDate()">
+              <h3 class="slots-title">Horarios para el {{ selectedDate() | date:'dd/MM' }}</h3>
+            </div>
+
+            <div class="slots-placeholder" *ngIf="!selectedDate()">
+              <span class="text-3xl mb-2">👈</span>
+              <p>Selecciona un día del calendario</p>
+            </div>
+
+            <div class="loading-slots" *ngIf="loadingSlots()">
+              <div class="spinner-sm"></div>
+              <span>Buscando...</span>
+            </div>
+
+            <div class="slots-grid" *ngIf="selectedDate() && !loadingSlots()">
+              @for (slot of availableSlots(); track slot.time) {
+                <button class="time-button"
+                        [class.selected]="selectedTime() === slot.time"
+                        [class.unavailable]="!slot.available"
+                        [disabled]="!slot.available"
+                        (click)="slot.available && selectedTime.set(slot.time)">
+                  {{ slot.time }}
+                </button>
+              } @empty {
+                <div class="empty-slots" *ngIf="!loadingSlots()">
+                  <p>Sin disponibilidad</p>
+                </div>
+              }
+            </div>
           </div>
         </div>
+
         <div class="step-footer">
           <button class="btn-back" (click)="prevStep()">Volver</button>
-          <button class="btn-primary" [disabled]="!selectedDate()" (click)="nextStep()">Continuar</button>
-        </div>
-      </div>
-
-      <!-- Step: Horario -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'time'">
-        <div class="step-header">
-          <h2 class="step-title">Selecciona un horario</h2>
-          <p class="step-description">Disponibilidad para el {{ selectedDate() | date:'fullDate':'':'es' }}</p>
-        </div>
-
-        <div class="loading-slots" *ngIf="loadingSlots()">
-          <div class="spinner-sm"></div>
-          <span>Buscando horarios libres...</span>
-        </div>
-
-        <div class="error-slots" *ngIf="slotError() && !loadingSlots()">
-          <span class="text-4xl block mb-2">⚠️</span>
-          <p>{{ slotError() }}</p>
-          <button (click)="currentStep.set(currentStep() - 1)" class="btn-text">Elegir otra fecha</button>
-        </div>
-
-        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" *ngIf="!loadingSlots() && !slotError()">
-          @for (slot of availableSlots(); track slot.time) {
-            <button class="time-button"
-                    [class.selected]="selectedTime() === slot.time"
-                    [class.unavailable]="!slot.available"
-                    [disabled]="!slot.available"
-                    (click)="slot.available && selectedTime.set(slot.time)">
-              {{ slot.time }}
-            </button>
-          } @empty {
-            <div class="empty-slots">
-              <span class="text-4xl block mb-2">😴</span>
-              <p>No hay horarios disponibles para este día.</p>
-              <button (click)="currentStep.set(currentStep() - 1)" class="btn-text">Elegir otra fecha</button>
-            </div>
-          }
-        </div>
-        <div class="step-footer" *ngIf="availableSlots().length > 0">
-          <button class="btn-back" (click)="prevStep()">Volver</button>
-          <button class="btn-primary" [disabled]="!selectedTime()" (click)="nextStep()">Continuar</button>
+          <button class="btn-primary" [disabled]="!selectedDate() || !selectedTime()" (click)="nextStep()">Continuar</button>
         </div>
       </div>
 

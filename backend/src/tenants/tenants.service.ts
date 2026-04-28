@@ -52,7 +52,9 @@ export class TenantsService {
                     id: true,
                     firstName: true,
                     lastName: true,
-                    photoUrl: true
+                    photoUrl: true,
+                    availability: true,
+                    exceptions: true
                   }
                 }
               }

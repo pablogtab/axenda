@@ -5,7 +5,7 @@ model Availability {
   professionalId String
   professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   branchId       String?
-  dayOfWeek      Int // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  dayOfWeek      Int // 1 = Lunes, ..., 7 = Domingo
   startTime      String // "09:00"
   endTime        String // "18:00"
 

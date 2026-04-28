@@ -46,8 +46,7 @@ export class BookingComponent implements OnInit {
       dynamicSteps.push({ id: 'professional', label: 'Profesional' });
     }
 
-    dynamicSteps.push({ id: 'date', label: 'Fecha' });
-    dynamicSteps.push({ id: 'time', label: 'Horario' });
+    dynamicSteps.push({ id: 'schedule', label: 'Horario' });
     dynamicSteps.push({ id: 'personal', label: 'Tus Datos' });
 
     return dynamicSteps;
@@ -92,6 +91,15 @@ export class BookingComponent implements OnInit {
     };
   });
 
+  // Calendar State
+  currentMonth = signal<Date>(new Date());
+  calendarDays = computed(() => {
+    // Dependencias para que se regenere al cambiar estos valores
+    this.selectedProfessional();
+    this.selectedBranch();
+    return this.generateCalendar(this.currentMonth());
+  });
+
   constructor() {
     effect(() => {
       const date = this.selectedDate();
@@ -100,10 +108,90 @@ export class BookingComponent implements OnInit {
       const prof = this.selectedProfessional();
       const tenant = this.tenant();
 
-      if (date && service && branch && prof && tenant && this.currentStepId() === 'time') {
+      if (date && service && branch && prof && tenant && this.currentStepId() === 'schedule') {
         this.loadAvailability();
       }
     });
+  }
+
+  private generateCalendar(monthDate: Date) {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const days = [];
+    
+    // Padding start (previous month days)
+    const startPadding = firstDay.getDay(); // 0 = Sunday
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startPadding - 1; i >= 0; i--) {
+      days.push({
+        day: prevMonthLastDay - i,
+        month: month - 1,
+        year,
+        isPadding: true
+      });
+    }
+    
+    // Current month days
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      const d = new Date(year, month, i);
+      const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay();
+      const prof = this.selectedProfessional();
+      const branch = this.selectedBranch();
+      
+      let hasAvailability = false;
+      if (prof && branch) {
+        // 1. Check weekly schedule
+        const weeklyMatch = prof.availability?.some((a: any) => 
+          a.dayOfWeek === dayOfWeek && a.branchId === branch.id
+        );
+
+        // 2. Check if it's a holiday/leave for this professional
+        const isOut = prof.exceptions?.some((ex: any) => {
+          const exDate = new Date(ex.date);
+          exDate.setHours(0,0,0,0);
+          const end = ex.endDate ? new Date(ex.endDate) : exDate;
+          end.setHours(0,0,0,0);
+          return d >= exDate && d <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
+        });
+
+        hasAvailability = !!weeklyMatch && !isOut;
+      }
+
+      days.push({
+        day: i,
+        month,
+        year,
+        isPadding: false,
+        isToday: d.getTime() === today.getTime(),
+        isPast: d.getTime() < today.getTime(),
+        hasAvailability,
+        date: d
+      });
+    }
+    
+    return days;
+  }
+
+  nextMonth() {
+    const current = this.currentMonth();
+    this.currentMonth.set(new Date(current.getFullYear(), current.getMonth() + 1, 1));
+  }
+
+  prevMonth() {
+    const current = this.currentMonth();
+    this.currentMonth.set(new Date(current.getFullYear(), current.getMonth() - 1, 1));
+  }
+
+  selectDate(date: Date) {
+    this.selectedDate.set(date);
+    this.selectedTime.set(null); // Reset time when date changes
   }
 
   ngOnInit() {
@@ -192,21 +280,12 @@ export class BookingComponent implements OnInit {
     this.selectedProfessional.set(prof);
   }
 
-  onDateChange(event: any) {
-    const dateStr = event.target.value;
-    if (dateStr) {
-      const [year, month, day] = dateStr.split('-').map(Number);
-      this.selectedDate.set(new Date(year, month - 1, day));
-    }
-  }
-
   canContinue(): boolean {
     const stepId = this.currentStepId();
     if (stepId === 'branch') return !!this.selectedBranch();
     if (stepId === 'services') return !!this.selectedService();
     if (stepId === 'professional') return !!this.selectedProfessional();
-    if (stepId === 'date') return !!this.selectedDate();
-    if (stepId === 'time') return !!this.selectedTime();
+    if (stepId === 'schedule') return !!this.selectedDate() && !!this.selectedTime();
     if (stepId === 'personal') return !!this.clientName().trim() && !!this.clientEmail().trim() && !!this.clientPhone().trim();
     return true;
   }

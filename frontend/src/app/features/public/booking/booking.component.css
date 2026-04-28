@@ -715,28 +715,195 @@
   100% { top: 0px; left: 0px; width: 72px; height: 72px; opacity: 0; }
 }
 
-.loading-slots, .error-slots {
+/* Schedule Container (Merged Date & Time) */
+.schedule-container {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 2rem;
+  min-height: 400px;
+}
+
+@media (max-width: 768px) {
+  .schedule-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calendar-card {
+  background: var(--booking-bg);
+  border-radius: 24px;
+  padding: 1.5rem;
+  border: 1px solid var(--booking-border);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.current-month {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--booking-text-main);
+}
+
+.calendar-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--booking-surface);
+  color: var(--booking-text-main);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--booking-primary);
+  color: white;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--booking-text-muted);
+  text-transform: uppercase;
+  padding-bottom: 8px;
+}
+
+.day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: var(--booking-text-main);
+}
+
+.day-cell:hover:not(.padding):not(.selected) {
+  background: var(--booking-primary-soft);
+  color: var(--booking-primary);
+}
+
+.day-cell.today {
+  color: var(--booking-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 800;
+}
+
+.day-cell.selected {
+  background: var(--booking-primary);
+  color: white;
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+  transform: scale(1.1);
+  z-index: 2;
+}
+
+.day-cell.unavailable {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--booking-border), transparent 80%);
+}
+
+.day-cell.past {
+  opacity: 0.2;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.day-cell.padding {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Slots Card */
+.slots-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.slots-header {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--booking-border);
+}
+
+.slots-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--booking-text-main);
+}
+
+.slots-placeholder {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 3rem;
-  color: var(--booking-text-muted);
-  font-weight: 600;
+  justify-content: center;
   text-align: center;
+  color: var(--booking-text-muted);
+  font-size: 0.875rem;
+  border: 2px dashed var(--booking-border);
+  border-radius: 24px;
+  padding: 2rem;
 }
 
-.error-slots p {
-  color: #ef4444;
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 400px;
+  padding-right: 4px;
 }
 
-.empty-slots {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 3rem;
-  background: var(--booking-bg);
-  border-radius: 20px;
-  color: var(--booking-text-muted);
+.slots-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.slots-grid::-webkit-scrollbar-thumb {
+  background: var(--booking-border);
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .slots-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.total-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px dashed var(--booking-border);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.total-price .price {
+  font-size: 1.75rem;
+  color: var(--booking-primary);
 }
 
 /* Animations */
