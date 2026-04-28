@@ -25,8 +25,6 @@ export class AvailabilityEngineService {
       where: { professionalId, dayOfWeek, branchId },
     })
 
-    console.log({ dayOfWeek, availabilities, professionalId, branchId })
-
     if (availabilities.length === 0) return []
 
     const startOfDay = new Date(date + 'T00:00:00Z')
