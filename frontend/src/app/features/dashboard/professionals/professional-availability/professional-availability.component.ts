@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfessionalsService, Professional, Availability, AvailabilityException } from '@services/professionals.service';
 import { SnackbarService } from '@services/snackbar.service';
+import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 
 @Component({
   selector: 'app-professional-availability',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SelectComponent],
   templateUrl: './professional-availability.component.html'
 })
 export class ProfessionalAvailabilityComponent implements OnInit {
@@ -49,14 +50,20 @@ export class ProfessionalAvailabilityComponent implements OnInit {
     { value: 'OTHER', label: 'Otro' }
   ];
 
+  typeSelectConfig: SelectConfig = {
+    displayFn: (item: any) => item.label,
+    valueFn: (item: any) => item.value,
+    placeholder: 'Tipo'
+  };
   constructor() {
+    const today = new Date().toISOString().split('T')[0];
     this.addForm = this.fb.group({
       dayOfWeek: [1, [Validators.required]],
       startTime: ['09:00', [Validators.required]],
-      endTime: ['18:00', [Validators.required]]
+      endTime: ['18:00', [Validators.required]],
+      branchId: [null, [Validators.required]]
     });
 
-    const today = new Date().toISOString().split('T')[0];
     this.exceptionForm = this.fb.group({
       date: [today, [Validators.required]],
       endDate: [null],
@@ -64,6 +71,12 @@ export class ProfessionalAvailabilityComponent implements OnInit {
       reason: ['']
     });
   }
+
+  branchSelectConfig: SelectConfig = {
+    displayFn: (item: any) => item.branch.name,
+    valueFn: (item: any) => item.branch.id,
+    placeholder: 'Sucursal'
+  };
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -88,10 +101,36 @@ export class ProfessionalAvailabilityComponent implements OnInit {
     });
   }
 
+  getBranchName(branchId?: string): string {
+    if (!branchId) return '';
+    const branches = this.professional()?.branches || [];
+    const found = branches.find(b => b.branch.id === branchId);
+    return found ? found.branch.name : '';
+  }
+
   getAvailabilityForDay(day: number): Availability[] {
     return this.availability()
       .filter(a => a.dayOfWeek === day)
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  addingToDay = signal<number | null>(null);
+
+  setAddingToDay(day: number): void {
+    this.addingToDay.set(day);
+    const branches = this.professional()?.branches || [];
+    const defaultBranchId = branches.length === 1 ? branches[0].branch.id : null;
+    
+    this.addForm.patchValue({ 
+      dayOfWeek: day, 
+      startTime: '09:00', 
+      endTime: '18:00',
+      branchId: defaultBranchId
+    });
+  }
+
+  cancelAdding(): void {
+    this.addingToDay.set(null);
   }
 
   addSlot(): void {
@@ -108,7 +147,7 @@ export class ProfessionalAvailabilityComponent implements OnInit {
       next: (newSlot) => {
         this.availability.set([...this.availability(), newSlot]);
         this.snackbar.success('Horario añadido');
-        this.addForm.patchValue({ startTime: '09:00', endTime: '18:00' });
+        this.addingToDay.set(null);
       },
       error: (err) => this.snackbar.error(err.error?.message || 'Error al añadir horario')
     });

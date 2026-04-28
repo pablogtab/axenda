@@ -1,5 +1,5 @@
-<div class="flex flex-col gap-4">
-  <header class="flex justify-between items-center">
+<div class="flex flex-col gap-4 h-[75vh] min-h-[500px]">
+  <header class="flex justify-between items-center flex-shrink-0">
     <div class="flex flex-col gap-1">
       <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
         <span>{{ isEditing ? '✏️' : '✨' }}</span>
@@ -29,114 +29,117 @@
     </button>
   </header>
 
-  @if (activeTab() === 'basic') {
-    <form [formGroup]="professionalForm" (ngSubmit)="onSubmit()" class="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <!-- Datos Básicos -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Nombre *</label>
-          <input type="text" formControlName="firstName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Juan">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Apellido *</label>
-          <input type="text" formControlName="lastName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Pérez">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Biografía corta</label>
-          <input type="text" formControlName="bio" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Especialista en...">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Color en Agenda</label>
-          <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-1.5">
-            <input type="color" formControlName="color" class="w-8 h-6 bg-transparent border-none cursor-pointer rounded overflow-hidden">
-            <span class="font-mono text-xs font-bold text-text-dim">{{ professionalForm.get('color')?.value }}</span>
+  <div class="flex-1 overflow-hidden">
+    @if (activeTab() === 'basic') {
+      <form [formGroup]="professionalForm" (ngSubmit)="onSubmit()" class="h-full overflow-y-auto pr-2 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 custom-scrollbar">
+        <!-- Datos Básicos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Nombre *</label>
+            <input type="text" formControlName="firstName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Juan">
           </div>
-        </div>
-      </div>
-
-      <!-- Selección de Sucursales y Servicios -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Sucursales -->
-        <div class="space-y-2">
-          <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1">Sucursales</h3>
-          <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-            @for (branch of allBranches(); track branch.id) {
-              <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
-                [class.bg-primary/10]="selectedBranches().includes(branch.id)"
-                [class.border-primary/30]="selectedBranches().includes(branch.id)"
-                [class.border-white/5]="!selectedBranches().includes(branch.id)"
-                [class.bg-white/5]="!selectedBranches().includes(branch.id)">
-                <span class="text-[11px] font-medium" [class.text-primary]="selectedBranches().includes(branch.id)">
-                  {{ branch.name }}
-                </span>
-                <input type="checkbox" [checked]="selectedBranches().includes(branch.id)" (change)="toggleBranch(branch.id)" class="sr-only">
-                <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
-                    [class.bg-primary]="selectedBranches().includes(branch.id)"
-                    [class.border-primary]="selectedBranches().includes(branch.id)">
-                  @if (selectedBranches().includes(branch.id)) {
-                    <span class="text-[8px] text-white font-bold">✓</span>
-                  }
-                </div>
-              </label>
-            }
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Apellido *</label>
+            <input type="text" formControlName="lastName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Pérez">
           </div>
         </div>
 
-        <!-- Servicios -->
-        <div class="space-y-2">
-          <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1">Servicios</h3>
-          <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-            @for (service of allServices(); track service.id) {
-              <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
-                [class.bg-accent/10]="selectedServices().includes(service.id)"
-                [class.border-accent/30]="selectedServices().includes(service.id)"
-                [class.border-white/5]="!selectedServices().includes(service.id)"
-                [class.bg-white/5]="!selectedServices().includes(service.id)">
-                <span class="text-[11px] font-medium" [class.text-accent]="selectedServices().includes(service.id)">
-                  {{ service.name }}
-                </span>
-                <input type="checkbox" [checked]="selectedServices().includes(service.id)" (change)="toggleService(service.id)" class="sr-only">
-                <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
-                    [class.bg-accent]="selectedServices().includes(service.id)"
-                    [class.border-accent]="selectedServices().includes(service.id)">
-                  @if (selectedServices().includes(service.id)) {
-                    <span class="text-[8px] text-white font-bold">✓</span>
-                  }
-                </div>
-              </label>
-            }
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Biografía corta</label>
+            <input type="text" formControlName="bio" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all" placeholder="Especialista en...">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Color en Agenda</label>
+            <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-1.5">
+              <input type="color" formControlName="color" class="w-8 h-6 bg-transparent border-none cursor-pointer rounded overflow-hidden">
+              <span class="font-mono text-xs font-bold text-text-dim">{{ professionalForm.get('color')?.value }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5">
-        <div class="flex flex-col gap-0.5">
-          <span class="text-sm font-bold text-text-main">Profesional activo</span>
-          <span class="text-[10px] text-text-dim">Habilitar para recibir turnos</span>
+        <!-- Selección de Sucursales y Servicios -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Sucursales -->
+          <div class="space-y-2">
+            <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1">Sucursales</h3>
+            <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+              @for (branch of allBranches(); track branch.id) {
+                <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
+                  [class.bg-primary/10]="selectedBranches().includes(branch.id)"
+                  [class.border-primary/30]="selectedBranches().includes(branch.id)"
+                  [class.border-white/5]="!selectedBranches().includes(branch.id)"
+                  [class.bg-white/5]="!selectedBranches().includes(branch.id)">
+                  <span class="text-[11px] font-medium" [class.text-primary]="selectedBranches().includes(branch.id)">
+                    {{ branch.name }}
+                  </span>
+                  <input type="checkbox" [checked]="selectedBranches().includes(branch.id)" (change)="toggleBranch(branch.id)" class="sr-only">
+                  <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
+                      [class.bg-primary]="selectedBranches().includes(branch.id)"
+                      [class.border-primary]="selectedBranches().includes(branch.id)">
+                    @if (selectedBranches().includes(branch.id)) {
+                      <span class="text-[8px] text-white font-bold">✓</span>
+                    }
+                  </div>
+                </label>
+              }
+            </div>
+          </div>
+
+          <!-- Servicios -->
+          <div class="space-y-2">
+            <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1">Servicios</h3>
+            <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+              @for (service of allServices(); track service.id) {
+                <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
+                  [class.bg-accent/10]="selectedServices().includes(service.id)"
+                  [class.border-accent/30]="selectedServices().includes(service.id)"
+                  [class.border-white/5]="!selectedServices().includes(service.id)"
+                  [class.bg-white/5]="!selectedServices().includes(service.id)">
+                  <span class="text-[11px] font-medium" [class.text-accent]="selectedServices().includes(service.id)">
+                    {{ service.name }}
+                  </span>
+                  <input type="checkbox" [checked]="selectedServices().includes(service.id)" (change)="toggleService(service.id)" class="sr-only">
+                  <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
+                      [class.bg-accent]="selectedServices().includes(service.id)"
+                      [class.border-accent]="selectedServices().includes(service.id)">
+                    @if (selectedServices().includes(service.id)) {
+                      <span class="text-[8px] text-white font-bold">✓</span>
+                    }
+                  </div>
+                </label>
+              }
+            </div>
+          </div>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer scale-90">
-          <input type="checkbox" formControlName="active" class="sr-only peer">
-          <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-        </label>
-      </div>
 
-      <footer class="flex justify-end gap-3 pt-4 border-t border-white/5">
-        <button type="button" (click)="onCancel()" class="px-6 py-2 text-sm font-bold text-text-dim hover:text-text-main transition-colors">
-          Cancelar
-        </button>
-        <button type="submit" [disabled]="isSubmitting || professionalForm.invalid" class="px-8 py-2 text-sm bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Profesional') }}
-        </button>
-      </footer>
-    </form>
-  } @else {
-    <div class="animate-in fade-in slide-in-from-right-2 duration-300">
-      <app-professional-availability 
-        [professionalId]="professionalData?.id || dialogData?.id || null">
-      </app-professional-availability>
-    </div>
-  }
+        <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-text-main">Profesional activo</span>
+            <span class="text-[10px] text-text-dim">Habilitar para recibir turnos</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer scale-90">
+            <input type="checkbox" formControlName="active" class="sr-only peer">
+            <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <footer class="flex justify-end gap-3 pt-4 border-t border-white/5">
+          <button type="button" (click)="onCancel()" class="px-6 py-2 text-sm font-bold text-text-dim hover:text-text-main transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="isSubmitting || professionalForm.invalid" class="px-8 py-2 text-sm bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Profesional') }}
+          </button>
+        </footer>
+      </form>
+    } @else {
+      <div class="h-full animate-in fade-in slide-in-from-right-2 duration-300">
+        <app-professional-availability 
+          [professionalId]="professional()?.id || null"
+          class="h-full block">
+        </app-professional-availability>
+      </div>
+    }
+  </div>
 </div>

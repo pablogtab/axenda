@@ -1,51 +1,70 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col h-full gap-6">
   <!-- Grid de Días Semanales y Excepciones -->
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1 min-h-0">
     
     <!-- Horarios Recurrentes -->
-    <div class="space-y-4">
-      <section class="bg-white/5 border border-white/10 rounded-2xl p-4">
+    <div class="flex flex-col min-h-0">
+      <section class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col h-full">
         <h2 class="text-xs font-bold text-text-dim uppercase tracking-widest mb-4 flex items-center gap-2">
           <span>⏰</span> Horario Semanal
         </h2>
         
-        <form [formGroup]="addForm" (ngSubmit)="addSlot()" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end mb-6">
-          <div class="sm:col-span-1">
-            <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Día</label>
-            <select formControlName="dayOfWeek" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
-              @for (day of days; track day.value) {
-                <option [value]="day.value">{{ day.label }}</option>
-              }
-            </select>
-          </div>
-          <div class="flex gap-2 sm:col-span-2">
-            <div class="flex-1">
-              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Desde</label>
-              <input type="time" formControlName="startTime" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
-            </div>
-            <div class="flex-1">
-              <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Hasta</label>
-              <input type="time" formControlName="endTime" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
-            </div>
-            <button type="submit" class="bg-primary text-white p-2 rounded-lg hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 self-end mb-[2px]" [disabled]="addForm.invalid">
-              <span class="text-xs font-bold">+</span>
-            </button>
-          </div>
-        </form>
 
-        <div class="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+        <div class="grid grid-cols-1 gap-2 overflow-y-auto pr-1 custom-scrollbar flex-1">
           @for (day of days; track day.value) {
             <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-text-main">{{ day.label }}</span>
-                @if (getAvailabilityForDay(day.value).length === 0) {
+              <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-text-main">{{ day.label }}</span>
+                  <button type="button" 
+                          (click)="setAddingToDay(day.value)" 
+                          *ngIf="addingToDay() !== day.value"
+                          class="w-5 h-5 flex items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-white transition-all">
+                    +
+                  </button>
+                </div>
+                @if (getAvailabilityForDay(day.value).length === 0 && addingToDay() !== day.value) {
                   <span class="text-[8px] font-bold text-text-dim uppercase">No laborable</span>
                 }
               </div>
+
+              <!-- Formulario Inline -->
+              @if (addingToDay() === day.value) {
+                <form [formGroup]="addForm" (ngSubmit)="addSlot()" class="flex flex-col gap-3 mb-4 p-3 rounded-xl bg-primary/5 border border-primary/10 animate-in slide-in-from-top-2 duration-200">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                      <label class="text-[9px] uppercase font-bold text-text-dim ml-1">Desde</label>
+                      <input type="time" formControlName="startTime" class="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[9px] uppercase font-bold text-text-dim ml-1">Hasta</label>
+                      <input type="time" formControlName="endTime" class="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
+                    </div>
+                    <div class="col-span-2 space-y-1">
+                      <label class="text-[9px] uppercase font-bold text-text-dim ml-1">Sucursal</label>
+                      <app-select formControlName="branchId" [config]="branchSelectConfig" [options]="professional()?.branches || []"></app-select>
+                    </div>
+                  </div>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" (click)="cancelAdding()" class="px-3 py-1 text-[10px] font-bold text-text-dim hover:text-text-main transition-colors">
+                      Cancelar
+                    </button>
+                    <button type="submit" [disabled]="addForm.invalid" class="px-4 py-1 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+                      Guardar
+                    </button>
+                  </div>
+                </form>
+              }
               <div class="flex flex-wrap gap-2">
                 @for (slot of getAvailabilityForDay(day.value); track slot.id) {
-                  <div class="flex items-center gap-2 px-2 py-1 rounded bg-primary/10 border border-primary/20">
-                    <span class="text-[10px] font-bold text-primary">{{ slot.startTime }} - {{ slot.endTime }}</span>
+                  <div class="flex items-center gap-2 px-2 py-1 rounded bg-primary/10 border border-primary/20 group/slot">
+                    <span class="text-[10px] font-bold text-primary flex items-center gap-1">
+                      <span class="opacity-40 text-[8px]">+</span>
+                      {{ slot.startTime }} - {{ slot.endTime }}
+                      <span class="text-[8px] opacity-60 ml-1 font-medium bg-primary/20 px-1 rounded uppercase" *ngIf="slot.branchId">
+                        {{ getBranchName(slot.branchId) }}
+                      </span>
+                    </span>
                     <button (click)="removeSlot(slot.id)" class="text-[10px] text-primary/40 hover:text-red-400 transition-colors">✕</button>
                   </div>
                 }
@@ -57,8 +76,8 @@
     </div>
 
     <!-- Excepciones -->
-    <div class="space-y-4">
-      <section class="bg-white/5 border border-white/10 rounded-2xl p-4">
+    <div class="flex flex-col min-h-0">
+      <section class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col h-full">
         <h2 class="text-xs font-bold text-text-dim uppercase tracking-widest mb-4 flex items-center gap-2">
           <span>📅</span> Bloqueos y Excepciones
         </h2>
@@ -71,11 +90,7 @@
             </div>
             <div>
               <label class="text-[9px] uppercase font-bold text-text-dim mb-1 block ml-1">Tipo</label>
-              <select formControlName="type" class="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-text-main outline-none focus:ring-1 focus:ring-primary/50">
-                @for (type of exceptionTypes; track type.value) {
-                  <option [value]="type.value">{{ type.label }}</option>
-                }
-              </select>
+              <app-select formControlName="type" [config]="typeSelectConfig" [options]="exceptionTypes"></app-select>
             </div>
           </div>
           <div class="flex gap-2">
@@ -85,8 +100,8 @@
             </button>
           </div>
         </form>
-
-        <div class="space-y-2 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+ 
+        <div class="space-y-2 overflow-y-auto pr-1 custom-scrollbar flex-1">
           @if (exceptions().length === 0) {
             <div class="py-10 text-center opacity-30 text-xs italic">Sin bloqueos programados</div>
           }

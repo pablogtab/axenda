@@ -30,16 +30,16 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 - [x] **Bloqueos rápidos con motivo**: Bloquear franjas horarias desde la agenda con una razón (almuerzo, trámite, etc.).
 
 ## 🔴 Fase 5: Reglas de Negocio y Lógica Avanzada
-- [ ] **Políticas de Anticipación**: Configurar límites mínimos y máximos para reservas.
+- [x] **Políticas de Anticipación**: Configurar límites mínimos y máximos para reservas.
 - [ ] **Modalidad Presencial/Virtual**: Definir tipo de servicio y links de reunión automáticos.
 - [ ] **Horarios por Servicio**: Restricción de disponibilidad y filtrado en agenda según el servicio seleccionado.
 - [ ] **Turnos Genéricos**: Bloqueos de tiempo sin servicio específico.
 - [ ] **Reservas Recurrentes**: Soporte para citas que se repiten en el tiempo.
 
 ## 🔴 Fase 6: Canal Público y Link de Reserva
-- [ ] **Link Público Personalizable**: Flujo de reserva para clientes finales (*Servicio → Prof → Hora*).
-- [ ] **Diseño y Temas**: Personalización de colores y logo en la vista pública.
-- [ ] **Generación de QR**: Generar códigos para acceso rápido al agendamiento.
+- [x] **Link Público Personalizable**: Flujo de reserva para clientes finales (*Servicio → Prof → Hora*).
+- [x] **Diseño y Temas**: Personalización de colores y logo en la vista pública.
+- [x] **Generación de QR**: Generar códigos para acceso rápido al agendamiento.
 - [ ] **Google Login**: Autenticación social para clientes.
 
 ## 🔴 Fase 7: Pagos y Notificaciones (Post-MVP)

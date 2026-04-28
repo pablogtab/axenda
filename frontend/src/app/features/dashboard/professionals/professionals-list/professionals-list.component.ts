@@ -75,10 +75,6 @@ export class ProfessionalsListComponent implements OnInit {
     }
   }
 
-  openAvailabilityModal(professional: Professional): void {
-    this.router.navigate(['/dashboard/professionals', professional.id, 'availability']);
-  }
-
   async deleteProfessional(id: string): Promise<void> {
     const confirmed = await this.dialog.confirm({
       title: '¿Remover profesional?',

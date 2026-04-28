@@ -26,6 +26,7 @@ export class ProfessionalFormComponent implements OnInit {
   public dialogData = inject<Professional>(DIALOG_DATA, { optional: true });
 
   @Input() set professionalData(data: Professional | null) {
+    this.professional.set(data);
     if (data) {
       this.initForm(data);
     } else if (!this.dialogData) {
@@ -35,6 +36,7 @@ export class ProfessionalFormComponent implements OnInit {
 
   @Output() closed = new EventEmitter<boolean>();
 
+  professional = signal<Professional | null>(null);
   professionalForm!: FormGroup;
   isEditing = false;
   isSubmitting = false;
@@ -51,6 +53,7 @@ export class ProfessionalFormComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.dialogData) {
+      this.professional.set(this.dialogData);
       this.initForm(this.dialogData);
     } else if (!this.professionalForm) {
       this.initForm(null);
@@ -111,7 +114,7 @@ export class ProfessionalFormComponent implements OnInit {
     this.isSubmitting = true;
     const val = this.professionalForm.value;
 
-    const profId = this.isEditing ? (this.professionalData?.id || this.dialogData?.id) : null;
+    const profId = this.isEditing ? (this.professional()?.id || this.dialogData?.id) : null;
 
     const request = this.isEditing && profId
       ? this.professionalsService.update(profId, val)
