@@ -101,9 +101,16 @@ export class TenantsService {
       }
     }
 
+    const updateData = { ...dto }
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === null || updateData[key] === undefined) {
+        delete updateData[key]
+      }
+    })
+
     return this.prisma.tenant.update({
       where: { id: tenantId },
-      data: dto,
+      data: updateData,
     })
   }
 

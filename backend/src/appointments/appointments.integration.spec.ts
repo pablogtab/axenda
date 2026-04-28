@@ -302,6 +302,76 @@ describe('Appointments — Integration', () => {
       // So Branch 1 should STILL have 09:00 available, even if the professional is booked at Branch 2.
       expect(slots).toContain('09:00')
     })
+
+    it('should respect publicMaxBookingDays (e.g., 7 days)', async () => {
+      // Set max days to 7
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { publicMaxBookingDays: 7 }
+      })
+
+      const farDate = new Date()
+      farDate.setDate(farDate.getDate() + 10) // 10 days away
+      const farDateStr = farDate.toISOString().split('T')[0]
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${farDateStr}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data).toHaveLength(0)
+    })
+
+    it('should respect publicMinBookingTime (e.g., 2h notice)', async () => {
+      // Set min notice to 2h
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { publicMinBookingTime: '2h' }
+      })
+
+      // We need to test "today"
+      const now = new Date()
+      const today = now.toISOString().split('T')[0]
+      
+      // Make professional available today
+      const dayOfWeekNow = now.getUTCDay()
+      await request(app.getHttpServer())
+        .post(`/api/professionals/${professionalId}/availability`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          dayOfWeek: dayOfWeekNow,
+          startTime: '00:00',
+          endTime: '23:59',
+          branchId: branchId,
+        })
+
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${today}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      
+      // Find a slot that is between now and 2h from now
+      const offsetMins = -180;
+      const currentMins = (now.getUTCHours() * 60 + now.getUTCMinutes()) + offsetMins
+      const tooSoonMins = currentMins + 30 // 30 mins from now
+      
+      if (tooSoonMins < 1440) { // If it's still today
+        const hh = Math.floor(tooSoonMins / 15 * 15 / 60).toString().padStart(2, '0') // Round to step
+        const mm = (Math.floor(tooSoonMins / 15) * 15 % 60).toString().padStart(2, '0')
+        const tooSoonTime = `${hh}:${mm}`
+
+        const slot = slotsObj.find(s => s.time === tooSoonTime)
+        if (slot) {
+          expect(slot.available).toBe(false) // Should be false because of 2h notice
+        }
+      }
+    })
   })
 
   // ── Appointments Tests ─────────────────────────────────────────────────────

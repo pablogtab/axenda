@@ -134,6 +134,8 @@ export class SettingsComponent implements OnInit {
   ];
 
   anticipationMinOptions = [
+    { label: '15 minutos antes', value: '15m' },
+    { label: '30 minutos antes', value: '30m' },
     { label: '1 hora antes', value: '1h' },
     { label: '2 horas antes', value: '2h' },
     { label: '12 horas antes', value: '12h' },
@@ -141,10 +143,10 @@ export class SettingsComponent implements OnInit {
   ];
 
   anticipationMaxOptions = [
-    { label: '1 semana', value: '1w' },
-    { label: '1 mes', value: '1m' },
-    { label: '2 meses', value: '2m' },
-    { label: '6 meses', value: '6m' }
+    { label: '1 semana', value: 7 },
+    { label: '1 mes', value: 30 },
+    { label: '2 meses', value: 60 },
+    { label: '6 meses', value: 180 }
   ];
 
   cancellationOptions = [
@@ -185,8 +187,8 @@ export class SettingsComponent implements OnInit {
       email: [''],
       address: [''],
       publicSlug: ['', { updateOn: 'change' }],
-      anticipationMin: ['1h'],
-      anticipationMax: ['1m'],
+      publicMinBookingTime: ['1h'],
+      publicMaxBookingDays: [30],
       cancellationLimit: ['24h'],
       allowReschedule: [true],
       confirmEmail: [true],
@@ -313,7 +315,9 @@ export class SettingsComponent implements OnInit {
           textColor: tenant.textColor || '#f8fafc',
           publicShowBranchSelection: tenant.publicShowBranchSelection ?? true,
           publicShowProfessionalSelection: tenant.publicShowProfessionalSelection ?? true,
-          publicMaxOverlapMins: tenant.publicMaxOverlapMins ?? 15
+          publicMaxOverlapMins: tenant.publicMaxOverlapMins ?? 15,
+          publicMaxBookingDays: tenant.publicMaxBookingDays ?? 30,
+          publicMinBookingTime: tenant.publicMinBookingTime || '1h'
         });
 
         // Initial theme detection
@@ -355,7 +359,9 @@ export class SettingsComponent implements OnInit {
       textColor: values.textColor,
       publicShowBranchSelection: values.publicShowBranchSelection,
       publicShowProfessionalSelection: values.publicShowProfessionalSelection,
-      publicMaxOverlapMins: values.publicMaxOverlapMins
+      publicMaxOverlapMins: values.publicMaxOverlapMins,
+      publicMaxBookingDays: values.publicMaxBookingDays,
+      publicMinBookingTime: values.publicMinBookingTime
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');

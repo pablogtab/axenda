@@ -23,6 +23,8 @@ export interface Tenant {
   publicShowBranchSelection?: boolean;
   publicShowProfessionalSelection?: boolean;
   publicMaxOverlapMins?: number;
+  publicMaxBookingDays?: number;
+  publicMinBookingTime?: string;
   services?: any[];
   branches?: any[];
 }
@@ -43,6 +45,8 @@ export interface UpdateTenantDto {
   publicShowBranchSelection?: boolean;
   publicShowProfessionalSelection?: boolean;
   publicMaxOverlapMins?: number;
+  publicMaxBookingDays?: number;
+  publicMinBookingTime?: string;
 }
 
 @Injectable({

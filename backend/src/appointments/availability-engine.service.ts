@@ -58,22 +58,26 @@ export class AvailabilityEngineService {
     const offsetMins = -180;
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { publicMaxOverlapMins: true }
+      select: { 
+        publicMaxOverlapMins: true,
+        publicMaxBookingDays: true,
+        publicMinBookingTime: true,
+      }
     })
 
-    // Default allowed overlap (e.g., 15 minutes) if the tenant hasn't configured it
-    const allowedOverlap = tenant?.publicMaxOverlapMins || 15
+    const allowedOverlap = tenant?.publicMaxOverlapMins ?? 15
+    const maxBookingDays = tenant?.publicMaxBookingDays ?? 30
+    const minBookingTimeStr = tenant?.publicMinBookingTime || '1h'
 
-    // Obtener minutos actuales si estamos consultando para "hoy"
+    // 1. Validar tiempo máximo de reserva
     const now = new Date()
+    const maxDate = new Date()
+    maxDate.setDate(maxDate.getDate() + maxBookingDays)
+    if (targetDate > maxDate) return []
+
     const todayStr = now.toISOString().split('T')[0]
     const currentMinsNow = (now.getUTCHours() * 60 + now.getUTCMinutes()) + offsetMins
-
-    console.log('appointments', appointments)
-    console.log('exceptions', exceptions)
-    console.log('currentMinsNow', currentMinsNow)
-    console.log('todayStr', todayStr)
-    console.log('allowedOverlap', allowedOverlap)
+    const minBookingMins = this.parseTimeToMins(minBookingTimeStr)
 
     const bookedRanges = appointments.map(app => ({
       start: (app.startTime.getUTCHours() * 60 + app.startTime.getUTCMinutes()) + offsetMins,
@@ -89,12 +93,8 @@ export class AvailabilityEngineService {
       }
     })
 
-    
     const allSlots: { time: string; available: boolean }[] = []
     const step = 15
-    
-    console.log('bookedRanges', bookedRanges.map(r => `${this.minsToTime(r.start)} - ${this.minsToTime(r.end)}`).join(', '))
-    console.log('availabilities', availabilities.map(a => `${this.minsToTime(this.timeToMins(a.startTime))} - ${this.minsToTime(this.timeToMins(a.endTime))}`).join(', '))
 
     for (const block of availabilities) {
       let current = this.timeToMins(block.startTime)
@@ -107,17 +107,25 @@ export class AvailabilityEngineService {
           return conflict;
         })
         
-        const isPast = date === todayStr && current <= currentMinsNow
+        const isTooSoon = date === todayStr && current < (currentMinsNow + minBookingMins)
         
         allSlots.push({
           time: this.minsToTime(current),
-          available: !hasConflict && !isPast
+          available: !hasConflict && !isTooSoon
         })
         current += step
       }
     }
 
     return allSlots
+  }
+
+  private parseTimeToMins(timeStr: string): number {
+    const match = timeStr.match(/^(\d+)(h|m)$/)
+    if (!match) return 60 // default 1h if invalid
+    const value = parseInt(match[1])
+    const unit = match[2]
+    return unit === 'h' ? value * 60 : value
   }
 
   async isSlotAvailable(tenantId: string, data: any): Promise<boolean> {
