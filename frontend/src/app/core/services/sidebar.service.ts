@@ -9,8 +9,8 @@ export class SidebarService {
   private breakpointObserver = inject(BreakpointObserver);
   private platformId = inject(PLATFORM_ID);
 
-  isCollapsed = signal(false);
-  isMobile = signal(false);
+  public isCollapsed = signal<boolean>(false);
+  public isMobile = signal<boolean>(false);
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -19,8 +19,6 @@ export class SidebarService {
         if (result.matches) {
           this.isCollapsed.set(true);
         } else {
-          // You might want to remember user preference here, 
-          // but for now we follow the previous logic.
           this.isCollapsed.set(false);
         }
       });

@@ -7,30 +7,7 @@ import { SidebarService } from '@core/services/sidebar.service';
   selector: 'app-agenda-navigation-zones',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <!-- Zona Izquierda -->
-    <div class="day-change-zone left-zone" 
-         [style.left]="offsetLeft"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'prev' && (agendaService.isDragging() || !sidebarService.isMobile())"
-         (click)="navigate.emit('prev')">
-      <div class="zone-content">
-        <span class="text-2xl">‹</span>
-        <span class="text-[10px] uppercase font-bold vertical-text text-center">{{ prevLabel }}</span>
-      </div>
-    </div>
-
-    <!-- Zona Derecha -->
-    <div class="day-change-zone right-zone"
-         [class.visible]="agendaService.isDragging() && !agendaService.isNavigating()"
-         [class.navigating]="activeDir === 'next' && (agendaService.isDragging() || !sidebarService.isMobile())"
-         (click)="navigate.emit('next')">
-      <div class="zone-content">
-        <span class="text-2xl">›</span>
-        <span class="text-[10px] uppercase font-bold vertical-text text-center">{{ nextLabel }}</span>
-      </div>
-    </div>
-  `,
+  templateUrl: 'agenda-navigation-zones.component.html',
   styleUrls: ['./agenda-navigation-zones.component.css'],
   styles: [`
     :host {
@@ -53,7 +30,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Output() navigate = new EventEmitter<'prev' | 'next'>();
 
   public agendaService = inject(AgendaService);
-  public sidebarService = inject(SidebarService);
+  public sidebarService = inject<SidebarService>(SidebarService);
   private el = inject(ElementRef);
   private navigationTimer: any = null;
   public activeDir: 'prev' | 'next' | null = null;
