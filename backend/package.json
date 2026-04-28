@@ -26,7 +26,7 @@
     "@nestjs/serve-static": "^5.0.5",
     "@nestjs/swagger": "^11.3.2",
     "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@prisma/client": "^7.8.0",
     "axios": "^1.6.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -35,7 +35,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
-    "prisma": "^7.7.0",
+    "prisma": "^7.8.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },
@@ -55,6 +55,7 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2"
   }
 }
