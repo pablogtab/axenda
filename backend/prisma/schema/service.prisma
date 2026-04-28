@@ -1,11 +1,11 @@
 // ─── ServiceCategory ───────────────────────────────────
 
 model ServiceCategory {
-  id       String   @id @default(uuid())
+  id       String  @id @default(uuid())
   tenantId String
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name     String
-  active   Boolean  @default(true)
+  active   Boolean @default(true)
 
   services Service[]
 
@@ -22,9 +22,9 @@ model Service {
   category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   name        String
   description String?
-  duration    Int              // duración en minutos
+  duration    Int // duración en minutos
   price       Decimal?         @db.Decimal(10, 2)
-  color       String?          // color hex para el calendario
+  color       String? // color hex para el calendario
   active      Boolean          @default(true)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt

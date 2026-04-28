@@ -118,6 +118,13 @@ export class SettingsComponent implements OnInit {
     valueFn: (item) => item.value
   };
 
+  overlapConfig: SelectConfig = {
+    label: 'Solapamiento de turnos',
+    placeholder: 'Seleccionar...',
+    displayFn: (item) => item.label,
+    valueFn: (item) => item.value
+  };
+
   // Options
   categories = [
     { label: 'Belleza y Estética', value: 'beauty' },
@@ -146,6 +153,15 @@ export class SettingsComponent implements OnInit {
     { label: '12 horas antes', value: '12h' },
     { label: '24 horas antes', value: '24h' },
     { label: 'No permitir cancelación online', value: 'never' }
+  ];
+
+  overlapOptions = [
+    { label: 'Sin solapamiento', value: 0 },
+    { label: '5 minutos', value: 5 },
+    { label: '10 minutos', value: 10 },
+    { label: '15 minutos', value: 15 },
+    { label: '20 minutos', value: 20 },
+    { label: '30 minutos', value: 30 }
   ];
 
   activeTheme = signal<any>(null);
@@ -183,7 +199,8 @@ export class SettingsComponent implements OnInit {
       backgroundColor: ['#0a0b14'],
       textColor: ['#f8fafc'],
       publicShowBranchSelection: [true],
-      publicShowProfessionalSelection: [true]
+      publicShowProfessionalSelection: [true],
+      publicMaxOverlapMins: [15]
     });
   }
 
@@ -295,7 +312,8 @@ export class SettingsComponent implements OnInit {
           backgroundColor: tenant.backgroundColor || '#0a0b14',
           textColor: tenant.textColor || '#f8fafc',
           publicShowBranchSelection: tenant.publicShowBranchSelection ?? true,
-          publicShowProfessionalSelection: tenant.publicShowProfessionalSelection ?? true
+          publicShowProfessionalSelection: tenant.publicShowProfessionalSelection ?? true,
+          publicMaxOverlapMins: tenant.publicMaxOverlapMins ?? 15
         });
 
         // Initial theme detection
@@ -336,7 +354,8 @@ export class SettingsComponent implements OnInit {
       backgroundColor: values.backgroundColor,
       textColor: values.textColor,
       publicShowBranchSelection: values.publicShowBranchSelection,
-      publicShowProfessionalSelection: values.publicShowProfessionalSelection
+      publicShowProfessionalSelection: values.publicShowProfessionalSelection,
+      publicMaxOverlapMins: values.publicMaxOverlapMins
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');

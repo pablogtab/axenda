@@ -120,7 +120,7 @@ describe('Appointments — Integration', () => {
       .send({
         dayOfWeek: 1, // Monday
         startTime: '09:00',
-        endTime: '12:00',
+        endTime: '18:00',
         branchId: branchId,
       })
   })
@@ -145,12 +145,17 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      const slots = res.body.data as string[]
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
       expect(slots).toContain('09:00')
       expect(slots).toContain('11:30')
-      expect(slots).not.toContain('12:00') // Doesn't fit a 30m service before 12:00
-      // 09:00 to 12:00 step 15m => 09:00, 09:15, 09:30, 09:45, 10:00, 10:15, 10:30, 10:45, 11:00, 11:15, 11:30 (11 slots)
-      expect(slots.length).toBe(11)
+      expect(slots).toContain('17:30')
+      expect(slots).not.toContain('17:45') // Doesn't fit a 30m service before 18:00
+      // 09:00 to 18:00 step 15m. (18-9)*4 = 36 slots.
+      // But last slot is 17:30. So 09:00 to 17:30 is 35 slots? 
+      // Wait, 09:00 (1), 09:15 (2), ..., 10:00 (5).
+      // (17.5 - 9) / 0.25 + 1 = 8.5 / 0.25 + 1 = 34 + 1 = 35.
+      expect(slots.length).toBe(35)
     })
 
     it('should block all slots if a HOLIDAY exception exists for the day', async () => {
@@ -171,7 +176,10 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      expect(res.body.data).toHaveLength(0) // No slots available
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      expect(slots).toHaveLength(0) // No slots available
+
     })
 
     it('should block slots if the day falls within a date range exception (LEAVE)', async () => {
@@ -201,7 +209,10 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      expect(res.body.data).toHaveLength(0) // Monday is inside the range
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      expect(slots).toHaveLength(0) // Monday is inside the range
+
     })
 
     it('should only block specific time if a partial BLOCK exception exists', async () => {
@@ -226,11 +237,70 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      const slots = res.body.data as string[]
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
       expect(slots).toContain('09:00')
       expect(slots).not.toContain('10:00')
       expect(slots).not.toContain('10:30')
       expect(slots).toContain('11:00')
+    })
+
+    it('should ignore appointments from other branches', async () => {
+      // Setup a second branch
+      const bRes2 = await request(app.getHttpServer())
+        .post('/api/tenants/me/branches')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Sede Appt 2' })
+      const branch2Id = bRes2.body.data.id
+
+      // Link Professional to Branch 2
+      await request(app.getHttpServer())
+        .patch(`/api/professionals/${professionalId}/branches`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ ids: [branchId, branch2Id] })
+
+      // Set Availability in Branch 2 (same time as Branch 1)
+      await request(app.getHttpServer())
+        .post(`/api/professionals/${professionalId}/availability`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          dayOfWeek: 1, // Monday
+          startTime: '09:00',
+          endTime: '18:00',
+          branchId: branch2Id,
+        })
+
+      // Book an appointment in Branch 2
+      const startTime = new Date(nextMonday)
+      startTime.setUTCHours(12, 0, 0, 0) // Book 09:00 local (12:00 UTC)
+      
+      await request(app.getHttpServer())
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientId,
+          professionalId,
+          serviceId,
+          branchId: branch2Id, // DIFFERENT BRANCH
+          startTime: startTime.toISOString(),
+          notes: 'Test note in another branch',
+        })
+        .expect(201)
+
+      // Query availability in Branch 1
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}`,
+        )
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      
+      // The user explicitly requested that appointments in one branch shouldn't block another branch.
+      // So Branch 1 should STILL have 09:00 available, even if the professional is booked at Branch 2.
+      expect(slots).toContain('09:00')
     })
   })
 
@@ -239,7 +309,7 @@ describe('Appointments — Integration', () => {
   describe('Appointments Booking', () => {
     it('should book an appointment', async () => {
       const startTime = new Date(nextMonday)
-      startTime.setUTCHours(9, 0, 0, 0) // Book 09:00 to 09:30
+      startTime.setUTCHours(16, 0, 0, 0) // Book 13:00 local (16:00 UTC)
 
       const res = await request(app.getHttpServer())
         .post('/api/appointments')
@@ -259,6 +329,35 @@ describe('Appointments — Integration', () => {
       expect(res.body.data.clientId).toBe(clientId)
     })
 
+    it('should ignore appointments from Branch 2 when querying Branch 1', async () => {
+      const startTime = new Date(nextMonday)
+      startTime.setUTCHours(14, 0, 0, 0) // 11:00 local (different time to avoid conflicts)
+      
+      const branches = await prisma.branch.findMany({ where: { tenantId } })
+      const branch2 = branches.find(b => b.name === 'Sede Appt 2')
+      
+      await request(app.getHttpServer())
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientId,
+          professionalId,
+          serviceId,
+          branchId: branch2.id,
+          startTime: startTime.toISOString(),
+        })
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      
+      // Branch 1 should STILL have 11:00 available
+      expect(slots).toContain('11:00')
+    })
+
     it('should reflect the booking in the availability engine (slot removed)', async () => {
       const res = await request(app.getHttpServer())
         .get(
@@ -267,15 +366,45 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      const slots = res.body.data as string[]
-      // 09:00 to 09:30 is occupied.
-      // So 09:00 cannot start.
-      // 08:45 (if existed) couldn't finish.
-      // 09:15 starts inside the booking, conflict!
-      expect(slots).not.toContain('09:00')
-      expect(slots).not.toContain('09:15')
-      expect(slots).toContain('09:30') // Free to start right after
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      // 13:00 to 13:30 is occupied.
+      expect(slots).not.toContain('13:00')
+      expect(slots).toContain('13:15') // Available because of 15m overlap!
+      expect(slots).toContain('13:30') // Free to start right after
     })
+
+    it('should allow 09:00 (60min) if 09:45 is booked and overlap is 15min', async () => {
+      // 1. Book at 09:45
+      const startTime45 = new Date(nextMonday)
+      startTime45.setUTCHours(12, 45, 0, 0) // 09:45 local
+      
+      await request(app.getHttpServer())
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: startTime45.toISOString(),
+        })
+
+      // 2. Query 09:00 with duration 60
+      const res = await request(app.getHttpServer())
+        .get(`/api/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${queryDate}&duration=60`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
+      
+      // 09:00 to 10:00 (60min)
+      // Overlaps with 09:45 - 10:15 by 15 minutes.
+      // Since allowedOverlap = 15, it should be AVAILABLE.
+      expect(slots).toContain('09:00')
+    })
+
 
     it('should fetch appointments and logs', async () => {
       const res = await request(app.getHttpServer())
@@ -283,8 +412,10 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      expect(res.body.data.length).toBe(1)
-      expect(res.body.data[0].id).toBe(appointmentId)
+      expect(res.body.data.length).toBe(4) // Since we added another one at 09:45
+      const appt = res.body.data.find((a: any) => a.id === appointmentId)
+      expect(appt).toBeDefined()
+      expect(appt.id).toBe(appointmentId)
 
       // Verify the log was created in DB directly since we didn't expose a /logs route
       const logs = await prisma.appointmentLog.findMany({ where: { appointmentId } })
@@ -335,7 +466,8 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      const slots = res.body.data as string[]
+      const slotsObj = res.body.data as { time: string; available: boolean }[]
+      const slots = slotsObj.filter(s => s.available).map(s => s.time)
       expect(slots).toContain('09:00') // Slot is back!
     })
   })

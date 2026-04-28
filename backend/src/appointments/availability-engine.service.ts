@@ -34,6 +34,7 @@ export class AvailabilityEngineService {
         where: {
           professionalId,
           tenantId,
+          branchId,
           status: { notIn: ['CANCELLED', 'NO_SHOW'] },
           startTime: { gte: startOfDay, lte: endOfDay },
         }
@@ -41,7 +42,11 @@ export class AvailabilityEngineService {
       this.prisma.availabilityException.findMany({
         where: {
           professionalId,
-          date: { gte: startOfDay, lte: endOfDay }
+          date: { lte: endOfDay },
+          OR: [
+            { endDate: { gte: startOfDay } },
+            { endDate: null }
+          ]
         }
       })
     ])
@@ -50,12 +55,25 @@ export class AvailabilityEngineService {
     if (isFullDayBlocked) return []
 
     // Offset para Argentina (UTC-3)
-    const offsetMins = -180; 
+    const offsetMins = -180;
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { publicMaxOverlapMins: true }
+    })
+
+    // Default allowed overlap (e.g., 15 minutes) if the tenant hasn't configured it
+    const allowedOverlap = tenant?.publicMaxOverlapMins || 15
 
     // Obtener minutos actuales si estamos consultando para "hoy"
     const now = new Date()
     const todayStr = now.toISOString().split('T')[0]
     const currentMinsNow = (now.getUTCHours() * 60 + now.getUTCMinutes()) + offsetMins
+
+    console.log('appointments', appointments)
+    console.log('exceptions', exceptions)
+    console.log('currentMinsNow', currentMinsNow)
+    console.log('todayStr', todayStr)
+    console.log('allowedOverlap', allowedOverlap)
 
     const bookedRanges = appointments.map(app => ({
       start: (app.startTime.getUTCHours() * 60 + app.startTime.getUTCMinutes()) + offsetMins,
@@ -71,8 +89,12 @@ export class AvailabilityEngineService {
       }
     })
 
+    
     const allSlots: { time: string; available: boolean }[] = []
     const step = 15
+    
+    console.log('bookedRanges', bookedRanges.map(r => `${this.minsToTime(r.start)} - ${this.minsToTime(r.end)}`).join(', '))
+    console.log('availabilities', availabilities.map(a => `${this.minsToTime(this.timeToMins(a.startTime))} - ${this.minsToTime(this.timeToMins(a.endTime))}`).join(', '))
 
     for (const block of availabilities) {
       let current = this.timeToMins(block.startTime)
@@ -80,13 +102,13 @@ export class AvailabilityEngineService {
 
       while (current + durationMins <= limit) {
         const currentEnd = current + durationMins
+        const hasConflict = bookedRanges.some(b => {
+          const conflict = (current < (b.end - allowedOverlap)) && (currentEnd > (b.start + allowedOverlap));
+          return conflict;
+        })
         
-        // 1. Verificar conflicto con turnos/bloqueos
-        const hasConflict = bookedRanges.some(b => current < b.end && currentEnd > b.start)
-        
-        // 2. Verificar si el horario ya pasó (si es hoy)
         const isPast = date === todayStr && current <= currentMinsNow
-
+        
         allSlots.push({
           time: this.minsToTime(current),
           available: !hasConflict && !isPast
@@ -101,11 +123,11 @@ export class AvailabilityEngineService {
   async isSlotAvailable(tenantId: string, data: any): Promise<boolean> {
     const dateStr = new Date(data.startTime).toISOString().split('T')[0]
     const slots = await this.getFreeSlots(tenantId, { ...data, date: dateStr })
-    
+
     const date = new Date(data.startTime)
     const mins = (date.getUTCHours() * 60 + date.getUTCMinutes()) - 180
     const timeStr = this.minsToTime(mins)
-    
+
     return slots.find(s => s.time === timeStr)?.available || false
   }
 

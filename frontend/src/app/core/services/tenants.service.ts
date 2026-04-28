@@ -22,6 +22,7 @@ export interface Tenant {
   active: boolean;
   publicShowBranchSelection?: boolean;
   publicShowProfessionalSelection?: boolean;
+  publicMaxOverlapMins?: number;
   services?: any[];
   branches?: any[];
 }
@@ -41,6 +42,7 @@ export interface UpdateTenantDto {
   textColor?: string;
   publicShowBranchSelection?: boolean;
   publicShowProfessionalSelection?: boolean;
+  publicMaxOverlapMins?: number;
 }
 
 @Injectable({

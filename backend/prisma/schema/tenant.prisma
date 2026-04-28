@@ -1,28 +1,29 @@
 // ─── Tenant (Organización) ─────────────────────────────
 
 model Tenant {
-  id        String     @id @default(uuid())
-  name      String
-  slug      String     @unique
-  mode      TenantMode @default(GENERIC)
-  timezone  String     @default("America/Argentina/Buenos_Aires")
-  currency  String     @default("ARS")
-  logoUrl   String?
+  id                String     @id @default(uuid())
+  name              String
+  slug              String     @unique
+  mode              TenantMode @default(GENERIC)
+  timezone          String     @default("America/Argentina/Buenos_Aires")
+  currency          String     @default("ARS")
+  logoUrl           String?
   bannerUrl         String?
   primaryColor      String?    @default("#6366f1")
   primaryHoverColor String?    @default("#4f46e5")
   accentColor       String?    @default("#a855f7")
   backgroundColor   String?    @default("#0a0b14")
   textColor         String?    @default("#f8fafc")
-  active     Boolean    @default(true)
-  publicSlug String?    @unique
-  
+  active            Boolean    @default(true)
+  publicSlug        String?    @unique
+
   // Public View Configurations
   publicShowBranchSelection       Boolean @default(true)
   publicShowProfessionalSelection Boolean @default(true)
+  publicMaxOverlapMins            Int     @default(15)
 
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   branches          Branch[]
   users             User[]

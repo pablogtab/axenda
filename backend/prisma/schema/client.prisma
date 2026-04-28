@@ -8,7 +8,7 @@ model Client {
   lastName  String
   email     String?
   phone     String?
-  document  String?  // DNI, CUIT, etc.
+  document  String? // DNI, CUIT, etc.
   notes     String?
   photoUrl  String?
   active    Boolean  @default(true)
@@ -24,10 +24,10 @@ model Client {
 // ─── ClientTag ─────────────────────────────────────────
 
 model ClientTag {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   tenantId String
   clientId String
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client   Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   name     String
   color    String?
 

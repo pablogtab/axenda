@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger'
-import { IsBoolean, IsEnum, IsOptional, IsString, IsTimeZone } from 'class-validator'
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, IsTimeZone } from 'class-validator'
 import { TenantMode } from '@prisma/client'
 
 export class UpdateTenantDto {
@@ -72,4 +72,9 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsBoolean()
   publicShowProfessionalSelection?: boolean
+
+  @ApiPropertyOptional({ example: 15 })
+  @IsOptional()
+  @IsNumber()
+  publicMaxOverlapMins?: number
 }
