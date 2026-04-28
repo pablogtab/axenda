@@ -23,13 +23,21 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^2.5.0",
+    "@analogjs/vitest-angular": "^2.5.0",
     "@angular-devkit/build-angular": "~21.2.0",
     "@angular/cli": "~21.2.0",
     "@angular/compiler-cli": "~21.2.0",
     "@tailwindcss/postcss": "^4.2.4",
+    "@vitest/ui": "^4.1.5",
     "autoprefixer": "^10.5.0",
+    "jsdom": "^22.0.0",
+    "jsonc-parser": "^3.3.1",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^4.0.0"
   }
 }

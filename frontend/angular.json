@@ -71,6 +71,9 @@
             }
           },
           "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@analogjs/vitest-angular:test"
         }
       }
     }
