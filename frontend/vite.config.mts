@@ -9,11 +9,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     angular({
       tsconfig: 'tsconfig.spec.json'
-    })
+    }),
+    viteTsConfigPaths()
   ],
-  resolve: {
-    tsconfigPaths: true
-  },
   test: {
     globals: true,
     environment: 'jsdom',
