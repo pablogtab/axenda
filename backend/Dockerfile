@@ -9,7 +9,7 @@ COPY prisma ./prisma/
 
 # Instalamos dependencias y generamos el cliente de Prisma
 RUN npm install
-RUN npx prisma generate
+RUN npx prisma generate --schema ./prisma/schema/schema.prisma
 
 # Copiamos el resto del código y compilamos
 COPY . .
