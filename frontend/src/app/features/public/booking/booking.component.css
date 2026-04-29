@@ -636,6 +636,12 @@
   margin-bottom: 1rem;
 }
 
+@media (max-width: 768px) {
+  .success-title {
+    font-size: 2rem;
+  }
+}
+
 .success-message {
   color: var(--booking-text-muted);
   font-size: 1.125rem;
@@ -654,17 +660,41 @@
 .detail-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 1rem;
+  gap: 1rem;
 }
 
 .detail-row span {
   color: var(--booking-text-muted);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .detail-row strong {
   font-weight: 700;
+  text-align: right;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .success-card {
+    padding: 2.5rem 1.5rem;
+  }
+  .success-details {
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    text-align: left;
+  }
+  .detail-row strong {
+    text-align: left;
+    font-size: 1.05rem;
+  }
 }
 
 .success-actions {

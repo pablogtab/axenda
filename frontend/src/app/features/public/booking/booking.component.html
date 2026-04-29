@@ -318,7 +318,7 @@
           </div>
           <div class="detail-row">
             <span>Lugar</span>
-            <strong>{{ selectedBranch()?.name }} - {{ selectedBranch()?.address }}</strong>
+            <strong *ngIf="selectedBranch()">{{ selectedBranch()!.name }}{{ selectedBranch()!.address ? ' - ' + selectedBranch()!.address : '' }}</strong>
           </div>
           <div class="detail-row">
             <span>Atendido por</span>
