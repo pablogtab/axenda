@@ -109,7 +109,7 @@ jobs:
             docker compose -p axenda-app up -d --remove-orphans
             
             # 4. Ejecutar migraciones de Prisma
-            docker exec axenda_backend npx prisma migrate deploy
+            docker exec axenda_backend npx prisma migrate deploy --schema ./prisma/schema/schema.prisma
             
             # Limpieza de imágenes huérfanas
             docker image prune -f
