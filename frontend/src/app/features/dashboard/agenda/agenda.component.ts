@@ -5,15 +5,16 @@ import { ProfessionalsService, Professional, AvailabilityException } from '@serv
 import { BranchesService, Branch } from '@services/branches.service';
 import { ModalService } from '@services/modal.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
-import { format, addDays, startOfDay, startOfWeek, addMonths, startOfMonth } from 'date-fns';
+import { format, addDays, startOfDay, startOfWeek, addMonths, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { SidebarService } from '@services/sidebar.service';
+import { startOfLocalDate, endOfLocalDate } from '@core/utils/date-utils';
+import { AppointmentsService, Appointment } from '@services/appointments.service';
 
 import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
 import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
 import { AgendaMonthViewComponent } from './views/agenda-month-view/agenda-month-view.component';
 import { AgendaViewType } from './agenda.types';
-import { Appointment } from '@services/appointments.service';
 import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
 import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
 import { AgendaService } from './agenda.service';
@@ -44,6 +45,7 @@ export class AgendaComponent implements OnInit {
   private userConfig = inject(UserConfigurationService);
   public agendaService = inject(AgendaService);
   public sidebarService = inject(SidebarService);
+  private appointmentsService = inject(AppointmentsService);
 
   @ViewChild(AgendaDayViewComponent) dayView?: AgendaDayViewComponent;
   @ViewChild(AgendaWeekViewComponent) weekView?: AgendaWeekViewComponent;
@@ -61,6 +63,18 @@ export class AgendaComponent implements OnInit {
     });
     effect(() => {
       this.userConfig.updateAgendaStatuses(this.selectedStatuses());
+    });
+
+    // Efecto para pre-consultar períodos adyacentes y mejorar performance
+    effect(() => {
+      const date = this.selectedDate();
+      const view = this.selectedView();
+      const branchId = this.selectedBranchId();
+      const statuses = this.selectedStatuses();
+      
+      if (branchId) {
+        this.prefetchAdjacentPeriods(date, view, branchId, statuses);
+      }
     });
   }
 
@@ -526,6 +540,49 @@ export class AgendaComponent implements OnInit {
   openSettings(): void {
     this.modal.open(AgendaSettingsComponent, {
       width: '450px'
+    });
+  }
+
+  private prefetchAdjacentPeriods(date: Date, view: AgendaViewType, branchId: string, statuses: string[]) {
+    const adjacentDates: Date[] = [];
+    
+    if (view === 'day') {
+      adjacentDates.push(addDays(date, -1));
+      adjacentDates.push(addDays(date, 1));
+    } else if (view === 'week') {
+      adjacentDates.push(addDays(date, -7));
+      adjacentDates.push(addDays(date, 7));
+    } else if (view === 'month') {
+      adjacentDates.push(addMonths(date, -1));
+      adjacentDates.push(addMonths(date, 1));
+    }
+
+    adjacentDates.forEach(d => {
+      let startDate: string;
+      let endDate: string;
+
+      if (view === 'day') {
+        startDate = startOfLocalDate(d).toISOString();
+        endDate = endOfLocalDate(d).toISOString();
+      } else if (view === 'week') {
+        const start = startOfWeek(d, { weekStartsOn: 1 });
+        const end = addDays(start, 6);
+        startDate = startOfLocalDate(start).toISOString();
+        endDate = endOfLocalDate(end).toISOString();
+      } else { // month
+        const start = startOfWeek(startOfMonth(d), { weekStartsOn: 1 });
+        const end = endOfWeek(endOfMonth(d), { weekStartsOn: 1 });
+        startDate = startOfLocalDate(start).toISOString();
+        endDate = endOfLocalDate(end).toISOString();
+      }
+
+      // Realizar la consulta para poblar el caché
+      this.appointmentsService.findAll({
+        startDate,
+        endDate,
+        branchId,
+        statuses
+      }).subscribe();
     });
   }
 }

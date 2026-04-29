@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap, shareReplay } from 'rxjs';
 import { environment } from '@env/environment';
 
 export enum AppointmentStatus {
@@ -52,6 +52,15 @@ export interface Appointment {
 export class AppointmentsService {
   private http: HttpClient = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/appointments`;
+  private cache = new Map<string, Observable<Appointment[]>>();
+
+  private getCacheKey(filters?: any): string {
+    return JSON.stringify(filters || {});
+  }
+
+  invalidateCache() {
+    this.cache.clear();
+  }
 
   findAll(filters?: { 
     startDate?: string; 
@@ -60,6 +69,12 @@ export class AppointmentsService {
     branchId?: string; 
     statuses?: string[];
   }): Observable<Appointment[]> {
+    const key = this.getCacheKey(filters);
+    
+    if (this.cache.has(key)) {
+      return this.cache.get(key)!;
+    }
+
     let params = new HttpParams();
     if (filters?.startDate) params = params.set('startDate', filters.startDate);
     if (filters?.endDate) params = params.set('endDate', filters.endDate);
@@ -69,7 +84,12 @@ export class AppointmentsService {
       filters.statuses.forEach(s => params = params.append('statuses[]', s));
     }
 
-    return this.http.get<Appointment[]>(this.apiUrl, { params });
+    const request = this.http.get<Appointment[]>(this.apiUrl, { params }).pipe(
+      shareReplay(1)
+    );
+
+    this.cache.set(key, request);
+    return request;
   }
 
   findOne(id: string): Observable<Appointment> {
@@ -77,19 +97,27 @@ export class AppointmentsService {
   }
 
   create(appointment: any): Observable<Appointment> {
-    return this.http.post<Appointment>(this.apiUrl, appointment);
+    return this.http.post<Appointment>(this.apiUrl, appointment).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: string, appointment: any): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${this.apiUrl}/${id}`, appointment);
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}`, appointment).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   updateStatus(id: string, status: AppointmentStatus): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/status`, { status });
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/status`, { status }).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   cancel(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   getAvailability(params: {
