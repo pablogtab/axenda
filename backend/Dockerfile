@@ -6,7 +6,7 @@ WORKDIR /app
 # Copiamos archivos de configuración y dependencias
 COPY package*.json ./
 COPY prisma ./prisma/
-COPY prisma.config.ts ./
+COPY prisma.config.js ./
 
 # Instalamos dependencias y generamos el cliente de Prisma
 RUN --mount=type=cache,target=/root/.npm \
