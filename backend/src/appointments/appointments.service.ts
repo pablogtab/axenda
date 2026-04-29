@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { AvailabilityEngineService } from './availability-engine.service'
 import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
 import { CreatePublicAppointmentDto } from './dto/public-appointment.dto'
+import { AppointmentCreatedEvent } from './events/appointment-created.event'
 import { BookingSource } from '@prisma/client'
 
 @Injectable()
@@ -10,6 +12,7 @@ export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly engine: AvailabilityEngineService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ─── Consultar Disponibilidad ─────────────────────────────────────────────
@@ -263,6 +266,15 @@ export class AppointmentsService {
           notes: 'Turno agendado vía link público',
         },
       })
+
+      const event = new AppointmentCreatedEvent()
+      event.appointment = appointment
+      event.client = client
+      event.professional = professional
+      event.service = service
+      event.isPublic = true
+
+      this.eventEmitter.emit('appointment.created', event)
 
       return appointment
     })

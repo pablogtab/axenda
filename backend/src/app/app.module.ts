@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
+import { EventEmitterModule } from '@nestjs/event-emitter'
 import { validateConfig } from '../config/app.config'
 import { PrismaModule } from '../prisma/prisma.module'
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter'
@@ -38,6 +39,7 @@ import { MailModule } from '../mail/mail.module'
 
     // ─── Shared Modules ──────────────────────────────────────────────────
     StorageModule,
+    EventEmitterModule.forRoot(),
 
     // ─── Auth ────────────────────────────────────────────────────────────
     AuthModule,
