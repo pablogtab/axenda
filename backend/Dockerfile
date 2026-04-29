@@ -9,7 +9,8 @@ COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
 # Instalamos dependencias y generamos el cliente de Prisma
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
 RUN npx prisma generate
 
 # Copiamos el resto del código y compilamos

@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalamos dependencias
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
 
 # Copiamos el resto del código y buildeamos la aplicación
 COPY . .

@@ -32,9 +32,7 @@ services:
       - axenda-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/pablogtab/axenda-backend:latest
     container_name: axenda_backend
     restart: unless-stopped
     environment:
@@ -51,9 +49,7 @@ services:
       - axenda-network
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/pablogtab/axenda-frontend:latest
     container_name: axenda_frontend
     restart: unless-stopped
     depends_on:
