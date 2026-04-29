@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "scripts": {
     "start": "ng serve",
     "start:mobile": "ng serve --host 0.0.0.0 --disable-host-check --configuration mobile",
