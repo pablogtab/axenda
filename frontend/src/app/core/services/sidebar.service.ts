@@ -1,5 +1,6 @@
 import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { Router, NavigationEnd } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
@@ -8,6 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
 export class SidebarService {
   private breakpointObserver = inject(BreakpointObserver);
   private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
 
   public isCollapsed = signal<boolean>(false);
   public isMobile = signal<boolean>(false);
@@ -20,6 +22,12 @@ export class SidebarService {
           this.isCollapsed.set(true);
         } else {
           this.isCollapsed.set(false);
+        }
+      });
+
+      this.router.events.subscribe(event => {
+        if (event instanceof NavigationEnd && this.isMobile()) {
+          this.isCollapsed.set(true);
         }
       });
     }
