@@ -5,6 +5,7 @@ export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { 
     path: 'login', 
+    title: 'Axenda - Iniciar Sesión',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) 
   },
   { 
@@ -15,18 +16,22 @@ export const appRoutes: Routes = [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { 
         path: 'home', 
+        title: 'Axenda - Inicio',
         loadComponent: () => import('./features/dashboard/home/home.component').then(m => m.HomeComponent) 
       },
       {
         path: 'agenda',
+        title: 'Axenda - Mi Agenda',
         loadComponent: () => import('./features/dashboard/agenda/agenda.component').then(m => m.AgendaComponent)
       },
       { 
         path: 'clients', 
+        title: 'Axenda - Clientes',
         loadComponent: () => import('./features/dashboard/clients/clients-list/clients-list.component').then(m => m.ClientsListComponent) 
       },
       { 
         path: 'services', 
+        title: 'Axenda - Servicios',
         loadComponent: () => import('./features/dashboard/services/services-list/services-list.component').then(m => m.ServicesListComponent) 
       },
       { 
@@ -35,6 +40,7 @@ export const appRoutes: Routes = [
       },
       {
         path: 'professionals',
+        title: 'Axenda - Profesionales',
         loadComponent: () => import('./features/dashboard/professionals/professionals-list/professionals-list.component').then(m => m.ProfessionalsListComponent)
       },
       {
@@ -43,6 +49,7 @@ export const appRoutes: Routes = [
       },
       {
         path: 'settings',
+        title: 'Axenda - Configuración',
         loadComponent: () => import('./features/dashboard/settings/settings.component').then(m => m.SettingsComponent)
       }
     ]

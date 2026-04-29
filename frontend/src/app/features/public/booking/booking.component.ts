@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,6 +19,7 @@ export class BookingComponent implements OnInit {
   private router = inject(Router);
   private tenantsService = inject(TenantsService);
   private bookingService = inject(PublicBookingService);
+  private titleService = inject(Title);
 
   tenant = signal<Tenant | null>(null);
   loading = signal(true);
@@ -208,6 +210,7 @@ export class BookingComponent implements OnInit {
     this.tenantsService.getPublicInfo(slug).subscribe({
       next: (tenant) => {
         this.tenant.set(tenant);
+        this.titleService.setTitle(`${tenant.name} - Turnos Online`);
         if (tenant.branches && tenant.branches.length > 0) {
           this.selectedBranch.set(tenant.branches[0]);
         }
