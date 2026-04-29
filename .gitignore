@@ -34,3 +34,6 @@ Thumbs.db
 .angular
 
 vitest.config.*.timestamp*
+
+# Local email emulator
+backend/sent_emails/
