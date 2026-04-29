@@ -4,21 +4,22 @@
         <p class="text-text-muted text-sm mt-1">Gestiona los detalles y preferencias de tu negocio.</p>
     </div>
 
-    <div class="flex-1 flex gap-4 overflow-hidden" [formGroup]="settingsForm">
+    <div class="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden" [formGroup]="settingsForm">
         <!-- Section Sidebar -->
-        <aside class="w-64 shrink-0 flex flex-col gap-1 overflow-y-auto custom-scrollbar pr-2">
+        <aside class="w-full md:w-64 shrink-0 flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-y-auto custom-scrollbar md:pr-2 pb-2 md:pb-0">
             <button
                 *ngFor="let section of sections"
                 (click)="setActiveSection(section.id)"
                 [class.bg-white/10]="activeSection === section.id"
                 [class.text-text-main]="activeSection === section.id"
-                [class.border-l-4]="activeSection === section.id"
+                [class.border-b-4]="activeSection === section.id"
+                [class.md:border-l-4]="activeSection === section.id"
                 [class.border-primary]="activeSection === section.id"
-                class="flex items-center gap-3 p-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main text-left group border-l-4 border-transparent">
-                <span class="text-xl transition-transform group-hover:scale-110">{{ section.icon }}</span>
+                class="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl text-text-muted font-medium transition-all hover:bg-white/5 hover:text-text-main text-left group border-b-4 md:border-b-0 md:border-l-4 border-transparent shrink-0">
+                <span class="text-lg md:text-xl transition-transform group-hover:scale-110">{{ section.icon }}</span>
                 <div class="flex flex-col min-w-0">
-                    <span class="font-bold truncate text-sm">{{ section.title }}</span>
-                    <span class="text-[10px] opacity-60 truncate">{{ section.description }}</span>
+                    <span class="font-bold truncate text-xs md:text-sm">{{ section.title }}</span>
+                    <span class="text-[10px] opacity-60 truncate hidden md:block">{{ section.description }}</span>
                 </div>
             </button>
         </aside>
@@ -117,19 +118,19 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-4 ml-1">
-                                <p class="text-[10px] text-text-muted italic">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
-                                <div class="flex items-center gap-3">
+                            <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 ml-1 mt-2">
+                                <p class="text-[10px] text-text-muted italic flex-1">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
+                                <div class="flex flex-wrap items-center gap-3 md:justify-end">
                                     <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="copyToClipboard()"
-                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
                                         <span>📋</span> Copiar link
                                     </button>
                                     <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="visitPublicPage()"
-                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
                                         <span>🚀</span> Ver mi página
                                     </button>
                                     <button *ngIf="settingsForm.get('publicSlug')?.value && (slugStatus() === 'idle' || slugStatus() === 'available')" (click)="generateQR()"
-                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1">
+                                        class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
                                         <span>📱</span> Generar QR
                                     </button>
                                 </div>
@@ -162,7 +163,7 @@
                 </div>
 
                 <!-- Appearance Section -->
-                <div *ngIf="activeSection === 'appearance'" class="h-[calc(100vh-160px)] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+                <div *ngIf="activeSection === 'appearance'" class="h-full md:h-[calc(100vh-160px)] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto md:overflow-hidden">
 
                     <!-- Header -->
                     <div class="flex justify-between items-center mb-6 shrink-0">
@@ -223,9 +224,9 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-hidden">
+                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 md:overflow-hidden">
                         <!-- Left Column: Settings (Scrollable) -->
-                        <div class="overflow-y-auto custom-scrollbar pr-4 space-y-6">
+                        <div class="md:overflow-y-auto custom-scrollbar md:pr-4 space-y-6">
 
                             <div class="space-y-4">
                                 <h3 class="text-xs font-bold text-text-dim uppercase tracking-widest ml-1">Colores de Marca</h3>
@@ -277,7 +278,7 @@
                             </div>
                         </div>
                         <!-- Right Column: Live Mockup (Fixed height to fit) -->
-                        <div class="h-full flex flex-col items-center justify-center bg-bg-secondary/10 rounded-3xl border border-white/5 relative overflow-hidden">
+                        <div class="min-h-[500px] md:h-full flex flex-col items-center justify-center bg-bg-secondary/10 rounded-3xl border border-white/5 relative overflow-hidden mt-6 md:mt-0">
                             <!-- Mockup Container -->
                             <div class="h-full w-full flex items-center justify-center p-4">
                                 <div
