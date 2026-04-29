@@ -4,6 +4,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailController } from './mail.controller';
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 @Module({
   imports: [
     MailerModule.forRootAsync({
@@ -27,6 +29,6 @@ import { MailController } from './mail.controller';
   ],
   providers: [MailService],
   exports: [MailService],
-  controllers: [MailController],
+  controllers: isDevelopment ? [MailController] : [],
 })
 export class MailModule {}
