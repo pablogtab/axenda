@@ -47,6 +47,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_emails:/app/sent_emails
     networks:
       - axenda-network
 
@@ -62,6 +65,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  backend_uploads:
+  backend_emails:
 
 networks:
   axenda-network:
