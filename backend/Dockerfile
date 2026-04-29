@@ -6,10 +6,11 @@ WORKDIR /app
 # Copiamos archivos de configuración y dependencias
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 # Instalamos dependencias y generamos el cliente de Prisma
 RUN npm install
-RUN npx prisma generate --schema ./prisma/schema/schema.prisma
+RUN npx prisma generate
 
 # Copiamos el resto del código y compilamos
 COPY . .
