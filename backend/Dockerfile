@@ -31,4 +31,4 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
 
 # Iniciamos la aplicación
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]

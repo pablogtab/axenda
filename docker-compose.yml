@@ -35,6 +35,8 @@ services:
     image: ghcr.io/pablogtab/axenda-backend:latest
     container_name: axenda_backend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-axenda}:${POSTGRES_PASSWORD:-axenda_secret}@postgres:5432/${POSTGRES_DB:-axenda_db}?schema=public
       REDIS_HOST: redis

@@ -104,9 +104,12 @@ jobs:
             # Login en GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pullear y levantar (solo lo que cambió)
-            docker compose pull
-            docker compose up -d --remove-orphans
+            # 3. Pullear nuevas imágenes y levantar con nombre de proyecto específico
+            docker compose -p axenda-app pull
+            docker compose -p axenda-app up -d --remove-orphans
+            
+            # 4. Ejecutar migraciones de Prisma
+            docker exec axenda_backend npx prisma migrate deploy
             
             # Limpieza de imágenes huérfanas
             docker image prune -f
