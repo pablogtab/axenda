@@ -56,3 +56,4 @@ Este documento detalla el progreso y lo que falta construir para alcanzar la pri
 
 - [ ] **Impresión de Agenda**: Vista optimizada para imprimir el día de trabajo.
 - [ ] **Pantalla de Sala de Espera**: Mostrar la agenda en un monitor para que los clientes vean el estado de los turnos.
+- [ ] **Step configurable**: El dueño del negocio podrá configurar cuántos turnos se muestran en pantalla
