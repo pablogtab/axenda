@@ -2,9 +2,12 @@ import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app/app.module'
+import { UtcLogger } from './common/logger/utc.logger'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, {
+    logger: new UtcLogger(),
+  })
   const logger = new Logger('Bootstrap')
 
   // ─── Global Prefix ──────────────────────────────────────────────────
