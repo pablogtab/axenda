@@ -11,6 +11,8 @@ import { RegisterDto } from './dto/register.dto'
 import { LoginDto } from './dto/login.dto'
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
 import { UserRole } from '@prisma/client'
+import { MailService } from '../mail/mail.service'
+import * as crypto from 'crypto'
 
 const BCRYPT_ROUNDS = process.env['NODE_ENV'] === 'test' ? 1 : 12
 
@@ -20,23 +22,38 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly mailService: MailService,
   ) {}
 
   // ─── Register ────────────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.tenant.findUnique({
-      where: { slug: dto.organizationSlug },
-    })
-    if (existing) {
-      throw new ConflictException(`El slug "${dto.organizationSlug}" ya está en uso`)
+    let slug = ''
+    let isUnique = false
+    let attempts = 0
+    const maxAttempts = 10
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Generamos un slug de 6 caracteres aleatorios (hexadecimal corto)
+      slug = crypto.randomBytes(3).toString('hex')
+      const existing = await this.prisma.tenant.findUnique({
+        where: { slug },
+      })
+      if (!existing) {
+        isUnique = true
+      }
+      attempts++
+    }
+
+    if (!isUnique) {
+      throw new ConflictException('No se pudo generar un identificador único para el negocio. Por favor, intenta de nuevo.')
     }
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
 
     const { tenant, user } = await this.prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
-        data: { name: dto.organizationName, slug: dto.organizationSlug },
+        data: { name: dto.organizationName, slug },
       })
 
       const user = await tx.user.create({
@@ -52,6 +69,22 @@ export class AuthService {
 
       return { tenant, user }
     })
+
+    // Enviamos el mail de bienvenida (no bloqueamos el retorno de los tokens)
+    this.mailService.sendMail({
+      to: user.email,
+      subject: '¡Bienvenido a Axenda!',
+      template: 'welcome-new-account',
+      context: {
+        ownerName: user.firstName,
+        businessName: tenant.name,
+        dashboardLink: `${this.config.get('FRONTEND_URL')}/dashboard`,
+        year: new Date().getFullYear(),
+      },
+    }).catch(err => {
+      // Solo logueamos el error para no fallar el registro si falla el mail
+      console.error('Error enviando mail de bienvenida:', err);
+    });
 
     return this.generateTokens(user.id, tenant.id, user.role)
   }

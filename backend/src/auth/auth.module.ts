@@ -9,8 +9,11 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 
+import { MailModule } from '../mail/mail.module'
+
 @Module({
   imports: [
+    MailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
