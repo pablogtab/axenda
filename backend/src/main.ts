@@ -59,6 +59,16 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0')
 
   logger.log(`🚀 API running at: http://localhost:${port}/api`)
+
+  // ─── Global Error Handlers (Evitar reinicios por errores no capturados) ───
+  process.on('uncaughtException', (err) => {
+    logger.error(`Excepción no capturada (uncaughtException): ${err.message}`, err.stack)
+    // No salimos del proceso para evitar que el servicio de Nest se reinicie
+  })
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error(`Promesa rechazada no manejada (unhandledRejection): ${reason}`)
+  })
 }
 
 bootstrap()
