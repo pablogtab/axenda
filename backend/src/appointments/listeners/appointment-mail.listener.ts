@@ -13,7 +13,7 @@ export class AppointmentMailListener {
     private readonly configService: ConfigService,
   ) {}
 
-  @OnEvent('appointment.created')
+  @OnEvent('appointment.created', { async: true })
   async handleAppointmentCreatedEvent(payload: AppointmentCreatedEvent) {
     // Solo enviamos correo si es un turno creado desde el lado público
     if (!payload.isPublic) {

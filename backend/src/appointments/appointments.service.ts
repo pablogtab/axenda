@@ -242,8 +242,8 @@ export class AppointmentsService {
     const end = new Date(start.getTime() + service.duration * 60000)
 
     // 5. Crear turno en transacción
-    return this.prisma.$transaction(async (tx) => {
-      const appointment = await tx.appointment.create({
+    const appointment = await this.prisma.$transaction(async (tx) => {
+      const newAppointment = await tx.appointment.create({
         data: {
           tenantId,
           clientId: client!.id,
@@ -260,24 +260,26 @@ export class AppointmentsService {
 
       await tx.appointmentLog.create({
         data: {
-          appointmentId: appointment.id,
+          appointmentId: newAppointment.id,
           changedBy: 'CLIENT',
-          newStatus: appointment.status,
+          newStatus: newAppointment.status,
           notes: 'Turno agendado vía link público',
         },
       })
 
-      const event = new AppointmentCreatedEvent()
-      event.appointment = appointment
-      event.client = client
-      event.professional = professional
-      event.service = service
-      event.isPublic = true
-
-      this.eventEmitter.emit('appointment.created', event)
-
-      return appointment
+      return newAppointment
     })
+
+    const event = new AppointmentCreatedEvent()
+    event.appointment = appointment
+    event.client = client
+    event.professional = professional
+    event.service = service
+    event.isPublic = true
+
+    this.eventEmitter.emit('appointment.created', event)
+
+    return appointment
   }
 }
 
