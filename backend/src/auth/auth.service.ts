@@ -83,11 +83,52 @@ export class AuthService {
         }
       }
 
-      // 3. Si sigue sin existir, es un registro nuevo vía Google
-      // IMPORTANTE: Aquí podrías crear un Tenant por defecto o pedirlo después.
-      // Por ahora, lanzaremos un error si no queremos auto-registro sin nombre de negocio.
+      // 3. Si sigue sin existir, es un registro nuevo vía Google (Auto-registro)
       if (!user) {
-        throw new UnauthorizedException('Cuenta no encontrada. Por favor, regístrate primero.')
+        const slug = await this.generateUniqueSlug()
+        const businessName = `Negocio de ${firstName}`
+
+        const result = await this.prisma.$transaction(async (tx) => {
+          const newTenant = await tx.tenant.create({
+            data: { 
+              name: businessName, 
+              slug 
+            },
+          })
+
+          const newUser = await tx.user.create({
+            data: {
+              tenantId: newTenant.id,
+              email,
+              role: UserRole.ADMIN,
+              firstName,
+              lastName,
+              identities: {
+                create: {
+                  provider: AuthProvider.GOOGLE,
+                  providerId: googleId,
+                },
+              },
+            },
+            include: { tenant: true }
+          })
+
+          return newUser
+        })
+        user = result
+
+        // 4. Enviar mail de bienvenida (no bloqueante)
+        this.mailService.sendMail({
+          to: user.email,
+          subject: '¡Bienvenido a Axenda!',
+          template: 'welcome-new-account',
+          context: {
+            ownerName: user.firstName,
+            businessName: user.tenant.name,
+            dashboardLink: `${this.config.get('FRONTEND_URL')}/dashboard`,
+            year: new Date().getFullYear(),
+          },
+        }).catch(err => console.error('Error enviando mail de bienvenida (Google):', err))
       }
 
       return this.generateTokens(user.id, user.tenantId, user.role)
