@@ -54,8 +54,12 @@ export class LoginComponent implements AfterViewInit {
       };
 
       this.authService.login(credentials).subscribe({
-        next: () => {
-          this.router.navigate(['/dashboard']);
+        next: (data) => {
+          if (data.onboardingCompleted) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.router.navigate(['/getting-started']);
+          }
         },
         error: (err) => {
           this.isLoading = false;
@@ -95,9 +99,13 @@ export class LoginComponent implements AfterViewInit {
   handleGoogleLogin(response: any) {
     this.isLoading = true;
     this.authService.googleLogin(response.credential, this.turnstileToken()).subscribe({
-      next: () => {
+      next: (data) => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        if (data.onboardingCompleted) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/getting-started']);
+        }
       },
       error: (err) => {
         this.isLoading = false;

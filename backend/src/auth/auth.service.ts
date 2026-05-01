@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
@@ -90,9 +91,9 @@ export class AuthService {
 
         const result = await this.prisma.$transaction(async (tx) => {
           const newTenant = await tx.tenant.create({
-            data: { 
-              name: businessName, 
-              slug 
+            data: {
+              name: businessName,
+              slug
             },
           })
 
@@ -279,8 +280,8 @@ export class AuthService {
       if (!tenant) throw new UnauthorizedException('Credenciales inválidas')
 
       user = await this.prisma.user.findFirst({
-        where: { 
-          tenantId: tenant.id, 
+        where: {
+          tenantId: tenant.id,
           email: dto.email,
           active: true,
         },
@@ -292,8 +293,8 @@ export class AuthService {
       })
     } else {
       user = await this.prisma.user.findFirst({
-        where: { 
-          email: dto.email, 
+        where: {
+          email: dto.email,
           active: true,
         },
         include: {
@@ -340,7 +341,7 @@ export class AuthService {
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   private async findUser(id: string) {
-    return this.prisma.user.findUnique({ 
+    return this.prisma.user.findUnique({
       where: { id },
       include: { identities: true }
     })
@@ -364,7 +365,7 @@ export class AuthService {
     // Calculate expirations for the client
     const accessTokenExpiresIn = this.config.get<string>('JWT_EXPIRES_IN', '15m')
     const expiresAt = this.parseExpiry(accessTokenExpiresIn)
-    
+
     const refreshExpiresAt = this.parseExpiry(refreshExpiresIn)
 
     // Persist refresh token (used for revocation)
@@ -372,11 +373,19 @@ export class AuthService {
       data: { userId, token: refreshToken, expiresAt: refreshExpiresAt },
     })
 
-    return { 
-      accessToken, 
-      refreshToken, 
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { onboardingCompleted: true }
+    })
+
+    if (!tenant) throw new BadRequestException('Tenant no encontrado')
+
+    return {
+      accessToken,
+      refreshToken,
       expiresAt: expiresAt.toISOString(),
-      refreshExpiresAt: refreshExpiresAt.toISOString()
+      refreshExpiresAt: refreshExpiresAt.toISOString(),
+      onboardingCompleted: tenant.onboardingCompleted
     }
   }
 

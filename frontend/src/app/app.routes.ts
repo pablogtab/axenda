@@ -20,6 +20,12 @@ export const appRoutes: Routes = [
     loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.dashboardRoutes)
   },
   {
+    path: 'getting-started',
+    canActivate: [authGuard],
+    title: 'Axenda - Empecemos',
+    loadComponent: () => import('./features/onboarding/getting-started/getting-started.component').then(m => m.GettingStartedComponent)
+  },
+  {
     path: ':publicSlug',
     loadComponent: () => import('./features/public/booking/booking.component').then(m => m.BookingComponent)
   }

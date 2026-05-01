@@ -10,6 +10,7 @@ export interface AuthData {
   refreshToken: string;
   expiresAt?: string;
   refreshExpiresAt?: string;
+  onboardingCompleted?: boolean;
 }
 
 @Injectable({

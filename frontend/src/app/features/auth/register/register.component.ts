@@ -112,8 +112,12 @@ export class RegisterComponent {
       };
 
       this.authService.registerComplete(data).subscribe({
-        next: () => {
-          this.router.navigate(['/dashboard']);
+        next: (res) => {
+          if (res.onboardingCompleted) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.router.navigate(['/getting-started']);
+          }
         },
         error: (err) => {
           this.isLoading.set(false);

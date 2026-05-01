@@ -1,4 +1,4 @@
-import { PrismaClient, TenantMode, UserRole, ExceptionType } from '@prisma/client'
+import { PrismaClient, TenantMode, UserRole, ExceptionType, AuthProvider } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import * as bcrypt from 'bcrypt'
@@ -49,9 +49,17 @@ async function main() {
             firstName: 'Admin',
             lastName: 'Axenda',
             email: 'admin@axenda.com',
-            passwordHash,
             role: UserRole.ADMIN,
-            active: true
+            active: true,
+            identities: {
+              create: [
+                {
+                  provider: AuthProvider.EMAIL,
+                  providerId: 'admin@axenda.com',
+                  passwordHash
+                }
+              ]
+            }
           }
         ]
       },
@@ -128,8 +136,16 @@ async function main() {
             firstName: 'Maria',
             lastName: 'Estetica',
             email: 'maria@estetica.com',
-            passwordHash,
             role: UserRole.ADMIN,
+            identities: {
+              create: [
+                {
+                  provider: AuthProvider.EMAIL,
+                  providerId: 'maria@estetica.com',
+                  passwordHash
+                }
+              ]
+            }
           }
         ]
       }

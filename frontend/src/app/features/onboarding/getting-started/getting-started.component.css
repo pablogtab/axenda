@@ -1,0 +1,33 @@
+@reference "../../../../styles.css";
+
+.step-container {
+  @apply transition-all duration-500 ease-in-out;
+}
+
+.step-active {
+  @apply opacity-100 translate-x-0;
+}
+
+.step-inactive {
+  @apply opacity-0 translate-x-10 pointer-events-none absolute;
+}
+
+.category-card {
+  @apply p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center gap-3 text-center;
+}
+
+.category-card.active {
+  @apply bg-primary/20 border-primary shadow-[0_0_20px_rgba(99,102,241,0.2)];
+}
+
+.category-icon {
+  @apply w-12 h-12 flex items-center justify-center rounded-xl bg-primary/10 text-primary text-2xl;
+}
+
+.progress-bar {
+  @apply h-1.5 bg-white/5 rounded-full overflow-hidden mb-8;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out;
+}

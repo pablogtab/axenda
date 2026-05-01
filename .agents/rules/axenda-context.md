@@ -39,6 +39,19 @@ trigger: always_on
 4. **Google OAuth**: Integración nativa para autenticación social.
 5. **Notificaciones**: Sistema de correos asíncrono basado en eventos.
 
+## 📁 Sistema de Almacenamiento
+- **Estrategia Híbrida**: Soporta almacenamiento local (desarrollo) y Google Cloud Storage (producción).
+- **Arquitectura**:
+  - `StorageProvider`: Interfaz abstracta que define la generación de URLs firmadas y borrado de archivos.
+  - `LocalStorageProvider`: Simula el comportamiento de la nube guardando archivos en `/backend/uploads`.
+  - `GcsStorageProvider`: Implementación para producción usando el SDK de Google Cloud.
+- **Flujo de Subida**:
+  1. Frontend solicita una URL de subida (`POST /api/storage/upload-url`).
+  2. Backend genera una URL firmada (o una URL local de simulación).
+  3. Frontend sube el archivo directamente a esa URL mediante `PUT`.
+  4. El componente `ImageUploaderComponent` emite la `fileKey` resultante para guardarla en la base de datos.
+- **Visualización**: El `StoragePipe` en el frontend convierte las keys almacenadas en URLs completas accesibles.
+
 ---
 
 # 🔄 Flujo de Trabajo Genérico

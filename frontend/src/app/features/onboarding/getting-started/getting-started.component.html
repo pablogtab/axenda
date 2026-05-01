@@ -1,0 +1,98 @@
+<div class="relative min-h-dvh flex items-center justify-center bg-bg-primary overflow-hidden">
+  <!-- Fondo Decorativo -->
+  <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[60%] bg-[radial-gradient(circle,var(--color-primary-glow)_0%,transparent_70%)] blur-[80px] z-0"></div>
+  <div class="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[radial-gradient(circle,rgba(168,85,247,0.15)_0%,transparent_70%)] blur-[80px] z-0"></div>
+
+  <div class="card-glass w-full max-w-[500px] !p-10 z-10 relative">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gradient mb-2">Hola!</h1>
+      <p class="text-text-muted">Personalicemos tu experiencia en Axenda</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="(currentStep() / 3) * 100"></div>
+    </div>
+
+    <!-- Step 1: Business Profile -->
+    <div class="step-container" [class.step-active]="currentStep() === 1" [class.step-inactive]="currentStep() !== 1">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-text-muted">Nombre de tu Negocio</label>
+          <input 
+            type="text" 
+            [ngModel]="businessName()"
+            (ngModelChange)="businessName.set($event)"
+            placeholder="Ej: Barbería Central"
+            class="input-field"
+          >
+        </div>
+
+        @if (tenantId()) {
+          <app-image-uploader 
+            [currentImageUrl]="logoUrl()"
+            [tenantId]="tenantId()"
+            category="logos"
+            label="Logo (Opcional)"
+            dimensions="w-20 h-20"
+            (imageUploaded)="onLogoUploaded($event)"
+          ></app-image-uploader>
+        } @else {
+          <div class="w-20 h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+        }
+
+        <button (click)="nextStep()" class="btn-primary w-full mt-4" [disabled]="!businessName()">
+          Siguiente paso →
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Category Selection -->
+    <div class="step-container" [class.step-active]="currentStep() === 2" [class.step-inactive]="currentStep() !== 2">
+      <div class="flex flex-col gap-6">
+        <label class="text-sm font-semibold text-text-muted text-center">¿A qué se dedica tu negocio?</label>
+        
+        <div class="grid grid-cols-2 gap-3">
+          @for (cat of categories; track cat.id) {
+            <div 
+              class="category-card" 
+              [class.active]="selectedCategory() === cat.id"
+              (click)="selectedCategory.set(cat.id)"
+            >
+              <div class="category-icon">{{ cat.icon }}</div>
+              <span class="text-sm font-medium">{{ cat.name }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button (click)="prevStep()" class="btn-secondary flex-1">Atrás</button>
+          <button (click)="nextStep()" class="btn-primary flex-1" [disabled]="!selectedCategory()">
+            Casi listo →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Final Touch -->
+    <div class="step-container" [class.step-active]="currentStep() === 3" [class.step-inactive]="currentStep() !== 3">
+      <div class="text-center py-6">
+        <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">¡Todo listo!</h2>
+        <p class="text-text-muted mb-8">Ya preparamos tu agenda. Puedes empezar a gestionar tus turnos ahora mismo.</p>
+        
+        <button (click)="completeOnboarding()" class="btn-primary w-full" [disabled]="isLoading">
+          @if (!isLoading) {
+            Ir al Panel de Control
+          } @else {
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+          }
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

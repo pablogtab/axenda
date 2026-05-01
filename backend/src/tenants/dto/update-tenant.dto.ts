@@ -24,12 +24,12 @@ export class UpdateTenantDto {
   @IsString()
   currency?: string
 
-  @ApiPropertyOptional({ example: 'https://cdn.example.com/logo.png' })
+  @ApiPropertyOptional({ example: '/logo.png' })
   @IsOptional()
   @IsString()
   logoUrl?: string
 
-  @ApiPropertyOptional({ example: 'https://cdn.example.com/banner.png' })
+  @ApiPropertyOptional({ example: '/banner.png' })
   @IsOptional()
   @IsString()
   bannerUrl?: string
@@ -90,4 +90,9 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsString()
   publicMinBookingTime?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  onboardingCompleted?: boolean
 }

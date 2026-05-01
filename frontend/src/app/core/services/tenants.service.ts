@@ -7,6 +7,7 @@ export interface Tenant {
   id: string;
   name: string;
   slug: string;
+  onboardingCompleted: boolean;
   publicSlug?: string;
   mode: string;
   timezone: string;
@@ -47,6 +48,7 @@ export interface UpdateTenantDto {
   publicMaxOverlapMins?: number;
   publicMaxBookingDays?: number;
   publicMinBookingTime?: string;
+  onboardingCompleted?: boolean;
 }
 
 @Injectable({
