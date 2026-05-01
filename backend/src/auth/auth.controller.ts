@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
-import { RegisterDto } from './dto/register.dto'
+import { RegisterStartDto, RegisterCompleteDto } from './dto/register-flow.dto'
 import { LoginDto } from './dto/login.dto'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
@@ -20,10 +20,16 @@ import { UserRole } from '@prisma/client'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  @ApiOperation({ summary: 'Registrar nueva organización con usuario administrador' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto)
+  @Post('register-start')
+  @ApiOperation({ summary: 'Iniciar registro (envía código al mail)' })
+  registerStart(@Body() dto: RegisterStartDto) {
+    return this.authService.registerStart(dto)
+  }
+
+  @Post('register-complete')
+  @ApiOperation({ summary: 'Completar registro (verifica código y crea cuenta)' })
+  registerComplete(@Body() dto: RegisterCompleteDto) {
+    return this.authService.registerComplete(dto)
   }
 
   @Post('login')

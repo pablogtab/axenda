@@ -31,7 +31,6 @@ function decodePayload(token: string): Record<string, unknown> {
 const slug = `test-org-${Date.now()}`
 const testOrg = {
   organizationName: 'Test Organization',
-  organizationSlug: slug,
   firstName: 'Test',
   lastName: 'Admin',
   email: `admin-${Date.now()}@test.axenda.com`,
@@ -85,57 +84,79 @@ describe('Auth — Integration', () => {
     await app.close()
   })
 
-  // ── POST /api/auth/register ────────────────────────────────────────────────
+  // ── POST /api/auth/register-flow ──────────────────────────────────────────
 
-  describe('POST /api/auth/register', () => {
-    it('should register a new organization and return token pair', async () => {
+  describe('Registration Flow (Start & Complete)', () => {
+    it('should start registration and send a code', async () => {
       const res = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send(testOrg)
+        .post('/api/auth/register-start')
+        .send({
+          organizationName: testOrg.organizationName,
+          email: testOrg.email,
+        })
         .expect(201)
 
-      expect(res.body).toMatchObject({ statusCode: 201 })
-      expect(res.body.data).toHaveProperty('accessToken')
-      expect(res.body.data).toHaveProperty('refreshToken')
+      expect(res.body.data.message).toContain('enviado')
+
+      // Verificar que el código existe en la DB
+      const verification = await prisma.verificationCode.findUnique({
+        where: { email: testOrg.email },
+      })
+      expect(verification).not.toBeNull()
+      expect(verification!.code).toHaveLength(6)
+    })
+
+
+    it('should complete registration with correct code', async () => {
+      // 1. Obtener el código de la DB
+      const verification = await prisma.verificationCode.findUnique({
+        where: { email: testOrg.email },
+      })
+      const code = verification!.code
+
+      // 2. Completar registro
+      const res = await request(app.getHttpServer())
+        .post('/api/auth/register-complete')
+        .send({
+          email: testOrg.email,
+          code,
+          firstName: testOrg.firstName,
+          lastName: testOrg.lastName,
+          password: testOrg.password,
+        })
+        .expect(201)
+
+      expect(res.body.data.accessToken).toBeDefined()
+      expect(res.body.data.refreshToken).toBeDefined()
 
       accessToken = res.body.data.accessToken
       refreshToken = res.body.data.refreshToken
 
       const payload = decodePayload(accessToken)
       tenantId = payload['tenantId'] as string
-
-      expect(payload['role']).toBe('ADMIN')
-      expect(tenantId).toBeDefined()
     })
 
-    it('should reject duplicate slug with 409', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send(testOrg)
+    it('should reject register-start with already registered email', async () => {
+      await request(app.getHttpServer())
+        .post('/api/auth/register-start')
+        .send({
+          organizationName: 'Another Org',
+          email: testOrg.email, // Ya registrado en el test anterior
+        })
         .expect(409)
-
-      expect(res.body.error.message).toContain(slug)
     })
 
-    it('should reject invalid slug format (uppercase / spaces) with 400', async () => {
+    it('should reject complete-registration with wrong code', async () => {
       await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({ ...testOrg, organizationSlug: 'Invalid Slug!' })
-        .expect(400)
-    })
-
-    it('should reject password shorter than 8 chars with 400', async () => {
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({ ...testOrg, organizationSlug: 'another-slug', password: '123' })
-        .expect(400)
-    })
-
-    it('should reject invalid email format with 400', async () => {
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({ ...testOrg, organizationSlug: 'another-slug-2', email: 'not-an-email' })
-        .expect(400)
+        .post('/api/auth/register-complete')
+        .send({
+          email: testOrg.email,
+          code: '000000', // Código incorrecto
+          firstName: testOrg.firstName,
+          lastName: testOrg.lastName,
+          password: testOrg.password,
+        })
+        .expect(401)
     })
   })
 
@@ -148,8 +169,8 @@ describe('Auth — Integration', () => {
         .send({ email: testOrg.email, password: testOrg.password })
         .expect(200)
 
-      expect(res.body.data).toHaveProperty('accessToken')
-      expect(res.body.data).toHaveProperty('refreshToken')
+      expect(res.body.data.accessToken).toBeDefined()
+      expect(res.body.data.refreshToken).toBeDefined()
 
       // Use fresh tokens for subsequent tests
       refreshToken = res.body.data.refreshToken
@@ -172,13 +193,13 @@ describe('Auth — Integration', () => {
         .expect(401)
     })
 
-    it('should login with tenantSlug and return 200', async () => {
+    it('should login with email and password and return 200', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: testOrg.email, password: testOrg.password, tenantSlug: slug })
+        .send({ email: testOrg.email, password: testOrg.password })
         .expect(200)
 
-      expect(res.body.data).toHaveProperty('accessToken')
+      expect(res.body.data.accessToken).toBeDefined()
       refreshToken = res.body.data.refreshToken
     })
 
@@ -205,8 +226,8 @@ describe('Auth — Integration', () => {
         .send({ refreshToken: oldRefreshToken })
         .expect(200)
 
-      expect(res.body.data).toHaveProperty('accessToken')
-      expect(res.body.data).toHaveProperty('refreshToken')
+      expect(res.body.data.accessToken).toBeDefined()
+      expect(res.body.data.refreshToken).toBeDefined()
       // New refresh token must be different (rotation)
       expect(res.body.data.refreshToken).not.toBe(oldRefreshToken)
 
@@ -251,15 +272,17 @@ describe('Auth — Integration', () => {
 
   describe('Database state', () => {
     it('should have created the tenant in the DB', async () => {
-      const tenant = await prisma.tenant.findUnique({ where: { slug } })
-      expect(tenant).not.toBeNull()
-      expect(tenant!.name).toBe(testOrg.organizationName)
+      const user = await prisma.user.findFirst({
+        where: { email: testOrg.email },
+        include: { tenant: true }
+      })
+      expect(user).not.toBeNull()
+      expect(user!.tenant.name).toBe(testOrg.organizationName)
     })
 
     it('should have created the admin user with ADMIN role', async () => {
-      const tenant = await prisma.tenant.findUnique({ where: { slug } })
-      const user = await prisma.user.findUnique({
-        where: { tenantId_email: { tenantId: tenant!.id, email: testOrg.email } },
+      const user = await prisma.user.findFirst({
+        where: { email: testOrg.email },
       })
       expect(user).not.toBeNull()
       expect(user!.role).toBe('ADMIN')

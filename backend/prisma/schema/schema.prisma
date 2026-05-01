@@ -53,3 +53,8 @@ enum BookingSource {
   WIDGET
   QR
 }
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+}

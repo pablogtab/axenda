@@ -7,10 +7,10 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
-import { RegisterDto } from './dto/register.dto'
+import { RegisterStartDto, RegisterCompleteDto } from './dto/register-flow.dto'
 import { LoginDto } from './dto/login.dto'
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
-import { UserRole } from '@prisma/client'
+import { UserRole, AuthProvider } from '@prisma/client'
 import { MailService } from '../mail/mail.service'
 import * as crypto from 'crypto'
 
@@ -27,33 +27,71 @@ export class AuthService {
 
   // ─── Register ────────────────────────────────────────────────────────────────
 
-  async register(dto: RegisterDto) {
-    let slug = ''
-    let isUnique = false
-    let attempts = 0
-    const maxAttempts = 10
+  // ─── Register Flow ───────────────────────────────────────────────────────────
 
-    while (!isUnique && attempts < maxAttempts) {
-      // Generamos un slug de 6 caracteres aleatorios (hexadecimal corto)
-      slug = crypto.randomBytes(3).toString('hex')
-      const existing = await this.prisma.tenant.findUnique({
-        where: { slug },
-      })
-      if (!existing) {
-        isUnique = true
-      }
-      attempts++
+  async registerStart(dto: RegisterStartDto) {
+    // 1. Verificar si el mail ya está en uso por un usuario activo
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: dto.email, active: true },
+    })
+    if (existingUser) {
+      throw new ConflictException('El correo electrónico ya está registrado.')
     }
 
-    if (!isUnique) {
-      throw new ConflictException('No se pudo generar un identificador único para el negocio. Por favor, intenta de nuevo.')
+    // 2. Generar código de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutos
+
+    // 3. Guardar en verification_codes (upsert para el mismo mail)
+    await this.prisma.verificationCode.upsert({
+      where: { email: dto.email },
+      create: {
+        email: dto.email,
+        code,
+        payload: { organizationName: dto.organizationName },
+        expiresAt,
+      },
+      update: {
+        code,
+        payload: { organizationName: dto.organizationName },
+        expiresAt,
+      },
+    })
+
+    // 4. Enviar mail
+    await this.mailService.sendMail({
+      to: dto.email,
+      subject: 'Código de verificación - Axenda',
+      template: 'verification-code',
+      context: {
+        code,
+        year: new Date().getFullYear(),
+      },
+    })
+
+    return { message: 'Código de verificación enviado al correo.' }
+  }
+
+  async registerComplete(dto: RegisterCompleteDto) {
+    // 1. Verificar código
+    const verification = await this.prisma.verificationCode.findUnique({
+      where: { email: dto.email },
+    })
+
+    if (!verification || verification.code !== dto.code || verification.expiresAt < new Date()) {
+      throw new UnauthorizedException('Código de verificación inválido o expirado.')
     }
+
+    const payload = verification.payload as { organizationName: string }
+
+    // 2. Generar slug único
+    const slug = await this.generateUniqueSlug()
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
 
     const { tenant, user } = await this.prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
-        data: { name: dto.organizationName, slug },
+        data: { name: payload.organizationName, slug },
       })
 
       const user = await tx.user.create({
@@ -61,6 +99,7 @@ export class AuthService {
           tenantId: tenant.id,
           email: dto.email,
           passwordHash,
+          provider: AuthProvider.EMAIL,
           role: UserRole.ADMIN,
           firstName: dto.firstName,
           lastName: dto.lastName,
@@ -70,7 +109,10 @@ export class AuthService {
       return { tenant, user }
     })
 
-    // Enviamos el mail de bienvenida (no bloqueamos el retorno de los tokens)
+    // 3. Borrar código usado
+    await this.prisma.verificationCode.delete({ where: { email: dto.email } })
+
+    // 4. Enviar mail de bienvenida (no bloqueante)
     this.mailService.sendMail({
       to: user.email,
       subject: '¡Bienvenido a Axenda!',
@@ -81,12 +123,30 @@ export class AuthService {
         dashboardLink: `${this.config.get('FRONTEND_URL')}/dashboard`,
         year: new Date().getFullYear(),
       },
-    }).catch(err => {
-      // Solo logueamos el error para no fallar el registro si falla el mail
-      console.error('Error enviando mail de bienvenida:', err);
-    });
+    }).catch(err => console.error('Error enviando mail de bienvenida:', err))
 
     return this.generateTokens(user.id, tenant.id, user.role)
+  }
+
+  private async generateUniqueSlug(): Promise<string> {
+    let slug = ''
+    let isUnique = false
+    let attempts = 0
+    const maxAttempts = 10
+
+    while (!isUnique && attempts < maxAttempts) {
+      slug = crypto.randomBytes(3).toString('hex')
+      const existing = await this.prisma.tenant.findUnique({ where: { slug } })
+      if (!existing) {
+        isUnique = true
+      }
+      attempts++
+    }
+
+    if (!isUnique) {
+      throw new ConflictException('No se pudo generar un identificador único para el negocio.')
+    }
+    return slug
   }
 
   // ─── Login ───────────────────────────────────────────────────────────────────

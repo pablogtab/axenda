@@ -5,8 +5,10 @@ model User {
   tenantId     String
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   email        String
-  passwordHash String
-  role         UserRole @default(RECEPTIONIST)
+  passwordHash String?
+  provider     AuthProvider @default(EMAIL)
+  googleId     String?      @unique
+  role         UserRole     @default(RECEPTIONIST)
   firstName    String
   lastName     String
   active       Boolean  @default(true)

@@ -1,0 +1,12 @@
+// ─── Verification Codes ──────────────────────────────────
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  code      String
+  payload   Json?    // Para guardar datos temporales como el organizationName
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("verification_codes")
+}

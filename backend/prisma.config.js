@@ -1,5 +1,7 @@
 const { defineConfig } = require('prisma/config');
 
+if (!process.env.DATABASE_URL) require('dotenv').config();
+
 module.exports = defineConfig({
   schema: './prisma/schema',
   datasource: {
