@@ -61,7 +61,13 @@
           }
         </div>
 
-        <button type="submit" class="btn-primary w-full mt-4 group" [disabled]="step1Form.invalid || isLoading()">
+        @if (!skipTurnstile) {
+          <div class="mt-4 flex justify-center min-h-[65px]">
+            <app-turnstile (resolved)="turnstileToken.set($event)"></app-turnstile>
+          </div>
+        }
+
+        <button type="submit" class="btn-primary w-full mt-4 group" [disabled]="step1Form.invalid || !turnstileToken() || isLoading()">
           @if (!isLoading()) {
             <span class="flex items-center justify-center gap-2">
               Continuar

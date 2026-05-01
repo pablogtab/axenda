@@ -9,6 +9,10 @@ export class RegisterStartDto {
   @ApiProperty({ example: 'admin@minegocio.com' })
   @IsEmail()
   email: string
+
+  @ApiProperty({ description: 'Cloudflare Turnstile token' })
+  @IsString()
+  turnstileToken: string
 }
 
 export class RegisterCompleteDto {

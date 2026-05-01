@@ -32,6 +32,13 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   FRONTEND_URL: string = 'http://localhost:4200'
+
+  @IsString()
+  CLOUDFLARE_TURNSTILE_SECRET: string
+
+  @IsOptional()
+  @IsString()
+  SKIP_TURNSTILE: string = 'false'
 }
 
 export function validateConfig(config: Record<string, unknown>) {

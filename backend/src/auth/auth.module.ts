@@ -11,6 +11,8 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 
 import { MailModule } from '../mail/mail.module'
 
+import { TurnstileService } from './turnstile.service'
+
 @Module({
   imports: [
     MailModule,
@@ -28,7 +30,7 @@ import { MailModule } from '../mail/mail.module'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, JwtAuthGuard, JwtRefreshGuard],
+  providers: [AuthService, TurnstileService, JwtStrategy, JwtRefreshStrategy, JwtAuthGuard, JwtRefreshGuard],
   exports: [AuthService, JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

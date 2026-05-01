@@ -28,14 +28,27 @@
 
       <div class="flex flex-col gap-2">
         <label for="password" class="text-sm font-semibold text-text-muted">Contraseña</label>
-        <input 
-          type="password" 
-          id="password" 
-          formControlName="password" 
-          placeholder="••••••••"
-          class="input-field"
-          [class.!border-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-        >
+        <div class="relative">
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            id="password" 
+            formControlName="password" 
+            placeholder="••••••••"
+            class="input-field pr-12"
+            [class.!border-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          >
+          <button 
+            type="button" 
+            (click)="showPassword.set(!showPassword())"
+            class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-text-dim hover:text-primary transition-colors focus:outline-none"
+          >
+            @if (showPassword()) {
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88L14.12 14.12"/><path d="M2 2l20 20"/><path d="M10.37 10.37a4 4 0 1 0 5.26 5.26"/><path d="M22.92 12.14a11 11 0 0 0-4.13-5.26"/><path d="M15.42 15.42a11 11 0 0 1-14.34-3.28"/><path d="M12 4.54a11 11 0 0 1 7.3 2.73"/><path d="M5.58 5.58a11 11 0 0 0-3.5 6.56"/></svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            }
+          </button>
+        </div>
       </div>
 
       @if (errorMessage) {
@@ -44,7 +57,13 @@
         </div>
       }
 
-      <button type="submit" class="btn-primary w-full mt-2 group" [disabled]="loginForm.invalid || isLoading">
+      @if (!skipTurnstile) {
+        <div class="mt-2 flex justify-center min-h-[65px]">
+          <app-turnstile (resolved)="turnstileToken.set($event)"></app-turnstile>
+        </div>
+      }
+
+      <button type="submit" class="btn-primary w-full mt-2 group" [disabled]="loginForm.invalid || !turnstileToken() || isLoading">
         @if (!isLoading) {
           <span class="flex items-center justify-center gap-2">
             Iniciar Sesión

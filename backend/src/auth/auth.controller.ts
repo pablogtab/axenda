@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Ip,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
@@ -15,14 +16,20 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { UserRole } from '@prisma/client'
 
+import { TurnstileService } from './turnstile.service'
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly turnstileService: TurnstileService,
+  ) {}
 
   @Post('register-start')
   @ApiOperation({ summary: 'Iniciar registro (envía código al mail)' })
-  registerStart(@Body() dto: RegisterStartDto) {
+  async registerStart(@Body() dto: RegisterStartDto, @Ip() ip: string) {
+    await this.turnstileService.verifyToken(dto.turnstileToken, ip)
     return this.authService.registerStart(dto)
   }
 
@@ -35,7 +42,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión' })
-  login(@Body() dto: LoginDto) {
+  async login(@Body() dto: LoginDto, @Ip() ip: string) {
+    await this.turnstileService.verifyToken(dto.turnstileToken, ip)
     return this.authService.login(dto)
   }
 

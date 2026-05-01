@@ -1,13 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '@services/auth.service';
+import { TurnstileComponent } from '@shared/components/turnstile/turnstile.component';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TurnstileComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
@@ -15,6 +17,7 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  @ViewChild(TurnstileComponent) turnstile!: TurnstileComponent;
 
   // Signals para el estado
   step = signal<1 | 2>(1);
@@ -22,6 +25,8 @@ export class RegisterComponent {
   errorMessage = signal('');
   showPassword = signal(false);
   showConfirmPassword = signal(false);
+  turnstileToken = signal<string | null>(environment.skipTurnstile ? 'skipped' : null);
+  skipTurnstile = environment.skipTurnstile;
 
   // Formulario Paso 1: Organización y Email
   step1Form = this.fb.group({
@@ -68,7 +73,8 @@ export class RegisterComponent {
 
       const data = {
         organizationName: this.step1Form.value.organizationName!,
-        email: this.step1Form.value.email!
+        email: this.step1Form.value.email!,
+        turnstileToken: this.turnstileToken()!
       };
 
       this.authService.registerStart(data).subscribe({
@@ -80,9 +86,13 @@ export class RegisterComponent {
         },
         error: (err) => {
           this.isLoading.set(false);
-          // Manejar estructura de error anidada del filtro global del backend
           const msg = err.error?.error?.message || err.error?.message || 'Error al iniciar el registro. Reintente.';
           this.errorMessage.set(msg);
+          
+          if (!this.skipTurnstile) {
+            this.turnstileToken.set(null);
+            this.turnstile.reset();
+          }
         }
       });
     }

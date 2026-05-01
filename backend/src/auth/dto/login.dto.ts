@@ -17,4 +17,8 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   tenantSlug?: string
+
+  @ApiProperty({ description: 'Cloudflare Turnstile token' })
+  @IsString()
+  turnstileToken: string
 }
