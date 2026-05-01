@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UpdateRoleDto } from './dto/update-role.dto'
-import { UserRole } from '@prisma/client'
+import { UserRole, AuthProvider } from '@prisma/client'
 
 // Fields returned in all user responses (no passwordHash)
 const USER_SELECT = {
@@ -42,10 +42,19 @@ export class UsersService {
   }
 
   async updateMe(userId: string, dto: UpdateUserDto) {
-    const data: Record<string, unknown> = {}
+    const data: any = {}
     if (dto.firstName) data['firstName'] = dto.firstName
     if (dto.lastName) data['lastName'] = dto.lastName
-    if (dto.password) data['passwordHash'] = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
+
+    if (dto.password) {
+      const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
+      data['identities'] = {
+        updateMany: {
+          where: { provider: AuthProvider.EMAIL },
+          data: { passwordHash },
+        },
+      }
+    }
 
     return this.prisma.user.update({
       where: { id: userId },
@@ -82,10 +91,16 @@ export class UsersService {
       data: {
         tenantId,
         email: dto.email,
-        passwordHash,
         firstName: dto.firstName,
         lastName: dto.lastName,
         role: dto.role ?? UserRole.RECEPTIONIST,
+        identities: {
+          create: {
+            provider: AuthProvider.EMAIL,
+            providerId: dto.email,
+            passwordHash,
+          },
+        },
       },
       select: USER_SELECT,
     })
@@ -94,10 +109,19 @@ export class UsersService {
   async update(tenantId: string, userId: string, dto: UpdateUserDto) {
     await this.findOrFail(userId, tenantId)
 
-    const data: Record<string, unknown> = {}
+    const data: any = {}
     if (dto.firstName) data['firstName'] = dto.firstName
     if (dto.lastName) data['lastName'] = dto.lastName
-    if (dto.password) data['passwordHash'] = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
+
+    if (dto.password) {
+      const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS)
+      data['identities'] = {
+        updateMany: {
+          where: { provider: AuthProvider.EMAIL },
+          data: { passwordHash },
+        },
+      }
+    }
 
     return this.prisma.user.update({
       where: { id: userId },

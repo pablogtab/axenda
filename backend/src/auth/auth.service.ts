@@ -98,11 +98,16 @@ export class AuthService {
         data: {
           tenantId: tenant.id,
           email: dto.email,
-          passwordHash,
-          provider: AuthProvider.EMAIL,
           role: UserRole.ADMIN,
           firstName: dto.firstName,
           lastName: dto.lastName,
+          identities: {
+            create: {
+              provider: AuthProvider.EMAIL,
+              providerId: dto.email,
+              passwordHash,
+            },
+          },
         },
       })
 
@@ -152,7 +157,7 @@ export class AuthService {
   // ─── Login ───────────────────────────────────────────────────────────────────
 
   async login(dto: LoginDto) {
-    let user: Awaited<ReturnType<typeof this.findUser>> | null
+    let user: any | null
 
     if (dto.tenantSlug) {
       const tenant = await this.prisma.tenant.findUnique({
@@ -160,12 +165,29 @@ export class AuthService {
       })
       if (!tenant) throw new UnauthorizedException('Credenciales inválidas')
 
-      user = await this.prisma.user.findUnique({
-        where: { tenantId_email: { tenantId: tenant.id, email: dto.email } },
+      user = await this.prisma.user.findFirst({
+        where: { 
+          tenantId: tenant.id, 
+          email: dto.email,
+          active: true,
+        },
+        include: {
+          identities: {
+            where: { provider: AuthProvider.EMAIL }
+          }
+        }
       })
     } else {
       user = await this.prisma.user.findFirst({
-        where: { email: dto.email, active: true },
+        where: { 
+          email: dto.email, 
+          active: true,
+        },
+        include: {
+          identities: {
+            where: { provider: AuthProvider.EMAIL }
+          }
+        }
       })
     }
 
@@ -173,7 +195,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas')
     }
 
-    const isValid = await bcrypt.compare(dto.password, user.passwordHash)
+    const emailIdentity = user.identities.find(i => i.provider === AuthProvider.EMAIL)
+    if (!emailIdentity || !emailIdentity.passwordHash) {
+      throw new UnauthorizedException('Credenciales inválidas')
+    }
+
+    const isValid = await bcrypt.compare(dto.password, emailIdentity.passwordHash)
     if (!isValid) throw new UnauthorizedException('Credenciales inválidas')
 
     return this.generateTokens(user.id, user.tenantId, user.role)
@@ -200,7 +227,10 @@ export class AuthService {
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   private async findUser(id: string) {
-    return this.prisma.user.findUnique({ where: { id } })
+    return this.prisma.user.findUnique({ 
+      where: { id },
+      include: { identities: true }
+    })
   }
 
   private async generateTokens(userId: string, tenantId: string, role: UserRole) {

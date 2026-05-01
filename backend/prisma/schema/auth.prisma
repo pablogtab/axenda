@@ -10,3 +10,18 @@ model VerificationCode {
 
   @@map("verification_codes")
 }
+// ─── User Identities ─────────────────────────────────────
+
+model UserIdentity {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     AuthProvider
+  providerId   String?      // googleId o email según el provider
+  passwordHash String?      // solo para provider EMAIL
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([provider, providerId])
+  @@map("user_identities")
+}

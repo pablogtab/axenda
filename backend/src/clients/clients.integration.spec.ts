@@ -61,10 +61,29 @@ describe('Clients — Integration', () => {
 
     prisma = moduleRef.get(PrismaService)
 
-    // Register org and get token
+    // 1. Start registration
+    await request(app.getHttpServer())
+      .post('/api/auth/register-start')
+      .send({
+        organizationName: adminOrg.organizationName,
+        email: adminOrg.email,
+      })
+
+    // 2. Get code from DB
+    const verification = await prisma.verificationCode.findUnique({
+      where: { email: adminOrg.email },
+    })
+
+    // 3. Complete registration and get token
     const res = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send(adminOrg)
+      .post('/api/auth/register-complete')
+      .send({
+        email: adminOrg.email,
+        code: verification!.code,
+        firstName: adminOrg.firstName,
+        lastName: adminOrg.lastName,
+        password: adminOrg.password,
+      })
 
     adminToken = res.body.data.accessToken
     const payload = JSON.parse(Buffer.from(adminToken.split('.')[1], 'base64url').toString())

@@ -5,16 +5,18 @@ model User {
   tenantId     String
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   email        String
-  passwordHash String?
-  provider     AuthProvider @default(EMAIL)
-  googleId     String?      @unique
-  role         UserRole     @default(RECEPTIONIST)
+  
+  // Datos personales
   firstName    String
   lastName     String
+  role         UserRole     @default(RECEPTIONIST)
   active       Boolean  @default(true)
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Relaciones
+  identities    UserIdentity[]
   professional  Professional?
   refreshTokens RefreshToken[]
 
