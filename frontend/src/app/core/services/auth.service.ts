@@ -31,6 +31,16 @@ export class AuthService {
     );
   }
 
+  registerStart(data: { organizationName: string; email: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/register-start`, data);
+  }
+
+  registerComplete(data: any): Observable<AuthData> {
+    return this.http.post<AuthData>(`${environment.apiUrl}/auth/register-complete`, data).pipe(
+      tap(authData => this.handleAuthentication(authData))
+    );
+  }
+
   refreshToken(): Observable<AuthData> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) return throwError(() => new Error('No refresh token available'));

@@ -9,6 +9,11 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) 
   },
   { 
+    path: 'register', 
+    title: 'Axenda - Crear Cuenta',
+    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) 
+  },
+  { 
     path: 'dashboard', 
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard/layout/layout.component').then(m => m.LayoutComponent),
