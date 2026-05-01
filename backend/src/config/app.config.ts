@@ -39,6 +39,10 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   SKIP_TURNSTILE: string = 'false'
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_ID: string
 }
 
 export function validateConfig(config: Record<string, unknown>) {

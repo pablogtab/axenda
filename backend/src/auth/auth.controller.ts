@@ -18,6 +18,8 @@ import { UserRole } from '@prisma/client'
 
 import { TurnstileService } from './turnstile.service'
 
+import { GoogleLoginDto } from './dto/google-login.dto'
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -25,6 +27,16 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly turnstileService: TurnstileService,
   ) {}
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Iniciar sesión con Google' })
+  async googleLogin(@Body() dto: GoogleLoginDto, @Ip() ip: string) {
+    if (dto.turnstileToken) {
+      await this.turnstileService.verifyToken(dto.turnstileToken, ip)
+    }
+    return this.authService.googleLogin(dto.idToken)
+  }
 
   @Post('register-start')
   @ApiOperation({ summary: 'Iniciar registro (envía código al mail)' })

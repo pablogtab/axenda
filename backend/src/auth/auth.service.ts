@@ -16,14 +16,86 @@ import * as crypto from 'crypto'
 
 const BCRYPT_ROUNDS = process.env['NODE_ENV'] === 'test' ? 1 : 12
 
+import { OAuth2Client } from 'google-auth-library'
+
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailService: MailService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(
+      this.config.get<string>('GOOGLE_CLIENT_ID')
+    )
+  }
+
+  async googleLogin(idToken: string) {
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: this.config.get<string>('GOOGLE_CLIENT_ID'),
+      })
+
+      const payload = ticket.getPayload()
+      if (!payload || !payload.email) {
+        throw new UnauthorizedException('Token de Google inválido')
+      }
+
+      const email = payload.email
+      const googleId = payload.sub
+      const firstName = payload.given_name || 'Usuario'
+      const lastName = payload.family_name || 'Google'
+
+      // 1. Buscar usuario por su identidad de Google
+      let user = await this.prisma.user.findFirst({
+        where: {
+          identities: {
+            some: {
+              provider: AuthProvider.GOOGLE,
+              providerId: googleId,
+            },
+          },
+          active: true,
+        },
+        include: { tenant: true },
+      })
+
+      // 2. Si no existe por identidad, buscar por email (vincular cuentas)
+      if (!user) {
+        user = await this.prisma.user.findFirst({
+          where: { email, active: true },
+          include: { tenant: true },
+        })
+
+        if (user) {
+          // Vincular identidad de Google a cuenta existente
+          await this.prisma.userIdentity.create({
+            data: {
+              userId: user.id,
+              provider: AuthProvider.GOOGLE,
+              providerId: googleId,
+            },
+          })
+        }
+      }
+
+      // 3. Si sigue sin existir, es un registro nuevo vía Google
+      // IMPORTANTE: Aquí podrías crear un Tenant por defecto o pedirlo después.
+      // Por ahora, lanzaremos un error si no queremos auto-registro sin nombre de negocio.
+      if (!user) {
+        throw new UnauthorizedException('Cuenta no encontrada. Por favor, regístrate primero.')
+      }
+
+      return this.generateTokens(user.id, user.tenantId, user.role)
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error
+      throw new UnauthorizedException('Fallo la autenticación con Google')
+    }
+  }
 
   // ─── Register ────────────────────────────────────────────────────────────────
 

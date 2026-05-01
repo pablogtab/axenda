@@ -31,6 +31,12 @@ export class AuthService {
     );
   }
 
+  googleLogin(idToken: string, turnstileToken?: string | null): Observable<AuthData> {
+    return this.http.post<AuthData>(`${environment.apiUrl}/auth/google`, { idToken, turnstileToken }).pipe(
+      tap(data => this.handleAuthentication(data))
+    );
+  }
+
   registerStart(data: { organizationName: string; email: string }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/register-start`, data);
   }

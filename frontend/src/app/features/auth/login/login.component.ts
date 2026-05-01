@@ -1,4 +1,6 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
+
+declare var google: any;
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,7 +15,7 @@ import { TurnstileComponent } from '@shared/components/turnstile/turnstile.compo
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements AfterViewInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -67,5 +69,45 @@ export class LoginComponent {
         }
       });
     }
+  }
+
+  ngAfterViewInit() {
+    this.initGoogleButton();
+  }
+
+  private initGoogleButton(retries = 0) {
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (response: any) => this.handleGoogleLogin(response)
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById('google-btn'),
+        { theme: 'outline', size: 'large', width: '320', shape: 'pill' }
+      );
+    } else if (retries < 10) {
+      // Reintentar cada 200ms hasta 10 veces si el script no ha cargado
+      setTimeout(() => this.initGoogleButton(retries + 1), 200);
+    }
+  }
+
+  handleGoogleLogin(response: any) {
+    this.isLoading = true;
+    this.authService.googleLogin(response.credential, this.turnstileToken()).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        const msg = err.error?.error?.message || err.error?.message || 'Error al iniciar sesión con Google';
+        this.errorMessage = msg;
+        if (!this.skipTurnstile) {
+          this.turnstileToken.set(null);
+          this.turnstile.reset();
+        }
+      }
+    });
   }
 }
