@@ -1,4 +1,6 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, inject, signal, ViewChild, AfterViewInit, effect } from '@angular/core';
+
+declare var google: any;
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,7 +15,7 @@ import { environment } from '@env/environment';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements AfterViewInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -131,6 +133,55 @@ export class RegisterComponent {
   goBack(): void {
     this.step.set(1);
     this.errorMessage.set('');
+    // Re-inicializar el botón de Google al volver al paso 1
+    setTimeout(() => this.initGoogleButton(), 0);
+  }
+
+  ngAfterViewInit() {
+    this.initGoogleButton();
+  }
+
+  private initGoogleButton(retries = 0) {
+    const btnContainer = document.getElementById('google-btn');
+    if (typeof google !== 'undefined' && btnContainer) {
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (response: any) => this.handleGoogleLogin(response)
+      });
+
+      const parentWidth = btnContainer.parentElement?.clientWidth || 320;
+      const finalWidth = Math.min(parentWidth, 360).toString();
+
+      google.accounts.id.renderButton(
+        btnContainer,
+        { theme: 'outline', size: 'large', width: finalWidth, shape: 'pill' }
+      );
+    } else if (retries < 10) {
+      setTimeout(() => this.initGoogleButton(retries + 1), 200);
+    }
+  }
+
+  handleGoogleLogin(response: any) {
+    this.isLoading.set(true);
+    this.authService.googleLogin(response.credential, this.turnstileToken()).subscribe({
+      next: (data) => {
+        this.isLoading.set(false);
+        if (data.onboardingCompleted) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/getting-started']);
+        }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        const msg = err.error?.error?.message || err.error?.message || 'Error al iniciar sesión con Google';
+        this.errorMessage.set(msg);
+        if (!this.skipTurnstile) {
+          this.turnstileToken.set(null);
+          this.turnstile.reset();
+        }
+      }
+    });
   }
 
   onlyNumbers(event: KeyboardEvent): void {
