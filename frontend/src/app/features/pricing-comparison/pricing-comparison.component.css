@@ -1,0 +1,54 @@
+.comparison-shell {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+.text-gradient {
+  color: #7C3AED; /* Fallback color (violeta) */
+  background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-bg {
+  position: absolute;
+  filter: blur(120px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+table td, table th {
+  vertical-align: middle;
+}
+
+/* Scrollbar styling for table */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .pricing-card {
+    padding: 1.5rem !important;
+  }
+}

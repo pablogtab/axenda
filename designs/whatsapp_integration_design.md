@@ -84,7 +84,7 @@ Axenda debe escuchar los Webhooks de Meta para:
 ## 📈 6. Lógica de Control de Límites
 Cada vez que se intenta enviar un mensaje:
 1.  Se consulta `TenantWhatsappConfig.messagesSentMonth`.
-2.  Se compara con el `maxWhatsapp` del plan actual (Platino: 300, Diamante: 1.000).
+2.  Se compara con el `maxWhatsapp` del plan actual (Business: 300, Elite: 1.000).
 3.  Si se alcanzó el límite:
     *   Se bloquea el envío por WhatsApp.
     *   Se degrada automáticamente a **Email**.
@@ -94,7 +94,7 @@ Cada vez que se intenta enviar un mensaje:
 
 ## 🎨 8. Interfaz del Editor de Plantillas (UI/UX)
 
-Para que el usuario pueda gestionar sus plantillas personalizadas (exclusivo de **Plan Diamante**), la interfaz se divide en dos paneles:
+Para que el usuario pueda gestionar sus plantillas personalizadas (exclusivo de **Plan Elite**), la interfaz se divide en dos paneles:
 
 ### A. Panel de Edición (Izquierda)
 *   **Nombre de la Plantilla:** Identificador único para Meta.

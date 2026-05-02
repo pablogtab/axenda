@@ -22,32 +22,32 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     {
       icon: 'calendar_month',
       title: 'Agenda Interactiva',
-      description: 'Visualizá tus turnos en una vista semanal o diaria moderna y fluida.'
+      description: 'Gestioná tus turnos en una interfaz de alto rendimiento, diseñada para la velocidad y la facilidad de uso.'
     },
     {
-      icon: 'groups',
-      title: 'Gestión de Clientes',
-      description: 'Centralizá la información de tus clientes y su historial de visitas en un solo lugar.'
+      icon: 'chat',
+      title: 'WhatsApp Automation',
+      description: 'Reducí el ausentismo hasta un 80% con recordatorios automáticos. El sistema trabaja por vos 24/7.'
     },
     {
-      icon: 'storefront',
-      title: 'Múltiples Sucursales',
-      description: 'Administrá diferentes sedes de tu negocio desde una misma cuenta maestra.'
+      icon: 'payments',
+      title: 'Mercado Pago Connect',
+      description: 'Asegurá tus ingresos cobrando señas o el total por adelantado. Integración nativa y sin intermediarios.'
     },
     {
-      icon: 'badge',
-      title: 'Staff y Profesionales',
-      description: 'Asigná horarios específicos y gestioná el desempeño de cada miembro de tu equipo.'
-    },
-    {
-      icon: 'format_list_bulleted',
-      title: 'Catálogo de Servicios',
-      description: 'Configurá tus servicios, duraciones y precios de manera flexible y personalizada.'
+      icon: 'star',
+      title: 'Reseñas en Google',
+      description: 'Mejorá tu reputación online solicitando reseñas automáticamente tras cada servicio exitoso.'
     },
     {
       icon: 'public',
-      title: 'Link de Reservas',
-      description: 'Tus clientes podrán agendar turnos 24/7 a través de tu propia página pública.'
+      title: 'Reservas Online 24/7',
+      description: 'Tu negocio nunca cierra. Permití que tus clientes agenden su próximo turno en cualquier momento y lugar.'
+    },
+    {
+      icon: 'lan',
+      title: 'Multi-Sede y Equipo',
+      description: 'Escalá tu negocio administrando múltiples sucursales y controlando el desempeño de todo tu staff.'
     }
   ];
 

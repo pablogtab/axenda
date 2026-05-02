@@ -111,21 +111,23 @@
   </section>
 
   <!-- Features Section -->
-  <section id="features" class="py-24 px-4 bg-white/[0.01]">
-    <div class="section-container">
+  <section id="features" class="py-24 px-4 relative">
+    <div class="section-container max-w-7xl mx-auto">
       <div class="text-center mb-16 animate-in fade-in slide-in-from-bottom duration-1000">
-        <h2 class="text-3xl md:text-5xl font-bold mb-4">Todo lo que necesitás</h2>
-        <p class="text-text-muted max-w-xl mx-auto">Más de 15 herramientas diseñadas para simplificar tu día a día y hacer crecer tu negocio.</p>
+        <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">Todo lo que necesitás para <span class="text-primary">escalar</span></h2>
+        <p class="text-text-muted max-w-2xl mx-auto text-lg">Axenda no es solo una agenda, es el centro de operaciones de tu negocio.</p>
       </div>
 
-      <div class="features-grid-container">
-        @for (feature of features; track feature.title; let i = $index) {
-          <div class="feature-card animate-in fade-in zoom-in duration-700" [style.transition-delay]="i * 100 + 'ms'">
-            <div class="icon-box">
-              <span class="material-symbols-rounded">{{ feature.icon }}</span>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        @for (feature of features; track feature.title) {
+          <div class="group p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-primary/20 hover:bg-primary/[0.02] transition-all duration-500">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+              <span class="material-symbols-rounded text-3xl text-primary">{{ feature.icon }}</span>
             </div>
-            <h3 class="text-xl font-bold">{{ feature.title }}</h3>
-            <p class="text-text-muted text-sm leading-relaxed">{{ feature.description }}</p>
+            <h3 class="text-xl font-bold mb-3 text-white">{{ feature.title }}</h3>
+            <p class="text-text-muted leading-relaxed text-sm">
+              {{ feature.description }}
+            </p>
           </div>
         }
       </div>
@@ -200,54 +202,139 @@
         <p class="text-text-muted">Elegí el que mejor se adapte a tu etapa actual.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        <!-- Plan Bronce -->
-        <div class="pricing-card !p-10 border-white/5 hover:border-white/10 transition-all">
-          <p class="text-xs font-bold text-text-muted mb-4 tracking-widest">PARA EMPEZAR</p>
-          <h3 class="text-3xl font-bold mb-1">Bronce</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
+        <!-- Plan Starter -->
+        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+          <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">PARA EMPEZAR</p>
+          <h3 class="text-2xl font-bold mb-1">Starter</h3>
           <div class="flex items-baseline gap-1 mb-8">
-            <span class="text-5xl font-extrabold text-white">Gratis</span>
+            <span class="text-4xl font-extrabold text-white">Gratis</span>
           </div>
-          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Hasta 30 turnos / mes</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Perfil público</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Agenda interactiva</li>
+          <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-success/20 text-success flex items-center justify-center text-[8px]">✓</span> 
+              <span>Máximo 25 turnos / mes</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-success/20 text-success flex items-center justify-center text-[8px]">✓</span> 
+              <span>Perfil público</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-success/20 text-success flex items-center justify-center text-[8px]">✓</span> 
+              <span>Agenda interactiva</span>
+            </li>
           </ul>
-          <a routerLink="/register" class="btn-secondary w-full block text-center !py-3">Elegir Bronce</a>
+          <a routerLink="/register" class="btn-secondary w-full block text-center !py-2.5 !text-xs mt-auto">Elegir Starter</a>
         </div>
 
-        <!-- Plan Oro -->
-        <div class="pricing-card featured !p-10 !bg-primary/5">
-          <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-white text-[10px] font-black rounded-full tracking-tighter shadow-lg shadow-primary/20">MÁS ELEGIDO</div>
-          <p class="text-xs font-bold text-primary mb-4 tracking-widest">PROFESIONAL</p>
-          <h3 class="text-3xl font-bold mb-1">Oro</h3>
-          <div class="flex items-baseline gap-1 mb-8">
-            <span class="text-5xl font-extrabold text-white">$19.900</span>
-            <span class="text-text-muted text-sm">/mes</span>
+        <!-- Plan Pro -->
+        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+          <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">PROFESIONAL</p>
+          <h3 class="text-2xl font-bold mb-1">Pro</h3>
+          <div class="flex flex-col mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-white">$10.000</span>
+              <span class="text-text-muted text-xs">/mes</span>
+            </div>
+            <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
           </div>
-          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Turnos ilimitados</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Recordatorios WhatsApp</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Cobros online</li>
+          <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Turnos ilimitados</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Cobros con Mercado Pago</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Reseñas Google (Email)</span>
+            </li>
           </ul>
-          <a routerLink="/register" class="btn-primary w-full block text-center !py-3 !shadow-2xl">Elegir Oro</a>
+          <a routerLink="/register" class="btn-secondary w-full block text-center !py-2.5 !text-xs mt-auto">Elegir Pro</a>
         </div>
 
-        <!-- Plan Diamante -->
-        <div class="pricing-card !p-10 border-white/5 hover:border-white/10 transition-all">
-          <p class="text-xs font-bold text-text-muted mb-4 tracking-widest">EQUIPOS</p>
-          <h3 class="text-3xl font-bold mb-1">Diamante</h3>
-          <div class="flex items-baseline gap-1 mb-8">
-            <span class="text-5xl font-extrabold text-white">$29.900</span>
-            <span class="text-text-muted text-sm">/mes</span>
+        <!-- Plan Business -->
+        <div class="pricing-card featured !p-8 !bg-primary/5 flex flex-col h-full relative">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-white text-[10px] font-black rounded-full tracking-tighter shadow-lg shadow-primary/20 z-10">RECOMENDADO</div>
+          <p class="text-[10px] font-bold text-primary mb-4 tracking-widest uppercase">CRECIMIENTO</p>
+          <h3 class="text-2xl font-bold mb-1">Business</h3>
+          <div class="flex flex-col mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-white">$19.600</span>
+              <span class="text-text-muted text-xs">/mes</span>
+            </div>
+            <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
           </div>
-          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Todo lo de Oro</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Múltiples sucursales</li>
-            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Marca blanca</li>
+          <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Hasta 5 profesionales</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <div class="flex flex-col">
+                <span>300 / mes (*)</span>
+                <span class="text-[10px] opacity-60">+ Ampliación disponible</span>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Reseñas Google (Email o WhatsApp)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px]">✓</span> 
+              <span>Todo lo del Plan Pro</span>
+            </li>
           </ul>
-          <a routerLink="/register" class="btn-secondary w-full block text-center !py-3">Elegir Diamante</a>
+          <a routerLink="/register" class="btn-primary w-full block text-center !py-2.5 !text-xs !shadow-2xl mt-auto">Elegir Business</a>
         </div>
+
+        <!-- Plan Elite -->
+        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+          <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">ÉLITE</p>
+          <h3 class="text-2xl font-bold mb-1">Elite</h3>
+          <div class="flex flex-col mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-white">$38.400</span>
+              <span class="text-text-muted text-xs">/mes</span>
+            </div>
+            <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
+          </div>
+          <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[8px]">✓</span> 
+              <span>Profesionales ilimitados</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[8px]">✓</span> 
+              <span>Reseñas Google (Email o WhatsApp)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[8px]">✓</span> 
+              <div class="flex flex-col">
+                <span>1.000 / mes (*)</span>
+                <span class="text-[10px] opacity-60">+ Ampliación disponible</span>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-4 h-4 mt-0.5 shrink-0 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[8px]">✓</span> 
+              <span>Usá tu propio número</span>
+            </li>
+          </ul>
+          <a routerLink="/register" class="btn-secondary w-full block text-center !py-2.5 !text-xs mt-auto">Elegir Elite</a>
+        </div>
+      </div>
+
+      <!-- Link to detailed comparison -->
+      <div class="mt-16 text-center animate-in fade-in slide-in-from-bottom duration-1000 delay-500">
+        <p class="text-[10px] text-text-muted mb-6">(*) Los límites de WhatsApp son ampliables mediante paquetes de mensajes adicionales.</p>
+        <a routerLink="/precios" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 hover:border-white/20 transition-all group">
+          <span class="material-symbols-rounded text-primary group-hover:rotate-12 transition-transform">analytics</span>
+          Ver comparativa completa de funciones
+          <span class="material-symbols-rounded text-text-dim group-hover:translate-x-1 transition-transform">chevron_right</span>
+        </a>
       </div>
     </div>
   </section>
@@ -285,7 +372,7 @@
           Unite a los profesionales que ya automatizaron su agenda y están ganando tiempo libre cada semana.
         </p>
         <a routerLink="/register" class="btn-primary !text-lg !px-12">Empezar ahora gratis</a>
-        <p class="text-xs text-text-dim mt-6">Sin tarjeta de crédito. Probá todas las funciones por 7 días.</p>
+        <p class="text-xs text-text-dim mt-6">Sin tarjeta de crédito. Empezá gratis hoy con nuestro plan Starter.</p>
       </div>
     </div>
   </section>

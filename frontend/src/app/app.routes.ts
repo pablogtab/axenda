@@ -17,6 +17,11 @@ export const appRoutes: Routes = [
     title: 'Axenda - Crear Cuenta',
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) 
   },
+  {
+    path: 'precios',
+    title: 'Axenda - Comparativa de Planes',
+    loadComponent: () => import('./features/pricing-comparison/pricing-comparison.component').then(m => m.PricingComparisonComponent)
+  },
   { 
     path: 'dashboard', 
     canActivate: [authGuard],
