@@ -201,8 +201,7 @@ export class BookingComponent implements OnInit {
     if (slug) {
       this.loadTenant(slug);
     } else {
-      this.loading.set(false);
-      this.error.set(true);
+      this.router.navigate(['/']);
     }
   }
 
@@ -217,8 +216,7 @@ export class BookingComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set(true);
-        this.loading.set(false);
+        this.router.navigate(['/']);
       }
     });
   }
