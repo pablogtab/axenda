@@ -47,9 +47,14 @@ model TenantWhatsappConfig {
   tenantId          String   @unique
   wabaId            String?  // WhatsApp Business Account ID
   phoneId           String?  // Phone Number ID
-  accessToken       String?  // Token de acceso de larga duración
+  accessToken       String?  // Token de acceso de larga duración (Cifrado)
   verified          Boolean  @default(false)
   
+  // Mapeo de Plantillas Activas
+  confirmationTemplateId String?
+  reminderTemplateId     String?
+  cancellationTemplateId String?
+
   // Estadísticas de uso mensual
   messagesSentMonth Int      @default(0)
   lastResetDate     DateTime @default(now())
@@ -57,16 +62,28 @@ model TenantWhatsappConfig {
   tenant            Tenant   @relation(fields: [tenantId], references: [id])
 }
 
+// Catálogo de Plantillas (Globales y Personalizadas)
+model WhatsappTemplate {
+  id                String   @id @default(uuid())
+  tenantId          String?  // Null para plantillas globales de Axenda
+  name              String   @unique // Nombre técnico para Meta (ej: axenda_confirm_v1)
+  body              String   // Texto con variables {{1}}, {{2}}...
+  category          String   @default("UTILITY") // UTILITY, MARKETING
+  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  language          String   @default("es_AR")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
 // Log de mensajes para auditoría y facturación
 model WhatsappMessageLog {
   id                String   @id @default(uuid())
   tenantId          String
   phoneNumber       String
-  templateName      String
-  category          String   // UTILITY, MARKETING, SERVICE
+  templateId        String
   status            String   // DELIVERED, READ, FAILED
   metaMessageId     String?  // ID devuelto por Meta
-  cost              Decimal? @db.Decimal(10, 4)
   createdAt         DateTime @default(now())
 }
 ```
@@ -89,6 +106,28 @@ Cada vez que se intenta enviar un mensaje:
     *   Se bloquea el envío por WhatsApp.
     *   Se degrada automáticamente a **Email**.
     *   Se notifica al dueño del negocio para un "Upgrade" o compra de paquete extra.
+
+---
+
+## 📋 7. Librería de Plantillas (Templates)
+
+Para mantener la calidad y la aprobación de Meta, manejamos dos tipos de plantillas:
+
+### A. Plantillas Estándar de Axenda (Plan Business & Elite)
+Son plantillas genéricas pero profesionales, pre-aprobadas por Meta bajo la cuenta oficial de Axenda. Los negocios pueden usarlas instantáneamente sin esperar revisión.
+*   **Confirmación:** `axenda_confirm_v1`
+    *   *Texto:* "Hola {{1}}, ¡tu turno ha sido reservado! Nos vemos en {{2}} el día {{3}} a las {{4}}."
+*   **Recordatorio (24h antes):** `axenda_remind_v1`
+    *   *Texto:* "Hola {{1}}, recordá tu turno para mañana en {{2}} a las {{3}}."
+*   **Cancelación:** `axenda_cancel_v1`
+    *   *Texto:* "Hola {{1}}, tu turno en {{2}} ha sido cancelado. Si querés reprogramar, podés hacerlo acá: {{3}}"
+
+### B. Plantillas Personalizadas (Exclusivo Plan Elite)
+Permite a los negocios con número propio (Dedicated) crear su propia voz de marca.
+1.  **Creación:** El usuario redacta el mensaje en el panel de Axenda.
+2.  **Envío a Meta:** Axenda envía la propuesta a la API de Meta.
+3.  **Revisión:** Meta demora de 1 a 24 horas en aprobar.
+4.  **Activación:** Axenda recibe un Webhook (`message_template_status_update`) y habilita la plantilla para su uso automático.
 
 ---
 

@@ -77,6 +77,9 @@ model SubscriptionPlan {
 
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
+
+  // Mercado Pago Integration
+  externalPlanId    String?  // ID del Plan en Mercado Pago (Preapproval Plan)
 }
 ```
 
@@ -93,5 +96,32 @@ model TenantSubscription {
   
   externalCustomerId      String?
   externalSubscriptionId  String?
+  
+  invoices                SubscriptionInvoice[]
+}
+
+// Historial de pagos de la suscripción del negocio
+model SubscriptionInvoice {
+  id                String   @id @default(uuid())
+  subscriptionId    String
+  amount            Decimal  @db.Decimal(10, 2)
+  status            String   // PAID, PENDING, FAILED, REFUNDED
+  paymentDate       DateTime @default(now())
+  externalPaymentId String?  // ID de la transacción en Mercado Pago
+  invoiceUrl        String?  // Link para descargar comprobante
+  
+  subscription      TenantSubscription @relation(fields: [subscriptionId], references: [id])
+}
+
+// Configuración de Mercado Pago Connect (para cobros de turnos del negocio)
+model TenantPaymentConfig {
+  id                String   @id @default(uuid())
+  tenantId          String   @unique
+  mpAccessToken     String   // Token cifrado (AES-256)
+  mpPublicKey       String?
+  mpUserId          String?  // Merchant ID
+  expiresAt         DateTime?
+  
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
 }
 ```
