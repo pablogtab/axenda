@@ -23,9 +23,13 @@
   --color-border: rgba(255, 255, 255, 0.08);
 }
 
+.symbol-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+}
+
 @layer base {
   html {
-    @apply text-[16px];
+    @apply text-[16px] scroll-smooth;
     @media (max-width: 640px) {
       font-size: 13px;
     }

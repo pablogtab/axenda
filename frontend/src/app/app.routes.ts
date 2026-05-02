@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const appRoutes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { 
+    path: '', 
+    title: 'Axenda - Gestión de Turnos y CRM',
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent) 
+  },
   { 
     path: 'login', 
     title: 'Axenda - Iniciar Sesión',

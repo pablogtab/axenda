@@ -1,0 +1,344 @@
+<div class="landing-shell">
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass !border-none !bg-bg-primary/80">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-0 group cursor-pointer" routerLink="/">
+        <img src="assets/logo.svg" alt="Axenda Logo" class="w-10 h-10 drop-shadow-2xl">
+        <span class="text-3xl font-extrabold tracking-tighter text-gradient -ml-1.5">xenda</span>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-text-muted">
+        <a href="#features" class="hover:text-primary transition-colors">Funcionalidades</a>
+        <a href="#testimonials" class="hover:text-primary transition-colors">Testimonios</a>
+        <a href="#pricing" class="hover:text-primary transition-colors">Precios</a>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <a routerLink="/login" class="text-sm font-semibold text-text-muted hover:text-text-main px-4 py-2">Ingresar</a>
+        <a routerLink="/register" class="btn-primary !py-2 !px-5 !text-sm">Registrate Gratis</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section overflow-hidden">
+    <!-- Glows -->
+    <div class="glow-bg top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20"></div>
+    <div class="glow-bg bottom-[0%] right-[-10%] w-[40%] h-[40%] bg-accent/15"></div>
+
+    <div class="section-container relative z-10">
+      <div class="hero-grid-container">
+        <!-- Left Column: Content -->
+        <div class="text-left animate-in fade-in slide-in-from-left duration-1000">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-8">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            NUEVA VERSIÓN 2.1 DISPONIBLE
+          </div>
+          
+          <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
+            Gestioná tu negocio <br>
+            <span class="text-gradient">mientras descansás</span>
+          </h1>
+          
+          <p class="text-lg md:text-xl text-text-muted mb-12 leading-relaxed">
+            Axenda centraliza turnos, cobros y recordatorios automáticos para que dejes de perseguir mensajes y te concentres en lo que importa: tus clientes.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <a routerLink="/register" class="btn-primary !text-lg !px-10 w-full sm:w-auto text-center">Comenzar Gratis</a>
+            <a href="#features" class="btn-secondary !text-lg !px-10 border border-white/10 hover:border-white/20 w-full sm:w-auto text-center">Ver funciones</a>
+          </div>
+
+          <div class="mt-12 flex items-center gap-8 grayscale opacity-50">
+            <div class="flex flex-col">
+              <span class="text-2xl font-bold">500+</span>
+              <span class="text-xs uppercase tracking-widest text-text-dim">Negocios</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-2xl font-bold">50k+</span>
+              <span class="text-xs uppercase tracking-widest text-text-dim">Turnos / mes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Dashboard Preview -->
+        <div class="relative animate-in fade-in slide-in-from-right duration-1000">
+          <div class="relative float-animation">
+            <!-- Asset Request: Hero Video/Image -->
+            <div class="asset-request mb-6">
+              <span class="material-symbols-rounded text-primary text-3xl">movie</span>
+              <p class="asset-request-text">[SOLICITUD: Video demo de la plataforma o imagen premium del dashboard]</p>
+            </div>
+
+            <div class="rounded-3xl p-3 bg-gradient-to-br from-white/10 to-transparent border border-white/5 shadow-2xl backdrop-blur-3xl">
+              <div class="rounded-2xl overflow-hidden bg-[#0c0d18] relative aspect-video">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="Dashboard Preview" class="w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0c0d18] via-transparent to-transparent"></div>
+              </div>
+            </div>
+            
+            <!-- Floating cards -->
+            <div class="absolute -right-8 top-12 glass p-5 rounded-2xl shadow-2xl animate-in zoom-in slide-in-from-right duration-700 delay-300">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
+                  <span class="material-symbols-rounded text-success">check</span>
+                </div>
+                <div>
+                  <p class="text-xs font-bold">Turno Confirmado</p>
+                  <p class="text-[10px] text-text-muted">Corte + Barba @ 15:30</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="absolute -left-8 bottom-12 glass p-5 rounded-2xl shadow-2xl animate-in zoom-in slide-in-from-left duration-700 delay-500">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span class="material-symbols-rounded text-primary">payments</span>
+                </div>
+                <div>
+                  <p class="text-xs font-bold">Pago Recibido</p>
+                  <p class="text-[10px] text-text-muted">Seña confirmada ($5.000)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-24 px-4 bg-white/[0.01]">
+    <div class="section-container">
+      <div class="text-center mb-16 animate-in fade-in slide-in-from-bottom duration-1000">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4">Todo lo que necesitás</h2>
+        <p class="text-text-muted max-w-xl mx-auto">Más de 15 herramientas diseñadas para simplificar tu día a día y hacer crecer tu negocio.</p>
+      </div>
+
+      <div class="features-grid-container">
+        @for (feature of features; track feature.title; let i = $index) {
+          <div class="feature-card animate-in fade-in zoom-in duration-700" [style.transition-delay]="i * 100 + 'ms'">
+            <div class="icon-box">
+              <span class="material-symbols-rounded">{{ feature.icon }}</span>
+            </div>
+            <h3 class="text-xl font-bold">{{ feature.title }}</h3>
+            <p class="text-text-muted text-sm leading-relaxed">{{ feature.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Carousel -->
+  <section id="testimonials" class="py-24 px-4 bg-white/[0.01]">
+    <div class="section-container">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4 font-extrabold tracking-tight">Opiniones que <span class="text-gradient">valen</span></h2>
+        <p class="text-text-muted">Dueños de negocios como vos ya están transformando su gestión.</p>
+      </div>
+
+      <div class="slider-container">
+        <div class="slider-track" 
+             [class.no-transition]="!isTransitioning()"
+             [style.transform]="getSliderTransform()">
+          @for (t of displayTestimonials; track t.author + '-' + $index) {
+            <div class="testimonial-slide">
+              <div class="testimonial-card-v2 group">
+                <div class="flex gap-1">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <span class="material-symbols-rounded text-warning text-sm symbol-fill">star</span>
+                  }
+                </div>
+                <span class="text-6xl text-primary/10 absolute top-4 right-6 font-serif group-hover:text-primary/20 transition-colors">“</span>
+                <p class="text-lg italic text-text-main relative z-10 leading-relaxed">{{ t.quote }}</p>
+                <div class="flex items-center gap-4 border-t border-white/5 pt-6 mt-auto">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold shadow-lg">
+                    {{ t.avatar }}
+                  </div>
+                  <div class="text-left">
+                    <p class="font-bold text-white">{{ t.author }}</p>
+                    <p class="text-xs text-text-dim">{{ t.role }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="slider-controls">
+        <button (click)="prev()" class="control-btn" aria-label="Anterior">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        
+        <div class="flex gap-2 mx-4">
+          @for (t of testimonials; track t.author; let i = $index) {
+            <button 
+              (click)="goTo(i)" 
+              class="dot-indicator" 
+              [class.active]="(currentIndex() % testimonials.length) === i">
+            </button>
+          }
+        </div>
+
+        <button (click)="next()" class="control-btn" aria-label="Siguiente">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-24 px-4 bg-white/[0.01]">
+    <div class="section-container">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4">Planes simples</h2>
+        <p class="text-text-muted">Elegí el que mejor se adapte a tu etapa actual.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Plan Bronce -->
+        <div class="pricing-card !p-10 border-white/5 hover:border-white/10 transition-all">
+          <p class="text-xs font-bold text-text-muted mb-4 tracking-widest">PARA EMPEZAR</p>
+          <h3 class="text-3xl font-bold mb-1">Bronce</h3>
+          <div class="flex items-baseline gap-1 mb-8">
+            <span class="text-5xl font-extrabold text-white">Gratis</span>
+          </div>
+          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Hasta 30 turnos / mes</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Perfil público</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center text-[10px]">✓</span> Agenda interactiva</li>
+          </ul>
+          <a routerLink="/register" class="btn-secondary w-full block text-center !py-3">Elegir Bronce</a>
+        </div>
+
+        <!-- Plan Oro -->
+        <div class="pricing-card featured !p-10 !bg-primary/5">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-white text-[10px] font-black rounded-full tracking-tighter shadow-lg shadow-primary/20">MÁS ELEGIDO</div>
+          <p class="text-xs font-bold text-primary mb-4 tracking-widest">PROFESIONAL</p>
+          <h3 class="text-3xl font-bold mb-1">Oro</h3>
+          <div class="flex items-baseline gap-1 mb-8">
+            <span class="text-5xl font-extrabold text-white">$19.900</span>
+            <span class="text-text-muted text-sm">/mes</span>
+          </div>
+          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Turnos ilimitados</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Recordatorios WhatsApp</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span> Cobros online</li>
+          </ul>
+          <a routerLink="/register" class="btn-primary w-full block text-center !py-3 !shadow-2xl">Elegir Oro</a>
+        </div>
+
+        <!-- Plan Diamante -->
+        <div class="pricing-card !p-10 border-white/5 hover:border-white/10 transition-all">
+          <p class="text-xs font-bold text-text-muted mb-4 tracking-widest">EQUIPOS</p>
+          <h3 class="text-3xl font-bold mb-1">Diamante</h3>
+          <div class="flex items-baseline gap-1 mb-8">
+            <span class="text-5xl font-extrabold text-white">$29.900</span>
+            <span class="text-text-muted text-sm">/mes</span>
+          </div>
+          <ul class="flex flex-col gap-5 text-sm text-text-muted mb-10">
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Todo lo de Oro</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Múltiples sucursales</li>
+            <li class="flex items-center gap-3"><span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">✓</span> Marca blanca</li>
+          </ul>
+          <a routerLink="/register" class="btn-secondary w-full block text-center !py-3">Elegir Diamante</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-24 px-4 bg-white/[0.01]">
+    <div class="section-container max-w-3xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4">Preguntas frecuentes</h2>
+        <p class="text-text-muted">Todo lo que necesitás saber para empezar.</p>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        @for (item of faqs; track item.question) {
+          <div class="faq-item">
+            <button class="faq-trigger">
+              <span class="font-semibold">{{ item.question }}</span>
+              <span class="material-symbols-rounded text-primary">expand_more</span>
+            </button>
+            <div class="p-6 pt-0 text-text-muted text-sm">
+              {{ item.answer }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-24 px-4">
+    <div class="section-container">
+      <div class="cta-banner">
+        <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">¿Listo para escalar <br> tu negocio?</h2>
+        <p class="text-lg text-text-muted max-w-xl mx-auto mb-10">
+          Unite a los profesionales que ya automatizaron su agenda y están ganando tiempo libre cada semana.
+        </p>
+        <a routerLink="/register" class="btn-primary !text-lg !px-12">Empezar ahora gratis</a>
+        <p class="text-xs text-text-dim mt-6">Sin tarjeta de crédito. Probá todas las funciones por 7 días.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-20 border-t border-white/5">
+    <div class="section-container px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center gap-0 group mb-6">
+            <img src="assets/logo.svg" alt="Axenda Logo" class="w-8 h-8">
+            <span class="text-2xl font-extrabold tracking-tighter text-gradient -ml-1">xenda</span>
+          </div>
+          <p class="text-text-muted text-sm max-w-xs mb-6">
+            La plataforma definitiva para la gestión de turnos y CRM para negocios modernos.
+          </p>
+          <!-- Asset Request: Social Icons -->
+          <div class="asset-request !py-4 !px-6 !flex-row !gap-4 mb-6 !w-fit">
+            <span class="asset-request-text">Iconos RRSS Premium</span>
+          </div>
+          <div class="flex gap-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+              <img src="https://img.icons8.com/ios-filled/20/ffffff/instagram-new.png" alt="Instagram">
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+              <img src="https://img.icons8.com/ios-filled/20/ffffff/facebook-new.png" alt="Facebook">
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-bold mb-6">Producto</h4>
+          <ul class="flex flex-col gap-4 text-sm text-text-muted">
+            <li><a href="#features" class="hover:text-primary transition-colors">Funciones</a></li>
+            <li><a href="#pricing" class="hover:text-primary transition-colors">Precios</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Soporte</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold mb-6">Legal</h4>
+          <ul class="flex flex-col gap-4 text-sm text-text-muted">
+            <li><a href="#" class="hover:text-primary transition-colors">Términos</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Privacidad</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Cookies</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8 text-xs text-text-dim">
+        <p>© 2026 Axenda. Todos los derechos reservados.</p>
+        <p>Hecho con ❤️ para emprendedores de Latinoamérica</p>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,145 @@
+@reference "../../../styles.css";
+
+.landing-shell {
+  min-height: 100vh;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-main);
+  overflow-x: hidden;
+}
+
+.landing-shell ::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.asset-request {
+  @apply bg-primary/5 border border-dashed border-primary/30 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3;
+}
+
+.asset-request-text {
+  @apply text-primary text-xs font-bold uppercase tracking-widest;
+}
+
+/* Explicit Grid Fallbacks */
+.features-grid-container {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .features-grid-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .features-grid-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.hero-grid-container {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 4rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .hero-grid-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.glow-bg {
+  @apply absolute blur-[120px] pointer-events-none;
+}
+
+.hero-section {
+  @apply relative pt-32 pb-20 md:pt-48 md:pb-32 px-4;
+}
+
+.section-container {
+  @apply max-w-7xl mx-auto;
+}
+
+.section-container {
+  @apply max-w-7xl mx-auto;
+}
+
+.feature-card {
+  @apply card-glass flex flex-col gap-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-primary/10;
+}
+
+.icon-box {
+  @apply w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary;
+}
+
+.testimonial-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-8 py-12;
+}
+
+.faq-item {
+  @apply card-glass !p-0 overflow-hidden mb-4;
+}
+
+.faq-trigger {
+  @apply w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors;
+}
+
+.pricing-card {
+  @apply card-glass relative border-white/5;
+  &.featured {
+    @apply border-primary/50 shadow-2xl shadow-primary/10;
+  }
+}
+
+.cta-banner {
+  @apply relative rounded-[2rem] overflow-hidden p-12 md:p-20 text-center bg-gradient-to-br from-primary/20 via-accent/5 to-transparent border border-white/10;
+}
+
+.slider-container {
+  @apply relative w-full overflow-hidden py-12;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.slider-track {
+  @apply flex;
+  transition: transform 0.7s ease-in-out;
+  &.no-transition {
+    transition: none !important;
+  }
+}
+
+.testimonial-slide {
+  @apply w-full md:w-1/2 lg:w-1/3 shrink-0 px-4;
+}
+
+.testimonial-card-v2 {
+  @apply card-glass flex flex-col gap-6 relative hover:border-primary/30 transition-all duration-500 h-full;
+}
+
+.slider-controls {
+  @apply flex items-center justify-center gap-6 mt-8;
+}
+
+.control-btn {
+  @apply w-12 h-12 rounded-full glass border border-white/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all active:scale-95;
+}
+
+.dot-indicator {
+  @apply w-2 h-2 rounded-full bg-white/10 transition-all;
+  &.active {
+    @apply w-6 bg-primary;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
