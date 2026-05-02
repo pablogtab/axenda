@@ -24,7 +24,7 @@ export class PricingComparisonComponent {
       category: 'Comunicación y WhatsApp',
       features: [
         { name: 'Notificaciones Email', starter: '✅', pro: '✅', business: '✅', elite: '✅' },
-        { name: 'Recordatorios WhatsApp', starter: '❌', pro: '❌', business: '300 / mes (*)', elite: '1.000 / mes (*)' },
+        { name: 'Recordatorios WhatsApp', starter: '❌', pro: '❌', business: '300 WhatsApps / mes (*)', elite: '1.000 WhatsApps / mes (*)' },
         { name: 'Remitente WhatsApp', starter: '❌', pro: '❌', business: 'Axenda', elite: 'Propio o Axenda' },
         { name: 'Plantillas Personalizadas', starter: '❌', pro: '❌', business: '❌', elite: '✅' }
       ]
