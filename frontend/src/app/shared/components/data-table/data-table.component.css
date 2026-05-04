@@ -1,1 +1,61 @@
-/* Refactored to Tailwind CSS */
+/* Transform table to cards on mobile */
+@media (max-width: 640px) {
+  :host {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    border: none !important;
+  }
+
+  thead {
+    display: none; /* Hide headers on mobile */
+  }
+
+  tbody {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  tr {
+    display: block;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-primary-500, #6366f1);
+  }
+
+  td {
+    display: block;
+    width: 100% !important;
+    padding: 0.125rem 0 !important;
+    border: none !important;
+    text-align: left !important;
+  }
+
+  /* Special handling for specific columns if needed */
+  
+  td:last-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    margin-top: 0.125rem;
+    padding-top: 0.25rem !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+}

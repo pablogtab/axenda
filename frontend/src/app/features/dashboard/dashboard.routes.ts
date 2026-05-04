@@ -26,24 +26,6 @@ export const dashboardRoutes: Routes = [
     title: 'Axenda - Clientes',
     component: ClientsListComponent
   },
-  { 
-    path: 'services', 
-    title: 'Axenda - Servicios',
-    component: ServicesListComponent
-  },
-  { 
-    path: 'branches', 
-    component: BranchesListComponent
-  },
-  {
-    path: 'professionals',
-    title: 'Axenda - Profesionales',
-    component: ProfessionalsListComponent
-  },
-  {
-    path: 'professionals/:id/availability',
-    component: ProfessionalAvailabilityComponent
-  },
   {
     path: 'settings',
     title: 'Axenda - Configuración',

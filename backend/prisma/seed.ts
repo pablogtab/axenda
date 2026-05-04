@@ -32,6 +32,7 @@ async function main() {
       slug: 'barberia-axenda',
       publicSlug: 'barberia-axenda',
       mode: TenantMode.BARBERSHOP,
+      
       active: true,
       
       // Crear Sucursales

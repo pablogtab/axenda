@@ -33,8 +33,18 @@ export class ClientsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos los clientes del tenant' })
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.clientsService.findAll(user.tenantId)
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('q') query?: string,
+  ) {
+    return this.clientsService.findAll(
+      user.tenantId,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20,
+      query,
+    )
   }
 
   @Get('search')

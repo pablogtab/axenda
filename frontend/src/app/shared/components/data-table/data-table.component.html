@@ -4,8 +4,10 @@
       @for (header of headers(); track $index) {
         <th [class.px-6]="density() === 'normal'"
             [class.py-4]="density() === 'normal'"
-            [class.px-4]="density() === 'compact'"
+            [class.px-4]="density() === 'compact' && columns()[$index] !== 'actions'"
+            [class.px-2]="density() === 'compact' && columns()[$index] === 'actions'"
             [class.py-2]="density() === 'compact'"
+            [class.text-right]="columns()[$index] === 'actions'"
             class="text-[0.75rem] font-bold text-text-dim uppercase tracking-widest">
           {{ header }}
         </th>
@@ -18,8 +20,11 @@
         @for (column of columns(); track column) {
           <td [class.px-6]="density() === 'normal'"
               [class.py-4]="density() === 'normal'"
-              [class.px-4]="density() === 'compact'"
+              [class.px-4]="density() === 'compact' && column !== 'actions'"
+              [class.px-2]="density() === 'compact' && column === 'actions'"
               [class.py-1.5]="density() === 'compact'"
+              [class.text-right]="column === 'actions'"
+              [class.w-1]="column === 'actions'"
               class="align-middle text-text-main">
             @if (getTemplateForColumn(column)) {
               <ng-container [ngTemplateOutlet]="getTemplateForColumn(column)!" [ngTemplateOutletContext]="{ $implicit: item }"></ng-container>

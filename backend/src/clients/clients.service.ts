@@ -9,14 +9,43 @@ export class ClientsService {
 
   // ─── CRUD Básico de Clientes ───────────────────────────────────────────────
   
-  async findAll(tenantId: string) {
-    return this.prisma.client.findMany({
-      where: { tenantId, active: true },
-      include: {
-        tags: true,
-      },
-      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
-    })
+  async findAll(tenantId: string, page: number = 1, limit: number = 20, search?: string) {
+    const skip = (page - 1) * limit
+    const where: any = { tenantId, active: true }
+
+    if (search) {
+      const parts = search.trim().split(/[\s*]+/).filter(p => p.length > 0)
+      if (parts.length > 0) {
+        where.AND = parts.map(part => ({
+          OR: [
+            { firstName: { contains: part, mode: 'insensitive' } },
+            { lastName: { contains: part, mode: 'insensitive' } },
+            { email: { contains: part, mode: 'insensitive' } },
+            { phone: { contains: part, mode: 'insensitive' } },
+          ],
+        }))
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.client.findMany({
+        where,
+        include: {
+          tags: true,
+        },
+        orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+        skip,
+        take: limit,
+      }),
+      this.prisma.client.count({ where }),
+    ])
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    }
   }
 
   async search(tenantId: string, query: string) {

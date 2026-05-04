@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, tap } from 'rxjs';
 import { SelectComponent, SelectConfig } from '../../../shared/components/select/select';
@@ -33,6 +33,7 @@ import * as QRCode from 'qrcode';
 })
 export class SettingsComponent implements OnInit {
   settingsForm: FormGroup;
+  private route = inject(ActivatedRoute);
 
   sections = [
     { id: 'business-info', title: 'Información del Negocio', icon: '🏢', description: 'Nombre, contacto y ubicación' },
@@ -207,6 +208,11 @@ export class SettingsComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['section']) {
+        this.activeSection = params['section'];
+      }
+    });
     this.loadTenantData();
     this.setupSlugValidation();
     this.setupFormLogic();

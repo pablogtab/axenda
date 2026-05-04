@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ClientsService, Client } from '@services/clients.service';
 import { DataTableComponent } from '@shared/components/data-table/data-table.component';
@@ -25,29 +25,52 @@ export class ClientsListComponent implements OnInit {
   searchTerm = signal('');
   isLoading = signal(true);
   
-  filteredClients = computed(() => {
-    const term = this.searchTerm().toLowerCase();
-    const allClients = this.clients();
-    
-    if (!term) return allClients;
-    
-    return allClients.filter(c => 
-      c.firstName.toLowerCase().includes(term) || 
-      c.lastName.toLowerCase().includes(term) ||
-      (c.email && c.email.toLowerCase().includes(term))
-    );
-  });
+  // Paginación
+  currentPage = signal(1);
+  pageSize = signal(15);
+  totalItems = signal(0);
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  
+  private prefetchCache = new Map<string, { items: Client[], total: number }>();
+
+  constructor() {
+    // Reaccionar a cambios en búsqueda o página
+    effect(() => {
+      const term = this.searchTerm();
+      const page = this.currentPage();
+      // Debounce implícito por el ciclo de vida de signals si se usa con cuidado, 
+      // pero aquí llamaremos a load directamente.
+      this.loadClients();
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit(): void {
-    this.loadClients();
+    // El efecto inicial se encarga de la carga
   }
 
   loadClients(): void {
+    const term = this.searchTerm();
+    const page = this.currentPage();
+    const limit = this.pageSize();
+    const cacheKey = `${term}_${page}`;
+
+    if (this.prefetchCache.has(cacheKey)) {
+      const cached = this.prefetchCache.get(cacheKey)!;
+      this.clients.set(cached.items);
+      this.totalItems.set(cached.total);
+      this.isLoading.set(false);
+      this.prefetchNextPage(); // Intentar pre-cargar la siguiente de todos modos
+      return;
+    }
+
     this.isLoading.set(true);
-    this.clientsService.findAll().subscribe({
-      next: (data) => {
-        this.clients.set(data);
+    this.clientsService.findAll(page, limit, term).subscribe({
+      next: (res) => {
+        this.clients.set(res.items);
+        this.totalItems.set(res.total);
         this.isLoading.set(false);
+        this.prefetchCache.set(cacheKey, res);
+        this.prefetchNextPage();
       },
       error: () => {
         this.isLoading.set(false);
@@ -55,11 +78,55 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
+  private prefetchNextPage(): void {
+    const term = this.searchTerm();
+    const nextPage = this.currentPage() + 1;
+    const limit = this.pageSize();
+    
+    if (nextPage > this.totalPages()) return;
+
+    const cacheKey = `${term}_${nextPage}`;
+    if (this.prefetchCache.has(cacheKey)) return;
+
+    this.clientsService.findAll(nextPage, limit, term).subscribe({
+      next: (res) => {
+        this.prefetchCache.set(cacheKey, res);
+      }
+    });
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm.set(value);
+    this.currentPage.set(1); // Reset a la primera página al buscar
+    this.prefetchCache.clear(); // Limpiar cache al cambiar búsqueda
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
   openCreateForm(): void {
     const dialogRef = this.modal.open(ClientFormComponent);
     
     dialogRef.closed.subscribe(result => {
-      if (result) this.loadClients();
+      if (result) {
+        this.prefetchCache.clear();
+        this.loadClients();
+      }
     });
   }
 
@@ -69,10 +136,12 @@ export class ClientsListComponent implements OnInit {
     });
 
     dialogRef.closed.subscribe(result => {
-      if (result) this.loadClients();
+      if (result) {
+        this.prefetchCache.clear();
+        this.loadClients();
+      }
     });
   }
-
 
   async deleteClient(id: string): Promise<void> {
     const confirmed = await this.dialog.confirm({
@@ -87,6 +156,7 @@ export class ClientsListComponent implements OnInit {
       this.clientsService.delete(id).subscribe({
         next: () => {
           this.snackbar.success('Cliente eliminado correctamente');
+          this.prefetchCache.clear();
           this.loadClients();
         },
         error: (err) => {
@@ -95,10 +165,6 @@ export class ClientsListComponent implements OnInit {
         }
       });
     }
-  }
-
-  onSearchChange(value: string): void {
-    this.searchTerm.set(value);
   }
 
   getInitials(client: Client): string {

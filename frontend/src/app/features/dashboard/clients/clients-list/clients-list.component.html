@@ -1,16 +1,19 @@
-<div class="p-8 flex flex-col gap-6">
+<div class="p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 h-full overflow-y-auto custom-scrollbar">
   <header class="flex justify-between items-center">
     <div class="header-info">
-      <h1 class="text-4xl font-bold mb-1 text-gradient">Clientes</h1>
-      <p class="text-text-muted">Gestiona tu base de datos de clientes y su historial.</p>
+      <h1 class="text-3xl font-black mb-1 text-gradient">Clientes</h1>
+      <p class="text-xs text-text-muted">Gestiona tu base de datos de clientes y su historial.</p>
     </div>
     <div class="header-actions">
-      <button class="btn-primary" (click)="openCreateForm()">+ Nuevo Cliente</button>
+      <button class="btn-primary !px-4 !py-2.5 !text-sm flex items-center gap-2" (click)="openCreateForm()">
+        <span class="material-symbols-rounded text-lg">person_add</span>
+        Nuevo Cliente
+      </button>
     </div>
   </header>
 
-  <div class="search-box-container max-w-md">
-    <span class="text-lg opacity-70">🔍</span>
+  <div class="search-box-container max-w-sm">
+    <span class="material-symbols-rounded text-lg text-text-dim">search</span>
     <input
       type="text"
       [value]="searchTerm()"
@@ -20,81 +23,123 @@
       placeholder="Buscar por nombre o email...">
   </div>
 
-  <div class="card-glass !p-0 overflow-hidden">
-    <app-data-table
-      [data]="filteredClients()"
-      [columns]="['client', 'contact', 'tags', 'active', 'actions']"
-      [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']">
-      
-      <!-- Plantilla para la columna de Cliente -->
-      <ng-template appTableCell="client" let-client>
-        <div class="flex items-center gap-4 py-2">
-          <div class="row-icon-circle bg-gradient-to-br from-primary to-accent text-white">
-            {{ getInitials(client) }}
+  <div class="card-glass !p-0 overflow-hidden border-white/5 flex flex-col h-full">
+    <div class="flex-1 overflow-y-auto custom-scrollbar">
+      <app-data-table
+        [data]="clients()"
+        density="compact"
+        [columns]="['client', 'contact', 'tags', 'active', 'actions']"
+        [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']">
+        
+        <!-- Templates as before -->
+        <ng-template appTableCell="client" let-client>
+          <div class="flex items-center gap-3 py-1">
+            <div class="row-icon-circle !w-8 !h-8 bg-gradient-to-br from-primary/20 to-accent/20 text-text-main border-primary/20 !text-[11px]">
+              {{ getInitials(client) }}
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-text-main leading-tight">{{ client.firstName }} {{ client.lastName }}</span>
+              @if (client.notes) {
+                <span class="text-[10px] text-text-dim max-w-[180px] truncate">{{ client.notes }}</span>
+              }
+            </div>
           </div>
-          <div class="flex flex-col">
-            <span class="font-semibold text-text-main">{{ client.firstName }} {{ client.lastName }}</span>
-            @if (client.notes) {
-              <span class="text-xs text-text-dim max-w-[200px] truncate">{{ client.notes }}</span>
+        </ng-template>
+
+        <ng-template appTableCell="contact" let-client>
+          <div class="flex flex-col gap-0">
+            <span class="text-[12px] text-text-muted font-medium">{{ client.email || '-' }}</span>
+            <span class="text-[10px] text-text-dim">{{ client.phone || '-' }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template appTableCell="tags" let-client>
+          <div class="flex flex-wrap gap-1">
+            @for (tag of client.tags; track tag.id) {
+              <span 
+                class="px-2 py-0 rounded-full text-[9px] font-bold border"
+                [style.background-color]="tag.color + '10'"
+                [style.color]="tag.color"
+                [style.border-color]="tag.color + '20'"
+              >
+                {{ tag.name }}
+              </span>
             }
           </div>
-        </div>
-      </ng-template>
+        </ng-template>
 
-      <!-- Plantilla para la columna de Contacto -->
-      <ng-template appTableCell="contact" let-client>
-        <div class="flex flex-col gap-0.5">
-          <span class="text-sm text-text-muted">{{ client.email || 'Sin email' }}</span>
-          <span class="text-xs text-text-dim">{{ client.phone || 'Sin teléfono' }}</span>
-        </div>
-      </ng-template>
+        <ng-template appTableCell="active" let-client>
+          <span class="status-indicator" [class.active]="client.active">
+            {{ client.active ? 'Activo' : 'Baja' }}
+          </span>
+        </ng-template>
 
-      <!-- Plantilla para la columna de Etiquetas -->
-      <ng-template appTableCell="tags" let-client>
-        <div class="flex flex-wrap gap-1.5">
-          @for (tag of client.tags; track tag.id) {
-            <span 
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-              [style.background-color]="tag.color + '15'"
-              [style.color]="tag.color"
-              [style.border-color]="tag.color + '30'"
-            >
-              {{ tag.name }}
+        <ng-template appTableCell="actions" let-client>
+          <div class="row-actions">
+            <button class="btn-icon-small" title="Ver Turnos">
+              <span class="material-symbols-rounded text-lg">calendar_month</span>
+            </button>
+            <button class="btn-icon-small" title="Editar" (click)="openEditForm(client)">
+              <span class="material-symbols-rounded text-lg">edit</span>
+            </button>
+            <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteClient(client.id)">
+              <span class="material-symbols-rounded text-lg">delete</span>
+            </button>
+          </div>
+        </ng-template>
+
+      </app-data-table>
+
+      @if (clients().length === 0 && !isLoading()) {
+        <div class="empty-state py-12">
+          <span class="material-symbols-rounded text-5xl mb-4 opacity-10">group</span>
+          <p class="text-sm">No se encontraron clientes.</p>
+        </div>
+      }
+
+      @if (isLoading()) {
+        <div class="empty-state py-12">
+          <div class="animate-spin text-2xl mb-4 text-primary">
+            <span class="material-symbols-rounded">progress_activity</span>
+          </div>
+          <p class="text-sm">Cargando clientes...</p>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination Footer -->
+    @if (totalItems() > 0) {
+      <footer class="px-4 sm:px-6 py-4 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/[0.02]">
+        <div class="text-xs text-text-dim text-center sm:text-left">
+          Mostrando <span class="text-text-muted font-bold">{{ clients().length }}</span> de <span class="text-text-muted font-bold">{{ totalItems() }}</span> clientes
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button 
+            (click)="prevPage()" 
+            [disabled]="currentPage() === 1"
+            class="btn-icon-small disabled:opacity-20">
+            <span class="material-symbols-rounded text-lg">chevron_left</span>
+          </button>
+          
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-primary px-2 py-1 bg-primary/10 rounded-lg">
+              {{ currentPage() }}
             </span>
-          }
+            <span class="text-[10px] text-text-dim uppercase font-bold tracking-widest px-1">de</span>
+            <span class="text-xs font-bold text-text-muted px-2 py-1 bg-white/5 rounded-lg">
+              {{ totalPages() }}
+            </span>
+          </div>
+
+          <button 
+            (click)="nextPage()" 
+            [disabled]="currentPage() === totalPages()"
+            class="btn-icon-small disabled:opacity-20">
+            <span class="material-symbols-rounded text-lg">chevron_right</span>
+          </button>
         </div>
-      </ng-template>
-
-      <!-- Plantilla para la columna de Estado -->
-      <ng-template appTableCell="active" let-client>
-        <span class="status-indicator" [class.active]="client.active">
-          {{ client.active ? 'Activo' : 'Inactivo' }}
-        </span>
-      </ng-template>
-
-      <!-- Plantilla para la columna de Acciones -->
-      <ng-template appTableCell="actions" let-client>
-        <div class="row-actions">
-          <button class="btn-icon-small" title="Ver Turnos">📅</button>
-          <button class="btn-icon-small" title="Editar" (click)="openEditForm(client)">✏️</button>
-          <button class="btn-icon-small btn-icon-delete" title="Eliminar" (click)="deleteClient(client.id)">🗑️</button>
-        </div>
-      </ng-template>
-
-    </app-data-table>
-
-    @if (filteredClients().length === 0 && !isLoading()) {
-      <div class="empty-state">
-        <span class="text-4xl mb-4 opacity-20">👥</span>
-        <p>No se encontraron clientes.</p>
-      </div>
-    }
-
-    @if (isLoading()) {
-      <div class="empty-state">
-        <div class="animate-spin text-2xl mb-4">⌛</div>
-        <p>Cargando clientes...</p>
-      </div>
+      </footer>
     }
   </div>
 </div>

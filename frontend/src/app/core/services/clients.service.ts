@@ -22,14 +22,10 @@ export class ClientsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/clients`;
 
-  findAll(): Observable<Client[]> {
-    return this.http.get<Client[]>(this.apiUrl);
-  }
-
-  search(query: string): Observable<Client[]> {
-    return this.http.get<Client[]>(`${this.apiUrl}/search`, { 
-      params: { q: query } 
-    });
+  findAll(page: number = 1, limit: number = 20, query?: string): Observable<{ items: Client[], total: number }> {
+    const params: any = { page: page.toString(), limit: limit.toString() };
+    if (query) params.q = query;
+    return this.http.get<{ items: Client[], total: number }>(this.apiUrl, { params });
   }
 
   findOne(id: string): Observable<Client> {
