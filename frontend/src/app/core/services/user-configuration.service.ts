@@ -41,7 +41,7 @@ export class UserConfigurationService {
       this._agendaSelectedProfessionalIds.set(this.storage.get(`${tenantId}_agenda_selected_professional_ids`, []));
       this._agendaView.set(this.storage.get(`${tenantId}_agenda_view`, 'day'));
       this._agendaSelectedStatuses.set(this.storage.get(`${tenantId}_agenda_selected_statuses`, ['PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW']));
-    }, { allowSignalWrites: true });
+    });
 
     // Efecto para persistir automáticamente cuando cambian los valores
     effect(() => {

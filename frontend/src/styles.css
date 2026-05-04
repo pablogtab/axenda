@@ -27,6 +27,14 @@
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
 }
 
+.material-symbols-rounded {
+  font-size: 20px; /* Smaller default size */
+  font-variation-settings: 'wght' 400, 'opsz' 20 !important;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
 @layer base {
   html {
     @apply text-[16px] scroll-smooth;
@@ -151,7 +159,7 @@
 }
 
 @utility nav-item {
-  @apply flex items-center gap-4 px-4 py-3 rounded-xl text-text-muted font-bold transition-all hover:bg-white/5 hover:text-text-main overflow-hidden select-none;
+  @apply flex items-center gap-4 px-2 py-2 rounded-xl text-text-muted font-bold transition-all hover:bg-white/5 hover:text-text-main overflow-hidden select-none;
 }
 
 @utility active-nav-item {
@@ -165,7 +173,7 @@
 }
 
 @utility nav-icon {
-  @apply text-[22px] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shrink-0;
+  @apply text-[14px] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shrink-0;
 }
 
 @utility nav-label {

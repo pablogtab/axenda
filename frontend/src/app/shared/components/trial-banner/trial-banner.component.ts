@@ -10,7 +10,10 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule],
   template: `
     @if (subService.bannerVisible()) {
-      <div class="mx-4 mt-4 p-3 glass border border-white/10 rounded-2xl flex items-center justify-between shadow-xl animate-in fade-in slide-in-from-top-4 duration-1000 z-50">
+      <div 
+        class="fixed bottom-4 left-4 right-24 p-3 glass border border-white/10 rounded-2xl flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in slide-in-from-bottom-4 duration-1000 z-[60]"
+        [class.lg:left-[256px]]="!sidebarService.isCollapsed() && !sidebarService.isMobile()"
+        [class.lg:left-4]="sidebarService.isCollapsed() || sidebarService.isMobile()">
         <div class="flex items-center gap-3 ml-1">
           <div class="relative flex items-center justify-center">
             <span class="material-symbols-rounded text-primary/80 text-xl">auto_awesome</span>

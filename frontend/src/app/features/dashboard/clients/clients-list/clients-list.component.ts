@@ -41,7 +41,7 @@ export class ClientsListComponent implements OnInit {
       // Debounce implícito por el ciclo de vida de signals si se usa con cuidado, 
       // pero aquí llamaremos a load directamente.
       this.loadClients();
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit(): void {

@@ -59,7 +59,7 @@
           (click)="sidebarService.toggle()"
           class="p-1.5 sm:p-2 bg-white/5 hover:bg-white/10 text-text-dim hover:text-text-main rounded-lg sm:rounded-xl border border-white/10 transition-all active:scale-95 group"
           [title]="sidebarService.isCollapsed() ? 'Mostrar menú' : 'Ocultar menú'">
-          <span class="text-lg sm:text-xl transition-transform group-hover:scale-110">☰</span>
+          <span class="text-base sm:text-lg transition-transform group-hover:scale-110">☰</span>
         </button>
 
         <!-- Navegación de Fecha Desktop -->
@@ -70,13 +70,13 @@
         
         <div class="flex items-center bg-white/5 rounded-xl border border-white/10 p-0.5">
           <button (click)="changeDate(-1)" class="py-1 px-3 hover:bg-white/10 rounded-lg transition-all text-text-dim hover:text-text-main active:scale-90">
-            <span class="text-xl">‹</span>
+            <span class="text-lg">‹</span>
           </button>
         
           <span class="text-sm sm:text-base font-bold text-text-main capitalize px-4 min-w-[200px] text-center">{{ currentDateLabel() }}</span>
         
           <button (click)="changeDate(1)" class="py-1 px-3 hover:bg-white/10 rounded-lg transition-all text-text-dim hover:text-text-main active:scale-90">
-            <span class="text-xl">›</span>
+            <span class="text-lg">›</span>
           </button>
         </div>
       </div>
@@ -491,7 +491,7 @@
 <!-- Floating Action Button (FAB) para Nuevo Turno -->
 <button (click)="onAddAppointment({ professional: activeProfessionals()[0], time: '09:00' })"
   class="fixed bottom-6 right-6 w-14 h-14 sm:w-12 sm:h-12 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 transition-all hover:scale-110 active:scale-95 z-[1000] group">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 sm:w-5 sm:h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 sm:w-4 h-4">
     <line x1="12" y1="5" x2="12" y2="19"></line>
     <line x1="5" y1="12" x2="19" y2="12"></line>
   </svg>

@@ -19,11 +19,11 @@ export class LayoutComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   public router = inject(Router);
   public sidebarService = inject(SidebarService);
-  private subscriptionService = inject(SubscriptionService);
+  public subService = inject(SubscriptionService);
 
   ngOnInit(): void {
     // Cargar información de suscripción
-    this.subscriptionService.loadStatus();
+    this.subService.loadStatus();
 
     this.tenantsService.getMe().subscribe({
       next: (tenant) => {

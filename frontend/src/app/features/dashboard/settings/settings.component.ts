@@ -3,17 +3,21 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, tap } from 'rxjs';
-import { SelectComponent, SelectConfig } from '../../../shared/components/select/select';
-import { ImageUploaderComponent } from '../../../shared/components/image-uploader/image-uploader.component';
+import { SelectConfig } from '../../../shared/components/select/select';
 
 import { ProfessionalsListComponent } from '../professionals/professionals-list/professionals-list.component';
 import { BranchesListComponent } from '../branches/branches-list/branches-list.component';
 import { ServicesListComponent } from '../services/services-list/services-list.component';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
-import { StoragePipe } from '@shared/pipes/storage.pipe';
-import { SubscriptionService } from '../../../core/services/subscription.service';
 import * as QRCode from 'qrcode';
+
+// Sub-components
+import { SettingsGeneralComponent } from './components/settings-general/settings-general.component';
+import { SettingsAppearanceComponent } from './components/settings-appearance/settings-appearance.component';
+import { SettingsBookingComponent } from './components/settings-booking/settings-booking.component';
+import { SettingsNotificationsComponent } from './components/settings-notifications/settings-notifications.component';
+import { SettingsBillingComponent } from './components/settings-billing/settings-billing.component';
 
 @Component({
   selector: 'app-settings',
@@ -22,12 +26,14 @@ import * as QRCode from 'qrcode';
     CommonModule, 
     RouterModule, 
     ReactiveFormsModule, 
-    SelectComponent,
     ProfessionalsListComponent,
     BranchesListComponent,
     ServicesListComponent,
-    ImageUploaderComponent,
-    StoragePipe,
+    SettingsGeneralComponent,
+    SettingsAppearanceComponent,
+    SettingsBookingComponent,
+    SettingsNotificationsComponent,
+    SettingsBillingComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -37,14 +43,14 @@ export class SettingsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   sections = [
-    { id: 'business-info', title: 'Información del Negocio', icon: '🏢', description: 'Nombre, contacto y ubicación' },
-    { id: 'appearance', title: 'Apariencia', icon: '🎨', description: 'Colores y estilo de tu marca' },
-    { id: 'booking-settings', title: 'Configuración de Reservas', icon: '📅', description: 'Antelación, intervalos y cancelaciones' },
-    { id: 'notifications', title: 'Notificaciones', icon: '🔔', description: 'Mensajes automáticos y recordatorios' },
-    { id: 'professionals', title: 'Profesionales', icon: '👨‍⚕️', description: 'Gestiona tu equipo de trabajo' },
-    { id: 'branches', title: 'Sucursales', icon: '📍', description: 'Ubicaciones de tu negocio' },
-    { id: 'services', title: 'Servicios', icon: '✂️', description: 'Catálogo de servicios y precios' },
-    { id: 'billing', title: 'Cuenta y Plan', icon: '💳', description: 'Gestiona tu suscripción y pagos' }
+    { id: 'business-info', title: 'Tu Negocio', icon: 'store', description: 'Nombre, contacto y ubicación' },
+    { id: 'appearance', title: 'Apariencia', icon: 'palette', description: 'Colores y estilo de tu marca' },
+    { id: 'booking-settings', title: 'Reservas', icon: 'calendar_month', description: 'Antelación, intervalos y cancelaciones' },
+    { id: 'notifications', title: 'Notificaciones', icon: 'notifications', description: 'Mensajes automáticos y recordatorios' },
+    { id: 'professionals', title: 'Profesionales', icon: 'group', description: 'Gestiona tu equipo de trabajo' },
+    { id: 'branches', title: 'Sucursales', icon: 'location_on', description: 'Ubicaciones de tu negocio' },
+    { id: 'services', title: 'Servicios', icon: 'content_cut', description: 'Catálogo de servicios y precios' },
+    { id: 'billing', title: 'Cuenta y Plan', icon: 'credit_card', description: 'Gestiona tu suscripción y pagos' }
   ];
 
   activeSection = 'business-info';
@@ -175,7 +181,6 @@ export class SettingsComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   private snackbar = inject(SnackbarService);
   private cdr = inject(ChangeDetectorRef);
-  public subService = inject(SubscriptionService);
 
   slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   originalSlug = signal<string>('');
@@ -222,7 +227,6 @@ export class SettingsComponent implements OnInit {
   }
 
   private setupFormLogic() {
-    // Theme detection - Instant for UI feedback
     this.settingsForm.valueChanges.subscribe(values => {
       const theme = this.colorPresets.find(p =>
         p.colors.primary === values.primaryColor &&
@@ -234,26 +238,12 @@ export class SettingsComponent implements OnInit {
       this.activeTheme.set(theme || null);
     });
 
-    // Auto-save - Debounced to avoid excessive API calls
     this.settingsForm.valueChanges.pipe(
       debounceTime(1000),
       distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
     ).subscribe(() => {
       this.save(true);
     });
-  }
-
-
-  onSlugInput() {
-    const slug = this.settingsForm.get('publicSlug')?.value;
-    if (slug === this.originalSlug()) {
-      this.slugStatus.set('idle');
-    } else if (slug && slug.length > 0) {
-      this.slugStatus.set('checking');
-    } else {
-      this.slugStatus.set('idle');
-    }
-    this.cdr.detectChanges();
   }
 
   private setupSlugValidation() {
@@ -278,7 +268,6 @@ export class SettingsComponent implements OnInit {
           return of({ available: true, skip: true });
         }
 
-        // Basic format validation
         const slugRegex = /^[a-z0-9-]+$/;
         if (!slugRegex.test(slug)) {
           this.slugStatus.set('invalid');
@@ -329,7 +318,6 @@ export class SettingsComponent implements OnInit {
           publicMinBookingTime: tenant.publicMinBookingTime || '1h'
         });
 
-        // Initial theme detection
         const values = this.settingsForm.getRawValue();
         const theme = this.colorPresets.find(p =>
           p.colors.primary === values.primaryColor &&
@@ -394,7 +382,7 @@ export class SettingsComponent implements OnInit {
     const slug = this.settingsForm.get('publicSlug')?.value;
     if (!slug) return;
 
-    const url = `axenda.com/${slug}`;
+    const url = `axenda.ar/${slug}`;
     navigator.clipboard.writeText(url).then(() => {
       this.snackbar.success('Link copiado al portapapeles');
     });
@@ -444,7 +432,6 @@ export class SettingsComponent implements OnInit {
         const x = (size - logoSize) / 2;
         const y = (size - logoSize) / 2;
 
-        // Draw background for logo (rounded white square)
         ctx.fillStyle = '#ffffff';
         const radius = logoSize * 0.25;
         ctx.beginPath();
@@ -460,18 +447,16 @@ export class SettingsComponent implements OnInit {
         ctx.closePath();
         ctx.fill();
 
-        // Load and draw the SVG logo
         const logoImg = new Image();
         logoImg.src = 'assets/logo.svg';
         await new Promise((resolve) => {
           logoImg.onload = resolve;
-          logoImg.onerror = resolve; // Continue even if logo fails
+          logoImg.onerror = resolve;
         });
 
         if (logoImg.complete && logoImg.naturalWidth > 0) {
           ctx.drawImage(logoImg, x, y, logoSize, logoSize);
         } else {
-          // Fallback to "A" if logo fails to load
           ctx.fillStyle = '#6366f1';
           ctx.font = `900 ${logoSize * 0.7}px system-ui, -apple-system, sans-serif`;
           ctx.textAlign = 'center';
