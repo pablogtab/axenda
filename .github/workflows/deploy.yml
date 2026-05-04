@@ -111,6 +111,7 @@ jobs:
             
             # 4. Ejecutar migraciones de Prisma
             docker exec axenda_backend npx prisma migrate deploy --schema ./prisma/schema/schema.prisma
+            docker exec axenda_backend npx prisma db seed
             
             # Limpieza de imágenes huérfanas
             docker image prune -f

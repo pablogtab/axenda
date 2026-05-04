@@ -97,6 +97,9 @@ export class AuthService {
             },
           })
 
+          // Crear suscripción Pro de prueba (14 días)
+          await this.createTrialSubscription(tx, newTenant.id)
+
           const newUser = await tx.user.create({
             data: {
               tenantId: newTenant.id,
@@ -207,6 +210,9 @@ export class AuthService {
       const tenant = await tx.tenant.create({
         data: { name: payload.organizationName, slug },
       })
+
+      // Crear suscripción Pro de prueba (14 días)
+      await this.createTrialSubscription(tx, tenant.id)
 
       const user = await tx.user.create({
         data: {
@@ -400,5 +406,30 @@ export class AuthService {
     const match = expiry.match(/^(\d+)([dhms])$/)
     const ms = match ? parseInt(match[1], 10) * (units[match[2]] ?? 0) : 7 * 86_400_000
     return new Date(Date.now() + ms)
+  }
+
+  private async createTrialSubscription(tx: any, tenantId: string) {
+    try {
+      const proPlan = await tx.subscriptionPlan.findUnique({
+        where: { code: 'PRO' },
+      })
+
+      if (!proPlan) {
+        console.error('Plan PRO no encontrado. Saltando creación de trial.')
+        return
+      }
+
+      await tx.tenantSubscription.create({
+        data: {
+          tenantId,
+          planId: proPlan.id,
+          status: 'TRIALING',
+          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 días
+        },
+      })
+    } catch (error) {
+      console.error('Error creando suscripción de trial:', error)
+      // No bloqueamos el registro por un error en la suscripción, pero lo logueamos
+    }
   }
 }

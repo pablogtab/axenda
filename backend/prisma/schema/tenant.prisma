@@ -35,6 +35,8 @@ model Tenant {
   services          Service[]
   clients           Client[]
   appointments      Appointment[]
+  subscription      TenantSubscription?
+  paymentConfig     TenantPaymentConfig?
 
   @@map("tenants")
 }
