@@ -304,10 +304,20 @@ export class AgendaComponent implements OnInit {
       return;
     }
 
-    this.isLoading.set(true);
     this.professionalsService.findAll(branchId).subscribe({
       next: (profs) => {
-        this.professionals.set(profs.filter(p => p.active));
+        const activeProfs = profs.filter(p => p.active);
+        this.professionals.set(activeProfs);
+        
+        // Validar profesionales seleccionados (eliminar los que no pertenecen a este tenant/sucursal)
+        const currentIds = this.selectedProfessionalIds();
+        if (currentIds.length > 0) {
+          const validIds = currentIds.filter(id => activeProfs.some(p => p.id === id));
+          if (validIds.length !== currentIds.length) {
+            this.selectedProfessionalIds.set(validIds);
+          }
+        }
+        
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)

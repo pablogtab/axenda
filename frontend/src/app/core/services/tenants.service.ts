@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -56,6 +56,16 @@ export interface UpdateTenantDto {
 })
 export class TenantsService {
   private http = inject(HttpClient);
+
+  // Estado global del tenant actual
+  private _currentTenant = signal<Tenant | null>(null);
+  currentTenant = this._currentTenant.asReadonly();
+  
+  currentTenantId = computed(() => this._currentTenant()?.id || null);
+
+  setTenant(tenant: Tenant): void {
+    this._currentTenant.set(tenant);
+  }
 
   getMe(): Observable<Tenant> {
     return this.http.get<Tenant>(`${environment.apiUrl}/tenants/me`);

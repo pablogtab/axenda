@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TenantsService } from '@services/tenants.service';
 import { AuthService } from '@services/auth.service';
-import { ImageUploaderComponent } from '@shared/components/image-uploader/image-uploader.component';
 
 @Component({
   selector: 'app-getting-started',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploaderComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './getting-started.component.html',
   styleUrl: './getting-started.component.css'
 })
