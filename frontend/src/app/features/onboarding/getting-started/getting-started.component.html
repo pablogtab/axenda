@@ -3,7 +3,9 @@
   <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[60%] bg-[radial-gradient(circle,var(--color-primary-glow)_0%,transparent_70%)] blur-[80px] z-0"></div>
   <div class="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[radial-gradient(circle,rgba(168,85,247,0.15)_0%,transparent_70%)] blur-[80px] z-0"></div>
 
-  <div class="card-glass w-full max-w-[500px] !p-10 z-10 relative">
+  <div class="card-glass w-full z-10 relative transition-all duration-500" 
+       [class.max-w-[900px]]="currentStep() === 4" 
+       [class.max-w-[500px]]="currentStep() !== 4">
     <!-- Header -->
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-gradient mb-2">Hola!</h1>
@@ -12,39 +14,32 @@
 
     <!-- Progress -->
     <div class="progress-bar">
-      <div class="progress-fill" [style.width.%]="(currentStep() / 3) * 100"></div>
+      <div class="progress-fill" [style.width.%]="(currentStep() / 6) * 100"></div>
     </div>
 
     <!-- Step 1: Business Profile -->
     <div class="step-container" [class.step-active]="currentStep() === 1" [class.step-inactive]="currentStep() !== 1">
-      <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold text-text-muted">Nombre de tu Negocio</label>
+      <div class="max-w-md mx-auto space-y-8">
+        <div class="text-center">
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 1 de 6</p>
+          <h3 class="text-2xl font-black">Tu Marca</h3>
+          <p class="text-sm text-text-muted">¿Cómo se llama tu negocio?</p>
+        </div>
+
+        <div class="space-y-6">
           <input 
             type="text" 
             [ngModel]="businessName()"
             (ngModelChange)="businessName.set($event)"
-            placeholder="Ej: Barbería Central"
-            class="input-field"
+            placeholder="Nombre de tu marca"
+            class="input-field h-16 text-xl text-center font-black"
           >
+          <p class="text-[10px] text-text-muted text-center px-4 italic">Luego podrás configurar un logo para tu negocio.</p>
+
+          <button (click)="nextStep()" class="btn-primary w-full h-14" [disabled]="!businessName()">
+            Empezar →
+          </button>
         </div>
-
-        @if (tenantId()) {
-          <app-image-uploader 
-            [currentImageUrl]="logoUrl()"
-            [tenantId]="tenantId()"
-            category="logos"
-            label="Logo (Opcional)"
-            dimensions="w-20 h-20"
-            (imageUploaded)="onLogoUploaded($event)"
-          ></app-image-uploader>
-        } @else {
-          <div class="w-20 h-20 rounded-2xl bg-white/5 animate-pulse"></div>
-        }
-
-        <button (click)="nextStep()" class="btn-primary w-full mt-4" [disabled]="!businessName()">
-          Siguiente paso →
-        </button>
       </div>
     </div>
 
@@ -75,21 +70,422 @@
       </div>
     </div>
 
-    <!-- Step 3: Final Touch -->
+    <!-- Step 3: Branch & Professional Details -->
     <div class="step-container" [class.step-active]="currentStep() === 3" [class.step-inactive]="currentStep() !== 3">
-      <div class="text-center py-6">
-        <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <div class="max-w-md mx-auto space-y-8">
+        <div class="text-center">
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 3 de 6</p>
+          <h3 class="text-2xl font-black">Donde sucede la magia</h3>
+          <p class="text-sm text-text-muted leading-relaxed">Configurá tu local para que tus clientes sepan <b>exactamente cómo llegar</b> y conocé a tu primer profesional.</p>
         </div>
-        <h2 class="text-2xl font-bold mb-2">¡Todo listo!</h2>
-        <p class="text-text-muted mb-8">Ya preparamos tu agenda. Puedes empezar a gestionar tus turnos ahora mismo.</p>
-        
-        <button (click)="completeOnboarding()" class="btn-primary w-full" [disabled]="isLoading">
-          @if (!isLoading) {
-            Ir al Panel de Control
+
+        <div class="space-y-4">
+          <!-- Sede -->
+          <div class="p-4 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+            <label class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <span class="material-symbols-rounded text-sm">store</span> Tu Primera Sede
+            </label>
+            <div class="space-y-3">
+              <input 
+                type="text" 
+                [ngModel]="branchName()"
+                (ngModelChange)="branchName.set($event)"
+                placeholder='Nombre de la Sede'
+                class="input-field"
+              >
+              <input 
+                type="text" 
+                [ngModel]="branchAddress()"
+                (ngModelChange)="branchAddress.set($event)"
+                placeholder="Dirección"
+                class="input-field"
+              >
+              <p class="text-[9px] text-text-muted px-2 italic">Esto aparecerá en el ticket de reserva de tus clientes.</p>
+            </div>
+          </div>
+
+          <!-- Profesional -->
+          <div class="p-4 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+            <label class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <span class="material-symbols-rounded text-sm">person</span> Tu Perfil Profesional
+            </label>
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <input 
+                  type="text" 
+                  [ngModel]="professionalFirstName()"
+                  (ngModelChange)="professionalFirstName.set($event)"
+                  placeholder="Nombre"
+                  class="input-field"
+                >
+                <input 
+                  type="text" 
+                  [ngModel]="professionalLastName()"
+                  (ngModelChange)="professionalLastName.set($event)"
+                  placeholder="Apellido"
+                  class="input-field"
+                >
+              </div>
+              <p class="text-[9px] text-text-muted px-2 italic">Como dueño, configuramos tu primer perfil para que puedas recibir turnos hoy mismo.</p>
+            </div>
+          </div>
+
+          <!-- Horarios -->
+          <div class="p-4 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+            <label class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <span class="material-symbols-rounded text-sm">schedule</span> Horarios de Atención
+            </label>
+            
+            <div class="flex justify-between gap-1">
+              @for (day of days; track day.id) {
+                <button 
+                  type="button"
+                  (click)="toggleDay(day.id)"
+                  [class.bg-primary]="workingDays().includes(day.id)"
+                  [class.text-white]="workingDays().includes(day.id)"
+                  [class.bg-white/5]="!workingDays().includes(day.id)"
+                  [class.text-text-muted]="!workingDays().includes(day.id)"
+                  [class.border-primary/50]="workingDays().includes(day.id)"
+                  class="w-9 h-9 rounded-xl text-xs font-bold transition-all border border-white/10"
+                >
+                  {{ day.label }}
+                </button>
+              }
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-2">
+              <div class="space-y-1">
+                <span class="text-[8px] text-text-muted uppercase ml-2 font-bold tracking-tighter">Desde</span>
+                <input 
+                  type="time" 
+                  [ngModel]="startTime()"
+                  (ngModelChange)="startTime.set($event)"
+                  class="input-field !py-2 text-sm text-center font-bold"
+                >
+              </div>
+              <div class="space-y-1">
+                <span class="text-[8px] text-text-muted uppercase ml-2 font-bold tracking-tighter">Hasta</span>
+                <input 
+                  type="time" 
+                  [ngModel]="endTime()"
+                  (ngModelChange)="endTime.set($event)"
+                  class="input-field !py-2 text-sm text-center font-bold"
+                >
+              </div>
+            </div>
+            <p class="text-[9px] text-text-muted px-2 italic text-center">Configuración rápida. Podrás definir horarios cortados más tarde.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button (click)="prevStep()" class="btn-secondary flex-1">Atrás</button>
+          <button (click)="nextStep()" class="btn-primary flex-1" [disabled]="!professionalFirstName() || !professionalLastName()">
+            Siguiente →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Plan Advisor -->
+    <div class="step-container" [class.step-active]="currentStep() === 4" [class.step-inactive]="currentStep() !== 4">
+      <div class="max-w-4xl mx-auto">
+        <!-- Header del Paso -->
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <p class="text-xs font-bold text-primary uppercase tracking-widest mb-1">Paso 4 de 6</p>
+            <h3 class="text-2xl font-black">Plan a tu medida</h3>
+          </div>
+          <button (click)="currentStep.set(5)" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-xs text-text-muted hover:text-white hover:border-white/20 transition-all font-bold uppercase tracking-widest">
+            Omitir →
+          </button>
+        </div>
+
+        <div class="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-8 items-start">
+          <!-- Opciones (Izquierda) -->
+          <div class="w-full space-y-6 lg:order-1">
+            <div class="space-y-6">
+              <!-- Contiguous Solid Stepper 1: Appointments -->
+              <div class="slider-group p-6 rounded-[2rem] bg-white/[0.02] border border-white/5">
+                <div class="flex justify-between mb-6">
+                  <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Turnos Mensuales</label>
+                  <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
+                    {{ appointmentsLevel() === 0 ? 'Hasta 25' : appointmentsLevel() === 1 ? 'Hasta 100' : 'Más de 500' }}
+                  </span>
+                </div>
+                
+                <div class="flex items-center px-2">
+                  <div class="relative w-full h-1 bg-white/10 rounded-full flex items-center justify-between">
+                    <div class="absolute left-0 h-full bg-primary rounded-full transition-all duration-300" 
+                         [style.width.%]="appointmentsLevel() * 50"></div>
+                    
+                    @for (i of [0, 1, 2]; track i) {
+                      <div class="relative z-10 w-8 h-8 flex items-center justify-center cursor-pointer group" (click)="appointmentsLevel.set(i)">
+                        <div class="w-5 h-5 rounded-full border-4 transition-all duration-300"
+                             [class.bg-primary]="appointmentsLevel() >= i"
+                             [class.border-primary]="appointmentsLevel() >= i"
+                             [class.bg-bg-primary]="appointmentsLevel() < i"
+                             [class.border-white/20]="appointmentsLevel() < i"
+                             [class.scale-125]="appointmentsLevel() === i"></div>
+                        <span class="absolute -bottom-8 text-[10px] font-bold transition-all"
+                              [class.text-primary]="appointmentsLevel() === i"
+                              [class.text-text-muted]="appointmentsLevel() !== i">
+                          {{ i === 0 ? '25' : i === 1 ? '100' : '500+' }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="h-8"></div>
+              </div>
+
+              <!-- Contiguous Solid Stepper 2: Professionals -->
+              <div class="slider-group p-6 rounded-[2rem] bg-white/[0.02] border border-white/5">
+                <div class="flex justify-between mb-6">
+                  <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Equipo (Profesionales)</label>
+                  <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
+                    {{ professionalsLevel() === 0 ? 'Solo yo' : professionalsLevel() === 1 ? 'Hasta 5' : 'Más de 5' }}
+                  </span>
+                </div>
+
+                <div class="flex items-center px-2">
+                  <div class="relative w-full h-1 bg-white/10 rounded-full flex items-center justify-between">
+                    <div class="absolute left-0 h-full bg-primary rounded-full transition-all duration-300" 
+                         [style.width.%]="professionalsLevel() * 50"></div>
+                    
+                    @for (i of [0, 1, 2]; track i) {
+                      <div class="relative z-10 w-8 h-8 flex items-center justify-center cursor-pointer group" (click)="professionalsLevel.set(i)">
+                        <div class="w-5 h-5 rounded-full border-4 transition-all duration-300"
+                             [class.bg-primary]="professionalsLevel() >= i"
+                             [class.border-primary]="professionalsLevel() >= i"
+                             [class.bg-bg-primary]="professionalsLevel() < i"
+                             [class.border-white/20]="professionalsLevel() < i"
+                             [class.scale-125]="professionalsLevel() === i"></div>
+                        <span class="absolute -bottom-8 text-[10px] font-bold transition-all"
+                              [class.text-primary]="professionalsLevel() === i"
+                              [class.text-text-muted]="professionalsLevel() !== i">
+                          {{ i === 0 ? 'Solo yo' : i === 1 ? 'Hasta 5' : 'Más de 5' }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="h-8"></div>
+              </div>
+
+              <!-- Toggles -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="check-card p-5" [class.active-card]="wantsWhatsApp()" (click)="wantsWhatsApp.set(!wantsWhatsApp())">
+                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                    <span class="material-symbols-rounded text-xl">chat</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold">Automatizar WhatsApp</p>
+                    <p class="text-[10px] text-text-muted">Recordatorios automáticos</p>
+                  </div>
+                  <div class="custom-check" [class.checked]="wantsWhatsApp()"></div>
+                </div>
+
+                <div class="check-card p-5" [class.active-card]="wantsPayments()" (click)="wantsPayments.set(!wantsPayments())">
+                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                    <span class="material-symbols-rounded text-xl">payments</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold">Cobrar señas online</p>
+                    <p class="text-[10px] text-text-muted">Mercado Pago integrado</p>
+                  </div>
+                  <div class="custom-check" [class.checked]="wantsPayments()"></div>
+                </div>
+
+                <div class="check-card p-5" [class.active-card]="branchesCount() > 1" (click)="branchesCount.set(branchesCount() > 1 ? 1 : 2)">
+                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                    <span class="material-symbols-rounded text-xl">location_city</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold">Múltiples sucursales</p>
+                    <p class="text-[10px] text-text-muted">Gestión de varias sedes</p>
+                  </div>
+                  <div class="custom-check" [class.checked]="branchesCount() > 1"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+              <button (click)="prevStep()" class="btn-secondary flex-1">Atrás</button>
+              <button (click)="nextStep()" class="btn-primary flex-[2]">
+                Continuar con <span class="font-black ml-1">Plan {{ recommendedPlan().name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card de Recomendación (Derecha - Sticky) -->
+          <div class="w-full lg:sticky lg:top-8 lg:order-2">
+            <div class="relative p-8 rounded-[2.5rem] bg-primary/10 border border-primary/20 text-center flex flex-col items-center overflow-hidden shadow-2xl">
+              <div class="absolute -top-12 -right-12 w-40 h-40 bg-primary/20 blur-3xl rounded-full"></div>
+              
+              <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-4 shadow-inner">
+                <span class="material-symbols-rounded text-4xl text-primary">{{ recommendedPlan().icon }}</span>
+              </div>
+              
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">Plan Recomendado</p>
+              <h4 class="text-3xl font-black mb-2">Plan {{ recommendedPlan().name }}</h4>
+              
+              <div class="flex items-baseline gap-1 mb-4">
+                <span class="text-4xl font-black text-white">{{ recommendedPlan().price }}</span>
+                <span class="text-xs text-text-muted">/mes</span>
+              </div>
+              
+              <p class="text-xs text-text-muted leading-relaxed mb-6">{{ recommendedPlan().desc }}</p>
+              
+              <div class="w-full space-y-2">
+                @if (recommendedPlan().name !== 'Starter') {
+                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
+                    <span class="material-symbols-rounded text-emerald-400 text-sm">check_circle</span>
+                    <span>7 días de prueba gratis</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
+                    <span class="material-symbols-rounded text-emerald-400 text-sm">check_circle</span>
+                    <span>Sin tarjeta de crédito</span>
+                  </div>
+                } @else {
+                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
+                    <span class="material-symbols-rounded text-emerald-400 text-sm">check_circle</span>
+                    <span>Gratis para siempre</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Services Configuration -->
+    <div class="step-container" [class.step-active]="currentStep() === 5" [class.step-inactive]="currentStep() !== 5">
+      <div class="max-w-xl mx-auto space-y-8">
+        <div class="text-center">
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 5 de 6</p>
+          <h3 class="text-2xl font-black">Configuración Final</h3>
+          <p class="text-sm text-text-muted">¿Cómo quieres empezar con tus servicios?</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Intelligent Load -->
+          <div class="check-card p-6 !flex-col md:!flex-row gap-6 items-center relative overflow-hidden" 
+               [class.active-card]="loadDefaultServices()" 
+               (click)="loadDefaultServices.set(true)">
+            
+            <div class="absolute top-0 right-0 px-3 py-1 bg-primary text-[8px] font-black uppercase tracking-tighter rounded-bl-xl text-white">Recomendado</div>
+            
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+              <span class="material-symbols-rounded text-3xl">magic_button</span>
+            </div>
+            <div class="flex-1 text-center md:text-left">
+              <p class="text-lg font-black">Carga Inteligente</p>
+              <p class="text-xs text-text-muted">Inicia con servicios sugeridos para {{ selectedCategory() || 'tu rubro' }}</p>
+              
+              <!-- Service Preview (Only visible when active) -->
+              @if (loadDefaultServices()) {
+                <div class="mt-4 flex flex-wrap gap-2 justify-center md:justify-start animate-fade-in">
+                  @for (service of categoryServices(); track service) {
+                    <span class="px-2 py-1 rounded-md bg-primary/5 border border-primary/10 text-[9px] font-bold text-primary">+ {{ service }}</span>
+                  }
+                </div>
+              }
+            </div>
+            <div class="custom-check shrink-0" [class.checked]="loadDefaultServices()"></div>
+          </div>
+
+          <!-- Manual Load -->
+          <div class="check-card p-6 !flex-col md:!flex-row gap-6 items-center" 
+               [class.active-card]="!loadDefaultServices()" 
+               (click)="loadDefaultServices.set(false)">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 text-white flex items-center justify-center">
+              <span class="material-symbols-rounded text-3xl">edit_note</span>
+            </div>
+            <div class="flex-1 text-center md:text-left">
+              <p class="text-lg font-black">Carga Manual</p>
+              <p class="text-xs text-text-muted">Configura tus propios servicios desde cero</p>
+            </div>
+            <div class="custom-check shrink-0" [class.checked]="!loadDefaultServices()"></div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="flex flex-col md:flex-row gap-3 pt-6">
+          <button (click)="prevStep()" class="btn-secondary flex-1" [disabled]="isLoading">Atrás</button>
+          <button (click)="completeOnboarding()" class="btn-primary flex-[2] relative overflow-hidden" [disabled]="isLoading">
+            @if (isLoading) {
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                <span>Configurando entorno...</span>
+              </div>
+            } @else {
+              <span>Finalizar Configuración</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Success & Summary -->
+    <div class="step-container" [class.step-active]="currentStep() === 6" [class.step-inactive]="currentStep() !== 6">
+      <div class="max-w-md mx-auto text-center space-y-8 animate-fade-in">
+        <div class="relative inline-block">
+          <div class="absolute -inset-4 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
+          <div class="relative w-24 h-24 rounded-full bg-primary flex items-center justify-center mx-auto shadow-2xl">
+            <span class="material-symbols-rounded text-5xl text-white">celebration</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-3xl font-black">¡Todo listo!</h3>
+          <p class="text-text-muted">Hemos configurado Axenda para <b>{{ businessName() || 'tu negocio' }}</b>.</p>
+        </div>
+
+        <!-- Plan Summary Card -->
+        <div class="p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 text-left relative overflow-hidden shadow-2xl">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-3xl rounded-full"></div>
+          
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
+              <span class="material-symbols-rounded text-primary text-2xl">{{ recommendedPlan().icon }}</span>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Tu Suscripción</p>
+              <h4 class="text-xl font-black">Plan {{ recommendedPlan().name }}</h4>
+            </div>
+          </div>
+
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-3 text-sm text-text-muted">
+              <span class="material-symbols-rounded text-emerald-400 text-lg">check_circle</span>
+              <span>Entorno para {{ selectedCategory() || 'tu rubro' }}</span>
+            </div>
+            <div class="flex items-center gap-3 text-sm text-text-muted">
+              <span class="material-symbols-rounded text-emerald-400 text-lg">check_circle</span>
+              <span>{{ loadDefaultServices() ? 'Servicios inteligentes cargados' : 'Configuración manual habilitada' }}</span>
+            </div>
+          </div>
+
+          @if (recommendedPlan().name !== 'Starter') {
+            <div class="p-4 rounded-2xl bg-primary/10 border border-primary/20">
+              <div class="flex gap-3">
+                <span class="material-symbols-rounded text-primary">info</span>
+                <div>
+                  <p class="text-[10px] font-black text-primary uppercase tracking-wider mb-1">Periodo de Prueba Activo</p>
+                  <p class="text-xs leading-relaxed">Disfrutás de <b>7 días gratis</b> para explorar todas las funciones. No se requiere tarjeta hoy.</p>
+                </div>
+              </div>
+            </div>
           } @else {
-            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <p class="text-xs">Tu Plan Gratuito está activo de por vida.</p>
+            </div>
           }
+        </div>
+
+        <button (click)="finishOnboarding()" class="btn-primary w-full h-16 text-lg font-black tracking-wide shadow-lg shadow-primary/20">
+          Empezar a usar Axenda →
         </button>
       </div>
     </div>

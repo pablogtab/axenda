@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { UpdateTenantDto } from './dto/update-tenant.dto'
 import { CreateBranchDto } from './dto/create-branch.dto'
 import { UpdateBranchDto } from './dto/update-branch.dto'
+import { OnboardingDto } from './dto/onboarding.dto'
 
 @Injectable()
 export class TenantsService {
@@ -145,6 +146,141 @@ export class TenantsService {
       where: { id: branchId },
       data: { active: false },
     })
+  }
+
+  async completeOnboarding(tenantId: string, userId: string, dto: OnboardingDto) {
+    const { name, logoUrl, mode, metadata, branchName, branchAddress, professionalFirstName, professionalLastName } = dto
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Actualizar el Tenant
+      const tenant = await tx.tenant.update({
+        where: { id: tenantId },
+        data: {
+          name,
+          logoUrl,
+          mode,
+          onboardingCompleted: true,
+        },
+      })
+
+      // 2. Crear la primera Sucursal
+      const branch = await tx.branch.create({
+        data: {
+          tenantId,
+          name: branchName || name,
+          address: branchAddress,
+        }
+      })
+
+      // 3. Crear el primer Profesional y vincularlo al usuario
+      const professional = await tx.professional.create({
+        data: {
+          tenantId,
+          userId,
+          firstName: professionalFirstName,
+          lastName: professionalLastName,
+          branches: {
+            create: {
+              branchId: branch.id
+            }
+          }
+        }
+      })
+
+      // 4. Configurar disponibilidad del profesional
+      const schedule = dto.availability || [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '18:00' },
+        { dayOfWeek: 2, startTime: '09:00', endTime: '18:00' },
+        { dayOfWeek: 3, startTime: '09:00', endTime: '18:00' },
+        { dayOfWeek: 4, startTime: '09:00', endTime: '18:00' },
+        { dayOfWeek: 5, startTime: '09:00', endTime: '18:00' },
+      ]
+
+      await tx.availability.createMany({
+        data: schedule.map(s => ({
+          professionalId: professional.id,
+          branchId: branch.id,
+          dayOfWeek: s.dayOfWeek === 0 ? 7 : s.dayOfWeek,
+          startTime: s.startTime,
+          endTime: s.endTime,
+        }))
+      })
+
+      // 5. Cargar servicios por defecto si se solicita
+      if (metadata.loadDefaults) {
+        const defaultServices = this.getDefaultServicesByMode(mode)
+        
+        if (defaultServices.length > 0) {
+          // Crear categoría "Principales" por defecto
+          const category = await tx.serviceCategory.create({
+            data: {
+              tenantId,
+              name: 'Servicios Principales',
+            }
+          })
+
+          // Crear los servicios y vincularlos al profesional
+          for (const s of defaultServices) {
+            const service = await tx.service.create({
+              data: {
+                tenantId,
+                categoryId: category.id,
+                name: s.name,
+                duration: s.duration,
+                price: s.price,
+                color: s.color,
+              }
+            })
+
+            // Vincular al profesional
+            await tx.professionalService.create({
+              data: {
+                professionalId: professional.id,
+                serviceId: service.id
+              }
+            })
+          }
+        }
+      }
+
+      return tenant
+    })
+  }
+
+  private getDefaultServicesByMode(mode: string) {
+    const services: Record<string, any[]> = {
+      BARBERSHOP: [
+        { name: 'Corte de Cabello', duration: 45, price: 5000, color: '#6366f1' },
+        { name: 'Barba & Perfilado', duration: 30, price: 3000, color: '#8b5cf6' },
+        { name: 'Coloración', duration: 90, price: 12000, color: '#ec4899' },
+      ],
+      MEDICAL: [
+        { name: 'Consulta Médica', duration: 20, price: 0, color: '#0ea5e9' },
+        { name: 'Control / Seguimiento', duration: 15, price: 0, color: '#10b981' },
+        { name: 'Estudio Médico', duration: 30, price: 0, color: '#06b6d4' },
+      ],
+      BEAUTY: [
+        { name: 'Limpieza Facial', duration: 60, price: 8000, color: '#f472b6' },
+        { name: 'Manicuría / Pedicuría', duration: 45, price: 4000, color: '#fb7185' },
+        { name: 'Depilación', duration: 30, price: 3500, color: '#fb923c' },
+      ],
+      FITNESS: [
+        { name: 'Clase Personalizada', duration: 60, price: 6000, color: '#f59e0b' },
+        { name: 'Evaluación Física', duration: 30, price: 2000, color: '#ef4444' },
+        { name: 'Yoga / Pilates', duration: 60, price: 4000, color: '#10b981' },
+      ],
+      LEGAL: [
+        { name: 'Asesoría Legal', duration: 60, price: 15000, color: '#6366f1' },
+        { name: 'Revisión de Contratos', duration: 45, price: 10000, color: '#8b5cf6' },
+        { name: 'Mediación', duration: 90, price: 20000, color: '#ec4899' },
+      ],
+      GENERIC: [
+        { name: 'Servicio Estándar', duration: 60, price: 5000, color: '#6366f1' },
+        { name: 'Consulta General', duration: 30, price: 3000, color: '#8b5cf6' },
+      ],
+    }
+
+    return services[mode] || []
   }
 
   // ─── Internal helpers ──────────────────────────────────────────────────────

@@ -72,4 +72,8 @@ export class TenantsService {
   updateMe(dto: UpdateTenantDto): Observable<Tenant> {
     return this.http.patch<Tenant>(`${environment.apiUrl}/tenants/me`, dto);
   }
+
+  completeOnboarding(dto: any): Observable<Tenant> {
+    return this.http.post<Tenant>(`${environment.apiUrl}/tenants/complete-onboarding`, dto);
+  }
 }

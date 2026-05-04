@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { OnboardingDto } from './dto/onboarding.dto'
 
 @ApiTags('Tenants')
 @ApiBearerAuth('access-token')
@@ -42,6 +43,13 @@ export class TenantsController {
   @ApiOperation({ summary: 'Actualizar datos de la organización (ADMIN)' })
   update(@CurrentUser() user: JwtPayload, @Body() dto: UpdateTenantDto) {
     return this.tenantsService.update(user.tenantId, dto)
+  }
+
+  @Post('complete-onboarding')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Completar onboarding y configurar entorno (ADMIN)' })
+  completeOnboarding(@CurrentUser() user: JwtPayload, @Body() dto: OnboardingDto) {
+    return this.tenantsService.completeOnboarding(user.tenantId, user.sub, dto)
   }
 
   // ─── Branches (Sucursales) ──────────────────────────────────────────────────
