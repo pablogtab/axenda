@@ -4,11 +4,13 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { TenantsService } from '../../../core/services/tenants.service';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { TrialBannerComponent } from '../../../shared/components/trial-banner/trial-banner.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TrialBannerComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
@@ -17,8 +19,12 @@ export class LayoutComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   public router = inject(Router);
   public sidebarService = inject(SidebarService);
+  private subscriptionService = inject(SubscriptionService);
 
   ngOnInit(): void {
+    // Cargar información de suscripción
+    this.subscriptionService.loadStatus();
+
     this.tenantsService.getMe().subscribe({
       next: (tenant) => {
         this.tenantsService.setTenant(tenant);

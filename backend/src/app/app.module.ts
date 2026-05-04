@@ -18,6 +18,7 @@ import { ClientsModule } from '../clients/clients.module'
 import { AppointmentsModule } from '../appointments/appointments.module'
 import { StorageModule } from '../common/storage/storage.module'
 import { MailModule } from '../mail/mail.module'
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { MailModule } from '../mail/mail.module'
     ClientsModule,
     AppointmentsModule,
     MailModule,
+    SubscriptionsModule,
   ],
 
   providers: [

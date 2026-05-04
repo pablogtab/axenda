@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'
+import { SubscriptionsService } from '../subscriptions/subscriptions.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateProfessionalDto } from './dto/create-professional.dto'
 import { UpdateProfessionalDto } from './dto/update-professional.dto'
@@ -6,7 +7,10 @@ import { CreateAvailabilityDto, CreateExceptionDto } from './dto/availability.dt
 
 @Injectable()
 export class ProfessionalsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   // ─── CRUD Básico ────────────────────────────────────────────────────────────
 
@@ -78,6 +82,9 @@ export class ProfessionalsService {
   }
 
   async create(tenantId: string, dto: CreateProfessionalDto) {
+    // Validar límites de suscripción
+    await this.subscriptionsService.validateLimit(tenantId, 'PROFESSIONALS');
+
     return this.prisma.professional.create({
       data: {
         tenantId,

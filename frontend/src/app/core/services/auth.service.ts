@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { StorageService } from './storage.service';
 
 export interface AuthData {
   accessToken: string;
@@ -19,6 +20,7 @@ export interface AuthData {
 export class AuthService {
   private http: HttpClient = inject(HttpClient);
   private router: Router = inject(Router);
+  private storage: StorageService = inject(StorageService);
   private readonly ACCESS_TOKEN_KEY = 'axenda_access_token';
   private readonly REFRESH_TOKEN_KEY = 'axenda_refresh_token';
   private readonly EXPIRES_AT_KEY = 'axenda_expires_at';
@@ -66,23 +68,23 @@ export class AuthService {
     if (refreshToken) {
       this.http.post(`${environment.apiUrl}/auth/logout`, { refreshToken }).subscribe();
     }
-    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.EXPIRES_AT_KEY);
+    this.storage.remove(this.ACCESS_TOKEN_KEY);
+    this.storage.remove(this.REFRESH_TOKEN_KEY);
+    this.storage.remove(this.EXPIRES_AT_KEY);
     this.isLoggedInSubject.next(false);
     this.router.navigate(['/login']);
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+    return this.storage.get<string | null>(this.ACCESS_TOKEN_KEY, null);
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return this.storage.get<string | null>(this.REFRESH_TOKEN_KEY, null);
   }
 
   getExpiresAt(): string | null {
-    return localStorage.getItem(this.EXPIRES_AT_KEY);
+    return this.storage.get<string | null>(this.EXPIRES_AT_KEY, null);
   }
 
   isTokenExpired(): boolean {
@@ -96,10 +98,10 @@ export class AuthService {
   }
 
   private handleAuthentication(data: AuthData): void {
-    localStorage.setItem(this.ACCESS_TOKEN_KEY, data.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, data.refreshToken);
+    this.storage.set(this.ACCESS_TOKEN_KEY, data.accessToken);
+    this.storage.set(this.REFRESH_TOKEN_KEY, data.refreshToken);
     if (data.expiresAt) {
-      localStorage.setItem(this.EXPIRES_AT_KEY, data.expiresAt);
+      this.storage.set(this.EXPIRES_AT_KEY, data.expiresAt);
     }
     this.isLoggedInSubject.next(true);
   }

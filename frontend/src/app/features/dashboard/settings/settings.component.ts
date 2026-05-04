@@ -12,6 +12,7 @@ import { ServicesListComponent } from '../services/services-list/services-list.c
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { StoragePipe } from '@shared/pipes/storage.pipe';
+import { SubscriptionService } from '../../../core/services/subscription.service';
 import * as QRCode from 'qrcode';
 
 @Component({
@@ -42,7 +43,8 @@ export class SettingsComponent implements OnInit {
     { id: 'notifications', title: 'Notificaciones', icon: '🔔', description: 'Mensajes automáticos y recordatorios' },
     { id: 'professionals', title: 'Profesionales', icon: '👨‍⚕️', description: 'Gestiona tu equipo de trabajo' },
     { id: 'branches', title: 'Sucursales', icon: '📍', description: 'Ubicaciones de tu negocio' },
-    { id: 'services', title: 'Servicios', icon: '✂️', description: 'Catálogo de servicios y precios' }
+    { id: 'services', title: 'Servicios', icon: '✂️', description: 'Catálogo de servicios y precios' },
+    { id: 'billing', title: 'Cuenta y Plan', icon: '💳', description: 'Gestiona tu suscripción y pagos' }
   ];
 
   activeSection = 'business-info';
@@ -173,6 +175,7 @@ export class SettingsComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   private snackbar = inject(SnackbarService);
   private cdr = inject(ChangeDetectorRef);
+  public subService = inject(SubscriptionService);
 
   slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   originalSlug = signal<string>('');

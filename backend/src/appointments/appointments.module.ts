@@ -7,8 +7,10 @@ import { TenantsModule } from '../tenants/tenants.module'
 import { MailModule } from '../mail/mail.module'
 import { AppointmentMailListener } from './listeners/appointment-mail.listener'
 
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
+
 @Module({
-  imports: [TenantsModule, MailModule],
+  imports: [TenantsModule, MailModule, SubscriptionsModule],
   controllers: [AppointmentsController, PublicAppointmentsController],
   providers: [AppointmentsService, AvailabilityEngineService, AppointmentMailListener],
   exports: [AppointmentsService],

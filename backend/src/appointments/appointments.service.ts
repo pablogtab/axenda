@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'
+import { SubscriptionsService } from '../subscriptions/subscriptions.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { AvailabilityEngineService } from './availability-engine.service'
@@ -13,6 +14,7 @@ export class AppointmentsService {
     private readonly prisma: PrismaService,
     private readonly engine: AvailabilityEngineService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
   // ─── Consultar Disponibilidad ─────────────────────────────────────────────
@@ -71,6 +73,9 @@ export class AppointmentsService {
   }
 
   async create(tenantId: string, userId: string, dto: CreateAppointmentDto) {
+    // 0. Validar límites de suscripción
+    await this.subscriptionsService.validateLimit(tenantId, 'APPOINTMENTS');
+
     // 1. Validar IDs
     const client = await this.prisma.client.findFirst({ where: { id: dto.clientId, tenantId } })
     if (!client) throw new NotFoundException('Cliente no encontrado')
@@ -192,6 +197,9 @@ export class AppointmentsService {
   }
 
   async createFromPublic(tenantId: string, dto: CreatePublicAppointmentDto) {
+    // 0. Validar límites de suscripción
+    await this.subscriptionsService.validateLimit(tenantId, 'APPOINTMENTS');
+
     // 1. Validar IDs de negocio (ya validado en controller pero doble check es sano)
     const professional = await this.prisma.professional.findFirst({ where: { id: dto.professionalId, tenantId } })
     if (!professional) throw new NotFoundException('Profesional no encontrado')
