@@ -17,6 +17,12 @@ export interface AppointmentFormData {
   endTime?: string;
   date?: string;
   branchId?: string;
+  // Para pre-carga optimista
+  clientId?: string;
+  serviceId?: string;
+  status?: AppointmentStatus;
+  notes?: string;
+  internalNotes?: string;
 }
 
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
@@ -46,6 +52,7 @@ export class AppointmentFormComponent implements OnInit {
   
   isSubmitting = signal(false);
   isEditMode = signal(false);
+  isLoadingData = signal(true);
 
   // Configuraciones de los buscadores
   clientConfig = { 
@@ -89,11 +96,29 @@ export class AppointmentFormComponent implements OnInit {
     if (this.data.appointmentId) {
       this.isEditMode.set(true);
     }
-    this.loadInitialData(() => {
-      if (this.data.appointmentId) {
-        this.loadAppointment(this.data.appointmentId);
-      }
-    });
+    
+    // Aplicar pre-carga de datos recibidos inmediatamente
+    this.patchFormWithInitialData();
+    
+    this.loadAllData();
+  }
+
+  private patchFormWithInitialData(): void {
+    const patch: any = {};
+    if (this.data.clientId) patch.clientId = this.data.clientId;
+    if (this.data.serviceId) patch.serviceId = this.data.serviceId;
+    if (this.data.professionalId) patch.professionalId = this.data.professionalId;
+    if (this.data.branchId) patch.branchId = this.data.branchId;
+    if (this.data.date) patch.date = this.data.date;
+    if (this.data.startTime) patch.time = this.data.startTime;
+    if (this.data.endTime) patch.endTime = this.data.endTime;
+    if (this.data.status) patch.status = this.data.status;
+    if (this.data.notes) patch.notes = this.data.notes;
+    if (this.data.internalNotes) patch.internalNotes = this.data.internalNotes;
+
+    if (Object.keys(patch).length > 0) {
+      this.form.patchValue(patch, { emitEvent: false });
+    }
   }
 
   private initForm(): void {
@@ -141,48 +166,65 @@ export class AppointmentFormComponent implements OnInit {
     }, { emitEvent: false });
   }
 
-  private loadAppointment(id: string): void {
-    this.appointmentsService.findOne(id).subscribe(appointment => {
-      // Ajustamos la fecha y hora
-      const startDate = new Date(appointment.startTime);
-      const endDate = new Date(appointment.endTime);
+  private loadAllData(): void {
+    this.isLoadingData.set(true);
 
-      this.form.patchValue({
-        clientId: appointment.client?.id,
-        serviceId: appointment.service?.id,
-        professionalId: appointment.professional?.id,
-        branchId: appointment.branch?.id,
-        date: this.data.date || toLocalDateStr(startDate),
-        time: toLocalTimeStr(startDate),
-        endTime: toLocalTimeStr(endDate),
-        status: appointment.status,
-        notes: appointment.notes,
-        internalNotes: appointment.internalNotes
-      });
-    });
-  }
-
-  private loadInitialData(callback?: () => void): void {
-    forkJoin({
-      profs: this.professionalsService.findAll(),
+    const requests: any = {
+      profs: this.professionalsService.findAll(this.data.branchId),
       services: this.servicesService.findAll()
-    }).subscribe(({ profs, services }) => {
-      this.professionals.set(profs.filter(p => p.active));
+    };
 
-      const activeServices = services.filter(s => s.active);
-      this.allServices.set(activeServices);
-      
-      // Aplicar filtro inicial si ya hay un profesional seleccionado
-      const currentProfId = this.form.get('professionalId')?.value;
-      if (currentProfId) {
-        this.filterServicesByProfessional(currentProfId);
-      } else {
-        this.services.set(activeServices);
+    if (this.data.appointmentId) {
+      requests.appointment = this.appointmentsService.findOne(this.data.appointmentId);
+    }
+
+    forkJoin(requests).subscribe({
+      next: (res: any) => {
+        const { profs, services, appointment } = res;
+        
+        // 1. Profesionales
+        this.professionals.set(profs.filter((p: Professional) => p.active));
+
+        // 2. Servicios
+        const activeServices = services.filter((s: BusinessService) => s.active);
+        this.allServices.set(activeServices);
+
+        // 3. Turno (si estamos editando)
+        if (appointment) {
+          const startDate = new Date(appointment.startTime);
+          const endDate = new Date(appointment.endTime);
+
+          this.form.patchValue({
+            clientId: appointment.client?.id,
+            serviceId: appointment.service?.id,
+            professionalId: appointment.professional?.id,
+            branchId: appointment.branch?.id,
+            date: this.data.date || toLocalDateStr(startDate),
+            time: toLocalTimeStr(startDate),
+            endTime: toLocalTimeStr(endDate),
+            status: appointment.status,
+            notes: appointment.notes,
+            internalNotes: appointment.internalNotes
+          }, { emitEvent: false });
+        }
+
+        // 4. Filtrar servicios por profesional inicial
+        const currentProfId = this.form.get('professionalId')?.value;
+        if (currentProfId) {
+          this.filterServicesByProfessional(currentProfId);
+        } else {
+          this.services.set(activeServices);
+        }
+
+        this.isLoadingData.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando datos del turno:', err);
+        this.isLoadingData.set(false);
       }
-
-      if (callback) callback();
     });
   }
+
 
   filterServicesByProfessional(profId: string): void {
     if (!profId) {

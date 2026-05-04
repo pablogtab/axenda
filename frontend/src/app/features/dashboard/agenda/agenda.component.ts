@@ -532,7 +532,13 @@ export class AgendaComponent implements OnInit {
         appointmentId: appointment.id,
         professionalId: appointment.professional?.id,
         branchId: appointment.branch?.id,
-        date: newDate ? format(newDate, 'yyyy-MM-dd') : undefined
+        date: newDate ? format(newDate, 'yyyy-MM-dd') : format(new Date(appointment.startTime), 'yyyy-MM-dd'),
+        startTime: format(new Date(appointment.startTime), 'HH:mm'),
+        endTime: format(new Date(appointment.endTime), 'HH:mm'),
+        clientId: appointment.client?.id,
+        serviceId: appointment.service?.id,
+        status: appointment.status,
+        notes: appointment.notes
       },
       width: '500px'
     });

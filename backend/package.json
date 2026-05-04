@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "scripts": {
     "start": "nest start",
     "dev": "nest start --watch",
