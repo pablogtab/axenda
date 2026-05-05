@@ -7,12 +7,11 @@ import { TenantsService } from '../../../core/services/tenants.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { TrialBannerComponent } from '../../../shared/components/trial-banner/trial-banner.component';
-import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, TrialBannerComponent, ThemeToggleComponent],
+  imports: [CommonModule, RouterModule, TrialBannerComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
