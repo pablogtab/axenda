@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 import { StorageService } from './storage.service';
@@ -38,6 +39,7 @@ export interface SubscriptionStatus {
 })
 export class SubscriptionService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   private storage = inject(StorageService);
   private apiUrl = `${environment.apiUrl}/subscriptions`;
 
@@ -92,6 +94,13 @@ export class SubscriptionService {
   dismissBanner() {
     this.storage.set(this.DISMISSED_KEY, Date.now().toString());
     this._dismissTrigger.set(Date.now());
+  }
+
+  /**
+   * Navega a la pantalla de gestión de plan y suscripción
+   */
+  goToUpgrade() {
+    this.router.navigate(['/dashboard/settings'], { queryParams: { section: 'billing' } });
   }
 
   /**

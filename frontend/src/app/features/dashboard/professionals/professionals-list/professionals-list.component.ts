@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
+import { SubscriptionService } from '@services/subscription.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
@@ -20,6 +21,7 @@ import { ProfessionalAvailabilityComponent } from '../professional-availability/
 })
 export class ProfessionalsListComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
+  public subscriptionService = inject(SubscriptionService);
   private snackbar = inject(SnackbarService);
   private dialog = inject(DialogService);
   private router = inject(Router);
@@ -42,6 +44,21 @@ export class ProfessionalsListComponent implements OnInit {
     );
   });
 
+  // Plan limitations
+  showLimitFeedback = signal(false);
+  
+  limitReached = computed(() => {
+    const limits = this.subscriptionService.limits();
+    const usage = this.subscriptionService.usage();
+    
+    if (!limits || !usage) return false;
+    
+    // Si el límite es 0 o negativo, interpretamos como sin límite (o no definido aún)
+    if (limits.maxProfessionals <= 0) return false;
+    
+    return usage.professionals >= limits.maxProfessionals;
+  });
+
   ngOnInit(): void {
     this.loadProfessionals();
   }
@@ -52,12 +69,20 @@ export class ProfessionalsListComponent implements OnInit {
       next: (data) => {
         this.professionals.set(data);
         this.isLoading.set(false);
+        // Si al cargar vemos que ya no estamos al límite (ej: tras borrar), reseteamos el feedback
+        if (!this.limitReached()) {
+          this.showLimitFeedback.set(false);
+        }
       },
       error: () => this.isLoading.set(false)
     });
   }
 
   openCreateForm(): void {
+    if (this.limitReached()) {
+      this.showLimitFeedback.set(true);
+      return;
+    }
     this.editingProfessional.set(null);
     this.isFormOpen.set(true);
   }
@@ -72,6 +97,7 @@ export class ProfessionalsListComponent implements OnInit {
     this.editingProfessional.set(null);
     if (refresh) {
       this.loadProfessionals();
+      this.subscriptionService.loadStatus();
     }
   }
 
@@ -88,6 +114,7 @@ export class ProfessionalsListComponent implements OnInit {
         next: () => {
           this.snackbar.success('Profesional removido correctamente');
           this.loadProfessionals();
+          this.subscriptionService.loadStatus();
         },
         error: () => this.snackbar.error('Error al intentar remover al profesional')
       });

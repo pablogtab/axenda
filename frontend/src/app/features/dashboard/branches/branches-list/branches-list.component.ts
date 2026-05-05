@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BranchesService, Branch } from '@services/branches.service';
+import { SubscriptionService } from '@services/subscription.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
@@ -18,6 +19,7 @@ import { BranchFormComponent } from '../branch-form/branch-form.component';
 })
 export class BranchesListComponent implements OnInit {
   private branchesService = inject(BranchesService);
+  public subscriptionService = inject(SubscriptionService);
   private snackbar = inject(SnackbarService);
   private dialog = inject(DialogService);
   private modal = inject(ModalService);
@@ -33,6 +35,21 @@ export class BranchesListComponent implements OnInit {
     return all.filter(b => b.name.toLowerCase().includes(term) || (b.address && b.address.toLowerCase().includes(term)));
   });
 
+  // Plan limitations
+  showLimitFeedback = signal(false);
+  
+  limitReached = computed(() => {
+    const limits = this.subscriptionService.limits();
+    const usage = this.subscriptionService.usage();
+    
+    if (!limits || !usage) return false;
+    
+    // Si el límite es 0 o negativo, interpretamos como sin límite
+    if (limits.maxBranches <= 0) return false;
+    
+    return usage.branches >= limits.maxBranches;
+  });
+
   ngOnInit(): void {
     this.loadBranches();
   }
@@ -43,15 +60,26 @@ export class BranchesListComponent implements OnInit {
       next: (data) => {
         this.branches.set(data);
         this.isLoading.set(false);
+        // Si al cargar vemos que ya no estamos al límite, reseteamos el feedback
+        if (!this.limitReached()) {
+          this.showLimitFeedback.set(false);
+        }
       },
       error: () => this.isLoading.set(false)
     });
   }
 
   openCreateForm(): void {
+    if (this.limitReached()) {
+      this.showLimitFeedback.set(true);
+      return;
+    }
     const ref = this.modal.open(BranchFormComponent);
     ref.closed.subscribe(result => {
-      if (result) this.loadBranches();
+      if (result) {
+        this.loadBranches();
+        this.subscriptionService.loadStatus();
+      }
     });
   }
 
@@ -75,6 +103,7 @@ export class BranchesListComponent implements OnInit {
         next: () => {
           this.snackbar.success('Sucursal eliminada');
           this.loadBranches();
+          this.subscriptionService.loadStatus();
         },
         error: () => this.snackbar.error('No se pudo eliminar la sucursal')
       });

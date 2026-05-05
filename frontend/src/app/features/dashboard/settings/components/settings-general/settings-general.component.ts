@@ -96,18 +96,18 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
           </div>
           <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 ml-1 mt-2">
             <p class="text-[10px] text-text-muted italic flex-1">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
-            <div class="flex flex-wrap items-center gap-3 md:justify-end">
+            <div class="flex flex-wrap items-center gap-1.5 md:justify-end">
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="copyLink.emit()"
-                class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
-                <span class="material-symbols-rounded text-[12px]">content_copy</span> Copiar link
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                <span class="material-symbols-rounded text-base">content_copy</span> Copiar link
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="visitPage.emit()"
-                class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
-                <span class="material-symbols-rounded text-[12px]">open_in_new</span> Ver mi página
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                <span class="material-symbols-rounded text-base">open_in_new</span> Ver mi página
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="generateQR.emit()"
-                class="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 whitespace-nowrap">
-                <span class="material-symbols-rounded text-[12px]">qr_code_2</span> Generar QR
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                <span class="material-symbols-rounded text-base">qr_code_2</span> Generar QR
               </button>
             </div>
           </div>

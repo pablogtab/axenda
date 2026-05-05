@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, tap } from 'rxjs';
 import { SelectConfig } from '../../../shared/components/select/select';
@@ -180,6 +180,7 @@ export class SettingsComponent implements OnInit {
 
   private tenantsService = inject(TenantsService);
   private snackbar = inject(SnackbarService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   slugStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
@@ -219,6 +220,7 @@ export class SettingsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['section']) {
         this.activeSection = params['section'];
+        this.cdr.detectChanges();
       }
     });
     this.loadTenantData();
@@ -338,6 +340,12 @@ export class SettingsComponent implements OnInit {
 
   setActiveSection(sectionId: string) {
     this.activeSection = sectionId;
+    // Actualizar la URL para que sea consistente con la navegación externa
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { section: sectionId },
+      queryParamsHandling: 'merge'
+    });
   }
 
   save(silent = false) {
