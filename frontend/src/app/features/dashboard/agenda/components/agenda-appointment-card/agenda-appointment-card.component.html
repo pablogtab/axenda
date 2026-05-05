@@ -4,7 +4,7 @@
   
   <!-- Badge de Profesional (Solo si hay varios y hay espacio mínimo) -->
   @if (showProfessionalBadge && height > 25) {
-    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white border border-white/20 shadow-lg z-20"
+    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white border border-border shadow-lg z-20"
          [style.background-color]="appointment.professional.color || '#6366f1'">
       {{ appointment.professional.firstName[0] }}{{ appointment.professional.lastName[0] }}
     </div>
@@ -44,7 +44,7 @@
         </span>
         <!-- Label de Estado (Solo si hay mucho espacio) -->
         @if (height >= 100) {
-          <span class="text-[7px] px-1 rounded bg-white/10 text-text-dim uppercase font-bold tracking-tighter">
+          <span class="text-[7px] px-1 rounded bg-surface-subtle text-text-dim uppercase font-bold tracking-tighter">
             {{ statusInfo().label }}
           </span>
         }

@@ -9,7 +9,7 @@
       <div class="header-actions flex items-center gap-3">
         @if (limitReached() && showLimitFeedback()) {
           <div class="hidden md:flex flex-col items-end mr-2 animate-in fade-in slide-in-from-right-2 duration-300">
-            <span class="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Límite alcanzado</span>
+            <span class="text-[10px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider">Límite alcanzado</span>
             <span class="text-[9px] text-text-dim">Mejora tu plan para agregar más</span>
           </div>
         }
@@ -45,11 +45,11 @@
 
       @if (limitReached() && showLimitFeedback()) {
         <div class="flex-1 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/80 shadow-lg shadow-amber-500/5">
-            <span class="material-symbols-rounded text-xl text-amber-500">info</span>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-warning/10 border border-warning/20 text-text-main shadow-lg shadow-warning/5">
+            <span class="material-symbols-rounded text-xl text-warning">info</span>
             <div class="text-xs">
-              <span class="font-bold block text-amber-500">Plan actual al límite</span>
-              Has alcanzado el máximo de <b>{{ subscriptionService.limits()?.maxProfessionals }}</b> profesionales.
+              <span class="font-bold block text-warning">Plan actual al límite</span>
+              Has alcanzado el máximo de <b class="text-text-main font-black">{{ subscriptionService.limits()?.maxProfessionals }}</b> profesionales.
             </div>
             <button 
               (click)="subscriptionService.goToUpgrade()"
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Tabla -->
-    <div class="card-glass !p-0 overflow-hidden border-white/5">
+    <div class="card-glass !p-0 overflow-hidden border-border">
       @if (isLoading()) {
         <div class="flex justify-center items-center py-12">
           <div class="animate-spin text-2xl text-primary">
@@ -97,7 +97,7 @@
             <div class="flex flex-wrap gap-1">
               @for (pb of item.branches; track pb.branch.id) {
                 @if (pb.branch.active) {
-                  <span class="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold text-text-muted">
+                  <span class="px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border text-[9px] font-bold text-text-muted">
                     {{ pb.branch.name }}
                   </span>
                 }
@@ -112,7 +112,7 @@
             <div class="flex flex-wrap gap-1">
               @for (ps of item.services; track ps.service.id) {
                 @if (ps.service.active) {
-                  <span class="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-[9px] font-black text-primary">
+                  <span class="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-[9px] font-black text-primary-dark dark:text-primary">
                     {{ ps.service.name }}
                   </span>
                 }

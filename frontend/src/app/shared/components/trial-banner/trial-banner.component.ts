@@ -11,13 +11,13 @@ import { RouterModule } from '@angular/router';
   template: `
     @if (subService.bannerVisible()) {
       <div 
-        class="fixed bottom-4 left-4 right-24 p-3 glass border border-white/10 rounded-2xl flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in slide-in-from-bottom-4 duration-1000 z-[60]"
+        class="fixed bottom-4 left-4 right-24 p-3 glass border border-border rounded-2xl flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in slide-in-from-bottom-4 duration-1000 z-[60]"
         [class.lg:left-[256px]]="!sidebarService.isCollapsed() && !sidebarService.isMobile()"
         [class.lg:left-4]="sidebarService.isCollapsed() || sidebarService.isMobile()">
         <div class="flex items-center gap-3 ml-1">
           <div class="relative flex items-center justify-center">
             <span class="material-symbols-rounded text-primary/80 text-xl">auto_awesome</span>
-            <span class="absolute h-full w-full rounded-full bg-primary/20 animate-ping opacity-20"></span>
+            <span class="absolute h-full w-full rounded-full bg-primary-glow animate-ping opacity-20"></span>
           </div>
           
           <p class="text-xs text-text-secondary">
@@ -28,13 +28,13 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <div class="flex items-center gap-2">
-          <button class="text-[10px] font-black uppercase tracking-widest text-text-main/60 hover:text-primary transition-colors cursor-pointer px-3 py-1.5 hover:bg-white/5 rounded-lg">
+          <button class="text-[10px] font-black uppercase tracking-widest text-text-main/60 hover:text-primary transition-colors cursor-pointer px-3 py-1.5 hover:bg-surface-subtle rounded-lg">
             Ver Planes
           </button>
           
-          <div class="w-[1px] h-4 bg-white/10 mx-1"></div>
+          <div class="w-[1px] h-4 bg-border mx-1"></div>
 
-          <button (click)="subService.dismissBanner()" class="p-1.5 hover:bg-white/10 rounded-full text-text-dim hover:text-text-main transition-all cursor-pointer" title="Cerrar (reaparecerá en 2h)">
+          <button (click)="subService.dismissBanner()" class="p-1.5 hover:bg-surface-subtle-hover rounded-full text-text-dim hover:text-text-main transition-all cursor-pointer" title="Cerrar (reaparecerá en 2h)">
             <span class="material-symbols-rounded text-base">close</span>
           </button>
         </div>

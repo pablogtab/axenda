@@ -81,7 +81,7 @@
 
         <div class="space-y-4">
           <!-- Sede -->
-          <div class="p-4 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+          <div class="p-4 rounded-3xl bg-surface-subtle border border-border space-y-4">
             <label class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
               <span class="material-symbols-rounded text-xs">store</span> Tu Primera Sede
             </label>
@@ -146,7 +146,7 @@
                   [class.bg-white/5]="!workingDays().includes(day.id)"
                   [class.text-text-muted]="!workingDays().includes(day.id)"
                   [class.border-primary/50]="workingDays().includes(day.id)"
-                  class="w-9 h-9 rounded-xl text-xs font-bold transition-all border border-white/10"
+                  class="w-9 h-9 rounded-xl text-xs font-bold transition-all border border-border"
                 >
                   {{ day.label }}
                 </button>
@@ -195,7 +195,7 @@
             <p class="text-xs font-bold text-primary uppercase tracking-widest mb-1">Paso 4 de 6</p>
             <h3 class="text-2xl font-black">Plan a tu medida</h3>
           </div>
-          <button (click)="currentStep.set(5)" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-xs text-text-muted hover:text-white hover:border-white/20 transition-all font-bold uppercase tracking-widest">
+          <button (click)="currentStep.set(5)" class="px-4 py-2 rounded-2xl bg-surface-subtle border border-border text-xs text-text-muted hover:text-text-main hover:border-primary/30 transition-all font-bold uppercase tracking-widest">
             Omitir →
           </button>
         </div>
@@ -205,7 +205,7 @@
           <div class="w-full space-y-6 lg:order-1">
             <div class="space-y-6">
               <!-- Contiguous Solid Stepper 1: Appointments -->
-              <div class="slider-group p-6 rounded-[2rem] bg-white/[0.02] border border-white/5">
+              <div class="slider-group p-6 rounded-[2rem] bg-surface-subtle border border-border">
                 <div class="flex justify-between mb-6">
                   <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Turnos Mensuales</label>
                   <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
@@ -214,7 +214,7 @@
                 </div>
                 
                 <div class="flex items-center px-2">
-                  <div class="relative w-full h-1 bg-white/10 rounded-full flex items-center justify-between">
+                  <div class="relative w-full h-1 bg-surface-subtle-hover rounded-full flex items-center justify-between">
                     <div class="absolute left-0 h-full bg-primary rounded-full transition-all duration-300" 
                          [style.width.%]="appointmentsLevel() * 50"></div>
                     
@@ -224,7 +224,7 @@
                              [class.bg-primary]="appointmentsLevel() >= i"
                              [class.border-primary]="appointmentsLevel() >= i"
                              [class.bg-bg-primary]="appointmentsLevel() < i"
-                             [class.border-white/20]="appointmentsLevel() < i"
+                             [class.border-border]="appointmentsLevel() < i"
                              [class.scale-125]="appointmentsLevel() === i"></div>
                         <span class="absolute -bottom-8 text-[10px] font-bold transition-all"
                               [class.text-primary]="appointmentsLevel() === i"
@@ -239,7 +239,7 @@
               </div>
 
               <!-- Contiguous Solid Stepper 2: Professionals -->
-              <div class="slider-group p-6 rounded-[2rem] bg-white/[0.02] border border-white/5">
+              <div class="slider-group p-6 rounded-[2rem] bg-surface-subtle border border-border">
                 <div class="flex justify-between mb-6">
                   <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Equipo (Profesionales)</label>
                   <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
@@ -275,7 +275,7 @@
               <!-- Toggles -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="check-card p-5" [class.active-card]="wantsWhatsApp()" (click)="wantsWhatsApp.set(!wantsWhatsApp())">
-                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-surface-subtle flex items-center justify-center">
                     <span class="material-symbols-rounded text-lg">chat</span>
                   </div>
                   <div class="flex-1">
@@ -330,7 +330,7 @@
               <h4 class="text-3xl font-black mb-2">Plan {{ recommendedPlan().name }}</h4>
               
               <div class="flex items-baseline gap-1 mb-4">
-                <span class="text-4xl font-black text-white">{{ recommendedPlan().price }}</span>
+                <span class="text-4xl font-black text-text-main">{{ recommendedPlan().price }}</span>
                 <span class="text-xs text-text-muted">/mes</span>
               </div>
               
@@ -399,7 +399,7 @@
           <div class="check-card p-6 !flex-col md:!flex-row gap-6 items-center" 
                [class.active-card]="!loadDefaultServices()" 
                (click)="loadDefaultServices.set(false)">
-            <div class="w-14 h-14 rounded-2xl bg-white/5 text-white flex items-center justify-center">
+            <div class="w-14 h-14 rounded-2xl bg-surface-subtle text-text-main flex items-center justify-center">
               <span class="material-symbols-rounded text-2xl">edit_note</span>
             </div>
             <div class="flex-1 text-center md:text-left">
@@ -443,7 +443,7 @@
         </div>
 
         <!-- Plan Summary Card -->
-        <div class="p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 text-left relative overflow-hidden shadow-2xl">
+        <div class="p-6 rounded-[2.5rem] bg-surface-subtle border border-border text-left relative overflow-hidden shadow-2xl">
           <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-3xl rounded-full"></div>
           
           <div class="flex items-center gap-4 mb-6">

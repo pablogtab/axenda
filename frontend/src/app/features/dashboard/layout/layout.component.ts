@@ -5,12 +5,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { TrialBannerComponent } from '../../../shared/components/trial-banner/trial-banner.component';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, TrialBannerComponent],
+  imports: [CommonModule, RouterModule, TrialBannerComponent, ThemeToggleComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
@@ -20,6 +22,7 @@ export class LayoutComponent implements OnInit {
   public router = inject(Router);
   public sidebarService = inject(SidebarService);
   public subService = inject(SubscriptionService);
+  public themeService = inject(ThemeService);
 
   ngOnInit(): void {
     // Cargar información de suscripción

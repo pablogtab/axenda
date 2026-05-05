@@ -16,13 +16,13 @@
 
     <!-- Indicador de Pasos -->
     <div class="flex justify-center gap-2 mb-8">
-      <div class="h-1.5 w-12 rounded-full transition-all duration-300" [class.bg-primary]="step() === 1" [class.bg-white/10]="step() !== 1"></div>
-      <div class="h-1.5 w-12 rounded-full transition-all duration-300" [class.bg-primary]="step() === 2" [class.bg-white/10]="step() !== 2"></div>
+      <div class="h-1.5 w-12 rounded-full transition-all duration-300" [class.bg-primary]="step() === 1" [class.bg-surface-subtle-hover]="step() !== 1"></div>
+      <div class="h-1.5 w-12 rounded-full transition-all duration-300" [class.bg-primary]="step() === 2" [class.bg-surface-subtle-hover]="step() !== 2"></div>
     </div>
 
     <!-- Mensaje de Error Global -->
     @if (errorMessage()) {
-      <div class="bg-error/10 border border-error text-red-300 p-3 rounded-xl text-sm text-center mb-6 animate-in fade-in slide-in-from-top-2">
+      <div class="bg-error/10 border border-error text-error p-3 rounded-xl text-sm text-center mb-6 animate-in fade-in slide-in-from-top-2">
         {{ errorMessage() }}
       </div>
     }
@@ -82,9 +82,9 @@
 
         <!-- Divisor con texto -->
         <div class="relative mt-4">
-          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-border"></div></div>
           <div class="relative flex justify-center text-xs uppercase">
-            <span class="bg-[#151515] px-2 text-text-dim">O regístrate con</span>
+            <span class="bg-[var(--color-surface)] px-2 text-text-dim">O regístrate con</span>
           </div>
         </div>
 
@@ -187,7 +187,7 @@
                 {{ getPasswordStrength().label }}
               </span>
             </div>
-            <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden flex gap-0.5">
+            <div class="h-1 w-full bg-surface-subtle-hover rounded-full overflow-hidden flex gap-0.5">
               <div class="h-full transition-all duration-500" [style.width]="(getPasswordStrength().score * 20) + '%'" [ngClass]="getPasswordStrength().color"></div>
             </div>
           </div>

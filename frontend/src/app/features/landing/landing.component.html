@@ -14,6 +14,7 @@
       </div>
 
       <div class="flex items-center gap-4">
+        <app-theme-toggle class="mr-2" />
         <a routerLink="/login" class="text-sm font-semibold text-text-muted hover:text-text-main px-4 py-2">Ingresar</a>
         <a routerLink="/register" class="btn-primary !py-2 !px-5 !text-sm">Registrate Gratis</a>
       </div>
@@ -49,7 +50,7 @@
 
           <div class="flex flex-col sm:flex-row items-center gap-4">
             <a routerLink="/register" class="btn-primary !text-lg !px-10 w-full sm:w-auto text-center">Comenzar Gratis</a>
-            <a href="#features" class="btn-secondary !text-lg !px-10 border border-white/10 hover:border-white/20 w-full sm:w-auto text-center">Ver funciones</a>
+            <a href="#features" class="btn-secondary !text-lg !px-10 border border-border hover:bg-surface-subtle-hover w-full sm:w-auto text-center">Ver funciones</a>
           </div>
 
           <div class="mt-12 flex items-center gap-8 grayscale opacity-50">
@@ -73,7 +74,7 @@
               <p class="asset-request-text">[SOLICITUD: Video demo de la plataforma o imagen premium del dashboard]</p>
             </div>
 
-            <div class="rounded-3xl p-3 bg-gradient-to-br from-white/10 to-transparent border border-white/5 shadow-2xl backdrop-blur-3xl">
+            <div class="rounded-3xl p-3 bg-gradient-to-br from-surface-subtle to-transparent border border-border shadow-2xl backdrop-blur-3xl">
               <div class="rounded-2xl overflow-hidden bg-[#0c0d18] relative aspect-video">
                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="Dashboard Preview" class="w-full h-full object-cover opacity-60">
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0c0d18] via-transparent to-transparent"></div>
@@ -120,11 +121,11 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @for (feature of features; track feature.title) {
-          <div class="group p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-primary/20 hover:bg-primary/[0.02] transition-all duration-500">
+          <div class="group p-8 rounded-[2rem] bg-surface-subtle border border-border hover:border-primary/20 hover:bg-primary-glow transition-all duration-500">
             <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
               <span class="material-symbols-rounded text-3xl text-primary">{{ feature.icon }}</span>
             </div>
-            <h3 class="text-xl font-bold mb-3 text-white">{{ feature.title }}</h3>
+            <h3 class="text-xl font-bold mb-3 text-text-main">{{ feature.title }}</h3>
             <p class="text-text-muted leading-relaxed text-sm">
               {{ feature.description }}
             </p>
@@ -135,7 +136,7 @@
   </section>
 
   <!-- Testimonials Carousel -->
-  <section id="testimonials" class="py-24 px-4 bg-white/[0.01]">
+  <section id="testimonials" class="py-24 px-4 bg-surface-subtle/30">
     <div class="section-container">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold mb-4 font-extrabold tracking-tight">Opiniones que <span class="text-gradient">valen</span></h2>
@@ -156,12 +157,12 @@
                 </div>
                 <span class="text-6xl text-primary/10 absolute top-4 right-6 font-serif group-hover:text-primary/20 transition-colors">“</span>
                 <p class="text-lg italic text-text-main relative z-10 leading-relaxed">{{ t.quote }}</p>
-                <div class="flex items-center gap-4 border-t border-white/5 pt-6 mt-auto">
+                <div class="flex items-center gap-4 border-t border-border pt-6 mt-auto">
                   <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold shadow-lg">
                     {{ t.avatar }}
                   </div>
                   <div class="text-left">
-                    <p class="font-bold text-white">{{ t.author }}</p>
+                    <p class="font-bold text-text-main">{{ t.author }}</p>
                     <p class="text-xs text-text-dim">{{ t.role }}</p>
                   </div>
                 </div>
@@ -195,7 +196,7 @@
   </section>
 
   <!-- Pricing -->
-  <section id="pricing" class="py-24 px-4 bg-white/[0.01]">
+  <section id="pricing" class="py-24 px-4 bg-surface-subtle/30">
     <div class="section-container">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold mb-4">Planes simples</h2>
@@ -204,11 +205,11 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
         <!-- Plan Starter -->
-        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+        <div class="pricing-card !p-8 border-border hover:border-primary/20 transition-all flex flex-col h-full">
           <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">PARA EMPEZAR</p>
           <h3 class="text-2xl font-bold mb-1">Starter</h3>
           <div class="flex items-baseline gap-1 mb-8">
-            <span class="text-4xl font-extrabold text-white">Gratis</span>
+            <span class="text-4xl font-extrabold text-text-main">Gratis</span>
           </div>
           <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
             <li class="flex items-start gap-3">
@@ -228,12 +229,12 @@
         </div>
 
         <!-- Plan Pro -->
-        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+        <div class="pricing-card !p-8 border-border hover:border-primary/20 transition-all flex flex-col h-full">
           <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">PROFESIONAL</p>
           <h3 class="text-2xl font-bold mb-1">Pro</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-white">$10.000</span>
+              <span class="text-4xl font-extrabold text-text-main">$10.000</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
             <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
@@ -256,13 +257,13 @@
         </div>
 
         <!-- Plan Business -->
-        <div class="pricing-card featured !p-8 !bg-primary/5 flex flex-col h-full relative">
+        <div class="pricing-card featured !p-8 !bg-primary-glow/50 flex flex-col h-full relative">
           <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-white text-[10px] font-black rounded-full tracking-tighter shadow-lg shadow-primary/20 z-10">RECOMENDADO</div>
           <p class="text-[10px] font-bold text-primary mb-4 tracking-widest uppercase">CRECIMIENTO</p>
           <h3 class="text-2xl font-bold mb-1">Business</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-white">$19.600</span>
+              <span class="text-4xl font-extrabold text-text-main">$19.600</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
             <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
@@ -292,12 +293,12 @@
         </div>
 
         <!-- Plan Elite -->
-        <div class="pricing-card !p-8 border-white/5 hover:border-white/10 transition-all flex flex-col h-full">
+        <div class="pricing-card !p-8 border-border hover:border-primary/20 transition-all flex flex-col h-full">
           <p class="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">ÉLITE</p>
           <h3 class="text-2xl font-bold mb-1">Elite</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-white">$38.400</span>
+              <span class="text-4xl font-extrabold text-text-main">$38.400</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
             <span class="text-[10px] text-primary font-bold">PAGANDO ANUAL (20% OFF)</span>
@@ -330,7 +331,7 @@
       <!-- Link to detailed comparison -->
       <div class="mt-16 text-center animate-in fade-in slide-in-from-bottom duration-1000 delay-500">
         <p class="text-[10px] text-text-muted mb-6">(*) Los límites de WhatsApp son ampliables mediante paquetes de mensajes adicionales.</p>
-        <a routerLink="/precios" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 hover:border-white/20 transition-all group">
+        <a routerLink="/precios" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-surface-subtle border border-border text-text-main font-bold hover:bg-surface-subtle-hover transition-all group">
           <span class="material-symbols-rounded text-primary group-hover:rotate-12 transition-transform">analytics</span>
           Ver comparativa completa de funciones
           <span class="material-symbols-rounded text-text-dim group-hover:translate-x-1 transition-transform">chevron_right</span>
@@ -340,7 +341,7 @@
   </section>
 
   <!-- FAQ Section -->
-  <section id="faq" class="py-24 px-4 bg-white/[0.01]">
+  <section id="faq" class="py-24 px-4 bg-surface-subtle/30">
     <div class="section-container max-w-3xl mx-auto">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-5xl font-bold mb-4">Preguntas frecuentes</h2>
@@ -378,7 +379,7 @@
   </section>
 
   <!-- Footer -->
-  <footer class="py-20 border-t border-white/5">
+  <footer class="py-20 border-t border-border">
     <div class="section-container px-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
         <div class="col-span-1 md:col-span-2">
@@ -389,16 +390,15 @@
           <p class="text-text-muted text-sm max-w-xs mb-6">
             La plataforma definitiva para la gestión de turnos y CRM para negocios modernos.
           </p>
-          <!-- Asset Request: Social Icons -->
-          <div class="asset-request !py-4 !px-6 !flex-row !gap-4 mb-6 !w-fit">
-            <span class="asset-request-text">Iconos RRSS Premium</span>
+          <div class="mb-4">
+            <span class="text-[10px] font-black uppercase tracking-widest text-text-dim">Redes Sociales</span>
           </div>
           <div class="flex gap-4">
-            <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-              <img src="https://img.icons8.com/ios-filled/20/ffffff/instagram-new.png" alt="Instagram">
+            <a href="#" class="w-10 h-10 rounded-full bg-surface-subtle flex items-center justify-center hover:bg-surface-subtle-hover transition-colors border border-border">
+              <img src="https://img.icons8.com/ios-filled/20/6366f1/instagram-new.png" alt="Instagram">
             </a>
-            <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-              <img src="https://img.icons8.com/ios-filled/20/ffffff/facebook-new.png" alt="Facebook">
+            <a href="#" class="w-10 h-10 rounded-full bg-surface-subtle flex items-center justify-center hover:bg-surface-subtle-hover transition-colors border border-border">
+              <img src="https://img.icons8.com/ios-filled/20/6366f1/facebook-new.png" alt="Facebook">
             </a>
           </div>
         </div>
@@ -422,7 +422,7 @@
         </div>
       </div>
       
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8 text-xs text-text-dim">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-t border-border pt-8 text-xs text-text-dim">
         <p>© 2026 Axenda. Todos los derechos reservados.</p>
         <p>Hecho con ❤️ para emprendedores de Latinoamérica</p>
       </div>

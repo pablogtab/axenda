@@ -1,7 +1,7 @@
 @reference "../../../../styles.css";
 
 .range-slider {
-  @apply w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary transition-all;
+  @apply w-full h-1.5 bg-surface-subtle-hover rounded-full appearance-none cursor-pointer accent-primary transition-all;
 }
 
 .range-slider::-webkit-slider-thumb {
@@ -9,20 +9,20 @@
 }
 
 .slider-group {
-  @apply p-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04];
+  @apply p-4 rounded-2xl bg-surface-subtle border border-border transition-all hover:bg-surface-subtle-hover;
 }
 
 .check-card {
-  @apply p-4 rounded-2xl bg-white/[0.03] border border-white/5 cursor-pointer transition-all duration-300
-         hover:bg-white/[0.06] hover:border-white/20 flex flex-col;
+  @apply p-4 rounded-2xl bg-surface-subtle border border-border cursor-pointer transition-all duration-300
+         hover:bg-surface-subtle-hover hover:border-primary/20 flex flex-col;
 }
 
 .active-card {
-  @apply bg-primary/5 border-primary/30;
+  @apply bg-primary-glow border-primary/30;
 }
 
 .custom-check {
-  @apply w-5 h-5 rounded-full border-2 border-white/10 relative transition-all duration-300;
+  @apply w-5 h-5 rounded-full border-2 border-border relative transition-all duration-300;
 }
 
 .custom-check.checked {
@@ -35,12 +35,12 @@
 }
 
 .mini-chip {
-  @apply flex-1 py-3 px-2 rounded-xl bg-white/5 border border-white/5 text-xs font-semibold
-         text-text-muted transition-all hover:bg-white/10;
+  @apply flex-1 py-3 px-2 rounded-xl bg-surface-subtle border border-border text-xs font-semibold
+         text-text-muted transition-all hover:bg-surface-subtle-hover;
 }
 
 .active-mini {
-  @apply bg-primary/20 border-primary text-white;
+  @apply bg-primary-glow border-primary text-primary;
 }
 
 .step-container {
@@ -56,11 +56,11 @@
 }
 
 .category-card {
-  @apply p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center gap-3 text-center;
+  @apply p-4 rounded-2xl border border-border bg-surface-subtle hover:bg-primary-glow hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center gap-3 text-center;
 }
 
 .category-card.active {
-  @apply bg-primary/20 border-primary shadow-[0_0_20px_rgba(99,102,241,0.2)];
+  @apply bg-primary-glow border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)];
 }
 
 .category-icon {
@@ -68,7 +68,7 @@
 }
 
 .progress-bar {
-  @apply h-1.5 bg-white/5 rounded-full overflow-hidden mb-8;
+  @apply h-1.5 bg-surface-subtle-hover rounded-full overflow-hidden mb-8;
 }
 
 .progress-fill {

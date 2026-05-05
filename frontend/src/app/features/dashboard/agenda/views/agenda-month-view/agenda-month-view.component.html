@@ -1,4 +1,4 @@
-<div class="flex flex-col h-full bg-bg-primary select-none relative">
+<div class="flex flex-col h-full bg-agenda-bg select-none relative">
   
   <!-- Grid de días -->
   <div class="flex-1 overflow-hidden">
@@ -6,8 +6,8 @@
       @for (day of monthDays(); track $index) {
         @let dayApps = getAppointmentsForDay(day);
         <div 
-          class="border-r border-b border-white/5 p-1 sm:p-2 transition-all hover:bg-white/[0.02] flex flex-col gap-0.5 sm:gap-1 relative group/day cursor-pointer overflow-hidden"
-          [class.bg-white/[0.03]]="!isCurrentMonth(day)"
+          class="border-r border-b border-agenda-border p-1 sm:p-2 transition-all hover:bg-agenda-slot-hover flex flex-col gap-0.5 sm:gap-1 relative group/day cursor-pointer overflow-hidden"
+          [class.bg-agenda-bg]="!isCurrentMonth(day)"
           [class.bg-primary/5]="dropPreviewDate()?.getTime() === day.getTime()"
           (click)="onAddAppointment(day, $event)">
 
@@ -39,7 +39,7 @@
             @for (block of getBlocksForDay(day); track block.id) {
               <div
                 (click)="onExceptionClick(block, $event)"
-                class="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm sm:rounded-md text-[8px] sm:text-[11px] transition-all cursor-pointer bg-red-500/10 border-l-2 border-red-500/50 hover:bg-red-500/20 group/block"
+                class="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm sm:rounded-md text-[8px] sm:text-[11px] transition-all cursor-pointer bg-agenda-blocked-bg border-l-2 border-agenda-blocked-border hover:brightness-110 group/block"
                 [title]="'Bloqueado: ' + block.startTime + ' - ' + block.endTime + ' | Prof: ' + block.professional.firstName + ' ' + block.professional.lastName + (block.reason ? ' (' + block.reason + ')' : '')">
                 
                 <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center text-[6px] sm:text-[7px] font-bold text-white shrink-0 shadow-sm"
@@ -47,8 +47,8 @@
                   {{ block.professional.firstName[0] }}
                 </div>
                 
-                <span class="font-bold text-red-500 opacity-80 shrink-0 hidden sm:inline text-[9px]">{{ block.startTime }}-{{ block.endTime }}</span>
-                <span class="truncate text-red-500/90 font-medium">{{ block.reason || 'Bloqueado' }}</span>
+                <span class="font-bold text-agenda-blocked opacity-80 shrink-0 hidden sm:inline text-[9px]">{{ block.startTime }}-{{ block.endTime }}</span>
+                <span class="truncate text-agenda-blocked/90 font-medium">{{ block.reason || 'Bloqueado' }}</span>
               </div>
             }
 
@@ -62,7 +62,7 @@
                 [class.opacity-40]="agendaService.draggedApp()?.id === app.id && isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.opacity-0]="agendaService.draggedApp()?.id === app.id && !isSameDayAsView(agendaService.draggedAppOriginDate())"
                 [class.pointer-events-none]="agendaService.draggedApp()?.id === app.id"
-                [style.background-color]="app.service.color + '15'"
+                [style.background-color]="app.service.color + '80'"
                 [style.border-left]="(sidebarService.isMobile() ? '2px' : '3px') + ' solid ' + getStatusColor(app.status)">
               
                 <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center text-[6px] sm:text-[7px] font-bold text-white shrink-0 shadow-sm"
@@ -88,7 +88,7 @@
   </div>
 
   @if (isLoading() && !agendaService.isDragging()) {
-    <div class="absolute inset-0 bg-bg-primary/20 backdrop-blur-[1px] flex items-center justify-center z-[110]">
+    <div class="absolute inset-0 bg-surface/20 backdrop-blur-[1px] flex items-center justify-center z-[110]">
       <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
     </div>
   }

@@ -1,26 +1,131 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --color-bg-primary: #0a0b14;
-  --color-bg-secondary: #121421;
-  --color-surface: #1e2030;
-  --color-surface-hover: #2a2d42;
+:root {
+  --color-bg-primary: #f1f5f9;
+  --color-bg-secondary: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8fafc;
   
   --color-primary: #6366f1;
+  --color-primary-dark: #4338ca;
   --color-primary-hover: #4f46e5;
-  --color-primary-glow: rgba(99, 102, 241, 0.3);
+  --color-primary-glow: rgba(99, 102, 241, 0.15);
   
   --color-accent: #a855f7;
   --color-success: #10b981;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
   
+  --color-text-main: #0f172a;
+  --color-text-muted: #334155;
+  --color-text-dim: #64748b;
+  
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-glass-bg: rgba(255, 255, 255, 0.85);
+  --color-glass-border: rgba(15, 23, 42, 0.08);
+  --color-surface-subtle: rgba(15, 23, 42, 0.05);
+  --color-surface-subtle-hover: rgba(15, 23, 42, 0.06);
+  --color-table-header: rgba(15, 23, 42, 0.04);
+  --color-stripe: rgba(15, 23, 42, 0.04);
+
+  /* Colores de Agenda - Bloqueos */
+  --color-agenda-blocked: #64748b;
+  --color-agenda-blocked-bg: rgba(100, 116, 139, 0.08);
+  --color-agenda-blocked-border: rgba(100, 116, 139, 0.15);
+  --color-agenda-blocked-stripe: rgba(100, 116, 139, 0.04);
+
+  /* Agenda Core Colors */
+  --color-agenda-bg: #fdfdfe;
+  --color-agenda-header-bg: #ffffff;
+  --color-agenda-border: rgba(15, 23, 42, 0.05);
+  --color-agenda-slot-hover: rgba(99, 102, 241, 0.04);
+  --color-agenda-hour-text: #94a3b8;
+  --color-agenda-available: rgba(16, 185, 129, 0.02);
+  --color-agenda-unavailable: rgba(81, 81, 255, 0.19);
+  --color-toggle-bg: #e2e8f0; /* Light gray for better contrast in light mode */
+  --color-toggle-knob: #0a0b14;
+  --color-toggle-icon: #ffffff;
+}
+
+.dark {
+  --color-bg-primary: #0a0b14;
+  --color-bg-secondary: #121421;
+  --color-primary-dark: #818cf8;
+  --color-surface: #1e2030;
+  --color-surface-hover: #2a2d42;
+  
   --color-text-main: #f8fafc;
   --color-text-muted: #94a3b8;
   --color-text-dim: #64748b;
   
   --color-border: rgba(255, 255, 255, 0.08);
+  --color-glass-bg: rgba(30, 32, 48, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-table-header: rgba(255, 255, 255, 0.03);
+  --color-surface-subtle: rgba(255, 255, 255, 0.03);
+  --color-surface-subtle-hover: rgba(255, 255, 255, 0.1);
+  --color-stripe: rgba(255, 255, 255, 0.1);
+
+  /* Colores de Agenda - Bloqueos (Dark) */
+  --color-agenda-blocked: #475569;
+  --color-agenda-blocked-bg: rgba(213, 82, 67, 0.2);
+  --color-agenda-blocked-border: rgba(71, 85, 105, 0.4);
+  --color-agenda-blocked-stripe: rgba(255, 255, 255, 0.03);
+
+  /* Agenda Core Colors (Dark) */
+  --color-agenda-bg: #0a0b14;
+  --color-agenda-header-bg: #121421;
+  --color-agenda-border: rgba(255, 255, 255, 0.05);
+  --color-agenda-slot-hover: rgba(99, 102, 241, 0.1);
+  --color-agenda-hour-text: #94a3b8;
+  --color-agenda-available: rgba(30, 78, 206, 0.14);
+  --color-agenda-unavailable: rgba(0, 0, 0, 0.2);
+  --color-toggle-bg: #0a0b14;
+  --color-toggle-knob: #ffffff;
+  --color-toggle-icon: #0a0b14;
+}
+
+@theme {
+  --color-surface-subtle: var(--color-surface-subtle);
+  --color-surface-subtle-hover: var(--color-surface-subtle-hover);
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-glow: var(--color-primary-glow);
+  
+  --color-accent: var(--color-accent);
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+  --color-warning: var(--color-warning);
+  
+  --color-text-main: var(--color-text-main);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-dim: var(--color-text-dim);
+  
+  --color-border: var(--color-border);
+
+  --color-agenda-blocked: var(--color-agenda-blocked);
+  --color-agenda-blocked-bg: var(--color-agenda-blocked-bg);
+  --color-agenda-blocked-border: var(--color-agenda-blocked-border);
+  --color-agenda-blocked-stripe: var(--color-agenda-blocked-stripe);
+
+  --color-agenda-bg: var(--color-agenda-bg);
+  --color-agenda-header-bg: var(--color-agenda-header-bg);
+  --color-agenda-border: var(--color-agenda-border);
+  --color-agenda-slot-hover: var(--color-agenda-slot-hover);
+  --color-agenda-hour-text: var(--color-agenda-hour-text);
+  --color-agenda-available: var(--color-agenda-available);
+  --color-agenda-unavailable: var(--color-agenda-unavailable);
+
+  --color-toggle-bg: var(--color-toggle-bg);
+  --color-toggle-knob: var(--color-toggle-knob);
+  --color-toggle-icon: var(--color-toggle-icon);
 }
 
 .symbol-fill {
@@ -93,8 +198,13 @@
 
 /* Definición de utilidades personalizadas (v4 syntax) */
 @utility glass {
-  @apply backdrop-blur-md border border-white/10;
-  background-color: rgba(30, 32, 48, 0.7);
+  @apply backdrop-blur-md shadow-xl shadow-black/5;
+  background-color: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+}
+
+.dark .glass {
+  @apply shadow-[0_40px_100px_rgba(0,0,0,0.4)];
 }
 
 @utility text-gradient {
@@ -110,7 +220,7 @@
 }
 
 @utility btn-secondary {
-  @apply bg-white/5 text-text-muted px-6 py-3 rounded-xl font-semibold transition-all hover:bg-white/10 hover:text-text-main;
+  @apply bg-surface-subtle text-text-muted px-6 py-3 rounded-xl font-semibold transition-all hover:bg-surface-subtle-hover hover:text-text-main;
 }
 
 @utility input-field {
@@ -118,7 +228,7 @@
 }
 
 @utility search-box-container {
-  @apply flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl transition-all focus-within:border-primary/50 focus-within:bg-white/10 focus-within:shadow-lg focus-within:shadow-primary/5 focus-within:-translate-y-0.5;
+  @apply flex items-center gap-3 bg-surface-subtle border border-border px-4 py-3 rounded-2xl transition-all focus-within:border-primary/50 focus-within:bg-surface-subtle-hover focus-within:shadow-lg focus-within:shadow-primary/5 focus-within:-translate-y-0.5;
 }
 
 @utility search-box-input {
@@ -126,7 +236,7 @@
 }
 
 @utility row-icon-circle {
-  @apply w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm shadow-lg border border-white/10;
+  @apply w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm shadow-lg border border-border;
 }
 
 @utility status-indicator {
@@ -147,7 +257,7 @@
 }
 
 @utility btn-icon-small {
-  @apply p-1.5 rounded-lg bg-transparent border border-transparent text-text-dim transition-all hover:bg-white/5 hover:border-white/10 hover:text-text-main hover:scale-110 active:scale-95;
+  @apply p-1.5 rounded-lg bg-transparent border border-transparent text-text-dim transition-all hover:bg-surface-subtle hover:border-border hover:text-text-main hover:scale-110 active:scale-95;
 }
 
 @utility btn-icon-delete {
@@ -159,11 +269,11 @@
 }
 
 @utility nav-item {
-  @apply flex items-center gap-4 px-2 py-2 rounded-xl text-text-muted font-bold transition-all hover:bg-white/5 hover:text-text-main overflow-hidden select-none;
+  @apply flex items-center gap-4 px-2 py-2 rounded-xl text-text-muted font-bold transition-all hover:bg-surface-subtle hover:text-text-main overflow-hidden select-none;
 }
 
 @utility active-nav-item {
-  @apply bg-white/10 text-primary shadow-[0_0_20px_rgba(99,102,241,0.15)];
+  @apply bg-surface-subtle-hover text-primary shadow-[0_0_20px_rgba(99,102,241,0.15)];
 }
 
 /* Nested styles for active nav item */
@@ -193,11 +303,11 @@
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-subtle-hover);
     border-radius: 10px;
   }
   &:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-text-dim);
   }
 }
 

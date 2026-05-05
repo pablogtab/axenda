@@ -1,21 +1,11 @@
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
 .bg-stripe-pattern {
   background-image: linear-gradient(
     45deg,
-    rgba(255, 255, 255, 0.15) 25%,
+    var(--color-stripe) 25%,
     transparent 25%,
     transparent 50%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.15) 75%,
+    var(--color-stripe) 50%,
+    var(--color-stripe) 75%,
     transparent 75%,
     transparent
   );
@@ -25,11 +15,11 @@
 .bg-stripe-pattern-heavy {
   background-image: linear-gradient(
     45deg,
-    rgba(255, 255, 255, 0.25) 25%,
+    var(--color-stripe) 25%,
     transparent 25%,
     transparent 50%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.25) 75%,
+    var(--color-stripe) 50%,
+    var(--color-stripe) 75%,
     transparent 75%,
     transparent
   );
@@ -41,8 +31,10 @@
 .cursor-grabbing { cursor: grabbing; }
 
 .cdk-drag-preview {
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: var(--shadow-premium, 0 10px 40px rgba(0,0,0,0.4));
+  border: 1px solid var(--color-glass-border);
+  background-color: var(--color-glass-bg);
+  backdrop-blur: blur(8px);
   cursor: grabbing;
 }
 

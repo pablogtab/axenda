@@ -13,7 +13,7 @@
 }
 
 .asset-request {
-  @apply bg-primary/5 border border-dashed border-primary/30 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3;
+  @apply bg-primary-glow border border-dashed border-primary/30 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3;
 }
 
 .asset-request-text {
@@ -77,22 +77,22 @@
 }
 
 .faq-item {
-  @apply card-glass !p-0 overflow-hidden mb-4;
+  @apply card-glass !p-0 overflow-hidden mb-4 border border-border;
 }
 
 .faq-trigger {
-  @apply w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors;
+  @apply w-full flex items-center justify-between p-6 text-left hover:bg-surface-subtle transition-colors;
 }
 
 .pricing-card {
-  @apply card-glass relative border-white/5;
+  @apply card-glass relative border border-border;
   &.featured {
     @apply border-primary/50 shadow-2xl shadow-primary/10;
   }
 }
 
 .cta-banner {
-  @apply relative rounded-[2rem] overflow-hidden p-12 md:p-20 text-center bg-gradient-to-br from-primary/20 via-accent/5 to-transparent border border-white/10;
+  @apply relative rounded-[2rem] overflow-hidden p-12 md:p-20 text-center bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border border-border;
 }
 
 .slider-container {
@@ -113,7 +113,7 @@
 }
 
 .testimonial-card-v2 {
-  @apply card-glass flex flex-col gap-6 relative hover:border-primary/30 transition-all duration-500 h-full;
+  @apply card-glass flex flex-col gap-6 relative hover:border-primary/30 transition-all duration-500 h-full border border-border;
 }
 
 .slider-controls {
@@ -121,11 +121,11 @@
 }
 
 .control-btn {
-  @apply w-12 h-12 rounded-full glass border border-white/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all active:scale-95;
+  @apply w-12 h-12 rounded-full glass border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all active:scale-95;
 }
 
 .dot-indicator {
-  @apply w-2 h-2 rounded-full bg-white/10 transition-all;
+  @apply w-2 h-2 rounded-full bg-border transition-all;
   &.active {
     @apply w-6 bg-primary;
   }

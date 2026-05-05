@@ -1,22 +1,22 @@
 <table class="w-full border-collapse text-left bg-transparent">
   <thead>
-    <tr class="bg-white/[0.02] border-b border-white/10">
+    <tr class="bg-[var(--color-table-header)] border-b-2 border-border/50">
       @for (header of headers(); track $index) {
         <th [class.px-6]="density() === 'normal'"
             [class.py-4]="density() === 'normal'"
             [class.px-4]="density() === 'compact' && columns()[$index] !== 'actions'"
             [class.px-2]="density() === 'compact' && columns()[$index] === 'actions'"
-            [class.py-2]="density() === 'compact'"
+            [class.py-3]="density() === 'compact'"
             [class.text-right]="columns()[$index] === 'actions'"
-            class="text-[0.75rem] font-bold text-text-dim uppercase tracking-widest">
+            class="text-[0.65rem] font-black text-text-muted uppercase tracking-[0.15em]">
           {{ header }}
         </th>
       }
     </tr>
   </thead>
-  <tbody class="divide-y divide-white/[0.05]">
+  <tbody class="divide-y divide-border/30">
     @for (item of safeData(); track $index) {
-      <tr class="transition-colors hover:bg-white/[0.03] group">
+      <tr class="transition-colors hover:bg-surface-subtle group">
         @for (column of columns(); track column) {
           <td [class.px-6]="density() === 'normal'"
               [class.py-4]="density() === 'normal'"

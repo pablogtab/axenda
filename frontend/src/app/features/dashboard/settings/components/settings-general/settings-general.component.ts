@@ -33,7 +33,7 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
           <div class="space-y-1">
             <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Nombre del Negocio</label>
             <input type="text" formControlName="name"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+              class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
               placeholder="Ej. Mi Peluquería">
           </div>
           <app-select
@@ -44,39 +44,39 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
           <div class="space-y-1">
             <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Teléfono</label>
             <input type="tel" formControlName="phone"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+              class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
               placeholder="+54 11 ...">
           </div>
           <div class="space-y-1">
             <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Email de Contacto</label>
             <input type="email" formControlName="email"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+              class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
               placeholder="tunegocio@axenda.ar">
           </div>
         </div>
       </div>
 
       <!-- Public Link Customization -->
-      <div class="pt-6 border-t border-white/5 space-y-4">
+      <div class="pt-6 border-t border-border space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
             <span class="material-symbols-rounded text-primary text-sm">link</span> Link Público de Reservas
           </h3>
           <span *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')"
-            class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
+            class="text-[10px] bg-primary-glow text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
         </div>
 
         <div class="space-y-2">
           <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Personalizar Link</label>
           <div class="flex items-stretch group relative">
             <div
-              class="bg-white/5 border border-white/10 border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary/5">
+              class="bg-surface-subtle border border-border border-r-0 rounded-l-xl px-3 md:px-4 flex items-center text-text-muted text-xs md:text-sm whitespace-nowrap transition-colors group-focus-within:border-primary/50 group-focus-within:bg-primary-glow">
               axenda.ar/
             </div>
             <input
               type="text"
               formControlName="publicSlug"
-              class="flex-1 bg-white/5 border border-white/10 rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+              class="flex-1 bg-surface-subtle border border-border rounded-r-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
               placeholder="mi-negocio-increible"
               [class.border-red-500/50]="slugStatus === 'taken' || slugStatus === 'invalid'"
               [class.border-green-500/50]="slugStatus === 'available'">
@@ -98,15 +98,15 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
             <p class="text-[10px] text-text-muted italic flex-1">Este es el link que compartirás con tus clientes para que reserven turnos.</p>
             <div class="flex flex-wrap items-center gap-1.5 md:justify-end">
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="copyLink.emit()"
-                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
                 <span class="material-symbols-rounded text-base">content_copy</span> Copiar link
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="visitPage.emit()"
-                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
                 <span class="material-symbols-rounded text-base">open_in_new</span> Ver mi página
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="generateQR.emit()"
-                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary/10 hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
+                class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
                 <span class="material-symbols-rounded text-base">qr_code_2</span> Generar QR
               </button>
             </div>
@@ -118,13 +118,13 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
         <div class="space-y-1">
           <label class="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider block">Dirección</label>
           <input type="text" formControlName="address"
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+            class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
             placeholder="">
         </div>
       </div>
 
       <!-- Banner Uploader -->
-      <div class="w-full pt-4 border-t border-white/5">
+      <div class="w-full pt-4 border-t border-border">
         <app-image-uploader
           label="Banner del Negocio"
           [currentImageUrl]="form.get('bannerUrl')?.value"

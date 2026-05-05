@@ -18,6 +18,7 @@ import { SettingsAppearanceComponent } from './components/settings-appearance/se
 import { SettingsBookingComponent } from './components/settings-booking/settings-booking.component';
 import { SettingsNotificationsComponent } from './components/settings-notifications/settings-notifications.component';
 import { SettingsBillingComponent } from './components/settings-billing/settings-billing.component';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-settings',
@@ -34,6 +35,7 @@ import { SettingsBillingComponent } from './components/settings-billing/settings
     SettingsBookingComponent,
     SettingsNotificationsComponent,
     SettingsBillingComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'

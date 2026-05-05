@@ -1,14 +1,8 @@
-.comparison-shell {
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-}
+@reference "../../../styles.css";
 
-.text-gradient {
-  color: #7C3AED; /* Fallback color (violeta) */
-  background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.comparison-shell {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-main);
 }
 
 .glow-bg {
@@ -20,9 +14,10 @@
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
 }
 
 table td, table th {
@@ -35,16 +30,16 @@ table td, table th {
 }
 
 .overflow-x-auto::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-surface-subtle-hover);
   border-radius: 10px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-text-dim);
 }
 
 @media (max-width: 768px) {
