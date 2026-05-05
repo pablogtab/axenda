@@ -22,6 +22,7 @@ export interface SubscriptionStatus {
     maxBranches: number;
     maxAppointments: number;
     maxUsers: number;
+    maxWhatsapp: number;
     hasReports: boolean;
     hasOnlinePayments: boolean;
     hasAutoReviews: boolean;
@@ -31,6 +32,7 @@ export interface SubscriptionStatus {
     branches: number;
     users: number;
     appointmentsMonth: number;
+    whatsappMonth: number;
   };
 }
 

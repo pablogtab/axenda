@@ -55,6 +55,7 @@ export class SubscriptionsService {
         maxBranches: sub.plan.maxBranches,
         maxAppointments: sub.plan.maxAppointments,
         maxUsers: sub.plan.maxUsers,
+        maxWhatsapp: sub.plan.maxWhatsapp,
         hasReports: sub.plan.hasReports,
         hasOnlinePayments: sub.plan.hasOnlinePayments,
         hasAutoReviews: sub.plan.hasAutoReviews,
@@ -64,6 +65,7 @@ export class SubscriptionsService {
         branches: branchCount,
         users: userCount,
         appointmentsMonth: apptCount,
+        whatsappMonth: 0, // TODO: Implementar tracking de WhatsApp
       },
     };
   }

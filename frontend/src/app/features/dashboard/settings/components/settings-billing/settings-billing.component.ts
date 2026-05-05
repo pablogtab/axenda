@@ -59,33 +59,44 @@ import { SubscriptionService } from '../../../../../core/services/subscription.s
             <div class="space-y-2">
               <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                 <span class="text-text-muted">Profesionales</span>
-                <span class="text-text-main">{{ subService.usage()?.professionals }} / {{ subService.limits()?.maxProfessionals || '∞' }}</span>
+                <span class="text-text-main">{{ subService.usage()?.professionals }} / {{ subService.limits()!.maxProfessionals >= 999999 ? '∞' : subService.limits()?.maxProfessionals }}</span>
               </div>
               <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden">
                 <div class="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] transition-all duration-1000" 
-                  [style.width.%]="(subService.usage()!.professionals / subService.limits()!.maxProfessionals) * 100"></div>
+                  [style.width.%]="subService.limits()!.maxProfessionals >= 999999 ? 0 : (subService.usage()!.professionals / subService.limits()!.maxProfessionals) * 100"></div>
               </div>
             </div>
             <!-- Appointments Usage -->
             <div class="space-y-2">
               <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                 <span class="text-text-muted">Turnos Mensuales</span>
-                <span class="text-text-main">{{ subService.usage()?.appointmentsMonth }} / {{ subService.limits()?.maxAppointments || '∞' }}</span>
+                <span class="text-text-main">{{ subService.usage()?.appointmentsMonth }} / {{ subService.limits()!.maxAppointments >= 999999 ? '∞' : subService.limits()?.maxAppointments }}</span>
               </div>
               <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden">
                 <div class="h-full bg-accent rounded-full shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)] transition-all duration-1000" 
-                  [style.width.%]="(subService.usage()!.appointmentsMonth / subService.limits()!.maxAppointments) * 100"></div>
+                  [style.width.%]="subService.limits()!.maxAppointments >= 999999 ? 0 : (subService.usage()!.appointmentsMonth / subService.limits()!.maxAppointments) * 100"></div>
+              </div>
+            </div>
+            <!-- WhatsApp Usage (Si aplica) -->
+            <div class="space-y-2" *ngIf="subService.limits()!.maxWhatsapp > 0">
+              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span class="text-text-muted">Mensajes WhatsApp</span>
+                <span class="text-text-main">{{ subService.usage()?.whatsappMonth }} / {{ subService.limits()!.maxWhatsapp >= 999999 ? '∞' : subService.limits()?.maxWhatsapp }}</span>
+              </div>
+              <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden">
+                <div class="h-full bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-1000" 
+                  [style.width.%]="subService.limits()!.maxWhatsapp >= 999999 ? 0 : (subService.usage()!.whatsappMonth / subService.limits()!.maxWhatsapp) * 100"></div>
               </div>
             </div>
             <!-- Branches Usage -->
             <div class="space-y-2">
               <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                 <span class="text-text-muted">Sucursales</span>
-                <span class="text-text-main">{{ subService.usage()?.branches }} / {{ subService.limits()?.maxBranches || '∞' }}</span>
+                <span class="text-text-main">{{ subService.usage()?.branches }} / {{ subService.limits()!.maxBranches >= 999999 ? '∞' : subService.limits()?.maxBranches }}</span>
               </div>
               <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden">
                 <div class="h-full bg-white/20 rounded-full transition-all duration-1000" 
-                  [style.width.%]="(subService.usage()!.branches / subService.limits()!.maxBranches) * 100"></div>
+                  [style.width.%]="subService.limits()!.maxBranches >= 999999 ? 0 : (subService.usage()!.branches / subService.limits()!.maxBranches) * 100"></div>
               </div>
             </div>
           </div>

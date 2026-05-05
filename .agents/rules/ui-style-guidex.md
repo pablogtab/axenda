@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: cuando trabajas en el frontend
 ---
 
 # Axenda - Guía de Estilo y UI (Agent Rules)

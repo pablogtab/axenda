@@ -10,7 +10,6 @@ import { BranchesListComponent } from '../branches/branches-list/branches-list.c
 import { ServicesListComponent } from '../services/services-list/services-list.component';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
-import * as QRCode from 'qrcode';
 
 // Sub-components
 import { SettingsGeneralComponent } from './components/settings-general/settings-general.component';
@@ -19,6 +18,7 @@ import { SettingsBookingComponent } from './components/settings-booking/settings
 import { SettingsNotificationsComponent } from './components/settings-notifications/settings-notifications.component';
 import { SettingsBillingComponent } from './components/settings-billing/settings-billing.component';
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
+import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialog.component';
 
 @Component({
   selector: 'app-settings',
@@ -35,7 +35,8 @@ import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/th
     SettingsBookingComponent,
     SettingsNotificationsComponent,
     SettingsBillingComponent,
-    ThemeToggleComponent
+    ThemeToggleComponent,
+    QrDialogComponent
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
@@ -189,7 +190,6 @@ export class SettingsComponent implements OnInit {
   originalSlug = signal<string>('');
   tenantId = signal<string>('');
   showQRModal = signal(false);
-  qrCodeDataUrl = signal<string | null>(null);
 
   constructor(private fb: FormBuilder) {
     this.settingsForm = this.fb.group({
@@ -418,79 +418,8 @@ export class SettingsComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  async generateQR() {
-    const slug = this.settingsForm.get('publicSlug')?.value;
-    if (!slug) return;
-
-    const url = `${window.location.origin}/${slug}`;
-    try {
-      const canvas = document.createElement('canvas');
-      await QRCode.toCanvas(canvas, url, {
-        width: 1000,
-        margin: 2,
-        errorCorrectionLevel: 'H',
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      });
-
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const size = canvas.width;
-        const logoSize = size * 0.22;
-        const x = (size - logoSize) / 2;
-        const y = (size - logoSize) / 2;
-
-        ctx.fillStyle = '#ffffff';
-        const radius = logoSize * 0.25;
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + logoSize - radius, y);
-        ctx.quadraticCurveTo(x + logoSize, y, x + logoSize, y + radius);
-        ctx.lineTo(x + logoSize, y + logoSize - radius);
-        ctx.quadraticCurveTo(x + logoSize, y + logoSize, x + logoSize - radius, y + logoSize);
-        ctx.lineTo(x + radius, y + logoSize);
-        ctx.quadraticCurveTo(x, y + logoSize, x, y + logoSize - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
-        ctx.fill();
-
-        const logoImg = new Image();
-        logoImg.src = 'assets/logo.svg';
-        await new Promise((resolve) => {
-          logoImg.onload = resolve;
-          logoImg.onerror = resolve;
-        });
-
-        if (logoImg.complete && logoImg.naturalWidth > 0) {
-          ctx.drawImage(logoImg, x, y, logoSize, logoSize);
-        } else {
-          ctx.fillStyle = '#6366f1';
-          ctx.font = `900 ${logoSize * 0.7}px system-ui, -apple-system, sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('A', size / 2, size / 2 + (logoSize * 0.05));
-        }
-      }
-
-      this.qrCodeDataUrl.set(canvas.toDataURL('image/png'));
-      this.showQRModal.set(true);
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error(err);
-      this.snackbar.error('Error al generar el código QR');
-    }
+  generateQR() {
+    this.showQRModal.set(true);
   }
 
-  downloadQR() {
-    const dataUrl = this.qrCodeDataUrl();
-    if (!dataUrl) return;
-
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `qr-axenda-${this.settingsForm.get('publicSlug')?.value}.png`;
-    link.click();
-  }
 }
