@@ -4,6 +4,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
 import { validateConfig } from '../config/app.config'
 import { PrismaModule } from '../prisma/prisma.module'
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter'
@@ -19,6 +20,7 @@ import { AppointmentsModule } from '../appointments/appointments.module'
 import { StorageModule } from '../common/storage/storage.module'
 import { MailModule } from '../mail/mail.module'
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
+import { WhatsappModule } from '../whatsapp/whatsapp.module'
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
     // ─── Shared Modules ──────────────────────────────────────────────────
     StorageModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
 
     // ─── Auth ────────────────────────────────────────────────────────────
     AuthModule,
@@ -54,6 +57,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
     AppointmentsModule,
     MailModule,
     SubscriptionsModule,
+    WhatsappModule,
   ],
 
   providers: [

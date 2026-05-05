@@ -43,6 +43,26 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   GOOGLE_CLIENT_ID: string
+
+  @IsOptional()
+  @IsString()
+  WPP_DEFAULT_PHONE_ID: string
+
+  @IsOptional()
+  @IsString()
+  WPP_DEFAULT_ACCESS_TOKEN: string
+
+  @IsOptional()
+  @IsString()
+  WPP_DEFAULT_WABA_ID: string 
+
+  @IsOptional()
+  @IsString()
+  WPP_WEBHOOK_VERIFY_TOKEN: string = 'axenda_verify_token'
+
+  @IsOptional()
+  @IsString()
+  WPP_SYNC_TEMPLATES: string = 'true'
 }
 
 export function validateConfig(config: Record<string, unknown>) {

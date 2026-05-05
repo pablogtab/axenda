@@ -8,11 +8,18 @@ import { MailModule } from '../mail/mail.module'
 import { AppointmentMailListener } from './listeners/appointment-mail.listener'
 
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
+import { WhatsappModule } from '../whatsapp/whatsapp.module'
+import { AppointmentWhatsappListener } from './listeners/appointment-whatsapp.listener'
 
 @Module({
-  imports: [TenantsModule, MailModule, SubscriptionsModule],
+  imports: [TenantsModule, MailModule, SubscriptionsModule, WhatsappModule],
   controllers: [AppointmentsController, PublicAppointmentsController],
-  providers: [AppointmentsService, AvailabilityEngineService, AppointmentMailListener],
+  providers: [
+    AppointmentsService, 
+    AvailabilityEngineService, 
+    AppointmentMailListener,
+    AppointmentWhatsappListener
+  ],
   exports: [AppointmentsService],
 })
 export class AppointmentsModule {}

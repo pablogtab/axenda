@@ -1,0 +1,6 @@
+{
+  "name": "axenda_booking_confirmation",
+  "category": "UTILITY",
+  "language": "es_AR",
+  "body": "Hola {{clientName}}, ¡tu turno ha sido reservado! Nos vemos el día {{appointmentDate}} a las {{appointmentTime}}. ¡Te esperamos!"
+}

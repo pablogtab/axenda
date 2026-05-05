@@ -37,6 +37,7 @@ model Tenant {
   appointments      Appointment[]
   subscription      TenantSubscription?
   paymentConfig     TenantPaymentConfig?
+  whatsappConfig    TenantWhatsappConfig?
 
   @@map("tenants")
 }

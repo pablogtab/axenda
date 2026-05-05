@@ -33,6 +33,9 @@ export class SubscriptionsService {
       },
     });
 
+    const whatsappConfig = await this.prisma.tenantWhatsappConfig.findUnique({ where: { tenantId } });
+    const whatsappMonth = whatsappConfig ? whatsappConfig.messagesSentMonth : 0;
+
     const now = new Date();
     const trialDaysRemaining = sub.trialEndsAt && sub.trialEndsAt > now
       ? Math.ceil((sub.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -65,7 +68,7 @@ export class SubscriptionsService {
         branches: branchCount,
         users: userCount,
         appointmentsMonth: apptCount,
-        whatsappMonth: 0, // TODO: Implementar tracking de WhatsApp
+        whatsappMonth: whatsappMonth,
       },
     };
   }
@@ -74,7 +77,7 @@ export class SubscriptionsService {
    * Valida si un tenant puede realizar una acción basada en sus límites
    * @throws ForbiddenException si se excede el límite
    */
-  async validateLimit(tenantId: string, feature: 'PROFESSIONALS' | 'BRANCHES' | 'APPOINTMENTS' | 'USERS') {
+  async validateLimit(tenantId: string, feature: 'PROFESSIONALS' | 'BRANCHES' | 'APPOINTMENTS' | 'USERS' | 'WHATSAPP') {
     const status = await this.getSubscriptionStatus(tenantId);
 
     if (!status.isActive) {
@@ -117,6 +120,18 @@ export class SubscriptionsService {
 
         if (apptCount >= status.limits.maxAppointments) {
           throw new ForbiddenException(`Has alcanzado el límite de turnos mensuales (${status.limits.maxAppointments}) para tu plan ${status.plan.name}.`);
+        }
+        break;
+
+      case 'WHATSAPP':
+        if (status.limits.maxWhatsapp <= 0) {
+          throw new ForbiddenException(`Tu plan ${status.plan.name} no incluye mensajes de WhatsApp.`);
+        }
+
+        const wConfig = await this.prisma.tenantWhatsappConfig.findUnique({ where: { tenantId } });
+        const wCount = wConfig ? wConfig.messagesSentMonth : 0;
+        if (wCount >= status.limits.maxWhatsapp) {
+          throw new ForbiddenException(`Has alcanzado el límite de mensajes de WhatsApp mensuales (${status.limits.maxWhatsapp}) para tu plan ${status.plan.name}.`);
         }
         break;
     }

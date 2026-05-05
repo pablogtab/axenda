@@ -17,6 +17,7 @@ import { SettingsAppearanceComponent } from './components/settings-appearance/se
 import { SettingsBookingComponent } from './components/settings-booking/settings-booking.component';
 import { SettingsNotificationsComponent } from './components/settings-notifications/settings-notifications.component';
 import { SettingsBillingComponent } from './components/settings-billing/settings-billing.component';
+import { SettingsWhatsappComponent } from './components/settings-whatsapp/settings-whatsapp.component';
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialog.component';
 
@@ -35,6 +36,7 @@ import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialo
     SettingsBookingComponent,
     SettingsNotificationsComponent,
     SettingsBillingComponent,
+    SettingsWhatsappComponent,
     ThemeToggleComponent,
     QrDialogComponent
   ],
@@ -53,6 +55,7 @@ export class SettingsComponent implements OnInit {
     { id: 'professionals', title: 'Profesionales', icon: 'group', description: 'Gestiona tu equipo de trabajo' },
     { id: 'branches', title: 'Sucursales', icon: 'location_on', description: 'Ubicaciones de tu negocio' },
     { id: 'services', title: 'Servicios', icon: 'content_cut', description: 'Catálogo de servicios y precios' },
+    { id: 'whatsapp', title: 'WhatsApp', icon: 'chat', description: 'Automatiza tus recordatorios' },
     { id: 'billing', title: 'Cuenta y Plan', icon: 'credit_card', description: 'Gestiona tu suscripción y pagos' }
   ];
 
