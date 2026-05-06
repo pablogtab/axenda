@@ -2,6 +2,7 @@ import { Injectable, Logger, InternalServerErrorException, NotFoundException, Ba
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { PhoneUtils } from '../common/utils/phone-utils';
 import axios from 'axios';
 
 @Injectable()
@@ -117,7 +118,12 @@ export class WhatsappService {
       throw new NotFoundException('WhatsApp no está configurado para este negocio.');
     }
 
-    const cleanPhone = to.replace(/\D/g, '');
+    // Normalizar el número de teléfono usando PhoneUtils
+    const cleanPhone = PhoneUtils.normalize(to);
+
+    if (!cleanPhone) {
+      throw new BadRequestException('El número de teléfono del cliente no es válido.');
+    }
 
     try {
       const response = await axios.post(
