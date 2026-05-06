@@ -93,6 +93,7 @@ describe('Auth — Integration', () => {
         .send({
           organizationName: testOrg.organizationName,
           email: testOrg.email,
+          turnstileToken: 'test-token',
         })
         .expect(201)
 
@@ -142,6 +143,7 @@ describe('Auth — Integration', () => {
         .send({
           organizationName: 'Another Org',
           email: testOrg.email, // Ya registrado en el test anterior
+          turnstileToken: 'test-token',
         })
         .expect(409)
     })
@@ -166,7 +168,7 @@ describe('Auth — Integration', () => {
     it('should login with correct credentials and return token pair', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: testOrg.email, password: testOrg.password })
+        .send({ email: testOrg.email, password: testOrg.password, turnstileToken: 'test-token' })
         .expect(200)
 
       expect(res.body.data.accessToken).toBeDefined()
@@ -180,7 +182,7 @@ describe('Auth — Integration', () => {
     it('should reject wrong password with 401', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: testOrg.email, password: 'WrongPassword!' })
+        .send({ email: testOrg.email, password: 'WrongPassword!', turnstileToken: 'test-token' })
         .expect(401)
 
       expect(res.body.statusCode).toBe(401)
@@ -189,14 +191,14 @@ describe('Auth — Integration', () => {
     it('should reject non-existent email with 401', async () => {
       await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: 'nobody@nowhere.com', password: 'Password123!' })
+        .send({ email: 'nobody@nowhere.com', password: 'Password123!', turnstileToken: 'test-token' })
         .expect(401)
     })
 
     it('should login with email and password and return 200', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: testOrg.email, password: testOrg.password })
+        .send({ email: testOrg.email, password: testOrg.password, turnstileToken: 'test-token' })
         .expect(200)
 
       expect(res.body.data.accessToken).toBeDefined()
@@ -206,7 +208,7 @@ describe('Auth — Integration', () => {
     it('should reject login with wrong tenantSlug with 401', async () => {
       await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email: testOrg.email, password: testOrg.password, tenantSlug: 'does-not-exist' })
+        .send({ email: testOrg.email, password: testOrg.password, tenantSlug: 'does-not-exist', turnstileToken: 'test-token' })
         .expect(401)
     })
   })

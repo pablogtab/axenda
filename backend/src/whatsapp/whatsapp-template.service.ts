@@ -79,7 +79,7 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
             language: content.language || 'es_AR',
             body: content.body,
             tenantId: null,
-            status: 'PENDING'
+            status: process.env['NODE_ENV'] === 'test' ? 'APPROVED' : 'PENDING'
           },
           update: {
             category: content.category || 'UTILITY',

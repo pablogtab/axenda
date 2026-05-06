@@ -124,11 +124,14 @@ export class AppointmentsService {
       }
     })
 
+
+
     // 6. Log inicial
     await this.prisma.appointmentLog.create({
       data: {
         appointmentId: appointment.id,
         changedBy: userId,
+        newStatus: 'PENDING',
         notes: 'Turno creado desde administración'
       }
     })
@@ -221,6 +224,7 @@ export class AppointmentsService {
     await this.prisma.appointmentLog.create({
       data: {
         appointmentId: appointment.id,
+        newStatus: 'PENDING',
         notes: 'Turno reservado desde página pública'
       }
     })

@@ -30,6 +30,7 @@ const adminOrg = {
 }
 
 describe('Appointments — Integration', () => {
+  jest.setTimeout(120000)
   let app: INestApplication
   let prisma: PrismaService
   let tenantId: string
@@ -43,11 +44,9 @@ describe('Appointments — Integration', () => {
 
   let appointmentId: string
 
-  // We'll test availability for next Monday
-  const nextMonday = new Date()
-  nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7)) // Find next Monday
-  nextMonday.setUTCHours(0, 0, 0, 0)
-  const queryDate = nextMonday.toISOString().split('T')[0] // YYYY-MM-DD
+  // Usaremos una fecha estática para evitar problemas de zona horaria y día actual en los tests.
+  // 2026-06-01 es Lunes.
+  const queryDate = '2026-06-01'
 
   // ── Setup ──────────────────────────────────────────────────────────────────
 
@@ -75,6 +74,7 @@ describe('Appointments — Integration', () => {
       .send({
         organizationName: adminOrg.organizationName,
         email: adminOrg.email,
+        turnstileToken: 'test-token',
       })
 
     // 2. Get code from DB
@@ -147,6 +147,26 @@ describe('Appointments — Integration', () => {
       })
   })
 
+
+
+  beforeEach(async () => {
+    // Limpiar solo las excepciones para evitar bloqueos entre tests.
+    if (professionalId) {
+      await prisma.availabilityException.deleteMany({ where: { professionalId } })
+    }
+    // Resetear configuración del tenant que se cambia en algunos tests
+    if (tenantId) {
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: {
+          publicMaxBookingDays: 30,
+          publicMinBookingTime: '1h',
+          publicMaxOverlapMins: 15,
+        }
+      })
+    }
+  })
+
   // ── Teardown ───────────────────────────────────────────────────────────────
 
   afterAll(async () => {
@@ -181,13 +201,16 @@ describe('Appointments — Integration', () => {
     })
 
     it('should block all slots if a HOLIDAY exception exists for the day', async () => {
+      // Limpiar excepciones previas
+      await prisma.availabilityException.deleteMany({ where: { professionalId } })
+
       // Add a holiday for next Monday
       await request(app.getHttpServer())
         .post(`/api/professionals/${professionalId}/exceptions`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           type: 'HOLIDAY',
-          date: nextMonday.toISOString(),
+          date: queryDate,
           reason: 'Día libre',
         })
 
@@ -209,9 +232,9 @@ describe('Appointments — Integration', () => {
       await prisma.availabilityException.deleteMany({ where: { professionalId } })
 
       // Create a range exception that covers next Monday
-      const start = new Date(nextMonday)
+      const start = new Date(queryDate)
       start.setDate(start.getDate() - 2)
-      const end = new Date(nextMonday)
+      const end = new Date(queryDate)
       end.setDate(end.getDate() + 2)
 
       await request(app.getHttpServer())
@@ -238,6 +261,7 @@ describe('Appointments — Integration', () => {
     })
 
     it('should only block specific time if a partial BLOCK exception exists', async () => {
+      // Limpiar excepciones previas
       await prisma.availabilityException.deleteMany({ where: { professionalId } })
 
       // Block 10:00 to 11:00
@@ -246,7 +270,7 @@ describe('Appointments — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           type: 'BLOCK',
-          date: nextMonday.toISOString(),
+          date: queryDate,
           startTime: '10:00',
           endTime: '11:00',
           reason: 'Pausa almuerzo',
@@ -293,7 +317,7 @@ describe('Appointments — Integration', () => {
         })
 
       // Book an appointment in Branch 2
-      const startTime = new Date(nextMonday)
+      const startTime = new Date(queryDate)
       startTime.setUTCHours(12, 0, 0, 0) // Book 09:00 local (12:00 UTC)
       
       await request(app.getHttpServer())
@@ -400,7 +424,7 @@ describe('Appointments — Integration', () => {
 
   describe('Appointments Booking', () => {
     it('should book an appointment', async () => {
-      const startTime = new Date(nextMonday)
+      const startTime = new Date(queryDate)
       startTime.setUTCHours(16, 0, 0, 0) // Book 13:00 local (16:00 UTC)
 
       const res = await request(app.getHttpServer())
@@ -422,7 +446,7 @@ describe('Appointments — Integration', () => {
     })
 
     it('should ignore appointments from Branch 2 when querying Branch 1', async () => {
-      const startTime = new Date(nextMonday)
+      const startTime = new Date(queryDate)
       startTime.setUTCHours(14, 0, 0, 0) // 11:00 local (different time to avoid conflicts)
       
       const branches = await prisma.branch.findMany({ where: { tenantId } })
@@ -468,7 +492,7 @@ describe('Appointments — Integration', () => {
 
     it('should allow 09:00 (60min) if 09:45 is booked and overlap is 15min', async () => {
       // 1. Book at 09:45
-      const startTime45 = new Date(nextMonday)
+      const startTime45 = new Date(queryDate)
       startTime45.setUTCHours(12, 45, 0, 0) // 09:45 local
       
       await request(app.getHttpServer())

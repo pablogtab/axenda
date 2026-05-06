@@ -52,6 +52,8 @@ export class AvailabilityEngineService {
       })
     ])
 
+
+
     const isFullDayBlocked = exceptions.some(e => e.type === 'HOLIDAY' || e.type === 'LEAVE' || (e.type === 'BLOCK' && !e.startTime))
     if (isFullDayBlocked) return []
 

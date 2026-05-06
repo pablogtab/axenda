@@ -83,6 +83,7 @@ describe('Users & Tenants — Integration', () => {
       .send({
         organizationName: adminOrg.organizationName,
         email: adminOrg.email,
+        turnstileToken: 'test-token',
       })
 
     // 2. Get code from DB
