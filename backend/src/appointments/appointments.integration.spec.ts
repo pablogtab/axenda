@@ -459,7 +459,7 @@ describe('Appointments — Integration', () => {
           clientId,
           professionalId,
           serviceId,
-          branchId: branch2.id,
+          branchId: branch2?.id,
           startTime: startTime.toISOString(),
         })
 

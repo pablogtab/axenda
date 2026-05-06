@@ -140,8 +140,9 @@ describe('Clients — Integration', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      expect(Array.isArray(res.body.data)).toBe(true)
-      expect(res.body.data.length).toBeGreaterThanOrEqual(1)
+      expect(Array.isArray(res.body.data.items)).toBe(true)
+      expect(res.body.data.items.length).toBeGreaterThanOrEqual(1)
+      expect(res.body.data.total).toBeDefined()
     })
   })
 
