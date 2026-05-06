@@ -1,10 +1,12 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, inject } from '@angular/core';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ThemeService {
   private readonly THEME_KEY = 'axenda-theme';
+  private storage = inject(StorageService);
   public isDark = signal<boolean>(this.getInitialTheme());
 
   constructor() {
@@ -15,7 +17,7 @@ export class ThemeService {
     effect(() => {
       const dark = this.isDark();
       this.applyTheme(dark);
-      localStorage.setItem(this.THEME_KEY, dark ? 'dark' : 'light');
+      this.storage.set(this.THEME_KEY, dark ? 'dark' : 'light');
     });
   }
 
@@ -24,7 +26,7 @@ export class ThemeService {
   }
 
   private getInitialTheme(): boolean {
-    const saved = localStorage.getItem(this.THEME_KEY);
+    const saved = this.storage.get<string | null>(this.THEME_KEY, null);
     if (saved) {
       return saved === 'dark';
     }

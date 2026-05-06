@@ -83,6 +83,11 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, authServ
       }),
       catchError((err) => {
         isRefreshing = false;
+        // Notificamos error a todas las peticiones que estaban esperando para que no se queden colgadas
+        refreshTokenSubject.error(err);
+        // Reiniciamos el subject para futuras peticiones después del fallo
+        refreshTokenSubject = new BehaviorSubject<string | null>(null);
+        
         authService.logout();
         return throwError(() => err);
       })

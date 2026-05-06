@@ -6,27 +6,44 @@ import { Injectable } from '@angular/core';
 export class StorageService {
   
   get<T>(key: string, defaultValue: T): T {
-    const saved = localStorage.getItem(key);
-    if (saved === null) return defaultValue;
-    
     try {
-      return JSON.parse(saved) as T;
-    } catch {
-      // Si no es JSON (como un string simple), lo devolvemos tal cual
-      return saved as unknown as T;
+      const saved = localStorage.getItem(key);
+      if (saved === null) return defaultValue;
+      
+      try {
+        return JSON.parse(saved) as T;
+      } catch {
+        // Si no es JSON (como un string simple), lo devolvemos tal cual
+        return saved as unknown as T;
+      }
+    } catch (e) {
+      console.error('StorageService.get failed', e);
+      return defaultValue;
     }
   }
 
   set(key: string, value: any): void {
-    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-    localStorage.setItem(key, stringValue);
+    try {
+      const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      localStorage.setItem(key, stringValue);
+    } catch (e) {
+      console.error('StorageService.set failed', e);
+    }
   }
 
   remove(key: string): void {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.error('StorageService.remove failed', e);
+    }
   }
 
   clear(): void {
-    localStorage.clear();
+    try {
+      localStorage.clear();
+    } catch (e) {
+      console.error('StorageService.clear failed', e);
+    }
   }
 }

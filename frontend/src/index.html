@@ -12,8 +12,30 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script>
       (function() {
-        const theme = localStorage.getItem('axenda-theme') || 'dark';
-        document.documentElement.classList.add(theme);
+        // Global error handling for early detection
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+          console.error('Global error:', msg, 'at', url, ':', lineNo, ':', columnNo, error);
+          return false;
+        };
+
+        window.onunhandledrejection = function(event) {
+          console.error('Unhandled promise rejection:', event.reason);
+        };
+
+        // Detect asset loading failures
+        window.addEventListener('error', function(e) {
+          if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+            console.error('Asset load failed:', e.target.src || e.target.href);
+          }
+        }, true);
+
+        try {
+          const theme = localStorage.getItem('axenda-theme') || 'dark';
+          document.documentElement.classList.add(theme);
+        } catch (e) {
+          console.error('Theme initialization failed', e);
+          document.documentElement.classList.add('dark');
+        }
       })();
     </script>
   </head>
