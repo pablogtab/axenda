@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ImageUploaderComponent } from '../../../../../shared/components/image-uploader/image-uploader.component';
-import { SelectComponent, SelectConfig } from '../../../../../shared/components/select/select';
+import { ImageUploaderComponent } from '@shared/components/image-uploader/image-uploader.component';
+import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({

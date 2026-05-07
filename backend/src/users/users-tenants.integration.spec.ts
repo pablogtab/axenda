@@ -318,15 +318,26 @@ describe('Users & Tenants — Integration', () => {
   // ── PATCH /api/tenants/me ──────────────────────────────────────────────────
 
   describe('PATCH /api/tenants/me', () => {
-    it('should update tenant name (ADMIN)', async () => {
+    it('should update tenant name and contact info (ADMIN)', async () => {
       const res = await request(app.getHttpServer())
         .patch('/api/tenants/me')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Updated Org Name', currency: 'USD' })
+        .send({ 
+          name: 'Updated Org Name', 
+          currency: 'USD',
+          category: 'BEAUTY',
+          phone: '+54 11 9999-9999',
+          email: 'contacto@test.com',
+          address: 'Nueva Direccion 123'
+        })
         .expect(200)
 
       expect(res.body.data.name).toBe('Updated Org Name')
       expect(res.body.data.currency).toBe('USD')
+      expect(res.body.data.category).toBe('BEAUTY')
+      expect(res.body.data.phone).toBe('+54 11 9999-9999')
+      expect(res.body.data.email).toBe('contacto@test.com')
+      expect(res.body.data.address).toBe('Nueva Direccion 123')
     })
 
     it('should reject invalid timezone with 400', async () => {
@@ -334,6 +345,20 @@ describe('Users & Tenants — Integration', () => {
         .patch('/api/tenants/me')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ timezone: 'Not/ATimezone' })
+        .expect(400)
+    })
+
+    it('should reject invalid slug format (uppercase, spaces, special chars) with 400', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/tenants/me')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ publicSlug: 'Invalid Slug!' })
+        .expect(400)
+      
+      await request(app.getHttpServer())
+        .patch('/api/tenants/me')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ publicSlug: 'UPPERCASE' })
         .expect(400)
     })
   })

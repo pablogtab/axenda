@@ -18,6 +18,12 @@ model Tenant {
   publicSlug        String?    @unique
   onboardingCompleted Boolean  @default(false)
 
+  // Business Contact Info
+  category          String?
+  phone             String?
+  email             String?
+  address           String?
+
   // Public View Configurations
   publicShowBranchSelection       Boolean @default(true)
   publicShowProfessionalSelection Boolean @default(true)

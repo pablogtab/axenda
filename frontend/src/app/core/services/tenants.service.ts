@@ -19,6 +19,9 @@ export interface Tenant {
   accentColor?: string;
   backgroundColor?: string;
   textColor?: string;
+  category?: string;
+  phone?: string;
+  email?: string;
   address?: string;
   active: boolean;
   publicShowBranchSelection?: boolean;
@@ -43,6 +46,10 @@ export interface UpdateTenantDto {
   accentColor?: string;
   backgroundColor?: string;
   textColor?: string;
+  category?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
   publicShowBranchSelection?: boolean;
   publicShowProfessionalSelection?: boolean;
   publicMaxOverlapMins?: number;

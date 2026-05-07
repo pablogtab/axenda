@@ -7,7 +7,7 @@ import { OnboardingDto } from './dto/onboarding.dto'
 
 @Injectable()
 export class TenantsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ─── Tenant profile ────────────────────────────────────────────────────────
 
@@ -34,6 +34,10 @@ export class TenantsService {
         accentColor: true,
         backgroundColor: true,
         textColor: true,
+        category: true,
+        phone: true,
+        email: true,
+        address: true,
         mode: true,
         publicShowBranchSelection: true,
         publicShowProfessionalSelection: true,
@@ -91,6 +95,11 @@ export class TenantsService {
       const reservedSlugs = ['login', 'dashboard', 'admin', 'api', 'p', 'auth', 'settings', 'home', 'agenda', 'clients', 'services', 'branches', 'professionals']
       if (reservedSlugs.includes(dto.publicSlug.toLowerCase())) {
         throw new ConflictException(`El nombre "${dto.publicSlug}" no está permitido como link`)
+      }
+
+      const slugRegex = /^[a-z0-9-]+$/;
+      if (!slugRegex.test(dto.publicSlug)) {
+        throw new ConflictException('El formato del link no es válido (solo minúsculas, números y guiones)')
       }
 
       const existing = await this.prisma.tenant.findFirst({
@@ -152,6 +161,12 @@ export class TenantsService {
     const { name, logoUrl, mode, metadata, branchName, branchAddress, professionalFirstName, professionalLastName } = dto
 
     return this.prisma.$transaction(async (tx) => {
+      // 0. Obtener email del usuario para el Tenant
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { email: true }
+      })
+
       // 1. Actualizar el Tenant
       const tenant = await tx.tenant.update({
         where: { id: tenantId },
@@ -159,6 +174,8 @@ export class TenantsService {
           name,
           logoUrl,
           mode,
+          email: user?.email,
+          address: branchAddress,
           onboardingCompleted: true,
         },
       })
@@ -209,7 +226,7 @@ export class TenantsService {
       // 5. Cargar servicios por defecto si se solicita
       if (metadata.loadDefaults) {
         const defaultServices = this.getDefaultServicesByMode(mode)
-        
+
         if (defaultServices.length > 0) {
           // Crear categoría "Principales" por defecto
           const category = await tx.serviceCategory.create({

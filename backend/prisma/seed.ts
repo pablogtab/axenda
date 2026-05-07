@@ -120,6 +120,8 @@ async function seedSampleBusiness() {
       slug: 'barberia-axenda',
       publicSlug: 'barberia-axenda',
       mode: TenantMode.BARBERSHOP,
+      email: 'admin@axenda.com',
+      address: 'Sede Palermo 123',
       active: true,
       subscription: {
         create: {

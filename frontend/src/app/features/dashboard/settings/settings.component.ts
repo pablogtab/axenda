@@ -25,9 +25,9 @@ import { IconComponent } from '@shared/components/icon/icon.component';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, 
-    RouterModule, 
-    ReactiveFormsModule, 
+  imports: [CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
     ProfessionalsListComponent,
     BranchesListComponent,
     ServicesListComponent,
@@ -258,6 +258,20 @@ export class SettingsComponent implements OnInit {
 
     control.valueChanges.pipe(
       tap(slug => {
+        // Normalize slug: lowercase, replace spaces with hyphens, remove special characters
+        if (slug) {
+          const normalized = slug.toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .replace(/-+/g, '-');
+          
+          if (normalized !== slug) {
+            control.setValue(normalized, { emitEvent: false });
+            slug = normalized;
+          }
+        }
+
         if (slug === this.originalSlug()) {
           this.slugStatus.set('idle');
         } else if (slug && slug.length > 0) {
@@ -312,6 +326,10 @@ export class SettingsComponent implements OnInit {
           publicSlug: tenant.publicSlug || '',
           logoUrl: tenant.logoUrl,
           bannerUrl: tenant.bannerUrl,
+          category: tenant.category || 'beauty',
+          phone: tenant.phone || '',
+          email: tenant.email || '',
+          address: tenant.address || '',
           primaryColor: tenant.primaryColor || '#6366f1',
           primaryHoverColor: tenant.primaryHoverColor || '#4f46e5',
           accentColor: tenant.accentColor || '#a855f7',
@@ -361,6 +379,10 @@ export class SettingsComponent implements OnInit {
       publicSlug: values.publicSlug,
       logoUrl: values.logoUrl,
       bannerUrl: values.bannerUrl,
+      category: values.category,
+      phone: values.phone,
+      email: values.email,
+      address: values.address,
       primaryColor: values.primaryColor,
       primaryHoverColor: values.primaryHoverColor,
       accentColor: values.accentColor,
@@ -403,7 +425,7 @@ export class SettingsComponent implements OnInit {
   visitPublicPage() {
     const slug = this.settingsForm.get('publicSlug')?.value;
     if (!slug) return;
-    
+
     const url = `${window.location.origin}/${slug}`;
     window.open(url, '_blank');
   }
