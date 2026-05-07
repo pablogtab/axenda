@@ -15,7 +15,7 @@ export class UserConfigurationService {
   private _agendaEndHour = signal<number>(21);
   private _agendaSelectedBranchId = signal<string | null>(null);
   private _agendaSelectedProfessionalIds = signal<string[]>([]);
-  private _agendaView = signal<'day' | 'week' | 'month'>('day');
+  private _agendaView = signal<'day' | 'week' | 'month'>('week');
   private _agendaSelectedStatuses = signal<string[]>(['PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW']);
 
   // Exponemos como readonly
@@ -39,7 +39,7 @@ export class UserConfigurationService {
       this._agendaEndHour.set(this.storage.get(`${tenantId}_agenda_end_hour`, 21));
       this._agendaSelectedBranchId.set(this.storage.get(`${tenantId}_agenda_selected_branch_id`, null));
       this._agendaSelectedProfessionalIds.set(this.storage.get(`${tenantId}_agenda_selected_professional_ids`, []));
-      this._agendaView.set(this.storage.get(`${tenantId}_agenda_view`, 'day'));
+      this._agendaView.set(this.storage.get(`${tenantId}_agenda_view`, 'week'));
       this._agendaSelectedStatuses.set(this.storage.get(`${tenantId}_agenda_selected_statuses`, ['PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW']));
     });
 
