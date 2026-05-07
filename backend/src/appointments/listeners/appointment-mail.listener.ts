@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MailService } from '../../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
-import { AppointmentCreatedEvent } from '../events/appointment-created.event';
+import { Appointment, Client, Professional, Service } from '@prisma/client';
 
 @Injectable()
 export class AppointmentMailListener {
@@ -14,19 +14,19 @@ export class AppointmentMailListener {
   ) {}
 
   @OnEvent('appointment.created', { async: true })
-  async handleAppointmentCreatedEvent(payload: AppointmentCreatedEvent) {
+  async handleAppointmentCreatedEvent(appointment: Appointment & { client: Client, professional: Professional, service: Service }) {
     // Solo enviamos correo si es un turno creado desde el lado público
-    if (!payload.isPublic) {
-      this.logger.log(`Turno creado internamente (Tenant). No se envía email a ${payload.client.email}`);
+    if (appointment.bookedVia === 'PANEL') {
+      this.logger.log(`Turno creado internamente (PANEL). No se envía email a ${appointment.client.email}`);
       return;
     }
 
-    if (!payload.client.email) {
+    if (!appointment.client.email) {
       this.logger.warn(`El cliente no tiene email registrado. Omitiendo notificación.`);
       return;
     }
 
-    const { appointment, client, professional, service } = payload;
+    const { client, professional, service } = appointment;
     
     // Formatear fechas para Argentina por defecto o local
     const dateObj = new Date(appointment.startTime);

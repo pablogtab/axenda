@@ -1,21 +1,42 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Obtiene el estado detallado de la suscripción de un tenant
    */
   async getSubscriptionStatus(tenantId: string) {
-    const sub = await this.prisma.tenantSubscription.findUnique({
+    let sub = await this.prisma.tenantSubscription.findUnique({
       where: { tenantId },
       include: { plan: true },
     });
 
     if (!sub) {
-      throw new NotFoundException('No se encontró información de suscripción para este negocio.');
+      // Intentar auto-asignar plan STARTER si no tiene ninguno (Fix para legacy data o errores en registro)
+      const starterPlan = await this.prisma.subscriptionPlan.findUnique({
+        where: { code: 'STARTER' }
+      });
+
+      if (!starterPlan) {
+        this.logger.error(`No se encontró el plan STARTER en la DB para el tenant ${tenantId}`);
+        throw new NotFoundException('No se encontró información de suscripción para este negocio.');
+      }
+
+      sub = await this.prisma.tenantSubscription.create({
+        data: {
+          tenantId,
+          planId: starterPlan.id,
+          status: 'ACTIVE',
+        },
+        include: { plan: true }
+      });
+      
+      this.logger.log(`Auto-asignado plan STARTER a tenant ${tenantId} por falta de registro previo.`);
     }
 
     const profCount = await this.prisma.professional.count({ where: { tenantId, active: true } });

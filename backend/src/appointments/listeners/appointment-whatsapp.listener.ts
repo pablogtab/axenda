@@ -11,10 +11,16 @@ export class AppointmentWhatsappListener {
   constructor(
     private readonly prisma: PrismaService,
     private readonly whatsappService: WhatsappService,
-  ) {}
+  ) { }
 
   @OnEvent('appointment.created')
   async handleAppointmentCreated(appointment: Appointment) {
+
+    // No enviar notificación si fue agendado manualmente desde el panel
+    if (appointment.bookedVia === 'PANEL') {
+      return;
+    }
+
     // 1. Obtener datos necesarios: cliente, profesional y negocio
     const [client, professional, tenant] = await Promise.all([
       this.prisma.client.findUnique({ where: { id: appointment.clientId } }),

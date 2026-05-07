@@ -24,6 +24,14 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
       return;
     }
 
+    const wabaId = this.configService.get('WPP_DEFAULT_WABA_ID')?.trim();
+    const accessToken = this.configService.get('WPP_DEFAULT_ACCESS_TOKEN');
+
+    if (!wabaId || !accessToken) {
+      this.logger.warn('WhatsApp no está configurado correctamente (WPP_DEFAULT_WABA_ID o WPP_DEFAULT_ACCESS_TOKEN faltantes). Se omitirá la sincronización.');
+      return;
+    }
+
     this.logger.log('Iniciando carga y sincronización de plantillas de WhatsApp post-arranque...');
     try {
       // 1. Cargar plantillas desde archivos JSON en el FS
@@ -31,7 +39,9 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
       
       // 2. Sincronizar cambios de contenido con Meta
       const results = await this.syncGlobalTemplates();
-      this.logger.log(`Sincronización inicial completada: ${results.created} creadas, ${results.updated} actualizadas.`);
+      if (results) {
+        this.logger.log(`Sincronización inicial completada: ${results.created} creadas, ${results.updated} actualizadas.`);
+      }
 
       // 3. Revisar si hay plantillas PENDING que ya fueron aprobadas
       await this.checkPendingTemplatesStatus();
@@ -47,6 +57,11 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     const templatesDir = path.join(__dirname, 'templates');
     const defaultWabaId = this.configService.get('WPP_DEFAULT_WABA_ID')?.trim(); 
     
+    if (!defaultWabaId) {
+      this.logger.warn('No hay WPP_DEFAULT_WABA_ID configurado. Saltando carga de plantillas desde FS.');
+      return;
+    }
+
     if (!fs.existsSync(templatesDir)) {
       this.logger.warn(`Carpeta de plantillas no encontrada: ${templatesDir}`);
       return;
@@ -157,7 +172,8 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     const accessToken = this.configService.get('WPP_DEFAULT_ACCESS_TOKEN');
 
     if (!wabaId || !accessToken) {
-      throw new InternalServerErrorException('WABA ID o Access Token por defecto no configurados.');
+      this.logger.warn('No se puede sincronizar con Meta: WABA ID o Access Token no configurados.');
+      return null;
     }
 
     // Obtener plantillas globales de la DB
