@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap, shareReplay } from 'rxjs';
+import { Observable, tap, shareReplay, from, firstValueFrom } from 'rxjs';
 import { environment } from '@env/environment';
+import { QueryClient } from '@tanstack/angular-query-experimental';
 
 export enum AppointmentStatus {
   PENDING = 'PENDING',
@@ -51,15 +52,11 @@ export interface Appointment {
 })
 export class AppointmentsService {
   private http: HttpClient = inject(HttpClient);
+  private queryClient = inject(QueryClient);
   private apiUrl = `${environment.apiUrl}/appointments`;
-  private cache = new Map<string, Observable<Appointment[]>>();
-
-  private getCacheKey(filters?: any): string {
-    return JSON.stringify(filters || {});
-  }
 
   invalidateCache() {
-    this.cache.clear();
+    this.queryClient.invalidateQueries({ queryKey: ['appointments'] });
   }
 
   findAll(filters?: { 
@@ -69,12 +66,6 @@ export class AppointmentsService {
     branchId?: string; 
     statuses?: string[];
   }): Observable<Appointment[]> {
-    const key = this.getCacheKey(filters);
-    
-    if (this.cache.has(key)) {
-      return this.cache.get(key)!;
-    }
-
     let params = new HttpParams();
     if (filters?.startDate) params = params.set('startDate', filters.startDate);
     if (filters?.endDate) params = params.set('endDate', filters.endDate);
@@ -84,12 +75,28 @@ export class AppointmentsService {
       filters.statuses.forEach(s => params = params.append('statuses[]', s));
     }
 
-    const request = this.http.get<Appointment[]>(this.apiUrl, { params }).pipe(
-      shareReplay(1)
-    );
+    return from(this.queryClient.fetchQuery({
+      queryKey: ['appointments', filters],
+      queryFn: () => firstValueFrom(this.http.get<Appointment[]>(this.apiUrl, { params })),
+      staleTime: 1000 * 60 * 5, // 5 minutos de caché fresca
+    }));
+  }
 
-    this.cache.set(key, request);
-    return request;
+  prefetch(filters: any): void {
+    let params = new HttpParams();
+    if (filters?.startDate) params = params.set('startDate', filters.startDate);
+    if (filters?.endDate) params = params.set('endDate', filters.endDate);
+    if (filters?.professionalId) params = params.set('professionalId', filters.professionalId);
+    if (filters?.branchId) params = params.set('branchId', filters.branchId);
+    if (filters?.statuses && filters.statuses.length > 0) {
+      filters.statuses.forEach((s: string) => params = params.append('statuses[]', s));
+    }
+
+    this.queryClient.prefetchQuery({
+      queryKey: ['appointments', filters],
+      queryFn: () => firstValueFrom(this.http.get<Appointment[]>(this.apiUrl, { params })),
+      staleTime: 1000 * 60 * 5,
+    });
   }
 
   findOne(id: string): Observable<Appointment> {

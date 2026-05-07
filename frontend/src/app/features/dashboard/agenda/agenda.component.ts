@@ -593,12 +593,12 @@ export class AgendaComponent implements OnInit {
       }
 
       // Realizar la consulta para poblar el caché
-      this.appointmentsService.findAll({
+      this.appointmentsService.prefetch({
         startDate,
         endDate,
         branchId,
         statuses
-      }).subscribe();
+      });
     });
   }
 }

@@ -9,6 +9,10 @@ import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import {
+  QueryClient,
+  provideTanStackQuery,
+} from '@tanstack/angular-query-experimental';
 
 registerLocaleData(localeEs);
 
@@ -17,6 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(appRoutes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    provideTanStackQuery(new QueryClient()),
     { provide: LOCALE_ID, useValue: 'es' },
   ],
 };
