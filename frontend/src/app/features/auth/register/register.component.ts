@@ -24,6 +24,7 @@ export class RegisterComponent implements AfterViewInit {
   // Signals para el estado
   step = signal<1 | 2>(1);
   isLoading = signal(false);
+  isGoogleLoading = signal(false);
   errorMessage = signal('');
   showPassword = signal(false);
   showConfirmPassword = signal(false);
@@ -163,9 +164,9 @@ export class RegisterComponent implements AfterViewInit {
 
   handleGoogleLogin(response: any) {
     this.isLoading.set(true);
+    this.isGoogleLoading.set(true);
     this.authService.googleLogin(response.credential, this.turnstileToken()).subscribe({
       next: (data) => {
-        this.isLoading.set(false);
         if (data.onboardingCompleted) {
           this.router.navigate(['/dashboard']);
         } else {
@@ -174,6 +175,7 @@ export class RegisterComponent implements AfterViewInit {
       },
       error: (err) => {
         this.isLoading.set(false);
+        this.isGoogleLoading.set(false);
         const msg = err.error?.error?.message || err.error?.message || 'Error al iniciar sesión con Google';
         this.errorMessage.set(msg);
         if (!this.skipTurnstile) {

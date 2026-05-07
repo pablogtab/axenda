@@ -12,9 +12,6 @@ import { LoadingService } from '../../../core/services/loading.service';
         <div class="loading-bar-wrapper">
           <div class="loading-bar"></div>
         </div>
-        <div class="spinner-overlay">
-          <div class="spinner"></div>
-        </div>
       </div>
     }
   `,

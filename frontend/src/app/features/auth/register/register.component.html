@@ -90,7 +90,13 @@
 
         <!-- Contenedor del Botón de Google -->
         <div class="flex justify-center mt-4 min-h-[40px] w-full">
-          <div id="google-btn" class="w-full flex justify-center"></div>
+          <div id="google-btn" class="w-full flex justify-center" [class.hidden]="isGoogleLoading()" [class.pointer-events-none]="isLoading()"></div>
+          @if (isGoogleLoading()) {
+            <div class="flex justify-center items-center h-10 w-[360px] max-w-full rounded-full border border-border bg-surface-subtle/50 animate-in fade-in zoom-in-95 duration-300">
+               <div class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+               <span class="ml-2 text-sm font-medium text-text-muted">Conectando con Google...</span>
+            </div>
+          }
         </div>
       </form>
     }

@@ -22,7 +22,7 @@ const WITH_SAMPLES = process.argv.includes('--with-samples');
 
 async function seedSubscriptionPlans() {
   console.log('💎 Sincronizando Planes de Suscripción (System Data)...')
-  
+
   const plans: Prisma.SubscriptionPlanCreateInput[] = [
     {
       code: 'STARTER',
@@ -105,7 +105,7 @@ async function seedSubscriptionPlans() {
 
 async function seedSampleBusiness() {
   console.log('🌱 Sembrando Negocios de Prueba (Sample Data)...')
-  
+
   const passwordHash = await bcrypt.hash('Password123!', 10)
   const proPlan = await prisma.subscriptionPlan.findUnique({ where: { code: 'PRO' } })
 
@@ -123,6 +123,7 @@ async function seedSampleBusiness() {
       email: 'admin@axenda.com',
       address: 'Sede Palermo 123',
       active: true,
+      onboardingCompleted: true,
       subscription: {
         create: {
           planId: proPlan.id,
@@ -224,8 +225,8 @@ async function seedSampleBusiness() {
       bio: 'Barbero Principal',
       color: '#2196F3',
       active: true,
-      branches: { create: [ { branchId: palermoBranch.id } ] },
-      services: { create: [ { serviceId: corteClasico.id }, { serviceId: arregloBarba.id } ] },
+      branches: { create: [{ branchId: palermoBranch.id }] },
+      services: { create: [{ serviceId: corteClasico.id }, { serviceId: arregloBarba.id }] },
       availability: {
         create: [1, 2, 3, 4, 5].map(day => ({
           dayOfWeek: day,

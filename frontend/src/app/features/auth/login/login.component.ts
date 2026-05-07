@@ -31,6 +31,7 @@ export class LoginComponent implements AfterViewInit {
   });
 
   isLoading = false;
+  isGoogleLoading = false;
   errorMessage = '';
 
   ngOnInit(): void {
@@ -98,9 +99,9 @@ export class LoginComponent implements AfterViewInit {
 
   handleGoogleLogin(response: any) {
     this.isLoading = true;
+    this.isGoogleLoading = true;
     this.authService.googleLogin(response.credential, this.turnstileToken()).subscribe({
       next: (data) => {
-        this.isLoading = false;
         if (data.onboardingCompleted) {
           this.router.navigate(['/dashboard']);
         } else {
@@ -109,6 +110,7 @@ export class LoginComponent implements AfterViewInit {
       },
       error: (err) => {
         this.isLoading = false;
+        this.isGoogleLoading = false;
         const msg = err.error?.error?.message || err.error?.message || 'Error al iniciar sesión con Google';
         this.errorMessage = msg;
         if (!this.skipTurnstile) {
