@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { RouterModule } from '@angular/router';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-trial-banner',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, IconComponent],
   template: `
     @if (subService.bannerVisible()) {
       <div 
@@ -16,7 +17,7 @@ import { RouterModule } from '@angular/router';
         [class.lg:left-4]="sidebarService.isCollapsed() || sidebarService.isMobile()">
         <div class="flex items-center gap-3 ml-1">
           <div class="relative flex items-center justify-center">
-            <span class="material-symbols-rounded text-primary/80 text-xl">auto_awesome</span>
+            <app-icon name="auto_awesome" class="text-primary/80 text-xl"></app-icon>
             <span class="absolute h-full w-full rounded-full bg-primary-glow animate-ping opacity-20"></span>
           </div>
           
@@ -35,7 +36,7 @@ import { RouterModule } from '@angular/router';
           <div class="w-[1px] h-4 bg-border mx-1"></div>
 
           <button (click)="subService.dismissBanner()" class="p-1.5 hover:bg-surface-subtle-hover rounded-full text-text-dim hover:text-text-main transition-all cursor-pointer" title="Cerrar (reaparecerá en 2h)">
-            <span class="material-symbols-rounded text-base">close</span>
+            <app-icon name="close" class="text-base"></app-icon>
           </button>
         </div>
       </div>

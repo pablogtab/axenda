@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TenantsService } from '@services/tenants.service';
 import { AuthService } from '@services/auth.service';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-getting-started',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './getting-started.component.html',
   styleUrl: './getting-started.component.css'
 })

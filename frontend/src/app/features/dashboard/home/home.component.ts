@@ -8,11 +8,12 @@ import { SnackbarService } from '@core/services/snackbar.service';
 import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialog.component';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { forkJoin, map } from 'rxjs';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, QrDialogComponent],
+  imports: [CommonModule, RouterModule, QrDialogComponent, IconComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })

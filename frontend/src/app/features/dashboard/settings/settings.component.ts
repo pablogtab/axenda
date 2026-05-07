@@ -20,12 +20,12 @@ import { SettingsBillingComponent } from './components/settings-billing/settings
 import { SettingsWhatsappComponent } from './components/settings-whatsapp/settings-whatsapp.component';
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialog.component';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [
-    CommonModule, 
+  imports: [CommonModule, 
     RouterModule, 
     ReactiveFormsModule, 
     ProfessionalsListComponent,
@@ -38,8 +38,7 @@ import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialo
     SettingsBillingComponent,
     SettingsWhatsappComponent,
     ThemeToggleComponent,
-    QrDialogComponent
-  ],
+    QrDialogComponent, IconComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })

@@ -3,16 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ImageUploaderComponent } from '../../../../../shared/components/image-uploader/image-uploader.component';
 import { SelectComponent, SelectConfig } from '../../../../../shared/components/select/select';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-general',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent, SelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent, SelectComponent, IconComponent],
   template: `
     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" [formGroup]="form">
       <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-          <span class="material-symbols-rounded text-primary text-base">store</span> Información del Negocio
+          <app-icon name="store" class="text-primary text-base"></app-icon> Información del Negocio
         </h2>
       </div>
 
@@ -60,7 +61,7 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
       <div class="pt-6 border-t border-border space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest flex items-center gap-2">
-            <span class="material-symbols-rounded text-primary text-sm">link</span> Link Público de Reservas
+            <app-icon name="link" class="text-primary text-sm"></app-icon> Link Público de Reservas
           </h3>
           <span *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')"
             class="text-[10px] bg-primary-glow text-primary px-2 py-0.5 rounded-full font-bold">Activo</span>
@@ -84,10 +85,10 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
             <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <div *ngIf="slugStatus === 'checking'" class="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
               <span *ngIf="slugStatus === 'available'" class="text-green-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                <span class="material-symbols-rounded text-xs">check</span> Disponible
+                <app-icon name="check" class="text-xs"></app-icon> Disponible
               </span>
               <span *ngIf="slugStatus === 'taken'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
-                <span class="material-symbols-rounded text-xs">close</span> No disponible
+                <app-icon name="close" class="text-xs"></app-icon> No disponible
               </span>
               <span *ngIf="slugStatus === 'invalid'" class="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-in fade-in zoom-in">
                 Formato inválido
@@ -99,15 +100,15 @@ import { SelectComponent, SelectConfig } from '../../../../../shared/components/
             <div class="flex flex-wrap items-center gap-1.5 md:justify-end">
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="copyLink.emit()"
                 class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
-                <span class="material-symbols-rounded text-base">content_copy</span> Copiar link
+                <app-icon name="content_copy" class="text-base"></app-icon> Copiar link
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="visitPage.emit()"
                 class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
-                <span class="material-symbols-rounded text-base">open_in_new</span> Ver mi página
+                <app-icon name="open_in_new" class="text-base"></app-icon> Ver mi página
               </button>
               <button *ngIf="form.get('publicSlug')?.value && (slugStatus === 'idle' || slugStatus === 'available')" (click)="generateQR.emit()"
                 class="text-[10px] text-primary font-black flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-primary-glow hover:scale-105 active:scale-95 whitespace-nowrap border border-transparent hover:border-primary/20">
-                <span class="material-symbols-rounded text-base">qr_code_2</span> Generar QR
+                <app-icon name="qr_code_2" class="text-base"></app-icon> Generar QR
               </button>
             </div>
           </div>

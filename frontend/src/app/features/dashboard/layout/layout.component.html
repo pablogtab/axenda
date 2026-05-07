@@ -31,21 +31,21 @@
       <a routerLink="/dashboard/home" 
          routerLinkActive="active-nav-item" 
          class="nav-item group">
-        <span class="material-symbols-rounded nav-icon">home</span>
+        <app-icon name="home" class="nav-icon"></app-icon>
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Inicio</span>
       </a>
 
       <a routerLink="/dashboard/agenda" 
          routerLinkActive="active-nav-item" 
          class="nav-item group">
-        <span class="material-symbols-rounded nav-icon">calendar_month</span>
+        <app-icon name="calendar_month" class="nav-icon"></app-icon>
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Agenda</span>
       </a>
       
       <a routerLink="/dashboard/clients" 
          routerLinkActive="active-nav-item" 
          class="nav-item group">
-        <span class="material-symbols-rounded nav-icon">group</span>
+        <app-icon name="group" class="nav-icon"></app-icon>
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Clientes</span>
       </a>
 
@@ -53,7 +53,7 @@
         <a routerLink="/dashboard/settings" 
            routerLinkActive="active-nav-item" 
            class="nav-item group">
-          <span class="material-symbols-rounded nav-icon">settings</span>
+          <app-icon name="settings" class="nav-icon"></app-icon>
           <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Configuración</span>
         </a>
       </div>
@@ -63,7 +63,7 @@
            class="mt-4 p-3 rounded-2xl bg-primary-glow border border-primary/20 relative overflow-hidden group animate-in fade-in slide-in-from-left-4 duration-500">
         <div class="relative z-10">
           <div class="flex items-center gap-2 mb-2">
-            <span class="material-symbols-rounded text-primary text-sm">auto_awesome</span>
+            <app-icon name="auto_awesome" class="text-primary text-sm"></app-icon>
             <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Axenda Pro</span>
           </div>
           <p class="text-[11px] text-text-muted leading-tight mb-3">
@@ -83,7 +83,7 @@
     <div class="mt-6 pt-4 border-t border-border">
       <button (click)="logout()" 
               class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-400/70 font-bold transition-all hover:bg-red-500/10 hover:text-red-400 group overflow-hidden">
-        <span class="material-symbols-rounded text-lg transition-transform group-hover:-translate-x-1">logout</span> 
+        <app-icon name="logout" class="text-lg transition-transform group-hover:-translate-x-1"></app-icon> 
         <span *ngIf="!sidebarService.isCollapsed()" class="whitespace-nowrap text-sm">Cerrar Sesión</span>
       </button>
     </div>
@@ -96,7 +96,7 @@
     <header *ngIf="sidebarService.isMobile() && !isAgendaView()" class="flex items-center px-2 py-2 border-b border-border glass shrink-0 z-50">
       <div class="flex items-center gap-3">
         <button (click)="sidebarService.toggle()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-subtle text-text-main transition-colors">
-          <span class="material-symbols-rounded">menu</span>
+          <app-icon name="menu"></app-icon>
         </button>
         <div class="flex items-center gap-0" routerLink="/dashboard/home">
           <img src="assets/logo.svg" alt="Axenda Logo" class="w-7 h-7">

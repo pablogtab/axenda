@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy, AfterViewInit, signal, HostListener, NgZo
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule, ThemeToggleComponent],
+  imports: [CommonModule, RouterModule, ThemeToggleComponent, IconComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css'
 })

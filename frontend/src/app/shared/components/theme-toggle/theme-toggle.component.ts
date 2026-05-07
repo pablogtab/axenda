@@ -1,11 +1,12 @@
 import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="flex items-center gap-3">
       <span *ngIf="showLabels" class="text-[10px] font-black uppercase tracking-widest text-text-muted select-none">
@@ -22,11 +23,7 @@ import { ThemeService } from '../../../core/services/theme.service';
              [class.translate-x-[20px]]="themeService.isDark()">
           
           <!-- Icon -->
-          <span class="material-symbols-rounded !text-[12px] transition-all duration-500 text-toggle-icon"
-                [class.rotate-[360deg]]="themeService.isDark()"
-                style="font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 12;">
-            {{ themeService.isDark() ? 'dark_mode' : 'light_mode' }}
-          </span>
+          <app-icon name="{{ themeService.isDark() ? 'dark_mode' : 'light_mode' }}" [class.rotate-[360deg]]="themeService.isDark()" style="font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 12;" class="!text-[12px] transition-all duration-500 text-toggle-icon"></app-icon>
         </div>
         
         <!-- Subtle Glow Effect -->

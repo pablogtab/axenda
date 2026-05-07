@@ -2,24 +2,25 @@ import { Component, Input, Output, EventEmitter, signal, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { StoragePipe } from '@shared/pipes/storage.pipe';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-appearance',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StoragePipe],
+  imports: [CommonModule, ReactiveFormsModule, StoragePipe, IconComponent],
   template: `
     <div class="h-full md:h-[calc(100vh-160px)] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto md:overflow-hidden" [formGroup]="form">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6 shrink-0">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-          <span class="material-symbols-rounded text-primary text-base">palette</span> Apariencia
+          <app-icon name="palette" class="text-primary text-base"></app-icon> Apariencia
         </h2>
         <!-- Theme Selector Dropdown -->
         <div class="relative">
           <button (click)="toggleThemeSelector.emit()"
             class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-surface-subtle border border-border hover:bg-surface-subtle-hover transition-all group relative z-[100]"
             [class.ring-2]="showThemeSelector" [class.ring-primary]="showThemeSelector">
-            <span class="material-symbols-rounded text-base group-hover:scale-110 transition-transform">palette</span>
+            <app-icon name="palette" class="text-base group-hover:scale-110 transition-transform"></app-icon>
             <div class="flex flex-col items-start leading-none">
               <span class="text-[10px] font-black text-text-dim uppercase tracking-wider mb-1">Plantillas</span>
               <span class="text-xs font-bold text-text-main">{{ activeTheme?.name || 'Personalizado' }}</span>

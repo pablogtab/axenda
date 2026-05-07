@@ -1,16 +1,17 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-billing',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-6">
       <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-          <span class="material-symbols-rounded text-primary text-base">credit_card</span> Cuenta y Plan
+          <app-icon name="credit_card" class="text-primary text-base"></app-icon> Cuenta y Plan
         </h2>
       </div>
 
@@ -23,7 +24,7 @@ import { SubscriptionService } from '../../../../../core/services/subscription.s
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-6">
               <div class="w-12 h-12 rounded-2xl bg-primary-glow flex items-center justify-center border border-primary/20 shadow-inner">
-                <span class="material-symbols-rounded text-primary text-2xl">verified_user</span>
+                <app-icon name="verified_user" class="text-primary text-2xl"></app-icon>
               </div>
               <div>
                 <span class="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">Tu plan actual</span>

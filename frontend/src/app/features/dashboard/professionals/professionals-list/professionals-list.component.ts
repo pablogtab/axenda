@@ -11,12 +11,13 @@ import { DataTableComponent } from '@shared/components/data-table/data-table.com
 import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { ProfessionalFormComponent } from '@features/dashboard/professionals/professional-form/professional-form.component';
 import { ProfessionalAvailabilityComponent } from '../professional-availability/professional-availability.component';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 // Componente principal para el listado de profesionales
 @Component({
   selector: 'app-professionals-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective, ProfessionalFormComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective, ProfessionalFormComponent, IconComponent],
   templateUrl: './professionals-list.component.html'
 })
 export class ProfessionalsListComponent implements OnInit {

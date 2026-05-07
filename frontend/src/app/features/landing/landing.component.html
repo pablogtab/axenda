@@ -70,7 +70,7 @@
           <div class="relative float-animation">
             <!-- Asset Request: Hero Video/Image -->
             <div class="asset-request mb-6">
-              <span class="material-symbols-rounded text-primary text-3xl">movie</span>
+              <app-icon name="movie" class="text-primary text-3xl"></app-icon>
               <p class="asset-request-text">[SOLICITUD: Video demo de la plataforma o imagen premium del dashboard]</p>
             </div>
 
@@ -85,7 +85,7 @@
             <div class="absolute -right-8 top-12 glass p-5 rounded-2xl shadow-2xl animate-in zoom-in slide-in-from-right duration-700 delay-300">
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
-                  <span class="material-symbols-rounded text-success">check</span>
+                  <app-icon name="check" class="text-success"></app-icon>
                 </div>
                 <div>
                   <p class="text-xs font-bold">Turno Confirmado</p>
@@ -97,7 +97,7 @@
             <div class="absolute -left-8 bottom-12 glass p-5 rounded-2xl shadow-2xl animate-in zoom-in slide-in-from-left duration-700 delay-500">
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span class="material-symbols-rounded text-primary">payments</span>
+                  <app-icon name="payments" class="text-primary"></app-icon>
                 </div>
                 <div>
                   <p class="text-xs font-bold">Pago Recibido</p>
@@ -123,7 +123,7 @@
         @for (feature of features; track feature.title) {
           <div class="group p-8 rounded-[2rem] bg-surface-subtle border border-border hover:border-primary/20 hover:bg-primary-glow transition-all duration-500">
             <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-              <span class="material-symbols-rounded text-3xl text-primary">{{ feature.icon }}</span>
+              <app-icon name="{{ feature.icon }}" class="text-3xl text-primary"></app-icon>
             </div>
             <h3 class="text-xl font-bold mb-3 text-text-main">{{ feature.title }}</h3>
             <p class="text-text-muted leading-relaxed text-sm">
@@ -152,7 +152,7 @@
               <div class="testimonial-card-v2 group">
                 <div class="flex gap-1">
                   @for (star of [1,2,3,4,5]; track star) {
-                    <span class="material-symbols-rounded text-warning text-sm symbol-fill">star</span>
+                    <app-icon name="star" class="text-warning text-sm symbol-fill"></app-icon>
                   }
                 </div>
                 <span class="text-6xl text-primary/10 absolute top-4 right-6 font-serif group-hover:text-primary/20 transition-colors">“</span>
@@ -175,7 +175,7 @@
       <!-- Controls -->
       <div class="slider-controls">
         <button (click)="prev()" class="control-btn" aria-label="Anterior">
-          <span class="material-symbols-rounded">chevron_left</span>
+          <app-icon name="chevron_left"></app-icon>
         </button>
         
         <div class="flex gap-2 mx-4">
@@ -189,7 +189,7 @@
         </div>
 
         <button (click)="next()" class="control-btn" aria-label="Siguiente">
-          <span class="material-symbols-rounded">chevron_right</span>
+          <app-icon name="chevron_right"></app-icon>
         </button>
       </div>
     </div>
@@ -332,9 +332,9 @@
       <div class="mt-16 text-center animate-in fade-in slide-in-from-bottom duration-1000 delay-500">
         <p class="text-[10px] text-text-muted mb-6">(*) Los límites de WhatsApp son ampliables mediante paquetes de mensajes adicionales.</p>
         <a routerLink="/precios" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-surface-subtle border border-border text-text-main font-bold hover:bg-surface-subtle-hover transition-all group">
-          <span class="material-symbols-rounded text-primary group-hover:rotate-12 transition-transform">analytics</span>
+          <app-icon name="analytics" class="text-primary group-hover:rotate-12 transition-transform"></app-icon>
           Ver comparativa completa de funciones
-          <span class="material-symbols-rounded text-text-dim group-hover:translate-x-1 transition-transform">chevron_right</span>
+          <app-icon name="chevron_right" class="text-text-dim group-hover:translate-x-1 transition-transform"></app-icon>
         </a>
       </div>
     </div>
@@ -353,7 +353,7 @@
           <div class="faq-item">
             <button class="faq-trigger">
               <span class="font-semibold">{{ item.question }}</span>
-              <span class="material-symbols-rounded text-primary">expand_more</span>
+              <app-icon name="expand_more" class="text-primary"></app-icon>
             </button>
             <div class="p-6 pt-0 text-text-muted text-sm">
               {{ item.answer }}

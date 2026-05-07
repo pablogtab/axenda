@@ -6,14 +6,14 @@
     </div>
     <div class="header-actions">
       <button class="btn-primary !px-4 !py-2.5 !text-sm flex items-center gap-2" (click)="openCreateForm()">
-        <span class="material-symbols-rounded text-base">add_task</span>
+        <app-icon name="add_task" class="text-base"></app-icon>
         Nuevo Servicio
       </button>
     </div>
   </header>
 
   <div class="search-box-container max-w-sm">
-    <span class="material-symbols-rounded text-base text-text-dim">search</span>
+    <app-icon name="search" class="text-base text-text-dim"></app-icon>
     <input
       type="text"
       [value]="searchTerm()"
@@ -64,10 +64,10 @@
       <ng-template appTableCell="actions" let-service>
         <div class="row-actions">
           <button (click)="openEditForm(service)" class="btn-icon-small" title="Editar">
-            <span class="material-symbols-rounded text-base">edit</span>
+            <app-icon name="edit" class="text-base"></app-icon>
           </button>
           <button (click)="deleteService(service.id)" class="btn-icon-small btn-icon-delete" title="Eliminar">
-            <span class="material-symbols-rounded text-base">delete</span>
+            <app-icon name="delete" class="text-base"></app-icon>
           </button>
         </div>
       </ng-template>
@@ -75,7 +75,7 @@
 
     @if (filteredServices().length === 0 && !isLoading()) {
       <div class="empty-state py-12">
-        <span class="material-symbols-rounded text-4xl mb-4 opacity-10">category</span>
+        <app-icon name="category" class="text-4xl mb-4 opacity-10"></app-icon>
         <p class="text-sm">No hay servicios registrados.</p>
       </div>
     }

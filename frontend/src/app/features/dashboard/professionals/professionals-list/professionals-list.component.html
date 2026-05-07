@@ -18,9 +18,7 @@
           [class.opacity-70]="limitReached() && showLimitFeedback()"
           class="btn-primary !px-4 !py-2.5 !text-sm flex items-center gap-2 group relative overflow-hidden"
         >
-          <span class="material-symbols-rounded text-lg transition-transform group-hover:scale-110">
-            {{ limitReached() && showLimitFeedback() ? 'lock' : 'person_add' }}
-          </span>
+          <app-icon name="{{ limitReached() && showLimitFeedback() ? 'lock' : 'person_add' }}" class="text-lg transition-transform group-hover:scale-110"></app-icon>
           Nuevo Profesional
           
           @if (limitReached() && showLimitFeedback()) {
@@ -33,7 +31,7 @@
     <!-- Filtros y Alerta de Límite -->
     <div class="flex flex-col md:flex-row md:items-center gap-4">
       <div class="search-box-container max-w-sm flex-1">
-        <span class="material-symbols-rounded text-lg text-text-dim">search</span>
+        <app-icon name="search" class="text-lg text-text-dim"></app-icon>
         <input 
           type="text" 
           [ngModel]="searchTerm()" 
@@ -46,7 +44,7 @@
       @if (limitReached() && showLimitFeedback()) {
         <div class="flex-1 animate-in fade-in slide-in-from-top-2 duration-500">
           <div class="flex items-center gap-3 p-3 rounded-xl bg-warning/10 border border-warning/20 text-text-main shadow-lg shadow-warning/5">
-            <span class="material-symbols-rounded text-xl text-warning">info</span>
+            <app-icon name="info" class="text-xl text-warning"></app-icon>
             <div class="text-xs">
               <span class="font-bold block text-warning">Plan actual al límite</span>
               Has alcanzado el máximo de <b class="text-text-main font-black">{{ subscriptionService.limits()?.maxProfessionals }}</b> profesionales.
@@ -135,10 +133,10 @@
           <ng-template appTableCell="actions" let-item>
             <div class="row-actions">
               <button (click)="openEditForm(item)" class="btn-icon-small" title="Editar">
-                <span class="material-symbols-rounded text-lg">edit</span>
+                <app-icon name="edit" class="text-lg"></app-icon>
               </button>
               <button (click)="deleteProfessional(item.id)" class="btn-icon-small btn-icon-delete" title="Eliminar">
-                <span class="material-symbols-rounded text-lg">delete</span>
+                <app-icon name="delete" class="text-lg"></app-icon>
               </button>
             </div>
           </ng-template>
@@ -146,7 +144,7 @@
 
         @if (filteredProfessionals().length === 0) {
           <div class="empty-state py-12">
-            <span class="material-symbols-rounded text-5xl mb-4 opacity-10">badge</span>
+            <app-icon name="badge" class="text-5xl mb-4 opacity-10"></app-icon>
             <p class="text-sm">No se encontraron profesionales</p>
           </div>
         }

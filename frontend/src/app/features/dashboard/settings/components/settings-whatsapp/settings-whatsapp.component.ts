@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { WhatsappService, WhatsappConfig } from '../../../../../core/services/whatsapp.service';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
 import { SnackbarService } from '../../../../../core/services/snackbar.service';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-whatsapp',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './settings-whatsapp.component.html',
 })
 export class SettingsWhatsappComponent implements OnInit {

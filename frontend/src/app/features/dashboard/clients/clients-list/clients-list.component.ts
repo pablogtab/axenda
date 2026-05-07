@@ -7,11 +7,12 @@ import { ClientFormComponent } from '../client-form/client-form.component';
 import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [FormsModule, DataTableComponent, TableCellDirective],
+  imports: [FormsModule, DataTableComponent, TableCellDirective, IconComponent],
   templateUrl: './clients-list.component.html',
   styleUrl: './clients-list.component.css'
 })

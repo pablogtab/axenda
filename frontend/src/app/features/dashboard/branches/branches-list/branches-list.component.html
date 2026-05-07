@@ -16,9 +16,7 @@
           [class.opacity-70]="limitReached() && showLimitFeedback()"
           class="btn-primary !px-4 !py-2.5 !text-sm flex items-center gap-2 group relative overflow-hidden"
         >
-          <span class="material-symbols-rounded text-lg transition-transform group-hover:scale-110">
-            {{ limitReached() && showLimitFeedback() ? 'lock' : 'add_location' }}
-          </span>
+          <app-icon name="{{ limitReached() && showLimitFeedback() ? 'lock' : 'add_location' }}" class="text-lg transition-transform group-hover:scale-110"></app-icon>
           Nueva Sucursal
           
           @if (limitReached() && showLimitFeedback()) {
@@ -30,7 +28,7 @@
 
   <div class="flex flex-col md:flex-row md:items-center gap-4">
     <div class="search-box-container max-w-sm flex-1">
-      <span class="material-symbols-rounded text-lg text-text-dim">search</span>
+      <app-icon name="search" class="text-lg text-text-dim"></app-icon>
       <input 
         type="text" 
         [value]="searchTerm()" 
@@ -44,7 +42,7 @@
     @if (limitReached() && showLimitFeedback()) {
       <div class="flex-1 animate-in fade-in slide-in-from-top-2 duration-500">
         <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/80 shadow-lg shadow-amber-500/5">
-          <span class="material-symbols-rounded text-xl text-amber-500">info</span>
+          <app-icon name="info" class="text-xl text-amber-500"></app-icon>
           <div class="text-xs">
             <span class="font-bold block text-amber-500">Plan actual al límite</span>
             Has alcanzado el máximo de <b>{{ subscriptionService.limits()?.maxBranches }}</b> sucursales en tu plan.
@@ -70,7 +68,7 @@
       <ng-template appTableCell="branch" let-branch>
         <div class="flex items-center gap-3 py-1">
           <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600/20 to-primary/20 text-text-main flex items-center justify-center border border-indigo-500/20 shadow-lg">
-            <span class="material-symbols-rounded text-lg text-indigo-400">location_on</span>
+            <app-icon name="location_on" class="text-lg text-indigo-400"></app-icon>
           </div>
           <div class="flex flex-col min-w-0">
             <span class="text-sm font-bold text-text-main truncate leading-tight">{{ branch.name }}</span>
@@ -94,10 +92,10 @@
       <ng-template appTableCell="actions" let-branch>
         <div class="row-actions">
           <button (click)="openEditForm(branch)" class="btn-icon-small" title="Editar">
-            <span class="material-symbols-rounded text-lg">edit</span>
+            <app-icon name="edit" class="text-lg"></app-icon>
           </button>
           <button (click)="deleteBranch(branch.id)" class="btn-icon-small btn-icon-delete" title="Eliminar">
-            <span class="material-symbols-rounded text-lg">delete</span>
+            <app-icon name="delete" class="text-lg"></app-icon>
           </button>
         </div>
       </ng-template>
@@ -105,7 +103,7 @@
 
     @if (filteredBranches().length === 0 && !isLoading()) {
       <div class="empty-state py-12">
-        <span class="material-symbols-rounded text-5xl mb-4 opacity-10">domain</span>
+        <app-icon name="domain" class="text-5xl mb-4 opacity-10"></app-icon>
         <p class="text-sm">No se encontraron sucursales.</p>
       </div>
     }

@@ -1,16 +1,17 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-notifications',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   template: `
     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" [formGroup]="form">
       <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-          <span class="material-symbols-rounded text-primary text-base">notifications</span> Notificaciones
+          <app-icon name="notifications" class="text-primary text-base"></app-icon> Notificaciones
         </h2>
       </div>
 

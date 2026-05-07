@@ -8,11 +8,12 @@ import { ModalService } from '@services/modal.service';
 import { DataTableComponent } from '@shared/components/data-table/data-table.component';
 import { TableCellDirective } from '@shared/components/data-table/table-cell.directive';
 import { ServiceFormComponent } from '../service-form/service-form.component';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-services-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective],
+  imports: [CommonModule, FormsModule, DataTableComponent, TableCellDirective, IconComponent],
   templateUrl: './services-list.component.html',
   styleUrl: './services-list.component.css'
 })

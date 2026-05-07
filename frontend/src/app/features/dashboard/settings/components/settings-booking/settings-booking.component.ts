@@ -2,16 +2,17 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectComponent, SelectConfig } from '../../../../../shared/components/select/select';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-booking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SelectComponent, IconComponent],
   template: `
     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" [formGroup]="form">
       <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
-          <span class="material-symbols-rounded text-primary text-base">calendar_month</span> Configuración de Reservas
+          <app-icon name="calendar_month" class="text-primary text-base"></app-icon> Configuración de Reservas
         </h2>
       </div>
 

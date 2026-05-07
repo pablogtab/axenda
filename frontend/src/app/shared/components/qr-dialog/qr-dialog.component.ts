@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as QRCode from 'qrcode';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-qr-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div (click)="close.emit()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
@@ -14,7 +15,7 @@ import * as QRCode from 'qrcode';
           <!-- Header -->
           <div class="p-6 pb-0 flex justify-between items-center">
               <h3 class="text-xl font-bold text-text-main flex items-center gap-2">
-                  <span class="material-symbols-rounded text-primary">qr_code_2</span> {{ title }}
+                  <app-icon name="qr_code_2" class="text-primary"></app-icon> {{ title }}
               </h3>
               <button (click)="close.emit()" class="w-8 h-8 rounded-full bg-surface-subtle flex items-center justify-center text-text-muted hover:bg-surface-subtle-hover transition-all">✕</button>
           </div>
