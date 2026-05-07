@@ -5,6 +5,7 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
+import { TimeInputComponent } from '@shared/components/time-input/time-input';
 import { DialogService } from '@core/services/dialog.service';
 
 export interface ExceptionFormData {
@@ -20,7 +21,7 @@ export interface ExceptionFormData {
 @Component({
   selector: 'app-professional-exception-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SelectComponent, TimeInputComponent],
   template: `
     <div class="bg-bg-secondary rounded-2xl border border-white/10 shadow-2xl overflow-hidden w-full max-w-md animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
       <!-- Header -->
@@ -56,14 +57,16 @@ export interface ExceptionFormData {
                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-1.5 text-sm text-text-main focus:border-primary/50 focus:ring-0 outline-none transition-all">
           </div>
           <div class="space-y-0.5">
-            <label class="text-[9px] font-bold text-text-dim uppercase ml-1">Desde</label>
-            <input type="time" formControlName="startTime"
-                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-1.5 text-sm text-text-main focus:border-primary/50 focus:ring-0 outline-none transition-all">
+            <app-time-input 
+              formControlName="startTime"
+              label="Desde">
+            </app-time-input>
           </div>
           <div class="space-y-0.5">
-            <label class="text-[9px] font-bold text-text-dim uppercase ml-1">Hasta</label>
-            <input type="time" formControlName="endTime"
-                   class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-1.5 text-sm text-text-main focus:border-primary/50 focus:ring-0 outline-none transition-all">
+            <app-time-input 
+              formControlName="endTime"
+              label="Hasta">
+            </app-time-input>
           </div>
         </div>
 

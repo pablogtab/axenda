@@ -1,6 +1,7 @@
-import { Component, Input, forwardRef, signal, ViewChild, ElementRef, inject, computed } from '@angular/core';
+import { Component, Input, forwardRef, signal, ViewChild, ElementRef, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { DialogRef } from '@angular/cdk/dialog';
 
@@ -30,7 +31,11 @@ export interface SelectConfig<T = any> {
 })
 export class SelectComponent<T = any> implements ControlValueAccessor {
   @Input({ required: true }) config!: SelectConfig<T>;
-  @Input({ required: true }) options: T[] = [];
+  @Input({ required: true }) set options(val: T[]) {
+    this._options.set(val);
+  }
+  get options() { return this._options(); }
+  private _options = signal<T[]>([]);
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -44,20 +49,26 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
   private get valueFn() { return this.config?.valueFn; }
 
   searchControl = new FormControl('');
+  searchQuery = toSignal(this.searchControl.valueChanges, { initialValue: '' });
   isOpen = signal(false);
   selectedItem = signal<T | null>(null);
   selectedIndex = signal(-1);
-  
+  pendingValue = signal<any>(null);
+
   private dialogRef = inject(DialogRef, { optional: true });
   skipFocus = signal(!!this.dialogRef);
   triggerWidth = signal<number | string>('auto');
 
+  // Decidir si habilitar filtrado basado en la cantidad de elementos
+  isFilterable = computed(() => this.options.length > 5);
+
   // Opciones filtradas basadas en el input
   filteredOptions = computed(() => {
-    const query = this.searchControl.value?.toLowerCase() || '';
-    if (!query) return this.options;
+    const query = this.searchQuery()?.toLowerCase() || '';
+    const options = this._options();
+    if (!query) return options;
     
-    return this.options.filter(opt => {
+    return options.filter(opt => {
       const display = this.displayFn(opt).toLowerCase();
       const description = this.descriptionFn ? this.descriptionFn(opt).toLowerCase() : '';
       return display.includes(query) || description.includes(query);
@@ -68,11 +79,38 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
     if (this.skipFocus()) {
       setTimeout(() => this.skipFocus.set(false), 100);
     }
+
+    // Efecto para que el primer elemento siempre esté resaltado al filtrar
+    effect(() => {
+      const opts = this.filteredOptions();
+      if (opts.length > 0) {
+        this.selectedIndex.set(0);
+      } else {
+        this.selectedIndex.set(-1);
+      }
+    });
+
+    // Efecto para resolver el item seleccionado cuando las opciones cambian
+    effect(() => {
+      const value = this.pendingValue();
+      const options = this._options();
+      
+      if (value !== null && options.length > 0) {
+        const found = options.find(opt => {
+          const optVal = this.valueFn ? this.valueFn(opt) : opt;
+          return optVal === value;
+        });
+        
+        if (found) {
+          this.selectedItem.set(found);
+        }
+      }
+    });
   }
 
   // ControlValueAccessor methods
-  onChange: any = () => {};
-  onTouched: any = () => {};
+  onChange: any = () => { };
+  onTouched: any = () => { };
 
   toggleOpen(): void {
     if (this.selectedItem()) return;
@@ -126,9 +164,12 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       this.selectedIndex.update(i => (i - 1 + opts.length) % opts.length);
-    } else if (event.key === 'Enter' && this.selectedIndex() >= 0) {
-      event.preventDefault();
-      this.selectItem(opts[this.selectedIndex()]);
+    } else if (event.key === 'Enter') {
+      const idx = this.selectedIndex();
+      if (idx >= 0 && idx < opts.length) {
+        event.preventDefault();
+        this.selectItem(opts[idx]);
+      }
     } else if (event.key === 'Escape') {
       this.isOpen.set(false);
     }
@@ -136,21 +177,23 @@ export class SelectComponent<T = any> implements ControlValueAccessor {
 
   // ControlValueAccessor Implementation
   writeValue(value: any): void {
-    if (value === null || value === undefined) {
-      this.selectedItem.set(null);
-      return;
-    }
+    const val = value || '';
+    this.searchControl.setValue(val, { emitEvent: false });
+    this.pendingValue.set(val);
 
-    // Buscar el item en las opciones si recibimos un valor simple (ID)
-    const found = this.options.find(opt => {
-      const optVal = this.valueFn ? this.valueFn(opt) : opt;
-      return optVal === value;
-    });
-
-    if (found) {
-      this.selectedItem.set(found);
-    } else if (typeof value === 'object') {
-      this.selectedItem.set(value);
+    // Intentar buscar inmediatamente si ya hay opciones
+    const options = this._options();
+    if (options.length > 0) {
+      const found = options.find(opt => {
+        const optVal = this.valueFn ? this.valueFn(opt) : opt;
+        return optVal === val;
+      });
+      
+      if (found) {
+        this.selectedItem.set(found);
+      } else {
+        this.selectedItem.set(null);
+      }
     }
   }
 

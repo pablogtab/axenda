@@ -16,13 +16,16 @@
            autocapitalize="off"
            spellcheck="false"
            [formControl]="searchControl"
-           [placeholder]="placeholder"
+           [placeholder]="isFilterable() ? 'Escribir para buscar...' : placeholder"
            [tabIndex]="skipFocus() ? -1 : 0"
+           [readOnly]="!isFilterable()"
            (focus)="onFocus()"
            (blur)="onBlur()"
            (keydown)="handleKeyDown($event)"
            [hidden]="selectedItem()"
-           class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all cursor-pointer">
+           [class.cursor-pointer]="!isFilterable()"
+           [class.cursor-text]="isFilterable()"
+           class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all">
     
     <!-- Icono de Flecha (cuando no hay selección) -->
     @if (!selectedItem() && !isOpen()) {

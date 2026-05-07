@@ -155,22 +155,18 @@
 
             <div class="grid grid-cols-2 gap-3 mt-2">
               <div class="space-y-1">
-                <span class="text-[8px] text-text-muted uppercase ml-2 font-bold tracking-tighter">Desde</span>
-                <input 
-                  type="time" 
+                <app-time-input 
                   [ngModel]="startTime()"
                   (ngModelChange)="startTime.set($event)"
-                  class="input-field !py-2 text-sm text-center font-bold"
-                >
+                  label="Desde"
+                ></app-time-input>
               </div>
               <div class="space-y-1">
-                <span class="text-[8px] text-text-muted uppercase ml-2 font-bold tracking-tighter">Hasta</span>
-                <input 
-                  type="time" 
+                <app-time-input 
                   [ngModel]="endTime()"
                   (ngModelChange)="endTime.set($event)"
-                  class="input-field !py-2 text-sm text-center font-bold"
-                >
+                  label="Hasta"
+                ></app-time-input>
               </div>
             </div>
             <p class="text-[9px] text-text-muted px-2 italic text-center">Configuración rápida. Podrás definir horarios cortados más tarde.</p>

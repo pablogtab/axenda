@@ -27,13 +27,14 @@ export interface AppointmentFormData {
 
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
+import { TimeInputComponent } from '@shared/components/time-input/time-input';
 import { getClientSearchConfig, getProfessionalSearchConfig } from '@core/configs/search-configs';
 import { ClientFormComponent } from '../../clients/client-form/client-form.component';
 
 @Component({
   selector: 'app-appointment-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, SelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, SelectComponent, TimeInputComponent],
   templateUrl: './appointment-form.html',
   styleUrls: ['./appointment-form.css']
 })
@@ -53,6 +54,7 @@ export class AppointmentFormComponent implements OnInit {
   isSubmitting = signal(false);
   isEditMode = signal(false);
   isLoadingData = signal(true);
+  serverError = signal<string | null>(null);
 
   // Configuraciones de los buscadores
   clientConfig = { 
@@ -153,7 +155,7 @@ export class AppointmentFormComponent implements OnInit {
     const startTime = this.form.get('time')?.value;
     const date = this.form.get('date')?.value;
 
-    if (!serviceId || !startTime || !date) return;
+    if (!serviceId || !startTime || !date || startTime.length !== 5) return;
 
     const service = this.services().find(s => s.id === serviceId);
     if (!service) return;
@@ -298,11 +300,22 @@ export class AppointmentFormComponent implements OnInit {
     request.subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
+        this.serverError.set(null);
         this.dialogRef.close(res);
       },
       error: (err) => {
         this.isSubmitting.set(false);
         console.error('Error al guardar turno:', err);
+        
+        // Extraer mensaje de error del backend
+        const message = err.error?.message;
+        if (Array.isArray(message)) {
+          this.serverError.set(message[0]);
+        } else if (typeof message === 'string') {
+          this.serverError.set(message);
+        } else {
+          this.serverError.set('Error inesperado: Verifica los datos e intenta nuevamente.');
+        }
       }
     });
   }
@@ -312,8 +325,12 @@ export class AppointmentFormComponent implements OnInit {
   }
 
   openNewClient(query: string): void {
+    const parts = query.trim().split(' ');
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ');
+
     const dialogRef = this.dialog.open(ClientFormComponent, {
-      data: { firstName: query }
+      data: { firstName, lastName }
     });
 
     dialogRef.closed.subscribe((result: any) => {

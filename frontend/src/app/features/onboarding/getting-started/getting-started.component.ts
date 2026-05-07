@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { TenantsService } from '@services/tenants.service';
 import { AuthService } from '@services/auth.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { TimeInputComponent } from '@shared/components/time-input/time-input';
 
 @Component({
   selector: 'app-getting-started',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, TimeInputComponent],
   templateUrl: './getting-started.component.html',
   styleUrl: './getting-started.component.css'
 })

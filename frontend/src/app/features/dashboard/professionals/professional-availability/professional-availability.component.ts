@@ -5,11 +5,12 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfessionalsService, Professional, Availability, AvailabilityException } from '@services/professionals.service';
 import { SnackbarService } from '@services/snackbar.service';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
+import { TimeInputComponent } from '@shared/components/time-input/time-input';
 
 @Component({
   selector: 'app-professional-availability',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, SelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SelectComponent, TimeInputComponent],
   templateUrl: './professional-availability.component.html'
 })
 export class ProfessionalAvailabilityComponent implements OnInit {

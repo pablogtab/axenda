@@ -62,15 +62,17 @@
         <!-- Horas en la misma fila -->
         <div class="col-span-2 md:col-span-2">
           <div class="flex gap-3">
-            <div class="flex-1 space-y-2">
-              <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Inicio</label>
-              <input type="time" formControlName="time"
-                     class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+            <div class="flex-1">
+              <app-time-input
+                formControlName="time"
+                label="Hora Inicio"
+              ></app-time-input>
             </div>
-            <div class="flex-1 space-y-2">
-              <label class="text-xs font-bold text-text-dim uppercase tracking-wider">Hora Fin</label>
-              <input type="time" formControlName="endTime"
-                     class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none">
+            <div class="flex-1">
+              <app-time-input
+                formControlName="endTime"
+                label="Hora Fin"
+              ></app-time-input>
             </div>
           </div>
         </div>
@@ -93,6 +95,17 @@
                   placeholder="Ej: El cliente llega 5 min tarde..."
                   class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none resize-none"></textarea>
       </div>
+
+      <!-- Server Error Message -->
+      @if (serverError()) {
+        <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <span class="text-red-500 text-lg">⚠️</span>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-red-500 uppercase tracking-wider">Error al agendar</p>
+            <p class="text-[11px] text-red-400 leading-tight mt-0.5">{{ serverError() }}</p>
+          </div>
+        </div>
+      }
   
     </form>
   </div>
