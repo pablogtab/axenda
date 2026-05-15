@@ -15,15 +15,19 @@ async function bootstrap() {
 
   // ─── CORS ───────────────────────────────────────────────────────────
   app.enableCors({
-    origin: process.env['NODE_ENV'] === 'production' 
-      ? (process.env['FRONTEND_URL'] ?? 'http://localhost:4200')
-      : true,
+    origin: process.env['NODE_ENV'] === 'production'
+      ? (process.env['FRONTEND_URL'] ?? 'https://axenda.ar')
+      : [
+        'http://localhost:4200',
+        'https://development.axenda.ar',
+        process.env['FRONTEND_URL'],
+      ].filter(Boolean) as string[],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',
   })
 
-  // ─── Global Validation Pipe ─────────────────────────────────────────
+  // ─── Global Validation Pipe ──────────────────── ─────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,              // Strip unknown properties

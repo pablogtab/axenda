@@ -1,103 +1,79 @@
-// ─── Subscription System ─────────────────────────────────
-
 model SubscriptionPlan {
-  id                String   @id @default(uuid())
-  code              String   @unique // STARTER, PRO, BUSINESS, ELITE
-  name              String
-  description       String?
-  priceMonthly      Decimal  @db.Decimal(10, 2)
-  priceYearly       Decimal  @db.Decimal(10, 2)
-  currency          String   @default("ARS")
-
-  // Technical Limits
-  maxProfessionals  Int      @default(1)
-  maxBranches       Int      @default(1)
-  maxAppointments   Int      @default(25)
-  maxUsers          Int      @default(1)
-  maxWhatsapp       Int      @default(0)
-  hasReports        Boolean  @default(false)
-  hasOnlinePayments Boolean  @default(false)
-  hasAutoReviews    Boolean  @default(false)
-
-  active            Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Mercado Pago Integration
+  id                    String               @id @default(uuid())
+  code                  String               @unique
+  name                  String
+  description           String?
+  priceMonthly          Decimal              @db.Decimal(10, 2)
+  priceYearly           Decimal              @db.Decimal(10, 2)
+  currency              String               @default("ARS")
+  maxProfessionals      Int                  @default(1)
+  maxBranches           Int                  @default(1)
+  maxAppointments       Int                  @default(25)
+  maxUsers              Int                  @default(1)
+  maxWhatsapp           Int                  @default(0)
+  hasReports            Boolean              @default(false)
+  hasOnlinePayments     Boolean              @default(false)
+  hasAutoReviews        Boolean              @default(false)
+  active                Boolean              @default(true)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
   externalPlanIdMonthly String?
   externalPlanIdYearly  String?
-
-  subscriptions     TenantSubscription[]
+  subscriptions         TenantSubscription[]
 
   @@map("subscription_plans")
 }
 
 model TenantSubscription {
-  id                String   @id @default(uuid())
-  tenantId          String   @unique
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  planId            String
-  plan              SubscriptionPlan @relation(fields: [planId], references: [id])
-  
-  status            SubscriptionStatus @default(ACTIVE)
-  billingCycle      SubscriptionBillingCycle @default(MONTHLY)
-  
-  startDate         DateTime @default(now())
-  endDate           DateTime?
-  
-  // Trial Fields
-  trialEndsAt       DateTime?
-  
-  autoRenew         Boolean  @default(true)
-  
-  externalCustomerId      String?
-  externalSubscriptionId  String?
-  
-  invoices                SubscriptionInvoice[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String                   @id @default(uuid())
+  tenantId               String                   @unique
+  planId                 String
+  status                 SubscriptionStatus       @default(ACTIVE)
+  billingCycle           SubscriptionBillingCycle @default(MONTHLY)
+  startDate              DateTime                 @default(now())
+  endDate                DateTime?
+  trialEndsAt            DateTime?
+  autoRenew              Boolean                  @default(true)
+  externalCustomerId     String?
+  externalSubscriptionId String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  invoices               SubscriptionInvoice[]
+  plan                   SubscriptionPlan         @relation(fields: [planId], references: [id])
+  tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_subscriptions")
 }
 
 model SubscriptionInvoice {
-  id                String   @id @default(uuid())
-  subscriptionId    String
-  subscription      TenantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  
-  amount            Decimal  @db.Decimal(10, 2)
-  currency          String   @default("ARS")
-  status            InvoiceStatus @default(PENDING)
-  
-  paymentDate       DateTime?
+  id                 String             @id @default(uuid())
+  subscriptionId     String
+  amount             Decimal            @db.Decimal(10, 2)
+  currency           String             @default("ARS")
+  status             InvoiceStatus      @default(PENDING)
+  paymentDate        DateTime?
   billingPeriodStart DateTime?
   billingPeriodEnd   DateTime?
-  
-  externalPaymentId String?  // Mercado Pago Payment ID
-  invoiceUrl        String?  // PDF link
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  externalPaymentId  String?
+  invoiceUrl         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  subscription       TenantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@map("subscription_invoices")
 }
 
-// Configuración de Mercado Pago Connect (para que el negocio cobre a sus clientes)
 model TenantPaymentConfig {
-  id                String   @id @default(uuid())
-  tenantId          String   @unique
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  mpAccessToken     String   // Cifrado
-  mpPublicKey       String?
-  mpUserId          String?  // Merchant ID
-  expiresAt         DateTime?
-  
-  active            Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id            String    @id @default(uuid())
+  tenantId      String    @unique
+  mpAccessToken String
+  mpPublicKey   String?
+  mpUserId      String?
+  expiresAt     DateTime?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_payment_configs")
 }

@@ -19,7 +19,7 @@ import { GetAvailabilityDto } from './dto/availability-query.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 
 @ApiTags('Appointments')
 @ApiBearerAuth('access-token')
@@ -34,7 +34,7 @@ export class AppointmentsController {
   @Get('availability')
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Consultar turnos disponibles' })
-  getAvailability(@CurrentUser() user: JwtPayload, @Query() query: GetAvailabilityDto) {
+  getAvailability(@CurrentUser() user: AuthenticatedUser, @Query() query: GetAvailabilityDto) {
     return this.appointmentsService.getAvailability(user.tenantId, query)
   }
 
@@ -44,7 +44,7 @@ export class AppointmentsController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
   @ApiOperation({ summary: 'Listar turnos del tenant con filtros' })
   findAll(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Query() query: { startDate?: string; endDate?: string; branchId?: string; statuses?: string[] }
   ) {
     return this.appointmentsService.findAll(user.tenantId, query)
@@ -53,14 +53,14 @@ export class AppointmentsController {
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
   @ApiOperation({ summary: 'Obtener detalle de un turno' })
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.appointmentsService.findOne(user.tenantId, id)
   }
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Crear un nuevo turno desde panel (manual/sobreturno)' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateAppointmentDto) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(user.tenantId, user.sub, dto)
   }
 
@@ -68,7 +68,7 @@ export class AppointmentsController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Actualizar datos generales de un turno' })
   update(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: any,
   ) {
@@ -79,7 +79,7 @@ export class AppointmentsController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
   @ApiOperation({ summary: 'Cambiar el estado de un turno (ej. a COMPLETADO)' })
   changeStatus(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateAppointmentStatusDto,
   ) {
@@ -90,7 +90,7 @@ export class AppointmentsController {
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Cancelar turno (Soft Delete)' })
-  cancel(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  cancel(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.appointmentsService.cancel(user.tenantId, id, user.sub)
   }
 }

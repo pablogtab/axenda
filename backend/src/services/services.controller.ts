@@ -18,7 +18,7 @@ import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 
 @ApiTags('Services')
 @ApiBearerAuth('access-token')
@@ -32,20 +32,20 @@ export class ServicesController {
 
   @Get('categories')
   @ApiOperation({ summary: 'Listar todas las categorías del tenant' })
-  findAllCategories(@CurrentUser() user: JwtPayload) {
+  findAllCategories(@CurrentUser() user: AuthenticatedUser) {
     return this.servicesService.findAllCategories(user.tenantId)
   }
 
   @Post('categories')
   @ApiOperation({ summary: 'Crear una nueva categoría' })
-  createCategory(@CurrentUser() user: JwtPayload, @Body() dto: CreateCategoryDto) {
+  createCategory(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateCategoryDto) {
     return this.servicesService.createCategory(user.tenantId, dto)
   }
 
   @Patch('categories/:id')
   @ApiOperation({ summary: 'Actualizar una categoría existente' })
   updateCategory(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateCategoryDto,
   ) {
@@ -55,7 +55,7 @@ export class ServicesController {
   @Delete('categories/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Desactivar una categoría (soft delete)' })
-  deactivateCategory(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  deactivateCategory(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.servicesService.deactivateCategory(user.tenantId, id)
   }
 
@@ -63,32 +63,32 @@ export class ServicesController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos los servicios del tenant' })
-  findAll(@CurrentUser() user: JwtPayload) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.servicesService.findAll(user.tenantId)
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener detalle de un servicio' })
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.servicesService.findOne(user.tenantId, id)
   }
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo servicio' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateServiceDto) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateServiceDto) {
     return this.servicesService.create(user.tenantId, dto)
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un servicio existente' })
-  update(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateServiceDto) {
+  update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateServiceDto) {
     return this.servicesService.update(user.tenantId, id, dto)
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Desactivar un servicio (soft delete)' })
-  deactivate(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  deactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.servicesService.deactivate(user.tenantId, id)
   }
 }

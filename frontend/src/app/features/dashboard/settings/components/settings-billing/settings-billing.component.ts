@@ -1,12 +1,14 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { PlansGridComponent } from '../../../subscription/plans-grid.component';
 
 @Component({
   selector: 'app-settings-billing',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterModule, IconComponent],
   template: `
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-6">
       <div class="flex justify-between items-center">
@@ -113,16 +115,16 @@ import { IconComponent } from '@shared/components/icon/icon.component';
           </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 relative z-10 w-full md:w-auto">
-          <button class="px-8 py-4 bg-surface-subtle hover:bg-surface-subtle-hover border border-border rounded-2xl text-sm font-bold text-text-main transition-all cursor-pointer">
-            Comparar Planes
-          </button>
-          <button class="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-2xl text-sm font-bold shadow-xl shadow-primary/20 transition-all cursor-pointer">
+          <button routerLink="/dashboard/subscription/plans" class="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-2xl text-sm font-bold shadow-xl shadow-primary/20 transition-all cursor-pointer text-center">
             Cambiar de Plan
           </button>
         </div>
         <!-- Background glow -->
         <div class="absolute right-0 bottom-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full translate-x-1/2 translate-y-1/2"></div>
       </div>
+
+      <!-- Componente de Planes (Movido a su propia página) -->
+      
     </div>
   `
 })

@@ -21,6 +21,7 @@ import { StorageModule } from '../common/storage/storage.module'
 import { MailModule } from '../mail/mail.module'
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
 import { WhatsappModule } from '../whatsapp/whatsapp.module'
+import { MercadoPagoModule } from '../mercadopago/mercadopago.module'
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module'
     MailModule,
     SubscriptionsModule,
     WhatsappModule,
+    MercadoPagoModule,
   ],
 
   providers: [

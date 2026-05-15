@@ -1,36 +1,30 @@
-// ─── ServiceCategory ───────────────────────────────────
-
 model ServiceCategory {
-  id       String  @id @default(uuid())
+  id       String    @id @default(uuid())
   tenantId String
-  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name     String
-  active   Boolean @default(true)
-
+  active   Boolean   @default(true)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   services Service[]
 
   @@map("service_categories")
 }
 
-// ─── Service ───────────────────────────────────────────
-
 model Service {
-  id          String           @id @default(uuid())
-  tenantId    String
-  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  categoryId  String?
-  category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  name        String
-  description String?
-  duration    Int // duración en minutos
-  price       Decimal?         @db.Decimal(10, 2)
-  color       String? // color hex para el calendario
-  active      Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  professionals ProfessionalService[]
+  id            String                @id @default(uuid())
+  tenantId      String
+  categoryId    String?
+  name          String
+  description   String?
+  duration      Int
+  price         Decimal?              @db.Decimal(10, 2)
+  color         String?
+  active        Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
   appointments  Appointment[]
+  professionals ProfessionalService[]
+  category      ServiceCategory?      @relation(fields: [categoryId], references: [id])
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("services")
 }

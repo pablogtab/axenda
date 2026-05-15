@@ -1,42 +1,35 @@
-// ─── Professional ──────────────────────────────────────
-
 model Professional {
-  id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId    String?  @unique
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  firstName String
-  lastName  String
-  bio       String?
-  photoUrl  String?
-  color     String? // Color en el calendario (hex)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  branches     ProfessionalBranch[]
-  services     ProfessionalService[]
+  id           String                  @id @default(uuid())
+  tenantId     String
+  userId       String?                 @unique
+  firstName    String
+  lastName     String
+  bio          String?
+  photoUrl     String?
+  color        String?
+  active       Boolean                 @default(true)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  appointments Appointment[]
   availability Availability[]
   exceptions   AvailabilityException[]
-  appointments Appointment[]
+  branches     ProfessionalBranch[]
+  services     ProfessionalService[]
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User?                   @relation(fields: [userId], references: [id])
 
   @@map("professionals")
 }
 
-// ─── ProfessionalBranch (N:M) ──────────────────────────
-
 model ProfessionalBranch {
   professionalId String
   branchId       String
-  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   branch         Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@id([professionalId, branchId])
   @@map("professional_branches")
 }
-
-// ─── ProfessionalService (N:M) ─────────────────────────
 
 model ProfessionalService {
   professionalId String

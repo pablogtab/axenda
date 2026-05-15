@@ -8,6 +8,7 @@ import { BranchesListComponent } from './branches/branches-list/branches-list.co
 import { ProfessionalsListComponent } from './professionals/professionals-list/professionals-list.component';
 import { ProfessionalAvailabilityComponent } from './professionals/professional-availability/professional-availability.component';
 import { SettingsComponent } from './settings/settings.component';
+import { SubscriptionSuccessComponent } from './subscription/subscription-success.component';
 
 export const dashboardRoutes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -30,5 +31,15 @@ export const dashboardRoutes: Routes = [
     path: 'settings',
     title: 'Axenda - Configuración',
     component: SettingsComponent
+  },
+  {
+    path: 'subscription/plans',
+    title: 'Axenda - Planes y Precios',
+    loadComponent: () => import('./subscription/subscription-plans.component').then(m => m.SubscriptionPlansComponent)
+  },
+  {
+    path: 'subscription/success',
+    title: 'Axenda - Suscripción Exitosa',
+    component: SubscriptionSuccessComponent
   }
 ];

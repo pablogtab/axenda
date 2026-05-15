@@ -106,6 +106,36 @@ export class SubscriptionService {
   }
 
   /**
+   * Crea un link de pago para la suscripción
+   */
+  async checkout(planId: string, billingCycle: 'MONTHLY' | 'YEARLY'): Promise<{ initPoint: string }> {
+    return firstValueFrom(
+      this.http.post<{ initPoint: string }>(`${this.apiUrl}/checkout`, {
+        planId,
+        billingCycle
+      })
+    );
+  }
+
+  /**
+   * Obtiene los planes disponibles
+   */
+  async getPlans(): Promise<any[]> {
+    return firstValueFrom(
+      this.http.get<any[]>(`${this.apiUrl}/plans`)
+    );
+  }
+
+  /**
+   * Verifica activamente el estado de un pago o suscripción de Mercado Pago
+   */
+  async verifySubscription(paymentId: string): Promise<any> {
+    return firstValueFrom(
+      this.http.get<any>(`${this.apiUrl}/verify?payment_id=${paymentId}`)
+    );
+  }
+
+  /**
    * Limpia el estado (útil al hacer logout)
    */
   clear() {

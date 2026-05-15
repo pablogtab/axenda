@@ -1,61 +1,47 @@
-// ─── WhatsApp Integration ─────────────────────────────────
-
 model TenantWhatsappConfig {
-  id                String   @id @default(uuid())
-  tenantId          String   @unique
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  wabaId            String?  // WhatsApp Business Account ID
-  phoneId           String?  // Phone Number ID
-  accessToken       String?  // Token de acceso de larga duración (Cifrado)
-  verified          Boolean  @default(false)
-  
-  // Mapeo de Plantillas Activas
+  id                     String   @id @default(uuid())
+  tenantId               String   @unique
+  wabaId                 String?
+  phoneId                String?
+  accessToken            String?
+  verified               Boolean  @default(false)
   confirmationTemplateId String?
   reminderTemplateId     String?
   cancellationTemplateId String?
-
-  // Estadísticas de uso mensual
-  messagesSentMonth Int      @default(0)
-  lastResetDate     DateTime @default(now())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  messagesSentMonth      Int      @default(0)
+  lastResetDate          DateTime @default(now())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_whatsapp_configs")
 }
 
-// Catálogo de Plantillas (Globales y Personalizadas)
 model WhatsappTemplate {
-  id                String   @id @default(uuid())
-  tenantId          String?  // Null para plantillas globales de Axenda
-  wabaId            String?  // ID de la cuenta de Meta donde reside la plantilla
-  name              String   // Nombre técnico para Meta
-  body              String   // Texto con variables {{clientName}}, etc.
-  category          String   @default("UTILITY") // UTILITY, MARKETING
-  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  language          String   @default("es_AR")
-  
-  // Identifica si esta plantilla personalizada reemplaza a una global de Axenda
-  replaces          String?  // Ej: "axenda_booking_confirmation"
-
+  id        String   @id @default(uuid())
+  tenantId  String?
+  name      String
+  body      String
+  category  String   @default("UTILITY")
+  status    String   @default("PENDING")
+  language  String   @default("es_AR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  replaces  String?
+  wabaId    String?
 
   @@unique([name, wabaId])
   @@map("whatsapp_templates")
 }
 
-// Log de mensajes para auditoría y facturación
 model WhatsappMessageLog {
-  id                String   @id @default(uuid())
-  tenantId          String
-  phoneNumber       String
-  templateId        String
-  status            String   // DELIVERED, READ, FAILED
-  metaMessageId     String?  // ID devuelto por Meta
-  
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  tenantId      String
+  phoneNumber   String
+  templateId    String
+  status        String
+  metaMessageId String?
+  createdAt     DateTime @default(now())
 
   @@map("whatsapp_message_logs")
 }

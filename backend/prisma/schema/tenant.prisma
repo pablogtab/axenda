@@ -1,68 +1,57 @@
-// ─── Tenant (Organización) ─────────────────────────────
-
 model Tenant {
-  id                String     @id @default(uuid())
-  name              String
-  slug              String     @unique
-  mode              TenantMode @default(GENERIC)
-  timezone          String     @default("America/Argentina/Buenos_Aires")
-  currency          String     @default("ARS")
-  logoUrl           String?
-  bannerUrl         String?
-  primaryColor      String?    @default("#6366f1")
-  primaryHoverColor String?    @default("#4f46e5")
-  accentColor       String?    @default("#a855f7")
-  backgroundColor   String?    @default("#0a0b14")
-  textColor         String?    @default("#f8fafc")
-  active            Boolean    @default(true)
-  publicSlug        String?    @unique
-  onboardingCompleted Boolean  @default(false)
-
-  // Business Contact Info
-  category          String?
-  phone             String?
-  email             String?
-  address           String?
-
-  // Public View Configurations
-  publicShowBranchSelection       Boolean @default(true)
-  publicShowProfessionalSelection Boolean @default(true)
-  publicMaxOverlapMins            Int     @default(15)
-  publicMaxBookingDays            Int     @default(30)
-  publicMinBookingTime            String  @default("1h")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  branches          Branch[]
-  users             User[]
-  professionals     Professional[]
-  serviceCategories ServiceCategory[]
-  services          Service[]
-  clients           Client[]
-  appointments      Appointment[]
-  subscription      TenantSubscription?
-  paymentConfig     TenantPaymentConfig?
-  whatsappConfig    TenantWhatsappConfig?
+  id                              String                @id @default(uuid())
+  name                            String
+  slug                            String                @unique
+  mode                            TenantMode            @default(GENERIC)
+  timezone                        String                @default("America/Argentina/Buenos_Aires")
+  currency                        String                @default("ARS")
+  logoUrl                         String?
+  active                          Boolean               @default(true)
+  createdAt                       DateTime              @default(now())
+  updatedAt                       DateTime              @updatedAt
+  bannerUrl                       String?
+  publicSlug                      String?               @unique
+  accentColor                     String?               @default("#a855f7")
+  backgroundColor                 String?               @default("#0a0b14")
+  primaryColor                    String?               @default("#6366f1")
+  primaryHoverColor               String?               @default("#4f46e5")
+  textColor                       String?               @default("#f8fafc")
+  publicShowBranchSelection       Boolean               @default(true)
+  publicShowProfessionalSelection Boolean               @default(true)
+  publicMaxOverlapMins            Int                   @default(15)
+  publicMaxBookingDays            Int                   @default(30)
+  publicMinBookingTime            String                @default("1h")
+  onboardingCompleted             Boolean               @default(false)
+  address                         String?
+  category                        String?
+  email                           String?
+  phone                           String?
+  appointments                    Appointment[]
+  branches                        Branch[]
+  clients                         Client[]
+  professionals                   Professional[]
+  serviceCategories               ServiceCategory[]
+  services                        Service[]
+  paymentConfig                   TenantPaymentConfig?
+  subscription                    TenantSubscription?
+  whatsappConfig                  TenantWhatsappConfig?
+  users                           User[]
 
   @@map("tenants")
 }
 
-// ─── Branch (Sucursal) ─────────────────────────────────
-
 model Branch {
-  id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  name      String
-  address   String?
-  phone     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  professionals ProfessionalBranch[]
+  id            String               @id @default(uuid())
+  tenantId      String
+  name          String
+  address       String?
+  phone         String?
+  active        Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   appointments  Appointment[]
+  tenant        Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  professionals ProfessionalBranch[]
 
   @@map("branches")
 }

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 
 @ApiTags('WhatsApp')
 @Controller('whatsapp')
@@ -23,7 +23,7 @@ export class WhatsappController {
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Obtener configuración de WhatsApp del tenant' })
-  getConfig(@CurrentUser() user: JwtPayload) {
+  getConfig(@CurrentUser() user: AuthenticatedUser) {
     return this.whatsappService.getTenantWhatsappConfig(user.tenantId);
   }
 
@@ -32,7 +32,7 @@ export class WhatsappController {
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar configuración de WhatsApp' })
-  updateConfig(@CurrentUser() user: JwtPayload, @Body() body: any) {
+  updateConfig(@CurrentUser() user: AuthenticatedUser, @Body() body: any) {
     return this.whatsappService.updateConfig(user.tenantId, body);
   }
 
@@ -41,7 +41,7 @@ export class WhatsappController {
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Finalizar flujo de embedded signup de Meta' })
-  embeddedSignup(@CurrentUser() user: JwtPayload, @Body('code') code: string) {
+  embeddedSignup(@CurrentUser() user: AuthenticatedUser, @Body('code') code: string) {
     return this.whatsappService.exchangeCodeForToken(user.tenantId, code);
   }
 
