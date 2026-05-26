@@ -6,6 +6,7 @@ import { AppointmentsService, AppointmentStatus } from '@services/appointments.s
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
+import { TenantsService } from '@services/tenants.service';
 import { format } from 'date-fns';
 import { createLocalDate, toLocalDateStr, toLocalTimeStr } from '@core/utils/date-utils';
 import { forkJoin } from 'rxjs';
@@ -45,6 +46,7 @@ export class AppointmentFormComponent implements OnInit {
   private servicesService = inject(ServicesService);
   private clientsService = inject(ClientsService);
   private dialog = inject(Dialog);
+  public tenantsService = inject(TenantsService);
 
   form!: FormGroup;
   professionals = signal<Professional[]>([]);
@@ -138,7 +140,8 @@ export class AppointmentFormComponent implements OnInit {
       endTime: [defaultEndTime, Validators.required],
       status: [AppointmentStatus.PENDING],
       notes: [''],
-      internalNotes: ['']
+      internalNotes: [''],
+      notifyClient: [true]
     });
 
     // Auto-calcular hora de fin al cambiar hora de inicio o servicio
@@ -290,7 +293,8 @@ export class AppointmentFormComponent implements OnInit {
       startTime: start.toISOString(),
       status: val.status,
       notes: val.notes,
-      internalNotes: val.internalNotes
+      internalNotes: val.internalNotes,
+      notifyClient: val.notifyClient
     };
 
     const request = this.isEditMode()

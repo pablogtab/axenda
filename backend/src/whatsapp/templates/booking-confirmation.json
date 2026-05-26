@@ -1,6 +1,13 @@
 {
-  "name": "axenda_booking_confirmation",
+  "name": "axenda_booking_confirmation_v2",
   "category": "UTILITY",
   "language": "es_AR",
-  "body": "Hola {{clientName}}, ¡tu turno ha sido reservado! Nos vemos el día {{appointmentDate}} a las {{appointmentTime}}. ¡Te esperamos!"
+  "body": "*Reserva Confirmada* ✨\n\nHola *{{clientName}}*, tu turno en *{{businessName}}* fue agendado con éxito.\n\n🔹 *Servicio:* {{serviceName}}\n📅 *Fecha:* {{appointmentDate}}\n🕒 *Hora:* {{appointmentTime}}\n📍 *Lugar:* {{branchAddress}}\n\n¡Te esperamos!",
+  "buttons": [
+    {
+      "type": "URL",
+      "text": "Cancelar / Reprogramar",
+      "url": "https://axenda.ar/booking/cancel/{{appointmentId}}"
+    }
+  ]
 }

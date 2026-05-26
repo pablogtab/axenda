@@ -1,0 +1,6 @@
+{
+  "name": "axenda_booking_cancellation_v2",
+  "category": "UTILITY",
+  "language": "es_AR",
+  "body": "*Turno Cancelado* 🚫\n\nHola *{{clientName}}*, tu turno para el *{{appointmentDate}}* a las *{{appointmentTime}}* en *{{businessName}}* fue cancelado."
+}

@@ -254,6 +254,13 @@ export class AppointmentsService {
       }
     })
 
+    if (dto.status === 'CANCELLED' && appointment.status !== 'CANCELLED') {
+      this.eventEmitter.emit('appointment.cancelled', {
+        appointment: updated,
+        notifyClient: dto.notifyClient !== false
+      })
+    }
+
     return updated
   }
 
@@ -276,7 +283,9 @@ export class AppointmentsService {
           branchId: dto.branchId,
           startTime: start,
           endTime: end,
-          notes: dto.notes
+          notes: dto.notes,
+          internalNotes: dto.internalNotes,
+          status: dto.status,
         },
         include: { client: true, professional: true, service: true, branch: true }
       })
@@ -285,15 +294,24 @@ export class AppointmentsService {
         data: {
           appointmentId: id,
           changedBy: userId,
+          oldStatus: appointment.status,
+          newStatus: dto.status || appointment.status,
           notes: 'Turno modificado desde administración'
         }
       })
+
+      if (dto.status === 'CANCELLED' && appointment.status !== 'CANCELLED') {
+        this.eventEmitter.emit('appointment.cancelled', {
+          appointment: updated,
+          notifyClient: dto.notifyClient !== false
+        })
+      }
 
       return updated
     })
   }
 
-  async cancel(tenantId: string, id: string, userId: string) {
-    return this.changeStatus(tenantId, id, userId, { status: 'CANCELLED' })
+  async cancel(tenantId: string, id: string, userId: string, notifyClient = true) {
+    return this.changeStatus(tenantId, id, userId, { status: 'CANCELLED', notifyClient })
   }
 }

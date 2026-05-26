@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { AppointmentStatus } from '@prisma/client'
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator'
+import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator'
 
 export class CreateAppointmentDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -37,6 +37,11 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsEnum(AppointmentStatus)
   status?: AppointmentStatus
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  notifyClient?: boolean
 }
 
 export class UpdateAppointmentStatusDto {
@@ -48,4 +53,9 @@ export class UpdateAppointmentStatusDto {
   @IsOptional()
   @IsString()
   notes?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  notifyClient?: boolean
 }

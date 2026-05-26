@@ -29,6 +29,10 @@ export interface Tenant {
   publicMaxOverlapMins?: number;
   publicMaxBookingDays?: number;
   publicMinBookingTime?: string;
+  whatsappReminder?: boolean;
+  confirmEmail?: boolean;
+  allowReschedule?: boolean;
+  whatsappCancellation?: boolean;
   services?: any[];
   branches?: any[];
 }
@@ -56,6 +60,10 @@ export interface UpdateTenantDto {
   publicMaxBookingDays?: number;
   publicMinBookingTime?: string;
   onboardingCompleted?: boolean;
+  whatsappReminder?: boolean;
+  confirmEmail?: boolean;
+  allowReschedule?: boolean;
+  whatsappCancellation?: boolean;
 }
 
 @Injectable({

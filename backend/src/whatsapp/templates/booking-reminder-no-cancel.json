@@ -1,0 +1,6 @@
+{
+  "name": "axenda_booking_reminder_no_cancel_v2",
+  "category": "UTILITY",
+  "language": "es_AR",
+  "body": "*Recordatorio de Turno* 🔔\n\nHola *{{clientName}}*, te recordamos tu próximo turno en *{{businessName}}*.\n\n🔹 *Servicio:* {{serviceName}}\n📅 *Fecha:* {{appointmentDate}}\n🕒 *Hora:* {{appointmentTime}}\n📍 *Lugar:* {{branchAddress}}\n\n¡Te esperamos!"
+}

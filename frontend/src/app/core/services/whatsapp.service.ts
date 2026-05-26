@@ -16,6 +16,17 @@ export interface WhatsappConfig {
   cancellationTemplateId?: string;
 }
 
+export interface WhatsappTemplate {
+  id: string;
+  tenantId?: string;
+  name: string;
+  body: string;
+  buttons?: any;
+  category: string;
+  status: string;
+  language: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -33,5 +44,9 @@ export class WhatsappService {
 
   embeddedSignup(code: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/embedded-signup`, { code });
+  }
+
+  getTemplates(): Observable<WhatsappTemplate[]> {
+    return this.http.get<WhatsappTemplate[]>(`${this.apiUrl}/templates`);
   }
 }

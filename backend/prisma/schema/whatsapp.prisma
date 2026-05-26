@@ -22,6 +22,7 @@ model WhatsappTemplate {
   tenantId  String?
   name      String
   body      String
+  buttons   Json?
   category  String   @default("UTILITY")
   status    String   @default("PENDING")
   language  String   @default("es_AR")
@@ -40,6 +41,7 @@ model WhatsappMessageLog {
   phoneNumber   String
   templateId    String
   status        String
+  body          String?
   metaMessageId String?
   createdAt     DateTime @default(now())
 

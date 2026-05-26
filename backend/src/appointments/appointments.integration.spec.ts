@@ -555,6 +555,40 @@ describe('Appointments — Integration', () => {
   // ── Status Changes ─────────────────────────────────────────────────────────
 
   describe('Status changes & Audit Trail', () => {
+    it('should update appointment details including status and internalNotes', async () => {
+      const startTime = new Date(queryDate)
+      startTime.setUTCHours(10, 0, 0, 0)
+      
+      const apptRes = await request(app.getHttpServer())
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: startTime.toISOString(),
+        })
+      const tempId = apptRes.body.data.id
+
+      const updateRes = await request(app.getHttpServer())
+        .patch(`/api/appointments/${tempId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: startTime.toISOString(),
+          status: 'CONFIRMED',
+          internalNotes: 'VIP Customer'
+        })
+        .expect(200)
+
+      expect(updateRes.body.data.status).toBe('CONFIRMED')
+      expect(updateRes.body.data.internalNotes).toBe('VIP Customer')
+    })
+
     it('should change status to CONFIRMED', async () => {
       const res = await request(app.getHttpServer())
         .patch(`/api/appointments/${appointmentId}/status`)

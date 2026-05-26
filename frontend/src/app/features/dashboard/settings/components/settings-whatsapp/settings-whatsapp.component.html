@@ -4,111 +4,205 @@
       <app-icon name="chat" class="text-[#25D366] text-base"></app-icon> WhatsApp Business
     </h2>
     <div class="px-3 py-1 rounded-full bg-[#25D366]/10 text-[#25D366] text-[10px] font-black uppercase tracking-wider border border-[#25D366]/20">
-      Cloud API
+      Servicio Axenda
     </div>
   </div>
 
-  <!-- Main Connection Card -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="glass p-8 rounded-[2.5rem] border border-border relative overflow-hidden group">
-      <!-- Background decoration -->
-      <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#25D366]/10 blur-[80px] rounded-full group-hover:bg-[#25D366]/20 transition-all duration-700"></div>
+  <!-- Main Info Row -->
+  <!-- Usage & Plan Info -->
+  <div class="glass p-8 rounded-[2.5rem] border border-border flex flex-col justify-between">
+    <div>
+      <h4 class="text-xs font-black text-text-dim uppercase tracking-widest mb-6">Uso del Mes</h4>
       
-      <div class="relative z-10">
-        <div class="flex items-center gap-4 mb-8">
-          <div class="w-14 h-14 rounded-2xl bg-[#25D366]/10 flex items-center justify-center border border-[#25D366]/20 shadow-inner">
-            <app-icon name="add_to_home_screen" class="text-[#25D366] text-3xl"></app-icon>
+      <div class="space-y-6">
+        <div class="space-y-2">
+          <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+            <span class="text-text-muted">Mensajes Enviados</span>
+            <span class="text-text-main">
+              {{ subService.usage()?.whatsappMonth || 0 }} / 
+              {{ subService.limits()?.maxWhatsapp === 999999 ? '∞' : (subService.limits()?.maxWhatsapp || 0) }}
+            </span>
           </div>
-          <div>
-            <h3 class="text-2xl font-black text-text-main tracking-tight">Conecta tu número</h3>
-            <p class="text-xs text-text-muted mt-1">Envía recordatorios automáticos desde tu propio número.</p>
+          <div class="h-2 w-full bg-surface-subtle rounded-full overflow-hidden p-[2px]">
+            <div class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.5)] transition-all duration-1000" 
+              [style.width.%]="subService.limits()?.maxWhatsapp === 999999 ? 0 : ((subService.usage()?.whatsappMonth || 0) / (subService.limits()?.maxWhatsapp || 1)) * 100"></div>
           </div>
-        </div>
-
-        <div class="space-y-6 mb-8">
-          <div class="flex items-start gap-3">
-            <app-icon name="check_circle" class="text-[#25D366] text-lg"></app-icon>
-            <div>
-              <p class="text-sm font-bold text-text-main">Configuración Instantánea</p>
-              <p class="text-[11px] text-text-muted">Sin códigos técnicos, 100% automático.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3">
-            <app-icon name="check_circle" class="text-[#25D366] text-lg"></app-icon>
-            <div>
-              <p class="text-sm font-bold text-text-main">Confirmaciones Automáticas</p>
-              <p class="text-[11px] text-text-muted">Tus clientes reciben el turno al instante.</p>
-            </div>
+          <div class="flex justify-between text-[9px] text-text-dim font-bold uppercase tracking-wider mt-1.5">
+            <span></span>
+            <span *ngIf="nextResetDate()">Próximo reinicio: {{ nextResetDate() | date:'dd/MM/yyyy' }}</span>
           </div>
         </div>
 
-        <button 
-          (click)="connect()"
-          class="w-full py-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl text-sm font-black shadow-xl shadow-[#25D366]/20 transition-all cursor-pointer flex items-center justify-center gap-2">
-          <app-icon name="dock_to_left"></app-icon>
-          CONECTAR WHATSAPP
-        </button>
+        <div class="p-4 rounded-2xl bg-surface-subtle/50 border border-border/50">
+          <div class="flex items-center gap-3">
+            <app-icon name="info" class="text-primary text-base"></app-icon>
+            <p class="text-[11px] text-text-muted leading-relaxed">
+              Tu plan <b>{{ subService.plan()?.name }}</b> incluye 
+              <b>{{ subService.limits()?.maxWhatsapp }}</b> mensajes mensuales.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Usage & Plan Info -->
-    <div class="glass p-8 rounded-[2.5rem] border border-border flex flex-col justify-between">
-      <div>
-        <h4 class="text-xs font-black text-text-dim uppercase tracking-widest mb-6">Uso del Mes</h4>
+  <!-- Interactive Templates Selection & Preview Section -->
+  <div class="glass p-8 rounded-[2.5rem] border border-border space-y-6">
+    <div>
+      <h3 class="text-xl font-black text-text-main tracking-tight">Plantillas de Mensajes</h3>
+      <p class="text-xs text-text-muted mt-1">Selecciona una plantilla para previsualizar exactamente cómo la recibirán tus clientes.</p>
+    </div>
+
+    <div *ngIf="loading()" class="py-12 flex flex-col items-center justify-center gap-3 text-text-muted">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <p class="text-xs font-bold">Cargando plantillas...</p>
+    </div>
+
+    <!-- Main Interactive Grid -->
+    <div *ngIf="!loading() && templates().length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Templates List Selection (Left column: 5/12) -->
+      <div class="lg:col-span-6 space-y-3">
+        <h4 class="text-xs font-black text-text-dim uppercase tracking-wider mb-4">Plantillas Disponibles</h4>
         
-        <div class="space-y-8">
-          <div class="space-y-3">
-            <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-              <span class="text-text-muted">Mensajes Enviados</span>
-              <span class="text-text-main">
-                {{ subService.usage()?.whatsappMonth || 0 }} / 
-                {{ subService.limits()?.maxWhatsapp === 999999 ? '∞' : (subService.limits()?.maxWhatsapp || 0) }}
+        <div *ngFor="let template of templates()" 
+             (click)="selectTemplate(template)"
+             class="p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-4 hover:bg-surface-subtle/50"
+             [class.bg-primary/5]="selectedTemplate()?.id === template.id"
+             [class.border-primary/30]="selectedTemplate()?.id === template.id"
+             [class.bg-surface-subtle/20]="selectedTemplate()?.id !== template.id"
+             [class.border-border]="selectedTemplate()?.id !== template.id">
+          
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+               [class.bg-primary/10]="selectedTemplate()?.id === template.id"
+               [class.border-primary/20]="selectedTemplate()?.id === template.id"
+               [class.bg-surface-subtle]="selectedTemplate()?.id !== template.id"
+               [class.border-border]="selectedTemplate()?.id !== template.id">
+            <app-icon [name]="getFriendlyIcon(template.name)" 
+                      [class.text-primary]="selectedTemplate()?.id === template.id"
+                      [class.text-text-muted]="selectedTemplate()?.id !== template.id"
+                      class="text-base"></app-icon>
+          </div>
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center gap-2">
+              <p class="text-sm font-bold truncate"
+                 [class.text-text-main]="selectedTemplate()?.id === template.id"
+                 [class.text-text-muted]="selectedTemplate()?.id !== template.id">
+                {{ getFriendlyName(template.name) }}
+              </p>
+              
+              <span class="shrink-0 px-2 py-0.5 rounded text-[8px] font-bold uppercase" 
+                [class.bg-[#25D366]/10]="template.status === 'APPROVED'"
+                [class.text-[#25D366]]="template.status === 'APPROVED'"
+                [class.bg-yellow-500/10]="template.status === 'PENDING'"
+                [class.text-yellow-500]="template.status === 'PENDING'">
+                {{ template.status === 'APPROVED' ? 'Aprobada' : 'Pendiente' }}
               </span>
             </div>
-            <div class="h-2 w-full bg-surface-subtle rounded-full overflow-hidden p-[2px]">
-              <div class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.5)] transition-all duration-1000" 
-                [style.width.%]="subService.limits()?.maxWhatsapp === 999999 ? 0 : ((subService.usage()?.whatsappMonth || 0) / (subService.limits()?.maxWhatsapp || 1)) * 100"></div>
-            </div>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-surface-subtle/50 border border-border/50">
-            <div class="flex items-center gap-3">
-              <app-icon name="info" class="text-primary text-lg"></app-icon>
-              <p class="text-[11px] text-text-muted leading-relaxed">
-                Tu plan actual <b>{{ subService.plan()?.name }}</b> incluye 
-                <b>{{ subService.limits()?.maxWhatsapp }}</b> mensajes mensuales. Los mensajes de respuesta (Servicio) son gratuitos.
-              </p>
-            </div>
+            <p class="text-[11px] text-text-dim mt-1 leading-relaxed">
+              {{ getFriendlyDescription(template.name) }}
+            </p>
           </div>
         </div>
       </div>
 
-      <div class="mt-6 pt-6 border-t border-border flex items-center justify-between">
-        <span class="text-[10px] font-bold text-text-dim uppercase tracking-wider">Estado de cuenta Meta</span>
-        <span class="flex items-center gap-1.5 text-[10px] font-black text-red-500">
-          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-          DESCONECTADO
-        </span>
-      </div>
-    </div>
-  </div>
+      <!-- Smartphone Preview Mockup (Right column: 6/12) -->
+      <div class="lg:col-span-6 flex justify-center">
+        <!-- Smartphone Container -->
+        <div class="w-full max-w-[340px] rounded-[3.25rem] border-[10px] border-[#1e222b] bg-[#0c1317] shadow-2xl relative overflow-hidden flex flex-col aspect-[9/18.5] min-h-[580px] shrink-0">
+          <!-- Smartphone Notch / Camera Cutout -->
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1e222b] rounded-b-2xl z-50 flex items-center justify-center">
+            <div class="w-3 h-3 rounded-full bg-[#101216] border border-[#2f3542]"></div>
+          </div>
 
-  <!-- Templates Preview Section (Locked) -->
-  <div class="glass p-8 rounded-[2.5rem] border border-border opacity-50 grayscale pointer-events-none">
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h3 class="text-xl font-black text-text-main tracking-tight">Plantillas de Mensajes</h3>
-        <p class="text-xs text-text-muted mt-1">Configura el contenido de tus recordatorios.</p>
-      </div>
-      <div class="px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-wider border border-accent/20">
-        Próximamente
-      </div>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="p-6 rounded-3xl bg-surface-subtle/30 border border-dashed border-border flex flex-col items-center justify-center text-center gap-3 min-h-[150px]">
-        <app-icon name="lock" class="text-text-dim text-3xl"></app-icon>
-        <p class="text-xs font-bold text-text-muted">Conecta tu cuenta para gestionar plantillas</p>
+          <!-- Smartphone Status Bar -->
+          <div class="px-6 pt-1 pb-1 bg-[#1f2c34] flex justify-between items-center text-[10px] font-semibold text-white/80 z-20 select-none">
+            <span>17:45</span>
+            <div class="flex items-center gap-1.5">
+              <app-icon name="wifi" class="text-[10px]"></app-icon>
+              <app-icon name="signal_cellular_4_bar" class="text-[10px]"></app-icon>
+              <app-icon name="battery_full" class="text-[10px]"></app-icon>
+            </div>
+          </div>
+
+          <!-- WhatsApp Header -->
+          <div class="px-4 py-3 bg-[#1f2c34] border-b border-[#2a3942] flex items-center gap-2.5 z-20 shadow-md">
+            <app-icon name="arrow_back" class="text-white text-base cursor-pointer"></app-icon>
+            
+            <!-- Avatar -->
+            <div class="w-9 h-9 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center text-white shrink-0 relative">
+              <app-icon name="chat" class="text-base text-[#25D366]"></app-icon>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#25D366] border-2 border-[#1f2c34]"></span>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1">
+                <span class="text-xs font-bold text-white truncate">Axenda</span>
+                <app-icon name="verified" class="text-[10px] text-[#53bdeb]"></app-icon>
+              </div>
+              <span class="text-[9px] text-white/60 block -mt-0.5">Cuenta oficial</span>
+            </div>
+
+            <!-- Header Action Icons -->
+            <div class="flex items-center gap-3 text-white/90">
+              <app-icon name="videocam" class="text-base"></app-icon>
+              <app-icon name="call" class="text-sm"></app-icon>
+              <app-icon name="more_vert" class="text-base"></app-icon>
+            </div>
+          </div>
+
+          <!-- WhatsApp Chat Window / Background Wallpaper -->
+          <div class="flex-1 p-4 overflow-y-auto flex flex-col justify-end gap-4 relative" 
+               style="background-color: #0b141a; background-image: radial-gradient(rgba(32,44,51,0.6) 1px, transparent 0); background-size: 16px 16px;">
+            
+            <!-- Date Divider -->
+            <div class="self-center px-3 py-1 rounded-lg bg-[#182229] border border-[#222d34] text-[9px] font-semibold text-[#8696a0] uppercase tracking-wider mb-2 shadow-sm">
+              Hoy
+            </div>
+
+            <!-- WhatsApp Message Bubble (Left/Incoming) -->
+            <div *ngIf="selectedTemplate()" class="flex flex-col max-w-[85%] self-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <!-- Bubble Container -->
+              <div class="rounded-2xl rounded-tl-none bg-[#202c33] border border-[#2c373d] p-3 shadow-lg relative flex flex-col">
+                <!-- Message Text (Markdown translated to HTML) -->
+                <div [innerHTML]="getFormattedHtml(selectedTemplate()!.body)" 
+                     class="text-[11px] text-[#e9edef] font-sans leading-relaxed break-words whitespace-pre-line">
+                </div>
+                
+                <!-- Time & Double Check -->
+                <div class="flex items-center gap-1 self-end mt-1.5 text-[8px] text-[#8696a0]">
+                  <span>17:45</span>
+                </div>
+
+                <!-- Simulated URL Button if present -->
+                <div *ngIf="selectedTemplate()!.buttons && selectedTemplate()!.buttons.length > 0" 
+                     class="mt-3 pt-2 border-t border-[#2a3942] flex flex-col gap-1 -mx-3 -mb-3 rounded-b-2xl overflow-hidden bg-[#1f2c34]">
+                  <div *ngFor="let btn of selectedTemplate()!.buttons" 
+                       class="py-2.5 flex items-center justify-center gap-1.5 text-center text-[#53bdeb] text-[11px] font-semibold hover:bg-[#202c33]/60 cursor-pointer transition-all">
+                    <app-icon name="open_in_new" class="text-[10px]"></app-icon>
+                    {{ btn.text }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulated WhatsApp Keyboard / Input Area -->
+          <div class="p-2 bg-[#1f2c34]/50 border-t border-[#2a3942]/40 flex items-center gap-2 z-20">
+            <!-- Text Box -->
+            <div class="flex-1 h-9 rounded-full bg-[#2a3942] border border-[#37454f] px-3 flex items-center gap-2 text-white/50 text-[11px]">
+              <app-icon name="sentiment_satisfied" class="text-sm text-white/40"></app-icon>
+              <span class="flex-1">Mensaje</span>
+              <app-icon name="attach_file" class="text-sm text-white/40 rotate-45"></app-icon>
+              <app-icon name="photo_camera" class="text-sm text-white/40"></app-icon>
+            </div>
+            <!-- Mic Icon Button -->
+            <div class="w-9 h-9 rounded-full bg-[#00a884] flex items-center justify-center text-white shrink-0 shadow-md">
+              <app-icon name="mic" class="text-sm"></app-icon>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

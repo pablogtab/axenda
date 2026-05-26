@@ -20,9 +20,49 @@ export class WhatsappService {
    * Obtiene la configuración de WhatsApp para un tenant
    */
   async getTenantWhatsappConfig(tenantId: string) {
-    return this.prisma.tenantWhatsappConfig.findUnique({
+    let config = await this.prisma.tenantWhatsappConfig.findUnique({
       where: { tenantId },
     });
+
+    if (!config) {
+      config = await this.prisma.tenantWhatsappConfig.create({
+        data: {
+          tenantId,
+          verified: false,
+          messagesSentMonth: 0,
+          lastResetDate: new Date(),
+        },
+      });
+    } else {
+      const now = new Date();
+      const lastReset = new Date(config.lastResetDate);
+      const nextReset = new Date(lastReset);
+      nextReset.setMonth(nextReset.getMonth() + 1);
+
+      if (now >= nextReset) {
+        let newResetDate = nextReset;
+        while (true) {
+          const nextMonth = new Date(newResetDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          if (now < nextMonth) {
+            break;
+          }
+          newResetDate = nextMonth;
+        }
+
+        this.logger.log(`Reseteando uso mensual de WhatsApp para el tenant ${tenantId}. Próximo reinicio: ${newResetDate.toISOString()}`);
+
+        config = await this.prisma.tenantWhatsappConfig.update({
+          where: { tenantId },
+          data: {
+            messagesSentMonth: 0,
+            lastResetDate: newResetDate,
+          },
+        });
+      }
+    }
+
+    return config;
   }
 
   /**
@@ -99,7 +139,7 @@ export class WhatsappService {
 
     // Extraer las variables en el orden exacto que aparecen en el body
     const varMatches = [...template.body.matchAll(/{{(\w+)}}/g)];
-    const components = [
+    const components: any[] = [
       {
         type: 'body',
         parameters: varMatches.map(match => ({
@@ -109,12 +149,36 @@ export class WhatsappService {
       },
     ];
 
+    // Check if the template has URL buttons
+    const buttons = template.buttons as any[];
+    if (buttons && Array.isArray(buttons) && buttons.length > 0) {
+      buttons.forEach((btn, index) => {
+        if (btn.type === 'URL') {
+          // If the button has url parameters, extract them
+          const btnVarMatches = [...btn.url.matchAll(/{{(\w+)}}/g)];
+          if (btnVarMatches.length > 0) {
+            components.push({
+              type: 'button',
+              sub_type: 'url',
+              index: String(index),
+              parameters: btnVarMatches.map(match => ({
+                type: 'text',
+                text: variables[match[1]] || '',
+              })),
+            });
+          }
+        }
+      });
+    }
+
     // 3. Obtener configuración de envío (Propia o Fallback a Axenda)
     const config = await this.getTenantWhatsappConfig(tenantId);
     const phoneId = config?.verified ? config.phoneId : this.configService.get('WPP_DEFAULT_PHONE_ID');
     const accessToken = config?.verified ? config.accessToken : this.configService.get('WPP_DEFAULT_ACCESS_TOKEN');
 
-    if (!phoneId || !accessToken) {
+    const realSend = this.configService.get('WPP_REAL_SEND') === 'true';
+
+    if (realSend && (!phoneId || !accessToken)) {
       throw new NotFoundException('WhatsApp no está configurado para este negocio.');
     }
 
@@ -125,26 +189,42 @@ export class WhatsappService {
       throw new BadRequestException('El número de teléfono del cliente no es válido.');
     }
 
+    // Reconstruir el texto del cuerpo del mensaje con sus variables reales
+    let bodyText = template.body;
+    for (const [key, val] of Object.entries(variables)) {
+      bodyText = bodyText.split(`{{${key}}}`).join(val);
+    }
+
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/${phoneId}/messages`,
-        {
-          messaging_product: 'whatsapp',
-          to: cleanPhone,
-          type: 'template',
-          template: {
-            name: template.name,
-            language: { code: template.language },
-            components,
+      let responseData: any;
+      if (realSend) {
+        const response = await axios.post(
+          `${this.baseUrl}/${phoneId}/messages`,
+          {
+            messaging_product: 'whatsapp',
+            to: cleanPhone,
+            type: 'template',
+            template: {
+              name: template.name,
+              language: { code: template.language },
+              components,
+            },
           },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
           },
-        },
-      );
+        );
+        responseData = response.data;
+      } else {
+        this.logger.log(`[MOCK WHATSAPP] Enviando mensaje a ${cleanPhone} usando plantilla ${template.name}`);
+        this.logger.log(`[MOCK WHATSAPP] Cuerpo: ${bodyText}`);
+        responseData = {
+          messages: [{ id: `wamid.mocked_${Date.now()}` }]
+        };
+      }
 
       // 4. Registrar logs y actualizar contadores
       await this.prisma.whatsappMessageLog.create({
@@ -153,7 +233,8 @@ export class WhatsappService {
           phoneNumber: cleanPhone,
           templateId: template.name,
           status: 'SENT',
-          metaMessageId: response.data.messages[0].id,
+          body: bodyText,
+          metaMessageId: responseData.messages[0].id,
         },
       });
 
@@ -163,7 +244,7 @@ export class WhatsappService {
         update: { messagesSentMonth: { increment: 1 } },
       });
 
-      return response.data;
+      return responseData;
     } catch (error) {
       const errorData = error.response?.data;
       this.logger.error(`Error sending WhatsApp message: ${error.message}`, errorData);
@@ -174,6 +255,7 @@ export class WhatsappService {
           phoneNumber: cleanPhone,
           templateId: template.name,
           status: 'FAILED',
+          body: bodyText,
         },
       });
       
@@ -181,6 +263,21 @@ export class WhatsappService {
         errorData?.error?.message || 'Error enviando mensaje de WhatsApp'
       );
     }
+  }
+
+  /**
+   * Obtiene las plantillas de WhatsApp (globales de Axenda y/o personalizadas del tenant)
+   */
+  async getTemplates(tenantId: string) {
+    return this.prisma.whatsappTemplate.findMany({
+      where: {
+        OR: [
+          { tenantId: null },
+          { tenantId }
+        ]
+      },
+      orderBy: { name: 'asc' }
+    });
   }
 
   /**

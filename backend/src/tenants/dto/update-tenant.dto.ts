@@ -116,4 +116,24 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsBoolean()
   onboardingCompleted?: boolean
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  whatsappReminder?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  confirmEmail?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  allowReschedule?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  whatsappCancellation?: boolean
 }

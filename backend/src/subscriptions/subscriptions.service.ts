@@ -29,6 +29,55 @@ export class SubscriptionsService implements OnModuleInit {
   }
 
   /**
+   * Obtiene y si es necesario resetea la configuración de WhatsApp para un tenant
+   */
+  private async getOrResetWhatsappConfig(tenantId: string) {
+    let config = await this.prisma.tenantWhatsappConfig.findUnique({
+      where: { tenantId },
+    });
+
+    if (!config) {
+      config = await this.prisma.tenantWhatsappConfig.create({
+        data: {
+          tenantId,
+          verified: false,
+          messagesSentMonth: 0,
+          lastResetDate: new Date(),
+        },
+      });
+    } else {
+      const now = new Date();
+      const lastReset = new Date(config.lastResetDate);
+      const nextReset = new Date(lastReset);
+      nextReset.setMonth(nextReset.getMonth() + 1);
+
+      if (now >= nextReset) {
+        let newResetDate = nextReset;
+        while (true) {
+          const nextMonth = new Date(newResetDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          if (now < nextMonth) {
+            break;
+          }
+          newResetDate = nextMonth;
+        }
+
+        this.logger.log(`Reseteando uso mensual de WhatsApp para el tenant ${tenantId}. Próximo reinicio: ${newResetDate.toISOString()}`);
+
+        config = await this.prisma.tenantWhatsappConfig.update({
+          where: { tenantId },
+          data: {
+            messagesSentMonth: 0,
+            lastResetDate: newResetDate,
+          },
+        });
+      }
+    }
+
+    return config;
+  }
+
+  /**
    * Obtiene el estado detallado de la suscripción de un tenant
    */
   async getSubscriptionStatus(tenantId: string) {
@@ -75,7 +124,7 @@ export class SubscriptionsService implements OnModuleInit {
       },
     });
 
-    const whatsappConfig = await this.prisma.tenantWhatsappConfig.findUnique({ where: { tenantId } });
+    const whatsappConfig = await this.getOrResetWhatsappConfig(tenantId);
     const whatsappMonth = whatsappConfig ? whatsappConfig.messagesSentMonth : 0;
 
     const now = new Date();
@@ -171,7 +220,7 @@ export class SubscriptionsService implements OnModuleInit {
           throw new ForbiddenException(`Tu plan ${status.plan.name} no incluye mensajes de WhatsApp.`);
         }
 
-        const wConfig = await this.prisma.tenantWhatsappConfig.findUnique({ where: { tenantId } });
+        const wConfig = await this.getOrResetWhatsappConfig(tenantId);
         const wCount = wConfig ? wConfig.messagesSentMonth : 0;
         if (wCount >= status.limits.maxWhatsapp) {
           throw new ForbiddenException(`Has alcanzado el límite de mensajes de WhatsApp mensuales (${status.limits.maxWhatsapp}) para tu plan ${status.plan.name}.`);

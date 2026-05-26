@@ -90,7 +90,11 @@ export class AppointmentsController {
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
   @ApiOperation({ summary: 'Cancelar turno (Soft Delete)' })
-  cancel(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.appointmentsService.cancel(user.tenantId, id, user.sub)
+  cancel(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Query('notifyClient') notifyClient?: string,
+  ) {
+    return this.appointmentsService.cancel(user.tenantId, id, user.sub, notifyClient !== 'false')
   }
 }

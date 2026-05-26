@@ -27,6 +27,15 @@ export class WhatsappController {
     return this.whatsappService.getTenantWhatsappConfig(user.tenantId);
   }
 
+  @Get('templates')
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Obtener plantillas de WhatsApp' })
+  getTemplates(@CurrentUser() user: AuthenticatedUser) {
+    return this.whatsappService.getTemplates(user.tenantId);
+  }
+
   @Patch('config')
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)

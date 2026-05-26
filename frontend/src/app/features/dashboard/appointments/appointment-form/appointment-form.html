@@ -85,6 +85,19 @@
           [options]="statusOptions"
           [config]="statusConfig"
         ></app-select>
+
+        @if (form.get('status')?.value === 'CANCELLED' && tenantsService.currentTenant()?.whatsappCancellation) {
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-primary-glow border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-200">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="notifyClient" class="sr-only peer">
+              <div class="w-9 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+            <div class="flex flex-col gap-0.5 select-none cursor-pointer" (click)="form.get('notifyClient')?.setValue(!form.get('notifyClient')?.value)">
+              <span class="text-xs font-bold text-text-main">Notificar al cliente por WhatsApp</span>
+              <span class="text-[10px] text-text-dim leading-none">Envía la plantilla de cancelación automáticamente.</span>
+            </div>
+          </div>
+        }
       }
   
       <!-- Notas -->

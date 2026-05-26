@@ -207,6 +207,7 @@ export class SettingsComponent implements OnInit {
       allowReschedule: [true],
       confirmEmail: [true],
       whatsappReminder: [false],
+      whatsappCancellation: [true],
       logoUrl: [null],
       bannerUrl: [null],
       primaryColor: ['#6366f1'],
@@ -339,7 +340,11 @@ export class SettingsComponent implements OnInit {
           publicShowProfessionalSelection: tenant.publicShowProfessionalSelection ?? true,
           publicMaxOverlapMins: tenant.publicMaxOverlapMins ?? 15,
           publicMaxBookingDays: tenant.publicMaxBookingDays ?? 30,
-          publicMinBookingTime: tenant.publicMinBookingTime || '1h'
+          publicMinBookingTime: tenant.publicMinBookingTime || '1h',
+          confirmEmail: tenant.confirmEmail ?? true,
+          whatsappReminder: tenant.whatsappReminder ?? false,
+          allowReschedule: tenant.allowReschedule ?? true,
+          whatsappCancellation: tenant.whatsappCancellation ?? true
         });
 
         const values = this.settingsForm.getRawValue();
@@ -392,7 +397,11 @@ export class SettingsComponent implements OnInit {
       publicShowProfessionalSelection: values.publicShowProfessionalSelection,
       publicMaxOverlapMins: values.publicMaxOverlapMins,
       publicMaxBookingDays: values.publicMaxBookingDays,
-      publicMinBookingTime: values.publicMinBookingTime
+      publicMinBookingTime: values.publicMinBookingTime,
+      confirmEmail: values.confirmEmail,
+      whatsappReminder: values.whatsappReminder,
+      allowReschedule: values.allowReschedule,
+      whatsappCancellation: values.whatsappCancellation
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');

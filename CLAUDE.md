@@ -83,8 +83,13 @@ El módulo de turnos utiliza `AvailabilityEngineService` en el backend para busc
 
 ### WhatsApp (Meta Cloud API)
 - Ubicación: `backend/src/whatsapp/`.
-- Configuración por Tenant (`TenantWhatsappConfig`): Guarda el `wabaId`, `phoneId` y `accessToken` de la cuenta de Meta del negocio. Si el negocio no está verificado, el backend hace fallback automático a las credenciales globales del sistema (`WPP_DEFAULT_PHONE_ID` y `WPP_DEFAULT_ACCESS_TOKEN`).
-- Resolución de Plantillas (`resolveTemplate`): Si el negocio tiene su propia cuenta verificada, busca plantillas con estado `'APPROVED'` que tengan el flag `replaces` apuntando a la plantilla global. De lo contrario, utiliza las plantillas globales del sistema Axenda.
+- Configuración por Tenant (`TenantWhatsappConfig`): Guarda el `wabaId`, `phoneId` y `accessToken` de la cuenta de Meta del negocio. Si el negocio no está verificado, hace fallback automático a las credenciales globales del sistema (`WPP_DEFAULT_PHONE_ID` y `WPP_DEFAULT_ACCESS_TOKEN`). Si no existe registro de configuración, el backend lo auto-crea con valores por defecto e inicializa `lastResetDate` al momento de la consulta.
+- Resolución de Plantillas (`resolveTemplate`): Si el negocio tiene su propia cuenta verificada, busca plantillas con estado `'APPROVED'` que tengan el flag `replaces` apuntando a la plantilla global. De lo contrario, utiliza las globales. En modo simulación (`WPP_REAL_SEND=false`), las plantillas se fuerzan localmente a `'APPROVED'`. Se selecciona la versión con o sin botón de cancelación (`allowReschedule` toggle de la tabla `tenants`) dinámicamente.
+- Reinicios y Límites: El backend verifica de forma diferida (on-access) en cada validación de límites o consulta si ya pasó 1 mes desde `lastResetDate`, en cuyo caso reinicia `messagesSentMonth` a `0` y actualiza `lastResetDate`.
+- Historial de Logs: Al despachar notificaciones, se reemplazan los placeholders (ej: `{{clientName}}`) con las variables reales y el texto final compilado se almacena en el campo `body` de `whatsapp_message_logs`.
+- Cancelación: Se despacha la plantilla de cancelación (`axenda_booking_cancellation_v2`) si el tenant tiene habilitado `whatsappCancellation` (por defecto `true`). Al realizar cancelaciones desde el panel de administración, el administrador cuenta con la opción de activar o desactivar este envío bajo demanda mediante un checkbox en el formulario de la cita.
+- Sincronización y Carga de Plantillas: Al iniciar la aplicación, `WhatsappTemplateService.loadTemplatesFromFS()` carga las plantillas de la carpeta local en la base de datos reemplazando el dominio `https://axenda.ar` por el `FRONTEND_URL` definido en el `.env`. Si el entorno es de pruebas (`NODE_ENV=test`), el servicio omite cualquier llamada o sincronización con la API de Meta.
+- Nombres de Plantilla (sufijo `_v2`): Se utiliza el sufijo `_v2` en las plantillas globales (como `axenda_booking_confirmation_v2` y `axenda_booking_reminder_v2`) para sortear el bloqueo por eliminación asíncrona de idioma de Meta cuando se recrean plantillas.
 - Normalización: Todos los números de destino pasan por `PhoneUtils.normalize` para asegurar el formato internacional requerido por Meta.
 
 ### MercadoPago
@@ -185,7 +190,7 @@ Tablas principales definidas en Prisma:
 | `tenant_payment_configs` | Credenciales de MercadoPago configuradas por el tenant para cobro de señas (post-MVP). |
 | `tenant_whatsapp_configs` | Configuración de Meta Cloud API del tenant (token, phoneId, wabaId) o bandera de uso global. |
 | `whatsapp_templates` | Registro local de plantillas cargadas y aprobadas en Meta. |
-| `whatsapp_message_logs` | Registro de mensajes enviados, destinos y sus estados ante la API de Meta. |
+| `whatsapp_message_logs` | Registro de mensajes enviados (incluyendo cuerpo de mensaje compilado), destinos y sus estados ante la API de Meta. |
 
 ## Convenciones de código
 

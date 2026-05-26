@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MailService } from '../../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../prisma/prisma.service';
 import { Appointment, Client, Professional, Service } from '@prisma/client';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AppointmentMailListener {
   constructor(
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @OnEvent('appointment.created', { async: true })
@@ -18,6 +20,13 @@ export class AppointmentMailListener {
     // Solo enviamos correo si es un turno creado desde el lado público
     if (appointment.bookedVia === 'PANEL') {
       this.logger.log(`Turno creado internamente (PANEL). No se envía email a ${appointment.client.email}`);
+      return;
+    }
+
+    // Verificar si el negocio tiene habilitada la opción de emails de confirmación
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: appointment.tenantId } });
+    if (tenant && !tenant.confirmEmail) {
+      this.logger.log(`Email confirmations are disabled for tenant ${tenant.name} (${tenant.id}). Skipping.`);
       return;
     }
 

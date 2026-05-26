@@ -17,6 +17,19 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
+    // 1. Siempre cargar plantillas desde archivos JSON del FS a la DB local
+    try {
+      await this.loadTemplatesFromFS();
+      this.logger.log('Plantillas de WhatsApp cargadas localmente en la base de datos.');
+    } catch (error) {
+      this.logger.error(`Error cargando plantillas locales de WhatsApp: ${error.message}`);
+    }
+
+    // Si estamos en entorno de test, nunca sincronizar con Meta ni iniciar crons
+    if (process.env['NODE_ENV'] === 'test') {
+      return;
+    }
+
     const shouldSync = this.configService.get('WPP_SYNC_TEMPLATES') === 'true';
     
     if (!shouldSync) {
@@ -32,35 +45,24 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
       return;
     }
 
-    this.logger.log('Iniciando carga y sincronización de plantillas de WhatsApp post-arranque...');
+    this.logger.log('Iniciando sincronización de plantillas de WhatsApp con Meta post-arranque...');
     try {
-      // 1. Cargar plantillas desde archivos JSON en el FS
-      await this.loadTemplatesFromFS();
-      
       // 2. Sincronizar cambios de contenido con Meta
       const results = await this.syncGlobalTemplates();
       if (results) {
-        this.logger.log(`Sincronización inicial completada: ${results.created} creadas, ${results.updated} actualizadas.`);
+        this.logger.log(`Sincronización inicial completada con Meta: ${results.created} creadas, ${results.updated} actualizadas.`);
       }
 
       // 3. Revisar si hay plantillas PENDING que ya fueron aprobadas
       await this.checkPendingTemplatesStatus();
     } catch (error) {
-      this.logger.error(`Fallo en el proceso inicial de WhatsApp: ${error.message}`);
+      this.logger.error(`Fallo en el proceso de sincronización con Meta: ${error.message}`);
     }
   }
 
-  /**
-   * Lee los archivos JSON en la carpeta 'templates' y los persiste en la DB
-   */
   private async loadTemplatesFromFS() {
     const templatesDir = path.join(__dirname, 'templates');
-    const defaultWabaId = this.configService.get('WPP_DEFAULT_WABA_ID')?.trim(); 
-    
-    if (!defaultWabaId) {
-      this.logger.warn('No hay WPP_DEFAULT_WABA_ID configurado. Saltando carga de plantillas desde FS.');
-      return;
-    }
+    const defaultWabaId = this.configService.get('WPP_DEFAULT_WABA_ID')?.trim() || null; 
 
     if (!fs.existsSync(templatesDir)) {
       this.logger.warn(`Carpeta de plantillas no encontrada: ${templatesDir}`);
@@ -72,7 +74,12 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     for (const file of files) {
       try {
         const filePath = path.join(templatesDir, file);
-        const rawContent = fs.readFileSync(filePath, 'utf8');
+        let rawContent = fs.readFileSync(filePath, 'utf8');
+
+        // Parametrizar la URL del frontend usando la variable de entorno FRONTEND_URL
+        const frontendUrl = this.configService.get('FRONTEND_URL')?.trim().replace(/\/$/, '') || 'https://axenda.ar';
+        rawContent = rawContent.replace(/https:\/\/axenda\.ar/g, frontendUrl);
+
         const content = JSON.parse(rawContent);
         
         if (!content.name || !content.body) {
@@ -93,13 +100,16 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
             category: content.category || 'UTILITY',
             language: content.language || 'es_AR',
             body: content.body,
+            buttons: content.buttons || null,
             tenantId: null,
-            status: process.env['NODE_ENV'] === 'test' ? 'APPROVED' : 'PENDING'
+            status: (process.env['NODE_ENV'] === 'test' || this.configService.get('WPP_REAL_SEND') !== 'true') ? 'APPROVED' : 'PENDING'
           },
           update: {
             category: content.category || 'UTILITY',
             language: content.language || 'es_AR',
-            body: content.body
+            body: content.body,
+            buttons: content.buttons || null,
+            status: (process.env['NODE_ENV'] === 'test' || this.configService.get('WPP_REAL_SEND') !== 'true') ? 'APPROVED' : 'PENDING'
           }
         });
       } catch (error) {
@@ -229,6 +239,7 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
   private checkTemplateChanges(dbTemplate: any, metaTemplate: any): boolean {
     if (dbTemplate.category !== metaTemplate.category) return true;
 
+    // 1. Check body changes
     let varCount = 0;
     const dbMetaBody = dbTemplate.body.replace(/{{(\w+)}}/g, () => {
       varCount++;
@@ -236,7 +247,35 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     });
 
     const metaBody = metaTemplate.components.find(c => c.type === 'BODY')?.text;
-    return dbMetaBody !== metaBody;
+    if (dbMetaBody !== metaBody) return true;
+
+    // 2. Check buttons changes
+    const dbButtons = dbTemplate.buttons ? JSON.parse(JSON.stringify(dbTemplate.buttons)) : null;
+    const metaButtonsComp = metaTemplate.components.find(c => c.type === 'BUTTONS');
+    const metaButtons = metaButtonsComp?.buttons;
+
+    if (!dbButtons && !metaButtons) return false;
+    if ((dbButtons && !metaButtons) || (!dbButtons && metaButtons)) return true;
+    if (dbButtons.length !== metaButtons.length) return true;
+
+    // Compare each button
+    for (let i = 0; i < dbButtons.length; i++) {
+      const dbBtn = dbButtons[i];
+      const metaBtn = metaButtons[i];
+
+      if (dbBtn.type !== metaBtn.type || dbBtn.text !== metaBtn.text) return true;
+
+      if (dbBtn.type === 'URL') {
+        let btnVarCount = 0;
+        const dbBtnUrl = dbBtn.url.replace(/{{(\w+)}}/g, () => {
+          btnVarCount++;
+          return `{{${btnVarCount}}}`;
+        });
+        if (dbBtnUrl !== metaBtn.url) return true;
+      }
+    }
+
+    return false;
   }
 
   private async getMetaTemplates(wabaId: string, accessToken: string) {
@@ -246,7 +285,7 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     return response.data.data;
   }
 
-  private prepareComponents(templateBody: string) {
+  private prepareComponents(templateBody: string, buttonsJson?: any) {
     let varCount = 0;
     const examples: string[] = [];
     const metaBody = templateBody.replace(/{{(\w+)}}/g, (match, varName) => {
@@ -254,6 +293,8 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
       examples.push(`[${varName}]`); 
       return `{{${varCount}}}`;
     });
+
+    const components: any[] = [];
 
     const bodyComponent: any = {
       type: 'BODY',
@@ -266,11 +307,43 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
       };
     }
 
-    return [bodyComponent];
+    components.push(bodyComponent);
+
+    if (buttonsJson && Array.isArray(buttonsJson) && buttonsJson.length > 0) {
+      const metaButtons = buttonsJson.map((btn: any) => {
+        if (btn.type === 'URL') {
+          let btnVarCount = 0;
+          const btnUrl = btn.url.replace(/{{(\w+)}}/g, () => {
+            btnVarCount++;
+            return `{{${btnVarCount}}}`;
+          });
+
+          const buttonMeta: any = {
+            type: 'URL',
+            text: btn.text,
+            url: btnUrl
+          };
+
+          if (btnVarCount > 0) {
+            buttonMeta.example = ['placeholder_id'];
+          }
+
+          return buttonMeta;
+        }
+        return btn;
+      });
+
+      components.push({
+        type: 'BUTTONS',
+        buttons: metaButtons
+      });
+    }
+
+    return components;
   }
 
   private async createMetaTemplate(wabaId: string, accessToken: string, template: any) {
-    const components = this.prepareComponents(template.body);
+    const components = this.prepareComponents(template.body, template.buttons);
 
     const payload = {
       name: template.name,
@@ -299,7 +372,7 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
   }
 
   private async editMetaTemplate(templateId: string, accessToken: string, template: any) {
-    const components = this.prepareComponents(template.body);
+    const components = this.prepareComponents(template.body, template.buttons);
 
     const payload = {
       components,
