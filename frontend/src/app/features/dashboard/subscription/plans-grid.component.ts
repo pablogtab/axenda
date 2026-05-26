@@ -40,8 +40,10 @@ export class PlansGridComponent implements OnInit {
   });
 
   isYearly = computed(() => this.billingCycle() === 'YEARLY');
+  paymentsEnabled = computed(() => this.subscriptionService.paymentsEnabled());
 
   ngOnInit() {
+    this.subscriptionService.loadConfig();
     this.loadPlans();
   }
 

@@ -186,6 +186,11 @@ export class SubscriptionsService implements OnModuleInit {
    * Crea un link de pago (suscripción) para el plan seleccionado.
    */
   async createCheckout(userId: string, planCode: string, billingCycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY', quantity: number = 1) {
+    const paymentsEnabled = this.configService.get('PAYMENTS_ENABLED') !== 'false';
+    if (!paymentsEnabled) {
+      throw new ForbiddenException('Los pagos online están temporalmente fuera de servicio.');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { tenant: true }
@@ -509,6 +514,10 @@ export class SubscriptionsService implements OnModuleInit {
       where: { subscriptionId: sub.id },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  isPaymentsEnabled(): boolean {
+    return this.configService.get('PAYMENTS_ENABLED') !== 'false';
   }
 
   /**

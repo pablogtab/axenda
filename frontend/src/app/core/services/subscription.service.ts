@@ -47,6 +47,7 @@ export class SubscriptionService {
   private apiUrl = `${environment.apiUrl}/subscriptions`;
 
   private _status = signal<SubscriptionStatus | null>(null);
+  private _paymentsEnabled = signal<boolean>(true);
 
   // Selectores de estado (Signals)
   status = computed(() => this._status());
@@ -55,6 +56,7 @@ export class SubscriptionService {
   trialDaysRemaining = computed(() => this._status()?.trialDaysRemaining ?? 0);
   isActive = computed(() => this._status()?.isActive ?? false);
   endDate = computed(() => this._status()?.endDate);
+  paymentsEnabled = computed(() => this._paymentsEnabled());
   
   // Límites y Uso
   limits = computed(() => this._status()?.limits);
@@ -89,6 +91,22 @@ export class SubscriptionService {
     } catch (error) {
       console.error('Error cargando estado de suscripción:', error);
       return null;
+    }
+  }
+
+  /**
+   * Carga la configuración del sistema de facturación desde el backend
+   */
+  async loadConfig(): Promise<boolean> {
+    try {
+      const data = await firstValueFrom(
+        this.http.get<{ paymentsEnabled: boolean }>(`${this.apiUrl}/config`)
+      );
+      this._paymentsEnabled.set(data.paymentsEnabled);
+      return data.paymentsEnabled;
+    } catch (error) {
+      console.error('Error cargando config de pagos:', error);
+      return true;
     }
   }
 

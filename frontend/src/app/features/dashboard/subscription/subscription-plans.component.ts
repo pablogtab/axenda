@@ -60,6 +60,19 @@ interface Plan {
             {{ stepDescription() }}
           </p>
         </div>
+
+        <!-- Payments Disabled Banner -->
+        <div *ngIf="!subService.paymentsEnabled()" class="mt-8 p-6 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex gap-4 items-start animate-in fade-in slide-in-from-top-4 duration-500">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/15 flex items-center justify-center shrink-0 border border-amber-500/20">
+            <app-icon name="warning" class="text-amber-500 text-lg"></app-icon>
+          </div>
+          <div>
+            <h4 class="text-sm font-black text-text-main mb-1">Pagos temporalmente no disponibles</h4>
+            <p class="text-xs text-text-muted leading-relaxed">
+              Actualmente estamos realizando tareas de mantenimiento en nuestra pasarela de pagos. Los cobros online se encuentran suspendidos temporalmente. Disculpa las molestias.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Content -->
@@ -209,8 +222,8 @@ interface Plan {
               </div>
 
               <div class="space-y-4">
-                <button (click)="processPayment()" [disabled]="isProcessing()"
-                  class="btn-primary w-full py-5 text-lg flex items-center justify-center gap-3 cursor-pointer">
+                <button (click)="processPayment()" [disabled]="isProcessing() || !subService.paymentsEnabled()"
+                  class="btn-primary w-full py-5 text-lg flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   <span *ngIf="!isProcessing()">Ir a Pagar con Mercado Pago</span>
                   <div *ngIf="isProcessing()" class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <app-icon *ngIf="!isProcessing()" name="arrow_forward" class="text-white"></app-icon>
@@ -327,10 +340,12 @@ export class SubscriptionPlansComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const data = await this.subService.getPlans();
-      this.plans.set(data || []);
+      await Promise.all([
+        this.subService.loadConfig(),
+        this.subService.getPlans().then(data => this.plans.set(data || []))
+      ]);
     } catch (err) {
-      console.error('Error al cargar planes:', err);
+      console.error('Error al cargar datos iniciales de planes:', err);
     }
   }
 

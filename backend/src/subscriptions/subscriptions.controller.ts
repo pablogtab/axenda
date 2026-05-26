@@ -23,6 +23,13 @@ export class SubscriptionsController {
     });
   }
 
+  @Get('config')
+  async getConfig() {
+    return {
+      paymentsEnabled: this.subscriptionsService.isPaymentsEnabled()
+    };
+  }
+
   @Post('checkout')
   async createCheckout(
     @CurrentUser('sub') userId: string,
