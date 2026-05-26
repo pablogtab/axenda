@@ -1,31 +1,31 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="text-center max-w-3xl mx-auto mb-16" *ngIf="mode === 'direct'">
-    <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 sm:text-5xl">
+    <h1 class="text-4xl font-black text-gradient sm:text-5xl tracking-tight">
       Eleva tu negocio al siguiente nivel
     </h1>
-    <p class="mt-4 text-xl text-gray-400">
+    <p class="mt-4 text-lg text-text-muted">
       Planes diseñados para profesionales y clínicas que buscan la excelencia. Cancela cuando quieras.
     </p>
 
     <!-- Toggle Mensual/Anual -->
     <div class="mt-10 flex justify-center items-center gap-4">
-      <span class="text-sm font-medium" [class.text-white]="!isYearly()" [class.text-gray-400]="isYearly()">Mensual</span>
+      <span class="text-sm font-medium transition-colors duration-300" [class.text-text-main]="!isYearly()" [class.text-text-muted]="isYearly()">Mensual</span>
       <button 
         type="button" 
         (click)="toggleBillingCycle()"
-        class="relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-        [class.bg-primary-600]="isYearly()"
-        [class.bg-gray-700]="!isYearly()"
+        class="relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20"
+        [class.bg-primary]="isYearly()"
+        [class.bg-surface-subtle]="!isYearly()"
       >
         <span 
-          class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-300 ease-in-out"
           [class.translate-x-7]="isYearly()"
           [class.translate-x-0]="!isYearly()"
         ></span>
       </button>
-      <span class="text-sm font-medium flex items-center gap-2" [class.text-white]="isYearly()" [class.text-gray-400]="!isYearly()">
+      <span class="text-sm font-medium flex items-center gap-2 transition-colors duration-300" [class.text-text-main]="isYearly()" [class.text-text-muted]="!isYearly()">
         Anual
-        <span class="inline-flex items-center rounded-full bg-emerald-400/10 px-2 py-1 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-400/20">
+        <span class="inline-flex items-center rounded-full bg-success/10 px-2.5 py-1 text-xs font-black text-success border border-success/10">
           Ahorra 20%
         </span>
       </span>
@@ -34,43 +34,48 @@
 
   <!-- Loading State -->
   <div *ngIf="isLoading()" class="flex justify-center items-center py-20">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
   </div>
 
   <!-- Plans Grid -->
   <div *ngIf="!isLoading()" class="grid grid-cols-1 gap-8 lg:grid-cols-3">
     <div *ngFor="let plan of plans()" 
-         class="relative flex flex-col rounded-3xl p-8 shadow-2xl ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-2 hover:shadow-primary-500/20 bg-gray-900/50 backdrop-blur-xl"
-         [class.border-primary-500]="plan.code === 'BUSINESS'"
+         class="relative flex flex-col rounded-[2.5rem] p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-primary/10 glass"
+         [class.border-primary]="plan.code === 'BUSINESS'"
          [class.border-2]="plan.code === 'BUSINESS'">
       
       <!-- Most Popular Badge -->
-      <div *ngIf="plan.code === 'BUSINESS'" class="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-gradient-to-r from-primary-500 to-indigo-500 px-3 py-1 text-center text-xs font-medium text-white shadow-sm">
+      <div *ngIf="plan.code === 'BUSINESS'" class="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-center text-[10px] font-black uppercase tracking-wider text-white shadow-md">
         Más Popular
       </div>
 
       <div class="mb-8">
-        <h3 class="text-2xl font-bold text-white">{{ plan.name }}</h3>
-        <p class="mt-4 text-sm leading-6 text-gray-400">{{ plan.description }}</p>
+        <div class="flex items-center justify-between">
+          <h3 class="text-2xl font-black text-text-main tracking-tight">{{ plan.name }}</h3>
+          <span *ngIf="currentPlanCode() === plan.code" class="inline-flex items-center rounded-full bg-primary-glow px-2.5 py-0.5 text-xs font-black text-primary border border-primary/20">
+            Actual
+          </span>
+        </div>
+        <p class="mt-4 text-sm leading-relaxed text-text-muted min-h-[48px]">{{ plan.description }}</p>
         <div class="mt-6 flex items-baseline gap-x-2">
-          <span class="text-5xl font-bold tracking-tight text-white">
+          <span class="text-5xl font-black tracking-tight text-text-main">
             ${{ isYearly() ? plan.priceYearly : plan.priceMonthly }}
           </span>
-          <span class="text-sm font-semibold leading-6 text-gray-400">/{{ isYearly() ? 'año' : 'mes' }}</span>
+          <span class="text-sm font-semibold leading-6 text-text-dim">/{{ isYearly() ? 'año' : 'mes' }}</span>
         </div>
-        <p *ngIf="isYearly()" class="mt-1 text-sm text-emerald-400">
+        <p *ngIf="isYearly()" class="mt-2 text-sm text-success font-bold">
           Equivale a ${{ (plan.priceYearly / 12) | number:'1.0-0' }}/mes
         </p>
       </div>
 
-      <ul role="list" class="mt-4 mb-8 space-y-4 text-sm leading-6 text-gray-300 flex-1">
-        <li *ngFor="let feature of getFeatures(plan.code)" class="flex gap-x-3">
+      <ul role="list" class="mt-4 mb-8 space-y-4 text-sm leading-6 text-text-muted flex-1">
+        <li *ngFor="let feature of getFeatures(plan.code)" class="flex gap-x-3 items-center">
           <app-icon [name]="feature.included ? 'check_circle' : 'cancel'" 
-                    class="h-6 w-5 flex-none"
-                    [class.text-primary-400]="feature.included"
-                    [class.text-gray-600]="!feature.included">
+                    class="h-5 w-5 flex-none"
+                    [class.text-primary]="feature.included"
+                    [class.text-text-dim]="!feature.included">
           </app-icon>
-          <span [class.text-gray-500]="!feature.included" [class.line-through]="!feature.included">
+          <span [class.text-text-dim]="!feature.included" [class.line-through]="!feature.included" [class.opacity-60]="!feature.included">
             {{ feature.text }}
           </span>
         </li>
@@ -79,35 +84,31 @@
       <button 
         (click)="subscribe(plan.id)"
         [disabled]="isProcessing() || activePlanId() === plan.id"
-        class="mt-auto block w-full rounded-xl px-3 py-3 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-all duration-200"
-        [class.bg-gradient-to-r]="plan.code === 'BUSINESS'"
-        [class.from-primary-600]="plan.code === 'BUSINESS'"
-        [class.to-indigo-600]="plan.code === 'BUSINESS'"
-        [class.text-white]="plan.code === 'BUSINESS'"
-        [class.hover:from-primary-500]="plan.code === 'BUSINESS'"
-        [class.hover:to-indigo-500]="plan.code === 'BUSINESS'"
-        [class.focus-visible:outline-primary-500]="plan.code === 'BUSINESS'"
-        [class.bg-white]="plan.code !== 'BUSINESS'"
-        [class.text-gray-900]="plan.code !== 'BUSINESS'"
-        [class.hover:bg-gray-100]="plan.code !== 'BUSINESS'"
-        [class.opacity-50]="isProcessing() || activePlanId() === plan.id"
+        class="mt-auto block w-full rounded-2xl py-4 text-center text-sm font-bold transition-all active:scale-[0.98] cursor-pointer"
+        [class.btn-primary]="plan.code === 'BUSINESS' || plan.code === 'ELITE'"
+        [class.btn-secondary]="plan.code !== 'BUSINESS' && plan.code !== 'ELITE' && activePlanId() !== plan.id"
+        [class.bg-surface-subtle]="activePlanId() === plan.id"
+        [class.text-text-dim]="activePlanId() === plan.id"
+        [class.border]="activePlanId() === plan.id"
+        [class.border-border]="activePlanId() === plan.id"
+        [class.opacity-50]="isProcessing()"
         [class.cursor-not-allowed]="isProcessing() || activePlanId() === plan.id"
       >
         <span *ngIf="!isProcessing() && activePlanId() !== plan.id">
-          {{ mode === 'selection' ? 'Seleccionar ' + plan.name : 'Suscribirse a ' + plan.name }}
+          {{ mode === 'selection' ? (currentPlanCode() === plan.code ? 'Extender plan ' + plan.name : 'Seleccionar ' + plan.name) : 'Suscribirse a ' + plan.name }}
         </span>
         <span *ngIf="activePlanId() === plan.id">Plan Actual</span>
-        <div *ngIf="isProcessing() && activePlanId() !== plan.id" class="flex justify-center items-center">
+        <div *ngIf="isProcessing() && activePlanId() !== plan.id" class="flex justify-center items-center gap-2">
           <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
-          <span class="ml-2">Procesando...</span>
+          <span>Procesando...</span>
         </div>
       </button>
     </div>
   </div>
   
   <div class="mt-12 text-center">
-    <p class="text-sm text-gray-500 flex items-center justify-center gap-2">
-      <app-icon name="lock" class="w-4 h-4"></app-icon>
+    <p class="text-sm text-text-muted flex items-center justify-center gap-2">
+      <app-icon name="lock" class="w-4 h-4 text-text-dim"></app-icon>
       Pagos seguros procesados por Mercado Pago
     </p>
   </div>

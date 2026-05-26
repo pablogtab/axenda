@@ -28,7 +28,7 @@ export class SubscriptionsController {
     @CurrentUser('sub') userId: string,
     @Body() body: CreateCheckoutDto
   ) {
-    return this.subscriptionsService.createCheckout(userId, body.planId, body.billingCycle);
+    return this.subscriptionsService.createCheckout(userId, body.planId, body.billingCycle, body.quantity || 1);
   }
 
   @Get('verify')
@@ -41,6 +41,11 @@ export class SubscriptionsController {
       throw new BadRequestException('Se requiere un ID de pago o suscripción para verificar');
     }
     return this.subscriptionsService.verifySubscription(tenantId, idToVerify);
+  }
+
+  @Get('invoices')
+  async getInvoices(@CurrentUser('tenantId') tenantId: string) {
+    return this.subscriptionsService.getSubscriptionInvoices(tenantId);
   }
 
   // TODO: Proteger esto con un guard de Admin de Sistema (SuperAdmin)

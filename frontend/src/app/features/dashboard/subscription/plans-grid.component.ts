@@ -26,9 +26,17 @@ export class PlansGridComponent implements OnInit {
   // Computed
   activePlanId = computed(() => {
     const status = this.subscriptionService.status();
+    // Si estamos en modo selección (checkout), no marcamos el plan como deshabilitado para permitir extenderlo
+    if (this.mode === 'selection') return null;
     // Si no hay status o estamos en trial, no marcamos ningún plan como "Actual" para permitir la compra
     if (!status || status.isTrial) return null;
     return this.plans().find(p => p.code === status.plan.code)?.id || null;
+  });
+
+  currentPlanCode = computed(() => {
+    const status = this.subscriptionService.status();
+    if (!status || status.isTrial) return null;
+    return status.plan.code;
   });
 
   isYearly = computed(() => this.billingCycle() === 'YEARLY');
@@ -85,7 +93,7 @@ export class PlansGridComponent implements OnInit {
           { text: 'Reseñas Automáticas (Email)', included: true },
           { text: '1 Profesional / 1 Sucursal', included: true },
           { text: 'Reportes y métricas', included: true },
-          { text: 'Mensajes de WhatsApp', included: false },
+          { text: '100 Mensajes de WhatsApp/mes', included: true },
         ];
       case 'BUSINESS':
         return [

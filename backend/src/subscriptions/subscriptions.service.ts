@@ -92,6 +92,7 @@ export class SubscriptionsService implements OnModuleInit {
       status: sub.status,
       billingCycle: sub.billingCycle,
       trialEndsAt: sub.trialEndsAt,
+      endDate: sub.endDate,
       trialDaysRemaining,
       isTrial: sub.status === 'TRIALING',
       isActive: sub.status === 'ACTIVE' || (sub.status === 'TRIALING' && trialDaysRemaining > 0),
@@ -202,20 +203,49 @@ export class SubscriptionsService implements OnModuleInit {
     if (!plan) throw new NotFoundException('Plan no encontrado');
     if (plan.code === 'STARTER') throw new ForbiddenException('No puedes comprar el plan Starter, es gratuito.');
 
-    this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}).`);
+    // Obtener la suscripción actual del tenant para calcular crédito si hay un cambio de plan
+    const currentSub = await this.prisma.tenantSubscription.findUnique({
+      where: { tenantId: user.tenantId },
+      include: { plan: true }
+    });
+
+    let credit = 0;
+    const now = new Date();
+    const isPlanChange = currentSub && currentSub.status === 'ACTIVE' && currentSub.plan.code !== plan.code;
+
+    if (isPlanChange && currentSub.endDate && currentSub.endDate > now) {
+      const remainingTime = currentSub.endDate.getTime() - now.getTime();
+      const remainingDays = Math.max(0, remainingTime / (1000 * 60 * 60 * 24));
+      
+      // Calcular precio diario del plan actual
+      const currentPlanPrice = currentSub.billingCycle === 'MONTHLY' 
+        ? Number(currentSub.plan.priceMonthly) 
+        : Number(currentSub.plan.priceYearly);
+      const currentPlanPeriodDays = currentSub.billingCycle === 'MONTHLY' ? 30 : 365;
+      const currentDailyPrice = currentPlanPrice / currentPlanPeriodDays;
+      
+      credit = Math.round(remainingDays * currentDailyPrice);
+    }
+
+    const finalQuantity = billingCycle === 'YEARLY' ? 1 : quantity;
+    const planPrice = billingCycle === 'MONTHLY' ? Number(plan.priceMonthly) : Number(plan.priceYearly);
+    const baseAmount = planPrice * finalQuantity;
+    const amountToCharge = Math.max(10, baseAmount - credit); // Mínimo de 10 ARS para evitar errores de MP
+
+    this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}). Crédito: ${credit}. Total: ${amountToCharge}.`);
 
     // Priorizamos la URL del túnel (HTTPS) si está configurada, para que Mercado Pago permita el auto_return
     const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
     const backUrl = `${baseUrl}/dashboard/subscription/success`;
 
-    // Creamos una PREFERENCIA de pago (pago único manual)
-    // Usamos una referencia compuesta: "tenantId:planCode:billingCycle:quantity"
-    const externalReference = `${user.tenantId}:${plan.code}:${billingCycle}:${quantity}`;
+    const externalReference = `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}`;
 
     const preference = await this.mercadopagoService.createPreference({
-      title: `Axenda - Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`,
-      amount: billingCycle === 'MONTHLY' ? Number(plan.priceMonthly) : Number(plan.priceYearly),
-      quantity: quantity,
+      title: isPlanChange 
+        ? `Axenda - Upgrade a Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`
+        : `Axenda - Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`,
+      amount: amountToCharge,
+      quantity: 1, // Usamos cantidad 1 ya que el precio ya contempla la multiplicación y el crédito prorrateado
       externalReference: externalReference,
       backUrl: backUrl,
       payerEmail: user.email,
@@ -370,6 +400,22 @@ export class SubscriptionsService implements OnModuleInit {
       return;
     }
 
+    // Evitar doble procesamiento si ya existe factura registrada para este id de pago
+    const existingInvoice = await this.prisma.subscriptionInvoice.findFirst({
+      where: {
+        externalPaymentId: mpPayment.id.toString(),
+        status: 'PAID'
+      }
+    });
+
+    if (existingInvoice) {
+      this.logger.log(`El pago de MP ${mpPayment.id} ya fue procesado previamente. Ignorando.`);
+      return {
+        status: mpPayment.status,
+        tenantId
+      };
+    }
+
     // Obtenemos la suscripción actual del tenant
     const currentSub = await this.prisma.tenantSubscription.findUnique({
       where: { tenantId },
@@ -396,7 +442,10 @@ export class SubscriptionsService implements OnModuleInit {
 
     // Determinamos cuánto tiempo extender
     const now = new Date();
-    let newEndDate = currentSub.endDate && currentSub.endDate > now ? new Date(currentSub.endDate) : new Date(now);
+    const isPlanChange = planCode && planCode !== currentSub.plan.code;
+    let newEndDate = (!isPlanChange && currentSub.endDate && currentSub.endDate > now) 
+      ? new Date(currentSub.endDate) 
+      : new Date(now);
 
     if (cycleToApply === 'MONTHLY') {
       newEndDate.setMonth(newEndDate.getMonth() + quantity);
@@ -442,6 +491,24 @@ export class SubscriptionsService implements OnModuleInit {
       status: mpPayment.status,
       tenantId
     };
+  }
+
+  /**
+   * Obtiene el historial de facturas (pagos) de la suscripción del tenant
+   */
+  async getSubscriptionInvoices(tenantId: string) {
+    const sub = await this.prisma.tenantSubscription.findUnique({
+      where: { tenantId }
+    });
+
+    if (!sub) {
+      return [];
+    }
+
+    return this.prisma.subscriptionInvoice.findMany({
+      where: { subscriptionId: sub.id },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
   /**
