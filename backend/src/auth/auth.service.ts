@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { RegisterStartDto, RegisterCompleteDto } from './dto/register-flow.dto'
 import { LoginDto } from './dto/login.dto'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 import { UserRole, AuthProvider } from '@prisma/client'
 import { MailService } from '../mail/mail.service'
 import * as crypto from 'crypto'
@@ -354,7 +354,7 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string, tenantId: string, role: UserRole) {
-    const payload: JwtPayload = { sub: userId, tenantId, role }
+    const payload: AuthenticatedUser = { sub: userId, tenantId, role }
 
     const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET')
     const refreshExpiresIn = this.config.get<string>('JWT_REFRESH_EXPIRES_IN', '7d')

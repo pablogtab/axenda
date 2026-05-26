@@ -21,7 +21,7 @@ import { CreateAvailabilityDto, CreateExceptionDto } from './dto/availability.dt
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 
 @ApiTags('Professionals')
 @ApiBearerAuth('access-token')
@@ -36,7 +36,7 @@ export class ProfessionalsController {
   @Get()
   @ApiOperation({ summary: 'Listar profesionales del tenant con filtros' })
   findAll(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('branchId') branchId?: string
   ) {
     return this.professionalsService.findAll(user.tenantId, branchId)
@@ -44,32 +44,32 @@ export class ProfessionalsController {
 
   @Get('search')
   @ApiOperation({ summary: 'Buscar profesionales por nombre o bio' })
-  search(@CurrentUser() user: JwtPayload, @Query('q') q: string) {
+  search(@CurrentUser() user: AuthenticatedUser, @Query('q') q: string) {
     return this.professionalsService.search(user.tenantId, q || '')
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener detalle de un profesional (horarios, sucursales)' })
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.professionalsService.findOne(user.tenantId, id)
   }
 
   @Post()
   @ApiOperation({ summary: 'Crear nuevo profesional' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateProfessionalDto) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateProfessionalDto) {
     return this.professionalsService.create(user.tenantId, dto)
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar perfil del profesional' })
-  update(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateProfessionalDto) {
+  update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateProfessionalDto) {
     return this.professionalsService.update(user.tenantId, id, dto)
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Eliminar profesional permanentemente' })
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  remove(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.professionalsService.delete(user.tenantId, id)
   }
 
@@ -78,7 +78,7 @@ export class ProfessionalsController {
   @Patch(':id/branches')
   @ApiOperation({ summary: 'Asignar sucursales al profesional' })
   setBranches(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateProfessionalRelationsDto,
   ) {
@@ -88,7 +88,7 @@ export class ProfessionalsController {
   @Patch(':id/services')
   @ApiOperation({ summary: 'Asignar servicios al profesional' })
   setServices(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateProfessionalRelationsDto,
   ) {
@@ -100,7 +100,7 @@ export class ProfessionalsController {
   @Post(':id/availability')
   @ApiOperation({ summary: 'Agregar bloque de disponibilidad semanal (schedule)' })
   addAvailability(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: CreateAvailabilityDto,
   ) {
@@ -111,7 +111,7 @@ export class ProfessionalsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Eliminar bloque de disponibilidad' })
   removeAvailability(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Param('availabilityId') availabilityId: string,
   ) {
@@ -121,7 +121,7 @@ export class ProfessionalsController {
   @Post(':id/exceptions')
   @ApiOperation({ summary: 'Agregar excepción (vacaciones, bloqueo manual)' })
   addException(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: CreateExceptionDto,
   ) {
@@ -132,7 +132,7 @@ export class ProfessionalsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Eliminar excepción' })
   removeException(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Param('exceptionId') exceptionId: string,
   ) {

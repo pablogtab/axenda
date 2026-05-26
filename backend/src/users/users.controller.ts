@@ -19,7 +19,7 @@ import { UpdateRoleDto } from './dto/update-role.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -32,13 +32,13 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
-  getMe(@CurrentUser() user: JwtPayload) {
+  getMe(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.getMe(user.sub)
   }
 
   @Patch('me')
   @ApiOperation({ summary: 'Actualizar perfil propio (nombre, password)' })
-  updateMe(@CurrentUser() user: JwtPayload, @Body() dto: UpdateUserDto) {
+  updateMe(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateUserDto) {
     return this.usersService.updateMe(user.sub, dto)
   }
 
@@ -47,21 +47,21 @@ export class UsersController {
   @Get()
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Listar usuarios del tenant' })
-  findAll(@CurrentUser() user: JwtPayload) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.findAll(user.tenantId)
   }
 
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Obtener un usuario por ID' })
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.usersService.findOne(user.tenantId, id)
   }
 
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Crear nuevo usuario en el tenant (ADMIN)' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateUserDto) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateUserDto) {
     return this.usersService.create(user.tenantId, dto)
   }
 
@@ -69,7 +69,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar datos de un usuario (ADMIN)' })
   update(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
   ) {
@@ -80,7 +80,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Cambiar rol de un usuario (ADMIN)' })
   updateRole(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: UpdateRoleDto,
   ) {
@@ -91,7 +91,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Desactivar usuario (soft delete, ADMIN)' })
-  deactivate(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  deactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.usersService.deactivate(user.tenantId, id, user.sub)
   }
 }

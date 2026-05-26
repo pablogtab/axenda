@@ -1,11 +1,32 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MercadoPagoService } from '../mercadopago/mercadopago.service';
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class SubscriptionsService {
+export class SubscriptionsService implements OnModuleInit {
   private readonly logger = new Logger(SubscriptionsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mercadopagoService: MercadoPagoService,
+    private readonly configService: ConfigService,
+  ) { }
+
+  async onModuleInit() {
+    // Si estamos en desarrollo y pedimos reset, o si no hay planes sincronizados, sincronizamos.
+    const isDev = this.configService.get('NODE_ENV') === 'development';
+    const forceReset = this.configService.get('RESET_MP_PLANS') === 'true';
+
+    if (isDev && forceReset) {
+      this.logger.warn('⚠️ RESET_MP_PLANS detectado. Limpiando y re-creando planes en Mercado Pago...');
+      await this.syncPlansWithMercadoPago(true);
+    } else {
+      // Sincronización normal (solo crea los que falten)
+      await this.syncPlansWithMercadoPago(false);
+    }
+  }
 
   /**
    * Obtiene el estado detallado de la suscripción de un tenant
@@ -35,7 +56,7 @@ export class SubscriptionsService {
         },
         include: { plan: true }
       });
-      
+
       this.logger.log(`Auto-asignado plan STARTER a tenant ${tenantId} por falta de registro previo.`);
     }
 
@@ -71,6 +92,7 @@ export class SubscriptionsService {
       status: sub.status,
       billingCycle: sub.billingCycle,
       trialEndsAt: sub.trialEndsAt,
+      endDate: sub.endDate,
       trialDaysRemaining,
       isTrial: sub.status === 'TRIALING',
       isActive: sub.status === 'ACTIVE' || (sub.status === 'TRIALING' && trialDaysRemaining > 0),
@@ -158,5 +180,341 @@ export class SubscriptionsService {
     }
 
     return true;
+  }
+
+  /**
+   * Crea un link de pago (suscripción) para el plan seleccionado.
+   */
+  async createCheckout(userId: string, planCode: string, billingCycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY', quantity: number = 1) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { tenant: true }
+    });
+
+    const plan = await this.prisma.subscriptionPlan.findFirst({
+      where: {
+        OR: [
+          { id: planCode },
+          { code: planCode }
+        ]
+      }
+    });
+
+    if (!plan) throw new NotFoundException('Plan no encontrado');
+    if (plan.code === 'STARTER') throw new ForbiddenException('No puedes comprar el plan Starter, es gratuito.');
+
+    // Obtener la suscripción actual del tenant para calcular crédito si hay un cambio de plan
+    const currentSub = await this.prisma.tenantSubscription.findUnique({
+      where: { tenantId: user.tenantId },
+      include: { plan: true }
+    });
+
+    let credit = 0;
+    const now = new Date();
+    const isPlanChange = currentSub && currentSub.status === 'ACTIVE' && currentSub.plan.code !== plan.code;
+
+    if (isPlanChange && currentSub.endDate && currentSub.endDate > now) {
+      const remainingTime = currentSub.endDate.getTime() - now.getTime();
+      const remainingDays = Math.max(0, remainingTime / (1000 * 60 * 60 * 24));
+      
+      // Calcular precio diario del plan actual
+      const currentPlanPrice = currentSub.billingCycle === 'MONTHLY' 
+        ? Number(currentSub.plan.priceMonthly) 
+        : Number(currentSub.plan.priceYearly);
+      const currentPlanPeriodDays = currentSub.billingCycle === 'MONTHLY' ? 30 : 365;
+      const currentDailyPrice = currentPlanPrice / currentPlanPeriodDays;
+      
+      credit = Math.round(remainingDays * currentDailyPrice);
+    }
+
+    const finalQuantity = billingCycle === 'YEARLY' ? 1 : quantity;
+    const planPrice = billingCycle === 'MONTHLY' ? Number(plan.priceMonthly) : Number(plan.priceYearly);
+    const baseAmount = planPrice * finalQuantity;
+    const amountToCharge = Math.max(10, baseAmount - credit); // Mínimo de 10 ARS para evitar errores de MP
+
+    this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}). Crédito: ${credit}. Total: ${amountToCharge}.`);
+
+    // Priorizamos la URL del túnel (HTTPS) si está configurada, para que Mercado Pago permita el auto_return
+    const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
+    const backUrl = `${baseUrl}/dashboard/subscription/success`;
+
+    const externalReference = `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}`;
+
+    const preference = await this.mercadopagoService.createPreference({
+      title: isPlanChange 
+        ? `Axenda - Upgrade a Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`
+        : `Axenda - Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`,
+      amount: amountToCharge,
+      quantity: 1, // Usamos cantidad 1 ya que el precio ya contempla la multiplicación y el crédito prorrateado
+      externalReference: externalReference,
+      backUrl: backUrl,
+      payerEmail: user.email,
+    });
+
+    return {
+      initPoint: preference.init_point
+    };
+  }
+
+  /**
+   * Verifica activamente con Mercado Pago el estado de un pago manual
+   * (Defensa proactiva cuando el usuario vuelve del checkout)
+   */
+  async verifySubscription(tenantId: string, paymentId: string) {
+    try {
+      this.logger.log(`Verificación proactiva de pago iniciada para tenant ${tenantId}, pago ${paymentId}`);
+
+      const payment = await this.mercadopagoService.getPayment(paymentId);
+      
+      // Procesamos el pago y obtenemos el resultado
+      const result = await this.handleMercadoPagoPayment(payment, tenantId);
+
+      return { 
+        success: true, 
+        status: result?.status || payment.status 
+      };
+    } catch (error) {
+      this.logger.error(`Error en verificación de pago para tenant ${tenantId}`, error);
+      throw new Error('No se pudo verificar el pago en este momento.');
+    }
+  }
+
+  /**
+   * Sincroniza los planes de la base de datos con Mercado Pago.
+   * Solo para uso administrativo/interno o durante el arranque.
+   */
+  async syncPlansWithMercadoPago(forceReset = false) {
+    this.logger.log(`Iniciando sincronización de planes con Mercado Pago (forceReset: ${forceReset})...`);
+
+    if (forceReset) {
+      // Limpiar IDs antiguos de la DB para forzar re-creación
+      await this.prisma.subscriptionPlan.updateMany({
+        data: {
+          externalPlanIdMonthly: null,
+          externalPlanIdYearly: null
+        }
+      });
+      this.logger.log('🧹 IDs de planes externos limpiados en la base de datos.');
+    }
+    const plans = await this.prisma.subscriptionPlan.findMany({
+      where: {
+        active: true,
+        code: { not: 'STARTER' } // Starter es gratis, no va a MP
+      }
+    });
+
+    const isDev = this.configService.get('NODE_ENV') === 'development';
+    const baseUrl = isDev ? 'https://axenda.ar' : (this.configService.get('FRONTEND_URL') || 'https://axenda.ar');
+    const backUrl = `${baseUrl}/dashboard/subscription/success`;
+    let syncedCount = 0;
+
+    for (const plan of plans) {
+      this.logger.log(`Sincronizando plan ${plan.name} (${plan.code})...`);
+
+      let updatedMonthlyId = plan.externalPlanIdMonthly;
+      let updatedYearlyId = plan.externalPlanIdYearly;
+
+      // Plan Mensual
+      if (!plan.externalPlanIdMonthly) {
+        try {
+          const mpPlanMonthly = await this.mercadopagoService.createPlan({
+            reason: `Axenda - ${plan.name} (Mensual)`,
+            amount: Number(plan.priceMonthly),
+            frequency: 1,
+            frequency_type: 'months',
+            back_url: backUrl,
+          });
+          updatedMonthlyId = mpPlanMonthly.id;
+          this.logger.log(`✅ Creado plan MENSUAL en MP para ${plan.code}: ${updatedMonthlyId}`);
+        } catch (error) {
+          this.logger.error(`❌ Error al crear plan MENSUAL para ${plan.code}`, error);
+        }
+      } else {
+        this.logger.log(`ℹ️ Plan MENSUAL para ${plan.code} ya existe en MP (${plan.externalPlanIdMonthly})`);
+      }
+
+      // Plan Anual (MP no soporta 'years', usamos 12 'months')
+      if (!plan.externalPlanIdYearly) {
+        try {
+          const mpPlanYearly = await this.mercadopagoService.createPlan({
+            reason: `Axenda - ${plan.name} (Anual)`,
+            amount: Number(plan.priceYearly),
+            frequency: 12,
+            frequency_type: 'months',
+            back_url: backUrl,
+          });
+          updatedYearlyId = mpPlanYearly.id;
+          this.logger.log(`✅ Creado plan ANUAL en MP para ${plan.code}: ${updatedYearlyId}`);
+        } catch (error) {
+          this.logger.error(`❌ Error al crear plan ANUAL para ${plan.code}`, error);
+        }
+      } else {
+        this.logger.log(`ℹ️ Plan ANUAL para ${plan.code} ya existe en MP (${plan.externalPlanIdYearly})`);
+      }
+
+      // Actualizar DB si hubo cambios
+      if (updatedMonthlyId !== plan.externalPlanIdMonthly || updatedYearlyId !== plan.externalPlanIdYearly) {
+        await this.prisma.subscriptionPlan.update({
+          where: { id: plan.id },
+          data: {
+            externalPlanIdMonthly: updatedMonthlyId,
+            externalPlanIdYearly: updatedYearlyId,
+          }
+        });
+        syncedCount++;
+      }
+    }
+
+    this.logger.log(`Sincronización finalizada. Planes actualizados en DB: ${syncedCount}`);
+    return { success: true, syncedPlans: syncedCount };
+  }
+
+  /**
+   * Procesa un pago manual (Preferencia) de Mercado Pago
+   */
+  async handleMercadoPagoPayment(mpPayment: any, providedTenantId?: string) {
+    this.logger.log(`Procesando pago de MP: ${mpPayment.id}. Status: ${mpPayment.status}`);
+
+    let tenantId = providedTenantId;
+    let planCode: string | undefined;
+    let billingCycle: string | undefined;
+    let quantity: number = 1;
+
+    // 1. Identificamos la información vía external_reference (tenantId:planCode:billingCycle:quantity)
+    if (mpPayment.external_reference) {
+      const parts = mpPayment.external_reference.split(':');
+      if (parts.length >= 1) tenantId = parts[0];
+      if (parts.length >= 2) planCode = parts[1];
+      if (parts.length >= 3) billingCycle = parts[2];
+      if (parts.length >= 4) quantity = parseInt(parts[3]) || 1;
+    }
+
+    if (!tenantId) {
+      this.logger.warn(`No se pudo identificar el tenant para el pago de MP: ${mpPayment.id}. Ignorando.`);
+      return;
+    }
+
+    // Solo procesamos si el pago está aprobado
+    if (mpPayment.status !== 'approved') {
+      this.logger.log(`El pago ${mpPayment.id} no está aprobado (${mpPayment.status}). No se actualiza la suscripción.`);
+      return;
+    }
+
+    // Evitar doble procesamiento si ya existe factura registrada para este id de pago
+    const existingInvoice = await this.prisma.subscriptionInvoice.findFirst({
+      where: {
+        externalPaymentId: mpPayment.id.toString(),
+        status: 'PAID'
+      }
+    });
+
+    if (existingInvoice) {
+      this.logger.log(`El pago de MP ${mpPayment.id} ya fue procesado previamente. Ignorando.`);
+      return {
+        status: mpPayment.status,
+        tenantId
+      };
+    }
+
+    // Obtenemos la suscripción actual del tenant
+    const currentSub = await this.prisma.tenantSubscription.findUnique({
+      where: { tenantId },
+      include: { plan: true }
+    });
+
+    if (!currentSub) {
+      this.logger.error(`No se encontró registro de suscripción para el tenant ${tenantId}`);
+      return;
+    }
+
+    // Buscamos el plan que el usuario pagó (si viene en la referencia)
+    let planIdToApply = currentSub.planId;
+    let cycleToApply = (billingCycle as any) || currentSub.billingCycle;
+
+    if (planCode) {
+      const targetPlan = await this.prisma.subscriptionPlan.findUnique({
+        where: { code: planCode }
+      });
+      if (targetPlan) {
+        planIdToApply = targetPlan.id;
+      }
+    }
+
+    // Determinamos cuánto tiempo extender
+    const now = new Date();
+    const isPlanChange = planCode && planCode !== currentSub.plan.code;
+    let newEndDate = (!isPlanChange && currentSub.endDate && currentSub.endDate > now) 
+      ? new Date(currentSub.endDate) 
+      : new Date(now);
+
+    if (cycleToApply === 'MONTHLY') {
+      newEndDate.setMonth(newEndDate.getMonth() + quantity);
+    } else {
+      newEndDate.setFullYear(newEndDate.getFullYear() + quantity);
+    }
+
+    // Solo activamos/extendemos si el pago está aprobado
+    if (mpPayment.status === 'approved') {
+      this.logger.log(`Extendiendo suscripción del tenant ${tenantId} al plan ${planCode || 'actual'} (${cycleToApply}) x${quantity} hasta ${newEndDate.toISOString()}`);
+
+      await this.prisma.$transaction([
+        this.prisma.tenantSubscription.update({
+          where: { tenantId },
+          data: {
+            planId: planIdToApply,
+            status: 'ACTIVE',
+            billingCycle: cycleToApply,
+            endDate: newEndDate,
+            trialEndsAt: null,
+            externalSubscriptionId: mpPayment.id.toString(),
+          }
+        }),
+        this.prisma.subscriptionInvoice.create({
+          data: {
+            subscriptionId: currentSub.id,
+            amount: mpPayment.transaction_amount,
+            currency: mpPayment.currency_id || 'ARS',
+            status: 'PAID',
+            paymentDate: new Date(),
+            externalPaymentId: mpPayment.id.toString(),
+            billingPeriodStart: now,
+            billingPeriodEnd: newEndDate
+          }
+        })
+      ]);
+      this.logger.log(`Suscripción del tenant ${tenantId} actualizada exitosamente.`);
+    } else {
+      this.logger.log(`Pago de MP ${mpPayment.id} recibido con estado: ${mpPayment.status}. No se requiere acción inmediata.`);
+    }
+
+    return {
+      status: mpPayment.status,
+      tenantId
+    };
+  }
+
+  /**
+   * Obtiene el historial de facturas (pagos) de la suscripción del tenant
+   */
+  async getSubscriptionInvoices(tenantId: string) {
+    const sub = await this.prisma.tenantSubscription.findUnique({
+      where: { tenantId }
+    });
+
+    if (!sub) {
+      return [];
+    }
+
+    return this.prisma.subscriptionInvoice.findMany({
+      where: { subscriptionId: sub.id },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  /**
+   * Deprecated: Manejo de suscripciones recurrentes de MP
+   */
+  async handleMercadoPagoSubscriptionUpdate(mpSubscription: any, providedTenantId?: string) {
+    this.logger.warn('Llamada a handleMercadoPagoSubscriptionUpdate (Deprecated).');
   }
 }

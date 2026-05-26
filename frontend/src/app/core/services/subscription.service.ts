@@ -14,6 +14,7 @@ export interface SubscriptionStatus {
   status: 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELED' | 'INACTIVE';
   billingCycle: 'MONTHLY' | 'YEARLY';
   trialEndsAt: string | null;
+  endDate: string | null;
   trialDaysRemaining: number;
   isTrial: boolean;
   isActive: boolean;
@@ -53,6 +54,7 @@ export class SubscriptionService {
   isTrial = computed(() => this._status()?.isTrial ?? false);
   trialDaysRemaining = computed(() => this._status()?.trialDaysRemaining ?? 0);
   isActive = computed(() => this._status()?.isActive ?? false);
+  endDate = computed(() => this._status()?.endDate);
   
   // Límites y Uso
   limits = computed(() => this._status()?.limits);
@@ -103,6 +105,46 @@ export class SubscriptionService {
    */
   goToUpgrade() {
     this.router.navigate(['/dashboard/settings'], { queryParams: { section: 'billing' } });
+  }
+
+  /**
+   * Crea un link de pago para la suscripción
+   */
+  async checkout(planId: string, billingCycle: 'MONTHLY' | 'YEARLY', quantity: number = 1): Promise<{ initPoint: string }> {
+    return firstValueFrom(
+      this.http.post<{ initPoint: string }>(`${this.apiUrl}/checkout`, {
+        planId,
+        billingCycle,
+        quantity
+      })
+    );
+  }
+
+  /**
+   * Obtiene los planes disponibles
+   */
+  async getPlans(): Promise<any[]> {
+    return firstValueFrom(
+      this.http.get<any[]>(`${this.apiUrl}/plans`)
+    );
+  }
+
+  /**
+   * Verifica activamente el estado de un pago o suscripción de Mercado Pago
+   */
+  async verifySubscription(paymentId: string): Promise<any> {
+    return firstValueFrom(
+      this.http.get<any>(`${this.apiUrl}/verify?payment_id=${paymentId}`)
+    );
+  }
+
+  /**
+   * Obtiene el historial de facturas/pagos del tenant actual
+   */
+  async getInvoices(): Promise<any[]> {
+    return firstValueFrom(
+      this.http.get<any[]>(`${this.apiUrl}/invoices`)
+    );
   }
 
   /**

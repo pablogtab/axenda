@@ -49,7 +49,7 @@ async function seedSubscriptionPlans() {
       maxBranches: 1,
       maxAppointments: 999999,
       maxUsers: 2,
-      maxWhatsapp: 0,
+      maxWhatsapp: 100,
       hasReports: true,
       hasOnlinePayments: true,
       hasAutoReviews: true,
@@ -87,18 +87,12 @@ async function seedSubscriptionPlans() {
   ]
 
   for (const plan of plans) {
-    const existing = await prisma.subscriptionPlan.findUnique({
+    await prisma.subscriptionPlan.upsert({
       where: { code: plan.code },
+      update: plan,
+      create: plan,
     })
-
-    if (!existing) {
-      await prisma.subscriptionPlan.create({
-        data: plan,
-      })
-      console.log(`✅ Plan ${plan.code} creado.`)
-    } else {
-      console.log(`ℹ️ Plan ${plan.code} ya existe. Saltando creación para no pisar datos.`)
-    }
+    console.log(`✅ Plan ${plan.code} sincronizado.`)
   }
   console.log('✅ Planes de suscripción actualizados.')
 }

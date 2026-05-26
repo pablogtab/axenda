@@ -19,7 +19,7 @@ import { CreateClientTagDto } from './dto/client-tag.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface'
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 
 @ApiTags('Clients')
 @ApiBearerAuth('access-token')
@@ -34,7 +34,7 @@ export class ClientsController {
   @Get()
   @ApiOperation({ summary: 'Listar todos los clientes del tenant' })
   findAll(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('q') query?: string,
@@ -49,32 +49,32 @@ export class ClientsController {
 
   @Get('search')
   @ApiOperation({ summary: 'Buscar clientes por nombre, email o teléfono' })
-  search(@CurrentUser() user: JwtPayload, @Query('q') query: string) {
+  search(@CurrentUser() user: AuthenticatedUser, @Query('q') query: string) {
     return this.clientsService.search(user.tenantId, query || '')
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener el perfil de un cliente' })
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.clientsService.findOne(user.tenantId, id)
   }
 
   @Post()
   @ApiOperation({ summary: 'Registrar un nuevo cliente' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateClientDto) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateClientDto) {
     return this.clientsService.create(user.tenantId, dto)
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar perfil del cliente' })
-  update(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateClientDto) {
+  update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateClientDto) {
     return this.clientsService.update(user.tenantId, id, dto)
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Dar de baja a un cliente (soft delete)' })
-  deactivate(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+  deactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.clientsService.deactivate(user.tenantId, id)
   }
 
@@ -83,7 +83,7 @@ export class ClientsController {
   @Post(':id/tags')
   @ApiOperation({ summary: 'Añadir un tag al cliente' })
   addTag(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() dto: CreateClientTagDto,
   ) {
@@ -94,7 +94,7 @@ export class ClientsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Quitar un tag del cliente' })
   removeTag(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Param('tagId') tagId: string,
   ) {

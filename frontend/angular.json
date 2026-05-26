@@ -18,8 +18,13 @@
             "browser": "src/main.ts",
             "polyfills": [],
             "tsConfig": "tsconfig.json",
-            "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.css"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css"
+            ],
             "scripts": []
           },
           "configurations": {
@@ -64,6 +69,12 @@
           "defaultConfiguration": "production"
         },
         "serve": {
+          "options": {
+            "allowedHosts": [
+              "localhost",
+              "development.axenda.ar"
+            ]
+          },
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
