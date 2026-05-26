@@ -186,8 +186,7 @@ export class SubscriptionsService implements OnModuleInit {
    * Crea un link de pago (suscripción) para el plan seleccionado.
    */
   async createCheckout(userId: string, planCode: string, billingCycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY', quantity: number = 1) {
-    const paymentsEnabled = this.configService.get('PAYMENTS_ENABLED') !== 'false';
-    if (!paymentsEnabled) {
+    if (!this.isPaymentsEnabled()) {
       throw new ForbiddenException('Los pagos online están temporalmente fuera de servicio.');
     }
 
@@ -517,7 +516,7 @@ export class SubscriptionsService implements OnModuleInit {
   }
 
   isPaymentsEnabled(): boolean {
-    return this.configService.get('PAYMENTS_ENABLED') !== 'false';
+    return this.configService.get<boolean>('PAYMENTS_ENABLED') === true;
   }
 
   /**

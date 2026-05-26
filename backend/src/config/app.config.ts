@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, Max } from 'class-validator'
+import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean } from 'class-validator'
 import { plainToInstance } from 'class-transformer'
 
 export class EnvironmentVariables {
@@ -63,6 +63,10 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   WPP_SYNC_TEMPLATES: string = 'true'
+
+  @IsOptional()
+  @IsBoolean()
+  PAYMENTS_ENABLED: boolean = false
 }
 
 export function validateConfig(config: Record<string, unknown>) {

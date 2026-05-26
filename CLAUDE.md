@@ -195,6 +195,7 @@ Tablas principales definidas en Prisma:
 - **Transactions:** Para operaciones críticas que requieran atomicidad (ej: guardar un turno y generar su log inicial), encapsular la lógica en `this.prisma.$transaction(async (tx) => { ... })`.
 - **Soft Deletes:** Utilizar el campo `active: Boolean` en lugar de borrar físicamente registros que tengan historial o dependencias (ej. `Client`, `Professional`, `Branch`, `Service`).
 - **Guards:** Colocar `@UseGuards(JwtAuthGuard)` a nivel controlador. Si algún endpoint es público (como en `PublicAppointmentsController`), se omite el guard. Para permisos, usar `@Roles(...)` + `RolesGuard`.
+- **Configuración y Env:** Todas las variables de entorno (`.env`) deben registrarse y validarse centralizadamente en `backend/src/config/app.config.ts` dentro de la clase `EnvironmentVariables`. No se deben leer variables ad-hoc con `process.env` ni realizar conversiones de tipo manuales en los servicios; en su lugar, se inyecta `ConfigService` y se utiliza de manera fuertemente tipada (ej: `this.configService.get<boolean>('VARIABLE')`). Las variables de tipo bandera o booleanas deben validarse obligatoriamente con `@IsBoolean()` y establecerse por defecto en `false` (salvo indicación explícita de lo contrario) para que solo sean verdaderas si se configuran explícitamente como `true`.
 
 ### Frontend (Angular / Tailwind CSS)
 - **Standalone Components:** Todos los componentes son standalone. No se utilizan módulos de Angular (`NgModule`).
