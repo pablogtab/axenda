@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
 
 export const appRoutes: Routes = [
   { 
@@ -10,11 +11,13 @@ export const appRoutes: Routes = [
   { 
     path: 'login', 
     title: 'Axenda - Iniciar Sesión',
+    canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) 
   },
   { 
     path: 'register', 
     title: 'Axenda - Crear Cuenta',
+    canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) 
   },
   {
