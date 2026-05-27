@@ -55,63 +55,63 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   testimonials = [
     {
-      quote: "Axenda cambió la forma en que manejamos nuestra barbería. Los clientes aman reservar por WhatsApp.",
+      quote: "Axenda cambió la forma en que manejamos nuestra agenda. Los clientes valoran muchísimo la comodidad de reservar online.",
       author: "Marcos Ruiz",
-      role: "Dueño de The Barber Shop",
+      role: "Director de Ruiz Barbería",
       avatar: "MR"
     },
     {
-      quote: "Como esteticista, el recordatorio automático me salvó de perder muchísimas horas por inasistencias.",
+      quote: "El recordatorio de WhatsApp redujo las inasistencias a casi cero. Es una herramienta indispensable para organizar mi día.",
       author: "Lucía Fernández",
-      role: "Especialista en Estética",
+      role: "Fundadora de LF Estética & Spa",
       avatar: "LF"
     },
     {
-      quote: "El sistema de cobro de señas es fantástico. Mis ingresos son mucho más estables ahora.",
-      author: "Carlos Gómez",
-      role: "Fisioterapeuta",
+      quote: "Cobrar señas por adelantado nos dio la estabilidad financiera que necesitábamos. El sistema es impecable.",
+      author: "Dr. Carlos Gómez",
+      role: "Director de Gómez Kinesiología",
       avatar: "CG"
     },
     {
-      quote: "Llevo el control de mi gimnasio boutique con Axenda. Es simple, rápido y muy profesional.",
+      quote: "Simple, rápido y con un diseño increíble. Llevo la gestión de mis clases de forma totalmente automatizada.",
       author: "Sonia Paz",
-      role: "Directora de FitStudio",
+      role: "Co-fundadora de Paz Fitness Studio",
       avatar: "SP"
     },
     {
-      quote: "La mejor inversión para mi consultorio. Los pacientes valoran la rapidez de la agenda online.",
+      quote: "Mis pacientes agendan en segundos. Nos ahorra horas de atención telefónica y mejora la experiencia general.",
       author: "Dr. Roberto Sosa",
-      role: "Odontólogo",
+      role: "Director de Clínica Dental DentalSosa",
       avatar: "RS"
     },
     {
-      quote: "Excelente soporte y una interfaz que mis clientes entienden a la primera. ¡100% recomendado!",
+      quote: "Una interfaz sofisticada y un soporte de primer nivel. Axenda superó todas nuestras expectativas.",
       author: "Elena Martínez",
-      role: "Propietaria de Spa Sentir",
+      role: "Creadora de Sentir Wellness & Spa",
       avatar: "EM"
     },
     {
-      quote: "Automatizar los turnos me permitió dedicarme más a mi arte y menos al teléfono.",
+      quote: "Automatizar mis turnos me devolvió el tiempo para concentrarme en mis diseños y no en responder mensajes.",
       author: "Julián Vaca",
-      role: "Tatuador Senior",
+      role: "Artista Principal en Vaca Tattoo Studio",
       avatar: "JV"
     },
     {
-      quote: "Axenda es intuitivo y potente. La gestión de múltiples sucursales es ahora una tarea fácil.",
+      quote: "Administrar múltiples sucursales y profesionales ahora es sumamente sencillo. Las métricas son excepcionales.",
       author: "Mariana Silva",
-      role: "Gerente de Cadena de Salones",
+      role: "Directora de Silva Coiffeur",
       avatar: "MS"
     },
     {
-      quote: "Desde que usamos Axenda, las reservas aumentaron un 30% gracias a la facilidad de uso.",
+      quote: "Las reservas aumentaron de inmediato gracias al link de reserva en nuestro perfil. Altamente recomendado.",
       author: "Pablo Torales",
-      role: "Dueño de PetShop & Grooming",
+      role: "Fundador de Torales Pet Spa",
       avatar: "PT"
     },
     {
-      quote: "Un sistema que realmente entiende las necesidades de los pequeños negocios. Muy completo.",
-      author: "Ana Clara Rossi",
-      role: "Psicóloga",
+      quote: "Un sistema profesional y respetuoso con el tiempo del paciente. La mejor inversión tecnológica para mi consultorio.",
+      author: "Lic. Ana Clara Rossi",
+      role: "Psicóloga y Terapeuta",
       avatar: "AR"
     }
   ];
