@@ -34,7 +34,16 @@ export interface SubscriptionStatus {
     users: number;
     appointmentsMonth: number;
     whatsappMonth: number;
+    extraWhatsappBalance?: number;
+    extraWhatsappTotal?: number;
   };
+  activePacks?: Array<{
+    id: string;
+    quantity: number;
+    remaining: number;
+    expiresAt: string;
+    createdAt: string;
+  }>;
 }
 
 @Injectable({
@@ -134,6 +143,17 @@ export class SubscriptionService {
         planId,
         billingCycle,
         quantity
+      })
+    );
+  }
+
+  /**
+   * Crea un link de pago para un paquete de WhatsApp
+   */
+  async checkoutPack(packCode: string): Promise<{ initPoint: string }> {
+    return firstValueFrom(
+      this.http.post<{ initPoint: string }>(`${this.apiUrl}/checkout-pack`, {
+        packCode
       })
     );
   }

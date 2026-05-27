@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { VerifySubscriptionDto } from './dto/verify-subscription.dto';
+import { CreatePackCheckoutDto } from './dto/create-pack-checkout.dto';
 
 @Controller('subscriptions')
 @UseGuards(JwtAuthGuard)
@@ -36,6 +37,14 @@ export class SubscriptionsController {
     @Body() body: CreateCheckoutDto
   ) {
     return this.subscriptionsService.createCheckout(userId, body.planId, body.billingCycle, body.quantity || 1);
+  }
+
+  @Post('checkout-pack')
+  async createPackCheckout(
+    @CurrentUser('sub') userId: string,
+    @Body() body: CreatePackCheckoutDto
+  ) {
+    return this.subscriptionsService.createPackCheckout(userId, body.packCode);
   }
 
   @Get('verify')

@@ -38,6 +38,11 @@ export const dashboardRoutes: Routes = [
     loadComponent: () => import('./subscription/subscription-plans.component').then(m => m.SubscriptionPlansComponent)
   },
   {
+    path: 'subscription/buy-packs',
+    title: 'Axenda - Comprar Mensajes de WhatsApp',
+    loadComponent: () => import('./subscription/whatsapp-packs.component').then(m => m.WhatsappPacksComponent)
+  },
+  {
     path: 'subscription/success',
     title: 'Axenda - Suscripción Exitosa',
     component: SubscriptionSuccessComponent

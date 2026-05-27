@@ -56,6 +56,7 @@ model SubscriptionInvoice {
   billingPeriodEnd   DateTime?
   externalPaymentId  String?            @unique
   invoiceUrl         String?
+  description        String?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   subscription       TenantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)

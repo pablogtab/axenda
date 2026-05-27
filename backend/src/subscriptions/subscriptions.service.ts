@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MercadoPagoService } from '../mercadopago/mercadopago.service';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { ConfigService } from '@nestjs/config';
+import { WHATSAPP_PACKS } from './constants/whatsapp-packs';
 
 @Injectable()
 export class SubscriptionsService implements OnModuleInit {
@@ -128,6 +129,19 @@ export class SubscriptionsService implements OnModuleInit {
     const whatsappMonth = whatsappConfig ? whatsappConfig.messagesSentMonth : 0;
 
     const now = new Date();
+    
+    // Calcular balance de mensajes extras activos (FIFO)
+    const activePacks = await this.prisma.tenantWhatsappPack.findMany({
+      where: {
+        tenantId,
+        remaining: { gt: 0 },
+        expiresAt: { gt: now }
+      },
+      orderBy: { expiresAt: 'asc' }
+    });
+    const extraWhatsappBalance = activePacks.reduce((acc, p) => acc + p.remaining, 0);
+    const extraWhatsappTotal = activePacks.reduce((acc, p) => acc + p.quantity, 0);
+
     const trialDaysRemaining = sub.trialEndsAt && sub.trialEndsAt > now
       ? Math.ceil((sub.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
@@ -161,7 +175,16 @@ export class SubscriptionsService implements OnModuleInit {
         users: userCount,
         appointmentsMonth: apptCount,
         whatsappMonth: whatsappMonth,
+        extraWhatsappBalance,
+        extraWhatsappTotal,
       },
+      activePacks: activePacks.map(p => ({
+        id: p.id,
+        quantity: p.quantity,
+        remaining: p.remaining,
+        expiresAt: p.expiresAt,
+        createdAt: p.createdAt
+      })),
     };
   }
 
@@ -222,8 +245,19 @@ export class SubscriptionsService implements OnModuleInit {
 
         const wConfig = await this.getOrResetWhatsappConfig(tenantId);
         const wCount = wConfig ? wConfig.messagesSentMonth : 0;
-        if (wCount >= status.limits.maxWhatsapp) {
-          throw new ForbiddenException(`Has alcanzado el límite de mensajes de WhatsApp mensuales (${status.limits.maxWhatsapp}) para tu plan ${status.plan.name}.`);
+
+        // Sumar saldo extra disponible de paquetes activos (FIFO)
+        const activePacks = await this.prisma.tenantWhatsappPack.findMany({
+          where: {
+            tenantId,
+            remaining: { gt: 0 },
+            expiresAt: { gt: new Date() }
+          }
+        });
+        const extraBalance = activePacks.reduce((acc, p) => acc + p.remaining, 0);
+
+        if (wCount >= status.limits.maxWhatsapp && extraBalance <= 0) {
+          throw new ForbiddenException(`Has alcanzado el límite de mensajes de WhatsApp mensuales (${status.limits.maxWhatsapp}) y no tienes saldo de mensajes extras para tu plan ${status.plan.name}.`);
         }
         break;
     }
@@ -299,6 +333,38 @@ export class SubscriptionsService implements OnModuleInit {
         : `Axenda - Plan ${plan.name} (${billingCycle === 'MONTHLY' ? 'Mes' : 'Año'})`,
       amount: amountToCharge,
       quantity: 1, // Usamos cantidad 1 ya que el precio ya contempla la multiplicación y el crédito prorrateado
+      externalReference: externalReference,
+      backUrl: backUrl,
+      payerEmail: user.email,
+    });
+
+    return {
+      initPoint: preference.init_point
+    };
+  }
+
+  async createPackCheckout(userId: string, packCode: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { tenant: true }
+    });
+
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const pack = WHATSAPP_PACKS[packCode as keyof typeof WHATSAPP_PACKS];
+    if (!pack) throw new BadRequestException('Paquete de WhatsApp no válido');
+
+    this.logger.log(`Iniciando checkout de pack para tenant ${user.tenantId}. Pack: ${packCode} ($${pack.price}).`);
+
+    const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
+    const backUrl = `${baseUrl}/dashboard/subscription/success`;
+
+    const externalReference = `${user.tenantId}:${packCode}:ONETIME:1`;
+
+    const preference = await this.mercadopagoService.createPreference({
+      title: `Axenda - ${pack.name}`,
+      amount: pack.price,
+      quantity: 1,
       externalReference: externalReference,
       backUrl: backUrl,
       payerEmail: user.email,
@@ -480,9 +546,57 @@ export class SubscriptionsService implements OnModuleInit {
       return;
     }
 
+    // Si el planCode es un paquete de WhatsApp
+    if (planCode && planCode.startsWith('WPP_PACK_')) {
+      const pack = WHATSAPP_PACKS[planCode as keyof typeof WHATSAPP_PACKS];
+      if (!pack) {
+        this.logger.error(`Paquete de WhatsApp no válido en pago de MP: ${planCode}`);
+        return;
+      }
+
+      if (mpPayment.status === 'approved') {
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 3); // 3 meses de validez
+
+        this.logger.log(`Acreditando ${pack.quantity} mensajes de WhatsApp para el tenant ${tenantId}. Expira el ${expiresAt.toISOString()}`);
+
+        await this.prisma.$transaction([
+          this.prisma.tenantWhatsappPack.create({
+            data: {
+              tenantId,
+              quantity: pack.quantity,
+              remaining: pack.quantity,
+              expiresAt,
+            }
+          }),
+          this.prisma.subscriptionInvoice.create({
+            data: {
+              subscriptionId: currentSub.id,
+              amount: mpPayment.transaction_amount || pack.price,
+              currency: mpPayment.currency_id || 'ARS',
+              status: 'PAID',
+              paymentDate: new Date(),
+              externalPaymentId: mpPayment.id.toString(),
+              billingPeriodStart: new Date(),
+              billingPeriodEnd: expiresAt,
+              description: pack.name,
+            }
+          })
+        ]);
+
+        this.logger.log(`Paquete de WhatsApp acreditado exitosamente para el tenant ${tenantId}.`);
+      }
+
+      return {
+        status: mpPayment.status,
+        tenantId
+      };
+    }
+
     // Buscamos el plan que el usuario pagó (si viene en la referencia)
     let planIdToApply = currentSub.planId;
     let cycleToApply = (billingCycle as any) || currentSub.billingCycle;
+    let planNameToUse = currentSub.plan.name;
 
     if (planCode) {
       const targetPlan = await this.prisma.subscriptionPlan.findUnique({
@@ -490,6 +604,7 @@ export class SubscriptionsService implements OnModuleInit {
       });
       if (targetPlan) {
         planIdToApply = targetPlan.id;
+        planNameToUse = targetPlan.name;
       }
     }
 
@@ -531,7 +646,8 @@ export class SubscriptionsService implements OnModuleInit {
             paymentDate: new Date(),
             externalPaymentId: mpPayment.id.toString(),
             billingPeriodStart: now,
-            billingPeriodEnd: newEndDate
+            billingPeriodEnd: newEndDate,
+            description: `Plan ${planNameToUse} (${cycleToApply === 'MONTHLY' ? 'Mensual' : 'Anual'})`,
           }
         })
       ]);

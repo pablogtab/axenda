@@ -238,6 +238,42 @@ export class WhatsappService {
         },
       });
 
+      // Descontar saldo extra de paquetes comprados si excede el límite del plan mensual (FIFO)
+      try {
+        const subscription = await this.prisma.tenantSubscription.findUnique({
+          where: { tenantId },
+          include: { plan: true },
+        });
+        const maxWhatsapp = subscription?.plan?.maxWhatsapp || 0;
+
+        const wConfig = await this.prisma.tenantWhatsappConfig.findUnique({
+          where: { tenantId }
+        });
+        const messagesSentMonth = wConfig ? wConfig.messagesSentMonth : 0;
+
+        if (messagesSentMonth >= maxWhatsapp) {
+          const soonestPack = await this.prisma.tenantWhatsappPack.findFirst({
+            where: {
+              tenantId,
+              remaining: { gt: 0 },
+              expiresAt: { gt: new Date() }
+            },
+            orderBy: { expiresAt: 'asc' }
+          });
+
+          if (soonestPack) {
+            await this.prisma.tenantWhatsappPack.update({
+              where: { id: soonestPack.id },
+              data: { remaining: { decrement: 1 } }
+            });
+            this.logger.log(`Discounted 1 WhatsApp message from pack ${soonestPack.id} (remaining: ${soonestPack.remaining - 1}) for tenant ${tenantId}.`);
+          }
+        }
+      } catch (err) {
+        // Log error but don't fail message delivery
+        this.logger.error(`Error processing WhatsApp pack FIFO consumption: ${err.message}`);
+      }
+
       await this.prisma.tenantWhatsappConfig.upsert({
         where: { tenantId },
         create: { tenantId, messagesSentMonth: 1 },

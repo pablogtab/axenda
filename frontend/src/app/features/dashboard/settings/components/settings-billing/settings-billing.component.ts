@@ -2,6 +2,7 @@ import { Component, Input, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
+import { SnackbarService } from '../../../../../core/services/snackbar.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
 import { PlansGridComponent } from '../../../subscription/plans-grid.component';
 
@@ -89,14 +90,64 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
               </div>
             </div>
             <!-- WhatsApp Usage (Si aplica) -->
-            <div class="space-y-2" *ngIf="subService.limits()!.maxWhatsapp > 0">
-              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                <span class="text-text-muted">Mensajes WhatsApp</span>
-                <span class="text-text-main">{{ subService.usage()?.whatsappMonth }} / {{ subService.limits()!.maxWhatsapp >= 999999 ? '∞' : subService.limits()?.maxWhatsapp }}</span>
+            <div class="space-y-4" *ngIf="subService.limits()!.maxWhatsapp > 0">
+              <!-- Bar 1: Plan Messages -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                  <span class="text-text-muted flex items-center gap-1">
+                    <app-icon name="chat" class="text-[#25D366] text-xs"></app-icon> Mensajes de Plan
+                  </span>
+                  <span class="text-text-main font-black">
+                    {{ subService.usage()?.whatsappMonth || 0 }} / {{ subService.limits()!.maxWhatsapp >= 999999 ? '∞' : subService.limits()?.maxWhatsapp }}
+                  </span>
+                </div>
+                <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden relative">
+                  <div class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.4)] transition-all duration-1000" 
+                    [style.width.%]="subService.limits()!.maxWhatsapp >= 999999 ? 0 : (((subService.usage()?.whatsappMonth || 0) / subService.limits()!.maxWhatsapp) * 100 > 100 ? 100 : ((subService.usage()?.whatsappMonth || 0) / subService.limits()!.maxWhatsapp) * 100)"></div>
+                </div>
               </div>
-              <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden">
-                <div class="h-full bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-1000" 
-                  [style.width.%]="subService.limits()!.maxWhatsapp >= 999999 ? 0 : (subService.usage()!.whatsappMonth / subService.limits()!.maxWhatsapp) * 100"></div>
+
+              <!-- Bar 2: Extra Messages (Only if has purchased extras) -->
+              <div class="space-y-2 pt-2 border-t border-border/10 animate-in fade-in duration-300" *ngIf="subService.usage()?.extraWhatsappTotal">
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                  <span class="text-text-muted flex items-center gap-1">
+                    <app-icon name="add_circle" class="text-[#25D366] text-xs"></app-icon> Mensajes Extras
+                  </span>
+                  <span class="text-text-main font-black">
+                    {{ (subService.usage()?.extraWhatsappTotal || 0) - (subService.usage()?.extraWhatsappBalance || 0) }} / {{ subService.usage()?.extraWhatsappTotal }}
+                  </span>
+                </div>
+                <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden relative">
+                  <div class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.4)] transition-all duration-1000" 
+                    [style.width.%]="subService.usage()?.extraWhatsappTotal ? (((subService.usage()?.extraWhatsappTotal || 0) - (subService.usage()?.extraWhatsappBalance || 0)) / subService.usage()?.extraWhatsappTotal) * 100 : 0"></div>
+                </div>
+              </div>
+
+              <!-- Explanation & Button -->
+              <div class="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
+                <div class="text-[9px] text-text-dim max-w-[170px] leading-tight">
+                  <span class="block">Una vez agotado tu plan, se consumen los mensajes extras automáticamente por vencimiento. Los packs expiran a los 3 meses.</span>
+                </div>
+                <button routerLink="/dashboard/subscription/buy-packs" class="px-3 py-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0">
+                  <app-icon name="add" class="text-xs"></app-icon> Comprar Extras
+                </button>
+              </div>
+
+              <!-- Active Packs List -->
+              <div class="mt-4 pt-3 border-t border-border/20 space-y-2 animate-in fade-in duration-300" *ngIf="subService.status()?.activePacks?.length">
+                <h5 class="text-[9px] font-black text-text-dim uppercase tracking-wider mb-2">Detalle de Packs</h5>
+                <div class="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
+                  <div *ngFor="let pack of subService.status()?.activePacks" class="flex justify-between items-center text-[10px] bg-surface-subtle/30 p-2 rounded-lg border border-border/30">
+                    <div class="flex items-center gap-1.5">
+                      <app-icon name="inventory_2" class="text-[#25D366] text-[11px]"></app-icon>
+                      <span class="font-semibold text-text-muted">Pack {{ pack.quantity }} msgs</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="font-bold text-text-main">{{ pack.remaining }} / {{ pack.quantity }} rest.</span>
+                      <span class="text-[9px] text-text-dim font-medium bg-surface-subtle px-1.5 py-0.5 rounded border border-border/30">Expira: {{ pack.expiresAt | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <!-- Branches Usage -->
@@ -141,29 +192,32 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-border">
-                <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Fecha</th>
-                <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Periodo</th>
-                <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Detalle</th>
-                <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Monto</th>
-                <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Estado</th>
+                <th class="py-4 pr-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Fecha</th>
+                <th class="py-4 pr-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Periodo</th>
+                <th class="py-4 pr-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Detalle</th>
+                <th class="py-4 pr-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Monto</th>
+                <th class="py-4 pr-4 text-[10px] font-black text-text-dim uppercase tracking-wider">Estado</th>
                 <th class="py-4 text-[10px] font-black text-text-dim uppercase tracking-wider text-right">Comprobante</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let invoice of invoices()" class="border-b border-border/30 hover:bg-white/[0.01] transition-colors">
-                <td class="py-4 text-xs font-semibold text-text-main">
+                <td class="py-4 pr-4 text-xs font-semibold text-text-main whitespace-nowrap">
                   {{ invoice.paymentDate | date:'dd/MM/yyyy' }}
                 </td>
-                <td class="py-4 text-xs text-text-muted">
+                <td class="py-4 pr-4 text-xs text-text-muted whitespace-nowrap">
                   {{ invoice.billingPeriodStart | date:'dd/MM/yyyy' }} - {{ invoice.billingPeriodEnd | date:'dd/MM/yyyy' }}
                 </td>
-                <td class="py-4 text-xs text-text-muted">
-                  {{ invoice.externalPaymentId ? 'Mercado Pago (Ref: ' + invoice.externalPaymentId + ')' : 'Pago manual' }}
+                <td class="py-4 pr-4 text-xs max-w-[220px] break-words">
+                  <span class="font-semibold text-text-main block">{{ invoice.description || 'Suscripción Axenda' }}</span>
+                  <span class="text-[10px] text-text-muted block">
+                    {{ invoice.externalPaymentId ? 'Mercado Pago (Ref: ' + invoice.externalPaymentId + ')' : 'Pago manual' }}
+                  </span>
                 </td>
-                <td class="py-4 text-xs font-black text-text-main">
+                <td class="py-4 pr-4 text-xs font-black text-text-main whitespace-nowrap">
                   {{ invoice.amount | currency:'ARS':'$':'1.0-2' }}
                 </td>
-                <td class="py-4 text-xs">
+                <td class="py-4 pr-4 text-xs whitespace-nowrap">
                   <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block" 
                     [ngClass]="{
                       'bg-green-500/10 text-green-500': invoice.status === 'PAID',
@@ -179,7 +233,7 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
                     }}
                   </span>
                 </td>
-                <td class="py-4 text-xs text-right">
+                <td class="py-4 text-xs text-right whitespace-nowrap">
                   <a *ngIf="invoice.invoiceUrl" [href]="invoice.invoiceUrl" target="_blank" class="inline-flex items-center gap-1 text-primary hover:underline font-bold">
                     <app-icon name="download" class="text-sm"></app-icon> Ver
                   </a>
@@ -208,13 +262,13 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
         <div class="absolute right-0 bottom-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full translate-x-1/2 translate-y-1/2"></div>
       </div>
 
-      <!-- Componente de Planes (Movido a su propia página) -->
-      
     </div>
   `
 })
 export class SettingsBillingComponent implements OnInit {
   public subService = inject(SubscriptionService);
+  private snackbar = inject(SnackbarService);
+  
   public invoices = signal<any[]>([]);
   public isLoadingInvoices = signal<boolean>(true);
 

@@ -39,6 +39,7 @@ model Tenant {
   paymentConfig                   TenantPaymentConfig?
   subscription                    TenantSubscription?
   whatsappConfig                  TenantWhatsappConfig?
+  whatsappPacks                   TenantWhatsappPack[]
   users                           User[]
 
   @@map("tenants")

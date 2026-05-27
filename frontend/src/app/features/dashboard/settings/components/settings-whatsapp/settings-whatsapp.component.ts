@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { WhatsappService, WhatsappConfig, WhatsappTemplate } from '../../../../../core/services/whatsapp.service';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
 import { SnackbarService } from '../../../../../core/services/snackbar.service';
@@ -8,7 +9,7 @@ import { IconComponent } from '@shared/components/icon/icon.component';
 @Component({
   selector: 'app-settings-whatsapp',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterModule, IconComponent],
   templateUrl: './settings-whatsapp.component.html',
 })
 export class SettingsWhatsappComponent implements OnInit {
@@ -33,6 +34,7 @@ export class SettingsWhatsappComponent implements OnInit {
   ngOnInit() {
     this.loadConfig();
     this.loadTemplates();
+    this.subService.loadStatus();
   }
 
   loadConfig() {
