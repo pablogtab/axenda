@@ -27,6 +27,12 @@ export class BookingComponent implements OnInit {
   success = signal(false);
   isBooking = signal(false);
 
+  // Cancellation and Rescheduling State
+  token = signal<string | null>(null);
+  appointment = signal<any | null>(null);
+  isCancelMode = signal(false);
+  isRescheduling = signal(false);
+
   // Stepper State
   currentStep = signal(1);
   
@@ -110,7 +116,7 @@ export class BookingComponent implements OnInit {
       const prof = this.selectedProfessional();
       const tenant = this.tenant();
 
-      if (date && service && branch && prof && tenant && this.currentStepId() === 'schedule') {
+      if (date && service && branch && prof && tenant && (this.currentStepId() === 'schedule' || this.isRescheduling())) {
         this.loadAvailability();
       }
     });
@@ -198,11 +204,42 @@ export class BookingComponent implements OnInit {
 
   ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('publicSlug');
-    if (slug) {
+    const token = this.route.snapshot.paramMap.get('token');
+
+    if (token) {
+      this.token.set(token);
+      this.isCancelMode.set(true);
+      this.loadAppointment(token);
+    } else if (slug) {
       this.loadTenant(slug);
     } else {
       this.router.navigate(['/']);
     }
+  }
+
+  loadAppointment(token: string) {
+    this.loading.set(true);
+    this.error.set(false);
+
+    this.bookingService.getAppointmentByToken(token).subscribe({
+      next: (appt) => {
+        this.appointment.set(appt);
+        this.tenant.set(appt.tenant);
+        this.titleService.setTitle(`Gestionar Turno - ${appt.tenant.name}`);
+        
+        // Preload values for scheduling
+        this.selectedBranch.set(appt.branch);
+        this.selectedService.set(appt.service);
+        this.selectedProfessional.set(appt.professional);
+        
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading appointment:', err);
+        this.error.set(true);
+        this.loading.set(false);
+      }
+    });
   }
 
   loadTenant(slug: string) {
@@ -239,11 +276,14 @@ export class BookingComponent implements OnInit {
     this.loadingSlots.set(true);
     this.slotError.set(null);
 
+    const appt = this.appointment();
+
     this.bookingService.getAvailability(slug, {
       professionalId: prof.id,
       serviceId: service.id,
       branchId: branch.id,
-      date: this.formatDate(date)
+      date: this.formatDate(date),
+      excludeAppointmentId: appt?.id
     }).subscribe({
       next: (slots) => {
         this.availableSlots.set(slots);
@@ -320,6 +360,24 @@ export class BookingComponent implements OnInit {
     const startTime = new Date(date);
     startTime.setHours(hours, minutes, 0, 0);
 
+    const token = this.token();
+
+    if (this.isCancelMode() && this.isRescheduling() && token) {
+      this.bookingService.rescheduleAppointment(token, startTime.toISOString()).subscribe({
+        next: (updatedAppt) => {
+          this.appointment.set(updatedAppt);
+          this.success.set(true);
+          this.isRescheduling.set(false);
+          this.isBooking.set(false);
+        },
+        error: (err) => {
+          alert(err.error?.message || 'Error al reprogramar el turno. Por favor intente nuevamente.');
+          this.isBooking.set(false);
+        }
+      });
+      return;
+    }
+
     const bookingData = {
       professionalId: prof.id,
       serviceId: service.id,
@@ -344,8 +402,57 @@ export class BookingComponent implements OnInit {
     });
   }
 
+  cancelAppointment() {
+    const token = this.token();
+    if (!token || this.isBooking()) return;
+
+    if (!confirm('¿Estás seguro de que deseas cancelar este turno? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    this.isBooking.set(true);
+    this.bookingService.cancelAppointment(token).subscribe({
+      next: () => {
+        const appt = this.appointment();
+        if (appt) {
+          appt.status = 'CANCELLED';
+          this.appointment.set({ ...appt });
+        }
+        this.success.set(true);
+        this.isBooking.set(false);
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Error al cancelar el turno. Por favor intente de nuevo.');
+        this.isBooking.set(false);
+      }
+    });
+  }
+
+  startRescheduling() {
+    this.selectedDate.set(null);
+    this.selectedTime.set(null);
+    this.availableSlots.set([]);
+    this.isRescheduling.set(true);
+  }
+
+  cancelRescheduling() {
+    this.isRescheduling.set(false);
+  }
+
+  goBackToBusiness() {
+    const slug = this.tenant()?.publicSlug || this.route.snapshot.paramMap.get('publicSlug');
+    if (slug) {
+      this.router.navigate([`/${slug}`]);
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+
   goToHome() {
-    // En lugar de ir al "/" (inicio del portal), reiniciamos el formulario en la misma página pública
+    if (this.isCancelMode()) {
+      this.goBackToBusiness();
+      return;
+    }
     this.success.set(false);
     this.currentStep.set(1);
     this.selectedService.set(null);
@@ -354,8 +461,6 @@ export class BookingComponent implements OnInit {
     this.selectedTime.set(null);
     this.availableSlots.set([]);
     this.slotError.set(null);
-    // Nota: mantenemos la sucursal seleccionada si el negocio tiene sucursales, 
-    // o el cliente podría querer elegir otra. Lo dejamos a paso 1.
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

@@ -60,7 +60,7 @@ export class AppointmentMailListener {
           time,
           price: priceFormatted,
           calendarLink: 'https://calendar.google.com/calendar/r/eventedit', // TODO: Generar link dinámico
-          cancelLink: `${this.configService.get('FRONTEND_URL')}/booking/cancel/${appointment.id}`, 
+          cancelLink: `${this.configService.get('FRONTEND_URL')}/booking/cancel/${appointment.cancelToken || appointment.id}`, 
           year: new Date().getFullYear(),
         },
       });

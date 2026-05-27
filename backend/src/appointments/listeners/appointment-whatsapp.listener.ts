@@ -58,7 +58,7 @@ export class AppointmentWhatsappListener {
       appointmentDate: dateStr,
       appointmentTime: timeStr,
       branchAddress: branchAddress,
-      appointmentId: appointment.id
+      appointmentId: appointment.cancelToken || appointment.id
     };
 
     // 4. Determinar la plantilla a usar según la opción de cancelar/modificar turnos
@@ -128,7 +128,7 @@ export class AppointmentWhatsappListener {
       serviceName: service?.name || 'Servicio',
       appointmentDate: dateStr,
       appointmentTime: timeStr,
-      appointmentId: appointment.id
+      appointmentId: appointment.cancelToken || appointment.id
     };
 
     try {

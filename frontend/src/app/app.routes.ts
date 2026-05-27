@@ -38,6 +38,11 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./features/onboarding/getting-started/getting-started.component').then(m => m.GettingStartedComponent)
   },
   {
+    path: 'booking/cancel/:token',
+    title: 'Axenda - Gestionar Turno',
+    loadComponent: () => import('./features/public/booking/booking.component').then(m => m.BookingComponent)
+  },
+  {
     path: ':publicSlug',
     loadComponent: () => import('./features/public/booking/booking.component').then(m => m.BookingComponent)
   }

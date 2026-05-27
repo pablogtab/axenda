@@ -960,3 +960,124 @@
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* ==========================================
+   Cancellation & Rescheduling Flow Styles
+   ========================================== */
+
+/* Appointment Details Grid */
+.appointment-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .appointment-details-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--booking-bg);
+  padding: 1.25rem;
+  border-radius: var(--booking-radius-md);
+  border: 1px solid var(--booking-border);
+}
+
+.detail-block:nth-child(2) {
+  grid-column: 1 / -1;
+  background: color-mix(in srgb, var(--booking-primary), transparent 94%);
+  border-color: color-mix(in srgb, var(--booking-primary), transparent 75%);
+}
+
+.block-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--booking-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.block-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.highlight-value {
+  font-size: 1.15rem;
+  color: var(--booking-primary);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  width: fit-content;
+  letter-spacing: 0.03em;
+}
+
+.status-badge.pending {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.confirmed {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.cancelled, .status-badge.canceled {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Red Danger Buttons */
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  padding: 1.25rem;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.4);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -10px rgba(239, 68, 68, 0.5);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Danger Success State Icon */
+.success-icon-wrapper.danger {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.success-icon-wrapper.danger .success-icon {
+  background: #ef4444;
+}

@@ -3,6 +3,7 @@ import { AppointmentsService } from './appointments.service'
 import { AvailabilityEngineService } from './availability-engine.service'
 import { AppointmentsController } from './appointments.controller'
 import { PublicAppointmentsController } from './public-appointments.controller'
+import { PublicAppointmentTokensController } from './public-appointment-tokens.controller'
 import { TenantsModule } from '../tenants/tenants.module'
 import { MailModule } from '../mail/mail.module'
 import { AppointmentMailListener } from './listeners/appointment-mail.listener'
@@ -13,7 +14,7 @@ import { AppointmentWhatsappListener } from './listeners/appointment-whatsapp.li
 
 @Module({
   imports: [TenantsModule, MailModule, SubscriptionsModule, WhatsappModule],
-  controllers: [AppointmentsController, PublicAppointmentsController],
+  controllers: [AppointmentsController, PublicAppointmentsController, PublicAppointmentTokensController],
   providers: [
     AppointmentsService, 
     AvailabilityEngineService, 

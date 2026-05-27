@@ -22,8 +22,8 @@
     <h1 class="business-name">{{ tenant()!.name }}</h1>
   </section>
 
-  <!-- Stepper Nav (Only show if not success) -->
-  <nav class="stepper-nav" *ngIf="!success()">
+  <!-- Stepper Nav (Only show if not success and not cancel mode) -->
+  <nav class="stepper-nav" *ngIf="!success() && !isCancelMode()">
     @for (step of steps(); track step.id; let i = $index) {
       <div class="step-item" [class.active]="currentStep() === i + 1" [class.completed]="currentStep() > i + 1">
         <span class="step-dot" *ngIf="currentStep() <= i + 1">{{ i + 1 }}</span>
@@ -41,8 +41,64 @@
     <!-- Step Content -->
     <div class="step-content">
       
-      <!-- Step: Sucursal -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'branch'">
+      <!-- CANCEL MODE: APPOINTMENT DETAILS CARD -->
+      <div class="step-card animate-in fade-in duration-500" *ngIf="isCancelMode() && !isRescheduling()">
+        <div class="step-header">
+          <span class="status-badge" [class]="appointment()?.status?.toLowerCase()">
+            {{ appointment()?.status === 'CANCELLED' ? 'Cancelado' : appointment()?.status === 'CONFIRMED' ? 'Confirmado' : 'Pendiente' }}
+          </span>
+          <h2 class="step-title mt-4">Detalles de tu Turno</h2>
+          <p class="step-description">Aquí tienes la información sobre tu reserva.</p>
+        </div>
+
+        <div class="appointment-details-grid">
+          <div class="detail-block">
+            <span class="block-label">Cliente</span>
+            <span class="block-value">{{ appointment()?.client?.firstName }} {{ appointment()?.client?.lastName }}</span>
+          </div>
+
+          <div class="detail-block">
+            <span class="block-label">Fecha y Hora</span>
+            <span class="block-value highlight-value">
+              {{ appointment()?.startTime | date:'EEEE d \'de\' MMMM' | titlecase }} a las {{ appointment()?.startTime | date:'HH:mm' }} hs
+            </span>
+          </div>
+
+          <div class="detail-block">
+            <span class="block-label">Servicio</span>
+            <span class="block-value">{{ appointment()?.service?.name }} ({{ appointment()?.service?.duration }} min)</span>
+          </div>
+
+          <div class="detail-block">
+            <span class="block-label">Profesional</span>
+            <span class="block-value">{{ appointment()?.professional?.firstName }} {{ appointment()?.professional?.lastName }}</span>
+          </div>
+
+          <div class="detail-block">
+            <span class="block-label">Sucursal / Ubicación</span>
+            <span class="block-value">{{ appointment()?.branch?.name }} ({{ appointment()?.branch?.address }})</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="step-footer mt-8 flex flex-col sm:flex-row gap-4" *ngIf="appointment()?.status !== 'CANCELLED'">
+          <button class="btn-danger flex-1 cursor-pointer" [disabled]="isBooking()" (click)="cancelAppointment()">
+            <span *ngIf="!isBooking()">Cancelar Turno</span>
+            <div class="spinner-sm white" *ngIf="isBooking()"></div>
+          </button>
+          
+          <button class="btn-primary outline flex-1 cursor-pointer" *ngIf="appointment()?.tenant?.allowReschedule" (click)="startRescheduling()">
+            Reprogramar Turno
+          </button>
+        </div>
+
+        <div class="step-footer mt-8 justify-center" *ngIf="appointment()?.status === 'CANCELLED'">
+          <button class="btn-primary w-full cursor-pointer" (click)="goBackToBusiness()">Agendar nuevo turno</button>
+        </div>
+      </div>
+
+      <!-- Step: Sucursal (Normal Mode) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="!isCancelMode() && currentStepId() === 'branch'">
         <div class="step-header">
           <h2 class="step-title">¿A qué sucursal quieres ir?</h2>
           <p class="step-description">Elige el local que más te convenga.</p>
@@ -65,8 +121,8 @@
         </div>
       </div>
 
-      <!-- Step: Servicios -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'services'">
+      <!-- Step: Servicios (Normal Mode) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="!isCancelMode() && currentStepId() === 'services'">
         <div class="step-header">
           <h2 class="step-title">¿Qué servicio necesitas?</h2>
           <p class="step-description">Selecciona una de nuestras opciones para continuar.</p>
@@ -96,8 +152,8 @@
         </div>
       </div>
 
-      <!-- Step: Profesional -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'professional'">
+      <!-- Step: Profesional (Normal Mode) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="!isCancelMode() && currentStepId() === 'professional'">
         <div class="step-header">
           <h2 class="step-title">¿Con quién quieres atenderte?</h2>
           <p class="step-description">Nuestros profesionales están listos para ayudarte.</p>
@@ -119,10 +175,10 @@
         </div>
       </div>
 
-      <!-- Step: Schedule (Fecha y Horario) -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'schedule'">
+      <!-- Step: Schedule / Rescheduling (Fecha y Horario - Reused in both flows) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'schedule' || (isCancelMode() && isRescheduling())">
         <div class="step-header">
-          <h2 class="step-title">¿Cuándo quieres venir?</h2>
+          <h2 class="step-title">{{ isCancelMode() ? 'Reprogramar Turno' : '¿Cuándo quieres venir?' }}</h2>
           <p class="step-description">Selecciona el día y luego el horario que prefieras.</p>
         </div>
 
@@ -194,13 +250,21 @@
         </div>
 
         <div class="step-footer">
-          <button class="btn-back" (click)="prevStep()">Volver</button>
-          <button class="btn-primary" [disabled]="!selectedDate() || !selectedTime()" (click)="nextStep()">Continuar</button>
+          @if (isCancelMode() && isRescheduling()) {
+            <button class="btn-back cursor-pointer" (click)="cancelRescheduling()">Cancelar</button>
+            <button class="btn-primary cursor-pointer" [disabled]="!selectedDate() || !selectedTime() || isBooking()" (click)="confirmBooking()">
+              <span *ngIf="!isBooking()">Confirmar Cambio</span>
+              <div class="spinner-sm white" *ngIf="isBooking()"></div>
+            </button>
+          } @else {
+            <button class="btn-back" (click)="prevStep()">Volver</button>
+            <button class="btn-primary" [disabled]="!selectedDate() || !selectedTime()" (click)="nextStep()">Continuar</button>
+          }
         </div>
       </div>
 
-      <!-- Step: Datos Personales -->
-      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="currentStepId() === 'personal'">
+      <!-- Step: Datos Personales (Normal Mode) -->
+      <div class="step-card animate-in fade-in slide-in-from-bottom-4 duration-500" *ngIf="!isCancelMode() && currentStepId() === 'personal'">
         <div class="step-header">
           <h2 class="step-title">Ya casi estamos</h2>
           <p class="step-description">Completa tus datos para finalizar la reserva.</p>
@@ -224,7 +288,7 @@
         </div>
         <div class="step-footer">
           <button class="btn-back" (click)="prevStep()">Volver</button>
-          <button class="btn-primary" 
+          <button class="btn-primary cursor-pointer" 
                   [disabled]="!canContinue() || isBooking()"
                   (click)="confirmBooking()">
             <span *ngIf="!isBooking()">Confirmar Reserva</span>
@@ -238,7 +302,7 @@
     <!-- Summary Sidebar (Visible on Desktop) -->
     <aside class="summary-sidebar">
       <div class="summary-card">
-        <h3 class="summary-title">Resumen</h3>
+        <h3 class="summary-title">{{ isCancelMode() ? 'Resumen de Cita' : 'Resumen' }}</h3>
         
         <div class="summary-details">
           <!-- Sucursal -->
@@ -274,14 +338,18 @@
               <div class="summary-icon">📅</div>
               <div class="flex flex-col">
                 <span class="summary-label">Fecha</span>
-                <span class="summary-value">{{ selectedDate() ? (selectedDate() | date:'dd/MM/yy') : '--' }}</span>
+                <span class="summary-value">
+                  {{ (selectedDate() || (isCancelMode() ? appointment()?.startTime : null)) | date:'dd/MM/yy' }}
+                </span>
               </div>
             </div>
             <div class="summary-item">
               <div class="summary-icon">🕒</div>
               <div class="flex flex-col">
                 <span class="summary-label">Hora</span>
-                <span class="summary-value">{{ selectedTime() || '--' }}</span>
+                <span class="summary-value">
+                  {{ selectedTime() || (isCancelMode() ? (appointment()?.startTime | date:'HH:mm') : '--') }} hs
+                </span>
               </div>
             </div>
           </div>
@@ -298,37 +366,88 @@
 
   </main>
 
+  <!-- SUCCESS STATES -->
   <ng-template #successState>
     <div class="success-container animate-in fade-in zoom-in duration-700">
       <div class="success-card">
-        <div class="success-icon-wrapper">
-          <div class="success-icon">✓</div>
-        </div>
-        <h2 class="success-title">¡Turno Agendado!</h2>
-        <p class="success-message">Hola <strong>{{ clientName() }}</strong>, tu reserva para <strong>{{ selectedService()?.name }}</strong> ha sido confirmada.</p>
         
-        <div class="success-details">
-          <div class="detail-row">
-            <span>Fecha</span>
-            <strong>{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+        <!-- Cancel Mode Success: CANCELLED -->
+        @if (isCancelMode() && appointment()?.status === 'CANCELLED') {
+          <div class="success-icon-wrapper danger">
+            <div class="success-icon">🚫</div>
           </div>
-          <div class="detail-row">
-            <span>Horario</span>
-            <strong>{{ selectedTime() }} hs</strong>
+          <h2 class="success-title">Turno Cancelado</h2>
+          <p class="success-message">Tu turno para <strong>{{ appointment()?.service?.name }}</strong> en <strong>{{ appointment()?.tenant?.name }}</strong> ha sido cancelado con éxito.</p>
+          
+          <div class="success-actions mt-6">
+            <button (click)="goToHome()" class="btn-primary w-full cursor-pointer">Agendar nuevo turno</button>
           </div>
-          <div class="detail-row">
-            <span>Lugar</span>
-            <strong *ngIf="selectedBranch()">{{ selectedBranch()!.name }}{{ selectedBranch()!.address ? ' - ' + selectedBranch()!.address : '' }}</strong>
+        }
+        
+        <!-- Cancel Mode Success: RESCHEDULED -->
+        @else if (isCancelMode() && appointment()?.status !== 'CANCELLED') {
+          <div class="success-icon-wrapper">
+            <div class="success-icon">✓</div>
           </div>
-          <div class="detail-row">
-            <span>Atendido por</span>
-            <strong>{{ selectedProfessional()?.firstName }} {{ selectedProfessional()?.lastName }}</strong>
+          <h2 class="success-title">Turno Reprogramado</h2>
+          <p class="success-message">Tu reserva ha sido reprogramada con éxito. Te enviamos la confirmación del nuevo horario.</p>
+          
+          <div class="success-details">
+            <div class="detail-row">
+              <span>Nueva Fecha</span>
+              <strong>{{ appointment()?.startTime | date:'fullDate':'':'es' }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Nuevo Horario</span>
+              <strong>{{ appointment()?.startTime | date:'HH:mm' }} hs</strong>
+            </div>
+            <div class="detail-row">
+              <span>Profesional</span>
+              <strong>{{ appointment()?.professional?.firstName }} {{ appointment()?.professional?.lastName }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Ubicación</span>
+              <strong>{{ appointment()?.branch?.name }} - {{ appointment()?.branch?.address }}</strong>
+            </div>
           </div>
-        </div>
 
-        <div class="success-actions">
-          <button (click)="goToHome()" class="btn-text w-full">Agendar otro turno</button>
-        </div>
+          <div class="success-actions">
+            <button (click)="goToHome()" class="btn-primary w-full cursor-pointer">Volver al inicio</button>
+          </div>
+        }
+        
+        <!-- Normal Mode Success: BOOKED -->
+        @else {
+          <div class="success-icon-wrapper">
+            <div class="success-icon">✓</div>
+          </div>
+          <h2 class="success-title">¡Turno Agendado!</h2>
+          <p class="success-message">Hola <strong>{{ clientName() }}</strong>, tu reserva para <strong>{{ selectedService()?.name }}</strong> ha sido confirmada.</p>
+          
+          <div class="success-details">
+            <div class="detail-row">
+              <span>Fecha</span>
+              <strong>{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Horario</span>
+              <strong>{{ selectedTime() }} hs</strong>
+            </div>
+            <div class="detail-row">
+              <span>Lugar</span>
+              <strong *ngIf="selectedBranch()">{{ selectedBranch()!.name }}{{ selectedBranch()!.address ? ' - ' + selectedBranch()!.address : '' }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Atendido por</span>
+              <strong>{{ selectedProfessional()?.firstName }} {{ selectedProfessional()?.lastName }}</strong>
+            </div>
+          </div>
+
+          <div class="success-actions">
+            <button (click)="goToHome()" class="btn-text w-full cursor-pointer">Agendar otro turno</button>
+          </div>
+        }
+        
       </div>
     </div>
   </ng-template>
@@ -338,14 +457,14 @@
   <div class="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
     <div *ngIf="loading()" class="flex flex-col items-center gap-6">
       <div class="loader-ripple"><div></div><div></div></div>
-      <p class="text-text-muted font-medium">Preparando tu experiencia...</p>
+      <p class="text-text-muted font-medium">Cargando...</p>
     </div>
 
     <div *ngIf="!loading() && error()" class="text-center space-y-4 max-w-sm">
       <span class="text-7xl block mb-6">🏜️</span>
-      <h2 class="text-2xl font-bold text-text-main">Página no encontrada</h2>
-      <p class="text-text-muted">El link que ingresaste no es válido o el negocio ya no está disponible.</p>
-      <button (click)="goToHome()" class="btn-primary !mt-8">
+      <h2 class="text-2xl font-bold text-text-main">No pudimos encontrar tu reserva</h2>
+      <p class="text-text-muted">{{ isCancelMode() ? 'No pudimos encontrar los detalles de tu turno. Es posible que el link sea incorrecto o haya expirado.' : 'El link que ingresaste no es válido o el negocio ya no está disponible.' }}</p>
+      <button (click)="goToHome()" class="btn-primary !mt-8 cursor-pointer">
         Ir al Inicio
       </button>
     </div>

@@ -57,6 +57,7 @@ export class AppointmentFormComponent implements OnInit {
   isEditMode = signal(false);
   isLoadingData = signal(true);
   serverError = signal<string | null>(null);
+  appointmentData = signal<any | null>(null);
 
   // Configuraciones de los buscadores
   clientConfig = { 
@@ -196,6 +197,7 @@ export class AppointmentFormComponent implements OnInit {
 
         // 3. Turno (si estamos editando)
         if (appointment) {
+          this.appointmentData.set(appointment);
           const startDate = new Date(appointment.startTime);
           const endDate = new Date(appointment.endTime);
 
@@ -326,6 +328,14 @@ export class AppointmentFormComponent implements OnInit {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  openCancelPage(): void {
+    const appt = this.appointmentData();
+    if (appt) {
+      const tokenOrId = appt.cancelToken || appt.id;
+      window.open(`/booking/cancel/${tokenOrId}`, '_blank');
+    }
   }
 
   openNewClient(query: string): void {

@@ -10,7 +10,7 @@ export class AvailabilityEngineService {
    * Calcula todos los slots potenciales y marca cuáles están disponibles.
    */
   async getFreeSlots(tenantId: string, dto: GetAvailabilityDto): Promise<{ time: string; available: boolean }[]> {
-    const { professionalId, serviceId, branchId, date, duration } = dto
+    const { professionalId, serviceId, branchId, date, duration, excludeAppointmentId } = dto
 
     const service = await this.prisma.service.findFirst({
       where: { id: serviceId, tenantId },
@@ -38,6 +38,7 @@ export class AvailabilityEngineService {
           branchId,
           status: { notIn: ['CANCELLED', 'NO_SHOW'] },
           startTime: { gte: startOfDay, lte: endOfDay },
+          id: excludeAppointmentId ? { not: excludeAppointmentId } : undefined,
         }
       }),
       this.prisma.availabilityException.findMany({

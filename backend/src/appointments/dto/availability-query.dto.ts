@@ -23,4 +23,9 @@ export class GetAvailabilityDto {
   @IsInt()
   @Min(5)
   duration?: number
+
+  @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Id del turno a excluir para evitar conflictos al reprogramar' })
+  @IsOptional()
+  @IsUUID()
+  excludeAppointmentId?: string
 }

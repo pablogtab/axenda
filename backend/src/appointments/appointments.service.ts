@@ -6,6 +6,7 @@ import { AvailabilityEngineService } from './availability-engine.service'
 import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
 import { CreatePublicAppointmentDto } from './dto/public-appointment.dto'
 import { PhoneUtils } from '../common/utils/phone-utils'
+import { randomUUID } from 'crypto'
 
 @Injectable()
 export class AppointmentsService {
@@ -114,7 +115,8 @@ export class AppointmentsService {
         endTime: end,
         notes: dto.notes,
         status: 'PENDING',
-        bookedVia: 'PANEL'
+        bookedVia: 'PANEL',
+        cancelToken: randomUUID()
       },
       include: {
         client: true,
@@ -210,7 +212,8 @@ export class AppointmentsService {
         endTime: end,
         notes: dto.notes,
         status: 'PENDING',
-        bookedVia: 'PUBLIC_LINK'
+        bookedVia: 'PUBLIC_LINK',
+        cancelToken: randomUUID()
       },
       include: {
         client: true,
@@ -313,5 +316,179 @@ export class AppointmentsService {
 
   async cancel(tenantId: string, id: string, userId: string, notifyClient = true) {
     return this.changeStatus(tenantId, id, userId, { status: 'CANCELLED', notifyClient })
+  }
+
+  async findOneByToken(tokenOrId: string) {
+    let appointment = await this.prisma.appointment.findFirst({
+      where: {
+        OR: [
+          { cancelToken: tokenOrId },
+          { id: tokenOrId }
+        ]
+      },
+      include: {
+        client: true,
+        professional: {
+          include: {
+            availability: true,
+            exceptions: true
+          }
+        },
+        service: true,
+        branch: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            publicSlug: true,
+            logoUrl: true,
+            primaryColor: true,
+            primaryHoverColor: true,
+            accentColor: true,
+            backgroundColor: true,
+            textColor: true,
+            allowReschedule: true,
+            whatsappCancellation: true,
+            branches: {
+              where: { active: true },
+              select: {
+                id: true,
+                name: true,
+                address: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Turno no encontrado');
+    }
+
+    // Lazy migration: generar cancelToken para turnos viejos
+    if (!appointment.cancelToken) {
+      appointment = await this.prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { cancelToken: randomUUID() },
+        include: {
+          client: true,
+          professional: {
+            include: {
+              availability: true,
+              exceptions: true
+            }
+          },
+          service: true,
+          branch: true,
+          tenant: {
+            select: {
+              id: true,
+              name: true,
+              publicSlug: true,
+              logoUrl: true,
+              primaryColor: true,
+              primaryHoverColor: true,
+              accentColor: true,
+              backgroundColor: true,
+              textColor: true,
+              allowReschedule: true,
+              whatsappCancellation: true,
+              branches: {
+                where: { active: true },
+                select: {
+                  id: true,
+                  name: true,
+                  address: true
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    return appointment;
+  }
+
+  async cancelByToken(tokenOrId: string, notifyClient = true) {
+    const appointment = await this.findOneByToken(tokenOrId);
+    
+    if (appointment.status === 'CANCELLED') {
+      return appointment;
+    }
+
+    const updated = await this.prisma.appointment.update({
+      where: { id: appointment.id },
+      data: { status: 'CANCELLED' },
+      include: { client: true, professional: true, service: true, branch: true }
+    });
+
+    await this.prisma.appointmentLog.create({
+      data: {
+        appointmentId: appointment.id,
+        changedBy: 'CLIENT_PUBLIC',
+        oldStatus: appointment.status,
+        newStatus: 'CANCELLED',
+        notes: 'Turno cancelado por el cliente desde la página pública'
+      }
+    });
+
+    this.eventEmitter.emit('appointment.cancelled', {
+      appointment: updated,
+      notifyClient
+    });
+
+    return updated;
+  }
+
+  async rescheduleByToken(tokenOrId: string, newStartTime: string) {
+    const appointment = await this.findOneByToken(tokenOrId);
+
+    if (!appointment.tenant.allowReschedule) {
+      throw new ForbiddenException('Este negocio no permite reprogramar turnos online.');
+    }
+
+    const start = new Date(newStartTime);
+    
+    // Validar disponibilidad
+    const isAvailable = await this.engine.isSlotAvailable(appointment.tenantId, {
+      professionalId: appointment.professionalId,
+      serviceId: appointment.serviceId,
+      branchId: appointment.branchId,
+      startTime: start,
+      excludeAppointmentId: appointment.id,
+    });
+
+    if (!isAvailable) {
+      throw new BadRequestException('El horario seleccionado ya no está disponible');
+    }
+
+    const end = new Date(start.getTime() + appointment.service.duration * 60000);
+
+    const updated = await this.prisma.appointment.update({
+      where: { id: appointment.id },
+      data: {
+        startTime: start,
+        endTime: end,
+        status: 'PENDING',
+      },
+      include: { client: true, professional: true, service: true, branch: true }
+    });
+
+    await this.prisma.appointmentLog.create({
+      data: {
+        appointmentId: appointment.id,
+        changedBy: 'CLIENT_PUBLIC',
+        oldStatus: appointment.status,
+        newStatus: 'PENDING',
+        notes: `Turno reprogramado por el cliente desde la página pública. Nuevo horario: ${start.toISOString()}`
+      }
+    });
+
+    // Disparar evento para enviar confirmación del nuevo horario
+    this.eventEmitter.emit('appointment.created', updated);
+
+    return updated;
   }
 }
