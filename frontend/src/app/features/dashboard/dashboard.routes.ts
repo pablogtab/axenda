@@ -22,6 +22,11 @@ export const dashboardRoutes: Routes = [
     title: 'Axenda - Mi Agenda',
     component: AgendaComponent
   },
+  {
+    path: 'appointments',
+    title: 'Axenda - Lista de Turnos',
+    loadComponent: () => import('./agenda/views/agenda-list-view/agenda-list-view.component').then(m => m.AgendaListViewComponent)
+  },
   { 
     path: 'clients', 
     title: 'Axenda - Clientes',

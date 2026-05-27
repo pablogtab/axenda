@@ -121,8 +121,9 @@ export class AppointmentsService {
     );
   }
 
-  cancel(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+  cancel(id: string, notifyClient: boolean = true): Observable<void> {
+    let params = new HttpParams().set('notifyClient', notifyClient.toString());
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params }).pipe(
       tap(() => this.invalidateCache())
     );
   }

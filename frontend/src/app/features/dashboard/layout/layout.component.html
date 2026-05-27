@@ -42,6 +42,13 @@
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Agenda</span>
       </a>
       
+      <a routerLink="/dashboard/appointments" 
+         routerLinkActive="active-nav-item" 
+         class="nav-item group">
+        <app-icon name="format_list_bulleted" class="nav-icon"></app-icon>
+        <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Lista de Turnos</span>
+      </a>
+      
       <a routerLink="/dashboard/clients" 
          routerLinkActive="active-nav-item" 
          class="nav-item group">

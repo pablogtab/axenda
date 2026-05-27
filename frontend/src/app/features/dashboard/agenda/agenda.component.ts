@@ -568,7 +568,7 @@ export class AgendaComponent implements OnInit {
     } else if (view === 'week') {
       adjacentDates.push(addDays(date, -7));
       adjacentDates.push(addDays(date, 7));
-    } else if (view === 'month') {
+    } else if (view === 'month' || view === 'list') {
       adjacentDates.push(addMonths(date, -1));
       adjacentDates.push(addMonths(date, 1));
     }

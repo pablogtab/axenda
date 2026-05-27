@@ -153,6 +153,7 @@
                     </div>
                     <span class="text-text-dim text-[10px] font-bold bg-surface-subtle px-2 py-0.5 rounded uppercase tracking-tighter">M</span>
                     </button>
+
               </div>
 
               <!-- Sección Sucursal -->
@@ -296,6 +297,7 @@
         (dateChange)="selectedDate.set($event)"
         (dayClick)="setView('day'); selectedDate.set($event)"></app-agenda-month-view>
       }
+
       }
     </div>
     
@@ -395,6 +397,7 @@
             <span class="w-2 h-2 rounded-full" [class.bg-primary]="selectedView() === 'month'" [class.bg-text-dim/20]="selectedView() !== 'month'"></span>
             <span class="text-sm font-medium" [class.text-primary]="selectedView() === 'month'" [class.text-text-main]="selectedView() !== 'month'">Mes</span>
           </button>
+
         </div>
       </section>
 
