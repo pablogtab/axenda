@@ -1,6 +1,6 @@
 {
   "name": "axenda",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Axenda CRM - Professional Scheduling System",
   "private": true,
   "workspaces": [
