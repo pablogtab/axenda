@@ -16,17 +16,7 @@ export class SubscriptionsService implements OnModuleInit {
   ) { }
 
   async onModuleInit() {
-    // Si estamos en desarrollo y pedimos reset, o si no hay planes sincronizados, sincronizamos.
-    const isDev = this.configService.get('NODE_ENV') === 'development';
-    const forceReset = this.configService.get('RESET_MP_PLANS') === 'true';
-
-    if (isDev && forceReset) {
-      this.logger.warn('⚠️ RESET_MP_PLANS detectado. Limpiando y re-creando planes en Mercado Pago...');
-      await this.syncPlansWithMercadoPago(true);
-    } else {
-      // Sincronización normal (solo crea los que falten)
-      await this.syncPlansWithMercadoPago(false);
-    }
+    // No-op: La sincronización de planes con Mercado Pago está desactivada porque se utiliza Checkout Directo (Preferences).
   }
 
   /**
@@ -399,93 +389,11 @@ export class SubscriptionsService implements OnModuleInit {
   }
 
   /**
-   * Sincroniza los planes de la base de datos con Mercado Pago.
-   * Solo para uso administrativo/interno o durante el arranque.
+   * @deprecated Los planes recurrentes de Mercado Pago no se utilizan ya que implementamos Checkout Directo (Preferences).
    */
   async syncPlansWithMercadoPago(forceReset = false) {
-    this.logger.log(`Iniciando sincronización de planes con Mercado Pago (forceReset: ${forceReset})...`);
-
-    if (forceReset) {
-      // Limpiar IDs antiguos de la DB para forzar re-creación
-      await this.prisma.subscriptionPlan.updateMany({
-        data: {
-          externalPlanIdMonthly: null,
-          externalPlanIdYearly: null
-        }
-      });
-      this.logger.log('🧹 IDs de planes externos limpiados en la base de datos.');
-    }
-    const plans = await this.prisma.subscriptionPlan.findMany({
-      where: {
-        active: true,
-        code: { not: 'STARTER' } // Starter es gratis, no va a MP
-      }
-    });
-
-    const isDev = this.configService.get('NODE_ENV') === 'development';
-    const baseUrl = isDev ? 'https://axenda.ar' : (this.configService.get('FRONTEND_URL') || 'https://axenda.ar');
-    const backUrl = `${baseUrl}/dashboard/subscription/success`;
-    let syncedCount = 0;
-
-    for (const plan of plans) {
-      this.logger.log(`Sincronizando plan ${plan.name} (${plan.code})...`);
-
-      let updatedMonthlyId = plan.externalPlanIdMonthly;
-      let updatedYearlyId = plan.externalPlanIdYearly;
-
-      // Plan Mensual
-      if (!plan.externalPlanIdMonthly) {
-        try {
-          const mpPlanMonthly = await this.mercadopagoService.createPlan({
-            reason: `Axenda - ${plan.name} (Mensual)`,
-            amount: Number(plan.priceMonthly),
-            frequency: 1,
-            frequency_type: 'months',
-            back_url: backUrl,
-          });
-          updatedMonthlyId = mpPlanMonthly.id;
-          this.logger.log(`✅ Creado plan MENSUAL en MP para ${plan.code}: ${updatedMonthlyId}`);
-        } catch (error) {
-          this.logger.error(`❌ Error al crear plan MENSUAL para ${plan.code}`, error);
-        }
-      } else {
-        this.logger.log(`ℹ️ Plan MENSUAL para ${plan.code} ya existe en MP (${plan.externalPlanIdMonthly})`);
-      }
-
-      // Plan Anual (MP no soporta 'years', usamos 12 'months')
-      if (!plan.externalPlanIdYearly) {
-        try {
-          const mpPlanYearly = await this.mercadopagoService.createPlan({
-            reason: `Axenda - ${plan.name} (Anual)`,
-            amount: Number(plan.priceYearly),
-            frequency: 12,
-            frequency_type: 'months',
-            back_url: backUrl,
-          });
-          updatedYearlyId = mpPlanYearly.id;
-          this.logger.log(`✅ Creado plan ANUAL en MP para ${plan.code}: ${updatedYearlyId}`);
-        } catch (error) {
-          this.logger.error(`❌ Error al crear plan ANUAL para ${plan.code}`, error);
-        }
-      } else {
-        this.logger.log(`ℹ️ Plan ANUAL para ${plan.code} ya existe en MP (${plan.externalPlanIdYearly})`);
-      }
-
-      // Actualizar DB si hubo cambios
-      if (updatedMonthlyId !== plan.externalPlanIdMonthly || updatedYearlyId !== plan.externalPlanIdYearly) {
-        await this.prisma.subscriptionPlan.update({
-          where: { id: plan.id },
-          data: {
-            externalPlanIdMonthly: updatedMonthlyId,
-            externalPlanIdYearly: updatedYearlyId,
-          }
-        });
-        syncedCount++;
-      }
-    }
-
-    this.logger.log(`Sincronización finalizada. Planes actualizados en DB: ${syncedCount}`);
-    return { success: true, syncedPlans: syncedCount };
+    this.logger.warn('⚠️ syncPlansWithMercadoPago fue llamada pero está obsoleta (se utiliza Checkout Directo).');
+    return { success: true, syncedPlans: 0, deprecated: true };
   }
 
   /**

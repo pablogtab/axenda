@@ -20,6 +20,10 @@ export class MercadoPagoService {
     });
   }
 
+  isConfigured(): boolean {
+    return !!this.configService.get<string>('MP_ACCESS_TOKEN');
+  }
+
   /**
    * Crea un plan de suscripción en Mercado Pago
    */
