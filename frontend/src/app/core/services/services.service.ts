@@ -13,6 +13,10 @@ export interface BusinessService {
   active: boolean;
   categoryId?: string;
   category?: { id: string, name: string };
+  isBookablePublic?: boolean;
+  showPrice?: boolean;
+  customPriceLabel?: string;
+  showDuration?: boolean;
 }
 
 export interface ServiceCategory {

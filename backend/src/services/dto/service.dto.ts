@@ -32,6 +32,31 @@ export class CreateServiceDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  isBookablePublic?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showPrice?: boolean
+
+  @ApiPropertyOptional({ example: 'Consultar' })
+  @IsOptional()
+  @IsString()
+  customPriceLabel?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showDuration?: boolean
 }
 
 export class UpdateServiceDto {
@@ -72,4 +97,24 @@ export class UpdateServiceDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  isBookablePublic?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showPrice?: boolean
+
+  @ApiPropertyOptional({ example: 'Consultar' })
+  @IsOptional()
+  @IsString()
+  customPriceLabel?: string
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showDuration?: boolean
 }

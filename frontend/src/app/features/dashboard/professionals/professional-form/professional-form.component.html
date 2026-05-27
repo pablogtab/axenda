@@ -88,28 +88,42 @@
 
           <!-- Servicios -->
           <div class="space-y-2">
-            <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1">Servicios</h3>
-            <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-              @for (service of allServices(); track service.id) {
-                <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
-                  [class.bg-accent/10]="selectedServices().includes(service.id)"
-                  [class.border-accent/30]="selectedServices().includes(service.id)"
-                  [class.border-white/5]="!selectedServices().includes(service.id)"
-                  [class.bg-white/5]="!selectedServices().includes(service.id)">
-                  <span class="text-[11px] font-medium" [class.text-accent]="selectedServices().includes(service.id)">
-                    {{ service.name }}
-                  </span>
-                  <input type="checkbox" [checked]="selectedServices().includes(service.id)" (change)="toggleService(service.id)" class="sr-only">
-                  <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
-                      [class.bg-accent]="selectedServices().includes(service.id)"
-                      [class.border-accent]="selectedServices().includes(service.id)">
-                    @if (selectedServices().includes(service.id)) {
-                      <span class="text-[8px] text-white font-bold">✓</span>
-                    }
-                  </div>
-                </label>
-              }
+            <div class="flex items-center justify-between border-b border-white/5 pb-1">
+              <h3 class="text-[10px] font-bold text-text-dim uppercase tracking-widest">Servicios</h3>
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" formControlName="allServices" class="w-3.5 h-3.5 rounded border-white/20 bg-white/5 text-accent focus:ring-accent/20 cursor-pointer">
+                <span class="text-[9px] font-bold text-text-dim uppercase tracking-wider">Todos</span>
+              </label>
             </div>
+            
+            @if (!professionalForm.get('allServices')?.value) {
+              <div class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
+                @for (service of allServices(); track service.id) {
+                  <label class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
+                    [class.bg-accent/10]="selectedServices().includes(service.id)"
+                    [class.border-accent/30]="selectedServices().includes(service.id)"
+                    [class.border-white/5]="!selectedServices().includes(service.id)"
+                    [class.bg-white/5]="!selectedServices().includes(service.id)">
+                    <span class="text-[11px] font-medium" [class.text-accent]="selectedServices().includes(service.id)">
+                      {{ service.name }}
+                    </span>
+                    <input type="checkbox" [checked]="selectedServices().includes(service.id)" (change)="toggleService(service.id)" class="sr-only">
+                    <div class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
+                        [class.bg-accent]="selectedServices().includes(service.id)"
+                        [class.border-accent]="selectedServices().includes(service.id)">
+                      @if (selectedServices().includes(service.id)) {
+                        <span class="text-[8px] text-white font-bold">✓</span>
+                      }
+                    </div>
+                  </label>
+                }
+              </div>
+            } @else {
+              <div class="p-3 bg-accent/5 border border-accent/10 rounded-xl text-center flex flex-col gap-0.5 animate-in fade-in duration-200">
+                <span class="text-[10px] text-accent font-bold uppercase tracking-wider">Realiza todos los servicios</span>
+                <span class="text-[9px] text-text-dim leading-normal">Cualquier servicio nuevo o reactivado del catálogo se le asignará de forma automática.</span>
+              </div>
+            }
           </div>
         </div>
 

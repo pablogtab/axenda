@@ -139,10 +139,16 @@
                 </div>
                 <div>
                   <div class="service-name">{{ service.name }}</div>
-                  <div class="service-duration">{{ service.duration }} min</div>
+                  @if (service.showDuration !== false) {
+                    <div class="service-duration">{{ service.duration }} min</div>
+                  }
                 </div>
               </div>
-              <div class="service-price">${{ service.price }}</div>
+              @if (service.showPrice !== false) {
+                <div class="service-price">${{ service.price }}</div>
+              } @else if (service.customPriceLabel) {
+                <div class="service-price-label">{{ service.customPriceLabel }}</div>
+              }
             </div>
           }
         </div>
@@ -355,10 +361,14 @@
           </div>
         </div>
 
-        <div class="summary-footer">
-          <div class="total-price" *ngIf="selectedService()">
+        <div class="summary-footer" *ngIf="selectedService() && ((selectedService()!.showPrice !== false) || selectedService()!.customPriceLabel)">
+          <div class="total-price">
             <span>Total</span>
-            <span class="price">${{ selectedService()!.price }}</span>
+            @if (selectedService()!.showPrice !== false) {
+              <span class="price">${{ selectedService()!.price }}</span>
+            } @else {
+              <span class="price-label">{{ selectedService()!.customPriceLabel }}</span>
+            }
           </div>
         </div>
       </div>

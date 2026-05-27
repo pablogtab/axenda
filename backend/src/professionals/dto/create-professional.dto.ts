@@ -34,4 +34,9 @@ export class CreateProfessionalDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean
+
+  @ApiPropertyOptional({ example: false, default: false })
+  @IsOptional()
+  @IsBoolean()
+  allServices?: boolean
 }

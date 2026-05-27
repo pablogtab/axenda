@@ -373,6 +373,12 @@
   color: var(--booking-primary);
 }
 
+.service-price-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--booking-text-muted);
+}
+
 /* Date Selection */
 .date-input {
   width: 100%;
@@ -540,6 +546,12 @@
 .total-price .price {
   font-size: 1.75rem;
   color: var(--booking-primary);
+}
+
+.total-price .price-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--booking-text-muted);
 }
 
 /* Buttons */

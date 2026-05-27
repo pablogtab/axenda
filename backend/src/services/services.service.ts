@@ -81,16 +81,38 @@ export class ServicesService {
       await this.validateCategory(tenantId, dto.categoryId)
     }
 
-    return this.prisma.service.create({
-      data: {
-        tenantId,
-        name: dto.name,
-        description: dto.description,
-        duration: dto.duration,
-        price: dto.price,
-        color: dto.color,
-        categoryId: dto.categoryId,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const service = await tx.service.create({
+        data: {
+          tenantId,
+          name: dto.name,
+          description: dto.description,
+          duration: dto.duration,
+          price: dto.price,
+          color: dto.color,
+          categoryId: dto.categoryId,
+          active: dto.active ?? true,
+          isBookablePublic: dto.isBookablePublic ?? true,
+          showPrice: dto.showPrice ?? true,
+          customPriceLabel: dto.customPriceLabel,
+          showDuration: dto.showDuration ?? true,
+        },
+      })
+
+      const professionals = await tx.professional.findMany({
+        where: { tenantId, allServices: true, active: true }
+      })
+
+      if (professionals.length > 0) {
+        await tx.professionalService.createMany({
+          data: professionals.map(p => ({
+            professionalId: p.id,
+            serviceId: service.id
+          }))
+        })
+      }
+
+      return service
     })
   }
 
@@ -104,9 +126,34 @@ export class ServicesService {
       await this.validateCategory(tenantId, dto.categoryId)
     }
 
-    return this.prisma.service.update({
-      where: { id },
-      data: dto,
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.service.update({
+        where: { id },
+        data: dto,
+      })
+
+      if (dto.active === true && !service.active) {
+        const professionals = await tx.professional.findMany({
+          where: { tenantId, allServices: true, active: true }
+        })
+        for (const p of professionals) {
+          await tx.professionalService.upsert({
+            where: {
+              professionalId_serviceId: {
+                professionalId: p.id,
+                serviceId: id
+              }
+            },
+            create: {
+              professionalId: p.id,
+              serviceId: id
+            },
+            update: {}
+          })
+        }
+      }
+
+      return updated
     })
   }
 

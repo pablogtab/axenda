@@ -19,6 +19,10 @@ model Service {
   price         Decimal?              @db.Decimal(10, 2)
   color         String?
   active        Boolean               @default(true)
+  isBookablePublic Boolean            @default(true)
+  showPrice     Boolean               @default(true)
+  customPriceLabel String?
+  showDuration  Boolean               @default(true)
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
   appointments  Appointment[]

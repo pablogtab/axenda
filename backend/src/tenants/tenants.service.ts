@@ -42,13 +42,17 @@ export class TenantsService {
         publicShowBranchSelection: true,
         publicShowProfessionalSelection: true,
         services: {
-          where: { active: true },
+          where: { active: true, isBookablePublic: true },
           select: {
             id: true,
             name: true,
             duration: true,
             price: true,
             color: true,
+            showPrice: true,
+            customPriceLabel: true,
+            showDuration: true,
+            isBookablePublic: true,
             professionals: {
               select: {
                 professionalId: true,
@@ -196,6 +200,7 @@ export class TenantsService {
           userId,
           firstName: professionalFirstName,
           lastName: professionalLastName,
+          allServices: true,
           branches: {
             create: {
               branchId: branch.id

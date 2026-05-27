@@ -1,62 +1,116 @@
-<div class="card-glass w-[550px] max-w-full !p-10">
-  <header class="flex justify-between items-center mb-8">
+<div class="card-glass w-[550px] max-w-full flex flex-col max-h-[90dvh] !p-0 overflow-hidden animate-in fade-in zoom-in duration-200">
+  <header class="flex justify-between items-center px-10 pt-10 pb-6 shrink-0">
     <h2 class="text-3xl font-bold text-text-main">{{ isEditing ? 'Editar Servicio' : 'Nuevo Servicio' }}</h2>
     <button class="text-3xl leading-none text-text-dim hover:text-red-500 transition-colors" (click)="onCancel()">×</button>
   </header>
 
-  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-    <div class="flex flex-col gap-2">
-      <label for="name" class="text-sm font-semibold text-text-muted">Nombre del Servicio *</label>
-      <input id="name" type="text" formControlName="name" class="input-field" placeholder="Ej: Corte de Cabello">
-      @if (serviceForm.get('name')?.touched && serviceForm.get('name')?.invalid) {
-        <span class="text-xs text-red-400">El nombre es obligatorio</span>
-      }
-    </div>
-
-    <div class="grid grid-cols-2 gap-6">
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-10 pb-6 flex flex-col gap-6">
       <div class="flex flex-col gap-2">
-        <label for="duration" class="text-sm font-semibold text-text-muted">Duración (minutos) *</label>
-        <input id="duration" type="number" formControlName="duration" class="input-field" step="5">
-        @if (serviceForm.get('duration')?.touched && serviceForm.get('duration')?.invalid) {
-          <span class="text-xs text-red-400">Mínimo 5 min</span>
+        <label for="name" class="text-sm font-semibold text-text-muted">Nombre del Servicio *</label>
+        <input id="name" type="text" formControlName="name" class="input-field" placeholder="Ej: Corte de Cabello">
+        @if (serviceForm.get('name')?.touched && serviceForm.get('name')?.invalid) {
+          <span class="text-xs text-red-400">El nombre es obligatorio</span>
         }
       </div>
-      <div class="flex flex-col gap-2">
-        <label for="price" class="text-sm font-semibold text-text-muted">Precio ($) *</label>
-        <input id="price" type="number" formControlName="price" class="input-field">
-      </div>
-    </div>
 
-    <div class="grid grid-cols-2 gap-6">
-      <div class="flex flex-col gap-2">
-        <label for="categoryId" class="text-sm font-semibold text-text-muted">Categoría</label>
-        <select id="categoryId" formControlName="categoryId" class="input-field">
-          <option value="">Sin categoría</option>
-          @for (cat of categories(); track cat.id) {
-            <option [value]="cat.id">{{ cat.name }}</option>
+      <div class="grid grid-cols-2 gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="duration" class="text-sm font-semibold text-text-muted">Duración (minutos) *</label>
+          <input id="duration" type="number" formControlName="duration" class="input-field" step="5">
+          @if (serviceForm.get('duration')?.touched && serviceForm.get('duration')?.invalid) {
+            <span class="text-xs text-red-400">Mínimo 5 min</span>
           }
-        </select>
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="color" class="text-sm font-semibold text-text-muted">Color en Agenda</label>
-        <div class="flex items-center gap-4 bg-bg-secondary p-2 rounded-xl border border-border">
-          <input id="color" type="color" formControlName="color" class="w-10 h-10 bg-transparent border-none cursor-pointer">
-          <span class="font-mono text-sm font-bold text-text-muted">{{ serviceForm.get('color')?.value }}</span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="price" class="text-sm font-semibold text-text-muted">Precio ($) *</label>
+          <input id="price" type="number" formControlName="price" class="input-field">
         </div>
       </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="categoryId" class="text-sm font-semibold text-text-muted">Categoría</label>
+          <select id="categoryId" formControlName="categoryId" class="input-field">
+            <option value="">Sin categoría</option>
+            @for (cat of categories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="color" class="text-sm font-semibold text-text-muted">Color en Agenda</label>
+          <div class="flex items-center gap-4 bg-bg-secondary p-2 rounded-xl border border-border">
+            <input id="color" type="color" formControlName="color" class="w-10 h-10 bg-transparent border-none cursor-pointer">
+            <span class="font-mono text-sm font-bold text-text-muted">{{ serviceForm.get('color')?.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="description" class="text-sm font-semibold text-text-muted">Descripción</label>
+        <textarea id="description" formControlName="description" rows="2" class="input-field resize-none" placeholder="Breve descripción del servicio..."></textarea>
+      </div>
+
+      <div class="flex items-center gap-3 py-2">
+        <input id="active" type="checkbox" formControlName="active" class="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20">
+        <label for="active" class="text-sm font-medium text-text-muted cursor-pointer">Servicio activo</label>
+      </div>
+
+      <!-- Sección: Configuración de Vista Pública -->
+      <div class="border-t border-border pt-6 flex flex-col gap-4">
+        <h3 class="text-xs font-bold text-text-dim uppercase tracking-wider">Vista Pública</h3>
+
+        <div class="flex items-start gap-3">
+          <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+            <input type="checkbox" formControlName="isBookablePublic" class="sr-only peer">
+            <div class="w-9 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+          <div class="flex flex-col gap-0.5 select-none cursor-pointer" (click)="serviceForm.get('isBookablePublic')?.setValue(!serviceForm.get('isBookablePublic')?.value)">
+            <span class="text-sm font-semibold text-text-main">Disponible para reservas online</span>
+            <span class="text-xs text-text-dim">Permite a los clientes reservar este servicio desde la página pública.</span>
+          </div>
+        </div>
+
+        @if (serviceForm.get('isBookablePublic')?.value) {
+          <div class="pl-6 flex flex-col gap-4 border-l-2 border-primary/20 ml-3.5 transition-all duration-300">
+            
+            <div class="flex items-start gap-3">
+              <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+                <input type="checkbox" formControlName="showPrice" class="sr-only peer">
+                <div class="w-9 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+              <div class="flex flex-col gap-0.5 select-none cursor-pointer" (click)="serviceForm.get('showPrice')?.setValue(!serviceForm.get('showPrice')?.value)">
+                <span class="text-sm font-semibold text-text-main">Mostrar precio</span>
+                <span class="text-xs text-text-dim">Muestra el precio del servicio en la página de reservas.</span>
+              </div>
+            </div>
+
+            @if (!serviceForm.get('showPrice')?.value) {
+              <div class="flex flex-col gap-2 max-w-md ml-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                <label for="customPriceLabel" class="text-xs font-semibold text-text-muted">Texto alternativo para el precio (opcional)</label>
+                <input id="customPriceLabel" type="text" formControlName="customPriceLabel" class="input-field py-2 text-sm" placeholder="Ej: Consultar precio, A convenir">
+                <span class="text-[11px] text-text-dim leading-normal">Si se deja vacío, no se mostrará ninguna referencia de precio en el portal público.</span>
+              </div>
+            }
+
+            <div class="flex items-start gap-3">
+              <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+                <input type="checkbox" formControlName="showDuration" class="sr-only peer">
+                <div class="w-9 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+              <div class="flex flex-col gap-0.5 select-none cursor-pointer" (click)="serviceForm.get('showDuration')?.setValue(!serviceForm.get('showDuration')?.value)">
+                <span class="text-sm font-semibold text-text-main">Mostrar duración</span>
+                <span class="text-xs text-text-dim">Muestra la duración del servicio en la página de reservas.</span>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
     </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="description" class="text-sm font-semibold text-text-muted">Descripción</label>
-      <textarea id="description" formControlName="description" rows="2" class="input-field resize-none" placeholder="Breve descripción del servicio..."></textarea>
-    </div>
-
-    <div class="flex items-center gap-3 py-2">
-      <input id="active" type="checkbox" formControlName="active" class="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20">
-      <label for="active" class="text-sm font-medium text-text-muted cursor-pointer">Servicio activo</label>
-    </div>
-
-    <footer class="flex justify-end gap-4 mt-4">
+    <footer class="flex justify-end gap-4 px-10 py-6 border-t border-border bg-surface-subtle/30 shrink-0">
       <button type="button" class="btn-secondary flex-1" (click)="onCancel()">Cancelar</button>
       <button type="submit" class="btn-primary flex-1" [disabled]="isSubmitting">
         {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Servicio') }}

@@ -37,4 +37,9 @@ export class UpdateProfessionalDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  allServices?: boolean
 }

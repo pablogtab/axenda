@@ -50,7 +50,7 @@ Las fases del roadmap se detallan a continuación (`ROADMAP.md`):
 - **Fase 4 — UX de Gestión Interna** [Completado]: Integración de Auth en el frontend, agenda interactiva (diaria/semanal, drag & drop, y vista de lista funcional), carga rápida de clientes desde el modal de citas, estados detallados de reserva (*Confirmado, En Espera, Asiste, No asistió*), bloqueos rápidos con motivo, y vista de lista con filtros y agrupamiento dinámico.
 - **Campos personalizados de clientes** [Completado]: Hasta 4 campos por tenant con tipos TEXT/NUMBER/DATE/SELECT/BOOLEAN, listas propias, filtros booleanos, reordenamiento por drag & drop y valor por defecto configurable por tipo.
 - **Fase 5 — Reglas de Negocio y Lógica Avanzada** [En Progreso]: Políticas de anticipación mín/máx [Completado]. Pendiente: modalidad presencial/virtual con links, horarios restringidos por servicio, turnos genéricos y reservas recurrentes.
-- **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado]. Pendiente: Google Login para clientes públicos.
+- **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado], configuración de visualización pública y precios en servicios [Completado]. Pendiente: Google Login para clientes públicos.
 - **Fase 7 — Pagos y Notificaciones (Post-MVP)** [Pendiente]: Integración MercadoPago para señas en turnos públicos, estados de pago (Pendiente, Señado, Pagado), y recordatorios automáticos o bots por WhatsApp.
 - **Fase 8 — Valor Agregado y Cierre** [Pendiente]: Integración con Google Reviews, guía de onboarding, tutoriales, templates por rubro, impresión de agenda física, y pantalla para sala de espera.
 
@@ -79,6 +79,24 @@ El módulo de turnos utiliza `AvailabilityEngineService` en el backend para busc
 - **Conflictos horarias:** Un horario está en conflicto si se solapa con otro turno existente (que no sea `CANCELLED` o `NO_SHOW`) o con un bloqueo manual (`AvailabilityException` de tipo `BLOCK`).
 - **Anticipación mínima:** El parámetro `publicMinBookingTime` (ej. `'1h'`, `'30m'`) define cuánto tiempo en el futuro debe estar el turno desde la hora actual.
 - **Solapamiento permitido:** `publicMaxOverlapMins` permite tolerar cierta superposición horaria (ej. para sobreturnos controlados).
+
+## Servicios y Profesionales (Configuración y Auto-asignación)
+
+### Configuración de Vista Pública en Servicios
+Los administradores pueden configurar cómo se comportan y visualizan los servicios en el portal público de reservas:
+- `isBookablePublic` (Boolean, por defecto `true`): Si es `false`, el servicio se filtra y no se muestra en el portal público.
+- `showPrice` (Boolean, por defecto `true`): Si es `false`, oculta el precio en las tarjetas y en el total del resumen de reserva.
+- `customPriceLabel` (String, opcional): Si `showPrice` es `false`, este texto se muestra como referencia de precio (ej: *"A convenir"*, *"Consultar"*). Si se deja vacío, no se muestra ninguna referencia.
+- `showDuration` (Boolean, por defecto `true`): Si es `false`, oculta la duración en minutos del servicio en el portal público.
+
+### Auto-asignación de Servicios a Profesionales (`allServices`)
+Los profesionales se pueden configurar para que realicen automáticamente todos los servicios de la organización:
+- `allServices` (Boolean, por defecto `false`): Si es `true`, el backend asocia automáticamente al profesional con todos los servicios del tenant.
+- **Sincronización en Tiempo Real:** Para mantener la integridad relacional de Prisma y el motor de disponibilidad, el backend sincroniza la tabla pivot `ProfessionalService`:
+  - Al crear o actualizar un profesional con `allServices: true`, se asocian todos los servicios activos del tenant.
+  - En `setServices()` (actualización manual de servicios), si el profesional tiene `allServices: true`, se ignora el payload y se fuerzan todos los servicios activos del tenant.
+  - Al crear o reactivar un servicio, el backend asocia automáticamente este nuevo servicio a todos los profesionales activos del inquilino que tengan `allServices: true`.
+  - El primer profesional creado durante el flujo de onboarding se inicializa con `allServices: true` por defecto.
 
 ## Notificaciones & Integraciones
 
@@ -187,10 +205,10 @@ Tablas principales definidas en Prisma:
 | `client_field_list_options` | Opciones asociadas a cada lista personalizada. |
 | `client_field_values` | Valores personalizados guardados por cliente y por campo. |
 | `client_tags` | Etiquetas de color asignadas a clientes (ej: "VIP", "Frecuente"). |
-| `professionals` | Profesionales que atienden turnos. Pueden tener biografía, color identificativo y foto. |
+| `professionals` | Profesionales que atienden turnos. Almacena biografía, color, foto y flag de auto-asignación de servicios (`allServices`). |
 | `professional_branches` | Tabla pivote que vincula profesionales a una o más sucursales (`Branch`). |
 | `professional_services` | Tabla pivote que vincula qué servicios puede prestar cada profesional. |
-| `services` | Catálogo de servicios. Almacena duración (minutos), precio (`Decimal(10,2)`) y color. |
+| `services` | Catálogo de servicios. Almacena duración (minutos), precio (`Decimal(10,2)`), color, y flags de vista pública (`isBookablePublic`, `showPrice`, `customPriceLabel`, `showDuration`). |
 | `service_categories` | Agrupación lógica de servicios (ej: "Cortes", "Coloración"). |
 | `availability` | Horarios regulares de atención de un profesional en un día de la semana y sucursal. |
 | `availability_exceptions` | Vacaciones, bloqueos de tiempo o feriados asociados a un profesional. |
@@ -208,7 +226,7 @@ Tablas principales definidas en Prisma:
 
 ### Backend (NestJS / Prisma)
 - **Endpoints:** Siempre en kebab-case y bajo el prefijo `api` global (`/api/appointments`, `/api/tenants`).
-- **DTOs:** Utilizar `class-validator` para validar datos entrantes. Configurar conversiones automáticas en el pipeline global de validación.
+- **DTOs:** Utilizar `class-validator` para validar datos entrantes. Configurar conversiones automáticas en el pipeline global de validación. **Importante:** Asegurarse siempre de revisar que todos los campos enviados por el formulario del frontend (ej: `active` en creación/edición) estén incluidos en los DTOs correspondientes (ej: `CreateServiceDto`, `UpdateServiceDto`). Como el backend usa validación estricta (`whitelist: true` y `forbidNonWhitelisted: true`), cualquier propiedad adicional no declarada en el DTO provocará un error HTTP 400 Bad Request.
 - **Transactions:** Para operaciones críticas que requieran atomicidad (ej: guardar un turno y generar su log inicial), encapsular la lógica en `this.prisma.$transaction(async (tx) => { ... })`.
 - **Soft Deletes:** Utilizar el campo `active: Boolean` en lugar de borrar físicamente registros que tengan historial o dependencias (ej. `Client`, `Professional`, `Branch`, `Service`).
 - **Guards:** Colocar `@UseGuards(JwtAuthGuard)` a nivel controlador. Si algún endpoint es público (como en `PublicAppointmentsController`), se omite el guard. Para permisos, usar `@Roles(...)` + `RolesGuard`.

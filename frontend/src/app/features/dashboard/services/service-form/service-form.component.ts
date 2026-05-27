@@ -29,7 +29,11 @@ export class ServiceFormComponent implements OnInit {
     price: [this.data?.price || 0, [Validators.required, Validators.min(0)]],
     color: [this.data?.color || '#6366f1', [Validators.required]],
     categoryId: [this.data?.categoryId || ''],
-    active: [this.data?.active ?? true]
+    active: [this.data?.active ?? true],
+    isBookablePublic: [this.data?.isBookablePublic ?? true],
+    showPrice: [this.data?.showPrice ?? true],
+    customPriceLabel: [this.data?.customPriceLabel || ''],
+    showDuration: [this.data?.showDuration ?? true]
   });
 
   ngOnInit(): void {

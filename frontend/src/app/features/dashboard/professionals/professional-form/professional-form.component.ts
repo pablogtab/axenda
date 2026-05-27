@@ -68,7 +68,8 @@ export class ProfessionalFormComponent implements OnInit {
       lastName: [data?.lastName || '', [Validators.required]],
       bio: [data?.bio || ''],
       color: [data?.color || '#6366f1'],
-      active: [data?.active ?? true]
+      active: [data?.active ?? true],
+      allServices: [data?.allServices ?? false]
     });
 
     if (this.isEditing && data) {

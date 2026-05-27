@@ -85,25 +85,66 @@ export class ProfessionalsService {
     // Validar límites de suscripción
     await this.subscriptionsService.validateLimit(tenantId, 'PROFESSIONALS');
 
-    return this.prisma.professional.create({
-      data: {
-        tenantId,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        bio: dto.bio,
-        photoUrl: dto.photoUrl,
-        color: dto.color,
-        userId: dto.userId,
-        active: dto.active,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const professional = await tx.professional.create({
+        data: {
+          tenantId,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          bio: dto.bio,
+          photoUrl: dto.photoUrl,
+          color: dto.color,
+          userId: dto.userId,
+          active: dto.active,
+          allServices: dto.allServices ?? false,
+        },
+      })
+
+      if (professional.allServices) {
+        const services = await tx.service.findMany({
+          where: { tenantId, active: true }
+        })
+        if (services.length > 0) {
+          await tx.professionalService.createMany({
+            data: services.map(s => ({
+              professionalId: professional.id,
+              serviceId: s.id
+            }))
+          })
+        }
+      }
+
+      return professional
     })
   }
 
   async update(tenantId: string, id: string, dto: UpdateProfessionalDto) {
     await this.findOrFail(tenantId, id)
-    return this.prisma.professional.update({
-      where: { id },
-      data: dto,
+    
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.professional.update({
+        where: { id },
+        data: dto,
+      })
+
+      if (dto.allServices === true) {
+        const services = await tx.service.findMany({
+          where: { tenantId, active: true }
+        })
+        await tx.professionalService.deleteMany({
+          where: { professionalId: id }
+        })
+        if (services.length > 0) {
+          await tx.professionalService.createMany({
+            data: services.map(s => ({
+              professionalId: id,
+              serviceId: s.id
+            }))
+          })
+        }
+      }
+
+      return updated
     })
   }
 
@@ -152,27 +193,34 @@ export class ProfessionalsService {
   }
 
   async setServices(tenantId: string, id: string, serviceIds: string[]) {
-    await this.findOrFail(tenantId, id)
+    const professional = await this.findOrFail(tenantId, id)
 
-    // Similar validación (comentado para evitar error si no hay DB mock de service,
-    // pero si service schema existe, funcionaría). Asumimos que service existe.
+    let idsToSet = serviceIds;
+    if (professional.allServices) {
+      const activeServices = await this.prisma.service.findMany({
+        where: { tenantId, active: true },
+        select: { id: true }
+      })
+      idsToSet = activeServices.map(s => s.id);
+    }
+
     const validServices = await this.prisma.service.count({
       where: {
-        id: { in: serviceIds },
+        id: { in: idsToSet },
         tenantId,
       },
     })
 
-    if (validServices !== serviceIds.length && serviceIds.length > 0) {
+    if (validServices !== idsToSet.length && idsToSet.length > 0) {
       throw new BadRequestException('Uno o más servicios son inválidos')
     }
 
     return this.prisma.$transaction(async (tx) => {
       await tx.professionalService.deleteMany({ where: { professionalId: id } })
       
-      if (serviceIds.length > 0) {
+      if (idsToSet.length > 0) {
         await tx.professionalService.createMany({
-          data: serviceIds.map((serviceId) => ({
+          data: idsToSet.map((serviceId) => ({
             professionalId: id,
             serviceId,
           })),

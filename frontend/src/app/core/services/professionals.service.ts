@@ -29,6 +29,7 @@ export interface Professional {
   photoUrl?: string;
   color?: string;
   active: boolean;
+  allServices?: boolean;
   services?: { service: { id: string, name: string, active: boolean } }[];
   branches?: { branch: { id: string, name: string, active: boolean } }[];
   availability?: Availability[];
