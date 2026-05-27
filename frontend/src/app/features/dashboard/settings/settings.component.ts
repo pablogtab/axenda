@@ -49,9 +49,7 @@ export class SettingsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   sections = [
-    { id: 'business-info', title: 'Tu Negocio', icon: 'store', description: 'Nombre, contacto y ubicación' },
-    { id: 'appearance', title: 'Apariencia', icon: 'palette', description: 'Colores y estilo de tu marca' },
-    { id: 'booking-settings', title: 'Reservas', icon: 'calendar_month', description: 'Antelación, intervalos y cancelaciones' },
+    { id: 'public-site', title: 'Sitio Público', icon: 'language', description: 'Portal de reservas, marca y reglas' },
     { id: 'notifications', title: 'Notificaciones', icon: 'notifications', description: 'Mensajes automáticos y recordatorios' },
     { id: 'professionals', title: 'Profesionales', icon: 'group', description: 'Gestiona tu equipo de trabajo' },
     { id: 'branches', title: 'Sucursales', icon: 'location_on', description: 'Ubicaciones de tu negocio' },
@@ -61,7 +59,8 @@ export class SettingsComponent implements OnInit {
     { id: 'billing', title: 'Cuenta y Plan', icon: 'credit_card', description: 'Gestiona tu suscripción y pagos' }
   ];
 
-  activeSection = 'business-info';
+  activeSection = 'public-site';
+  activePublicSubTab = 'general';
 
   colorPresets = [
     {
@@ -129,7 +128,7 @@ export class SettingsComponent implements OnInit {
   };
 
   cancellationConfig: SelectConfig = {
-    label: 'Límite para cancelar',
+    label: 'Límite para cancelar / reprogramar',
     placeholder: 'Seleccionar...',
     displayFn: (item) => item.label,
     valueFn: (item) => item.value
@@ -171,7 +170,7 @@ export class SettingsComponent implements OnInit {
     { label: '6 horas antes', value: '6h' },
     { label: '12 horas antes', value: '12h' },
     { label: '24 horas antes', value: '24h' },
-    { label: 'No permitir cancelación online', value: 'never' }
+    { label: 'No permitir cancelación / reprogramación online', value: 'never' }
   ];
 
   overlapOptions = [
@@ -220,14 +219,37 @@ export class SettingsComponent implements OnInit {
       textColor: ['#f8fafc'],
       publicShowBranchSelection: [true],
       publicShowProfessionalSelection: [true],
-      publicMaxOverlapMins: [15]
+      publicMaxOverlapMins: [15],
+      publicActive: [true]
     });
   }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       if (params['section']) {
-        this.activeSection = params['section'];
+        const legacyMap: Record<string, string> = {
+          'business-info': 'general',
+          'appearance': 'appearance',
+          'booking': 'booking',
+          'booking-settings': 'booking'
+        };
+        
+        const mappedSubTab = legacyMap[params['section']];
+        if (mappedSubTab) {
+          this.activeSection = 'public-site';
+          this.activePublicSubTab = mappedSubTab;
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { section: 'public-site', subtab: mappedSubTab },
+            queryParamsHandling: 'merge',
+            replaceUrl: true
+          });
+        } else {
+          this.activeSection = params['section'];
+          if (this.activeSection === 'public-site') {
+            this.activePublicSubTab = params['subtab'] || 'general';
+          }
+        }
         this.cdr.detectChanges();
       }
     });
@@ -347,7 +369,9 @@ export class SettingsComponent implements OnInit {
           confirmEmail: tenant.confirmEmail ?? true,
           whatsappReminder: tenant.whatsappReminder ?? false,
           allowReschedule: tenant.allowReschedule ?? true,
-          whatsappCancellation: tenant.whatsappCancellation ?? true
+          whatsappCancellation: tenant.whatsappCancellation ?? true,
+          publicActive: tenant.publicActive ?? true,
+          cancellationLimit: tenant.cancellationLimit || '24h'
         });
 
         const values = this.settingsForm.getRawValue();
@@ -370,10 +394,26 @@ export class SettingsComponent implements OnInit {
 
   setActiveSection(sectionId: string) {
     this.activeSection = sectionId;
-    // Actualizar la URL para que sea consistente con la navegación externa
+    
+    const queryParams: any = { section: sectionId };
+    if (sectionId === 'public-site') {
+      queryParams.subtab = this.activePublicSubTab;
+    } else {
+      queryParams.subtab = null;
+    }
+
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { section: sectionId },
+      queryParams,
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  setActivePublicSubTab(subtabId: string) {
+    this.activePublicSubTab = subtabId;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { subtab: subtabId },
       queryParamsHandling: 'merge'
     });
   }
@@ -404,7 +444,9 @@ export class SettingsComponent implements OnInit {
       confirmEmail: values.confirmEmail,
       whatsappReminder: values.whatsappReminder,
       allowReschedule: values.allowReschedule,
-      whatsappCancellation: values.whatsappCancellation
+      whatsappCancellation: values.whatsappCancellation,
+      publicActive: values.publicActive,
+      cancellationLimit: values.cancellationLimit
     }).subscribe({
       next: () => {
         if (!silent) this.snackbar.success('Configuración guardada correctamente');

@@ -41,6 +41,8 @@ export class TenantsService {
         mode: true,
         publicShowBranchSelection: true,
         publicShowProfessionalSelection: true,
+        publicActive: true,
+        cancellationLimit: true,
         services: {
           where: { active: true, isBookablePublic: true },
           select: {
@@ -80,7 +82,7 @@ export class TenantsService {
         }
       }
     })
-    if (!tenant) throw new NotFoundException('Negocio no encontrado')
+    if (!tenant || !tenant.publicActive) throw new NotFoundException('Negocio no encontrado')
     return tenant
   }
 

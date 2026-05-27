@@ -136,4 +136,14 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsBoolean()
   whatsappCancellation?: boolean
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  publicActive?: boolean
+
+  @ApiPropertyOptional({ example: '24h' })
+  @IsOptional()
+  @IsString()
+  cancellationLimit?: string
 }

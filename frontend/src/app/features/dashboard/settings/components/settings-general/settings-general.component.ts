@@ -4,6 +4,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ImageUploaderComponent } from '@shared/components/image-uploader/image-uploader.component';
 import { SelectComponent, SelectConfig } from '@shared/components/select/select';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { DialogService } from '@core/services/dialog.service';
 
 @Component({
   selector: 'app-settings-general',
@@ -11,10 +12,22 @@ import { IconComponent } from '@shared/components/icon/icon.component';
   imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent, SelectComponent, IconComponent],
   template: `
     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" [formGroup]="form">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-4">
         <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
           <app-icon name="store" class="text-primary text-base"></app-icon> Información del Negocio
         </h2>
+        
+        <!-- Toggle Sitio Activo -->
+        <div class="flex items-center gap-3 bg-surface-subtle border border-border px-4 py-2 rounded-xl">
+          <div class="flex flex-col">
+            <span class="font-bold text-xs text-text-main">Sitio de reservas online</span>
+            <span class="text-[9px] text-text-muted">Permitir reservas de clientes</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer scale-90">
+            <input type="checkbox" [checked]="form.get('publicActive')?.value" (change)="onToggleActive($event)" class="sr-only peer">
+            <div class="w-10 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
       </div>
 
       <div class="flex flex-col md:flex-row gap-6 items-start">
@@ -140,6 +153,8 @@ import { IconComponent } from '@shared/components/icon/icon.component';
   `
 })
 export class SettingsGeneralComponent {
+  private dialogService = inject(DialogService);
+
   @Input({ required: true }) form!: FormGroup;
   @Input({ required: true }) tenantId!: string;
   @Input({ required: true }) slugStatus!: string;
@@ -149,4 +164,32 @@ export class SettingsGeneralComponent {
   @Output() copyLink = new EventEmitter<void>();
   @Output() visitPage = new EventEmitter<void>();
   @Output() generateQR = new EventEmitter<void>();
+
+  async onToggleActive(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const checked = input.checked;
+
+    if (!checked) {
+      // User is trying to DEACTIVATE the public site. Show confirmation dialog.
+      event.preventDefault();
+      // Keep checkbox checked until confirmed
+      input.checked = true;
+
+      const confirmed = await this.dialogService.confirm({
+        title: '¿Desactivar sitio público?',
+        message: 'Tus clientes no podrán ver tu agenda ni reservar turnos online mientras el sitio esté desactivado. ¿Estás seguro?',
+        confirmText: 'Sí, desactivar',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
+
+      if (confirmed) {
+        input.checked = false;
+        this.form.get('publicActive')?.setValue(false);
+      }
+    } else {
+      // User is activating the site
+      this.form.get('publicActive')?.setValue(true);
+    }
+  }
 }

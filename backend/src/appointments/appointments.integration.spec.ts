@@ -621,4 +621,111 @@ describe('Appointments — Integration', () => {
       expect(slots).toContain('09:00') // Slot is back!
     })
   })
+
+  describe('Cancellation Limit Validation', () => {
+    let testToken: string;
+    let nearApptId: string;
+    let farApptId: string;
+    let farToken: string;
+
+    beforeAll(async () => {
+      // 1. Create a near appointment (e.g. 2 hours from now)
+      const nearTime = new Date();
+      nearTime.setHours(nearTime.getHours() + 2);
+      
+      const appt1 = await prisma.appointment.create({
+        data: {
+          tenantId,
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: nearTime,
+          endTime: new Date(nearTime.getTime() + 30 * 60000),
+          status: 'PENDING',
+          cancelToken: `near-token-${Date.now()}`
+        }
+      });
+      testToken = appt1.cancelToken!;
+      nearApptId = appt1.id;
+
+      // 2. Create a far appointment (e.g. 30 hours from now)
+      const farTime = new Date();
+      farTime.setHours(farTime.getHours() + 30);
+      
+      const appt2 = await prisma.appointment.create({
+        data: {
+          tenantId,
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: farTime,
+          endTime: new Date(farTime.getTime() + 30 * 60000),
+          status: 'PENDING',
+          cancelToken: `far-token-${Date.now()}`
+        }
+      });
+      farToken = appt2.cancelToken!;
+      farApptId = appt2.id;
+    });
+
+    afterAll(async () => {
+      await prisma.appointment.deleteMany({
+        where: { id: { in: [nearApptId, farApptId] } }
+      });
+    });
+
+    it('should reject cancellation if time is within limit (e.g. limit 24h, appt in 2h)', async () => {
+      // Set limit to 24h
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { cancellationLimit: '24h' }
+      });
+
+      // Try to cancel near appointment via token
+      await request(app.getHttpServer())
+        .post(`/api/public/appointments/${testToken}/cancel`)
+        .expect(400); // Bad Request because limit of 24h has passed
+    });
+
+    it('should reject rescheduling if time is within limit (e.g. limit 24h, appt in 2h)', async () => {
+      // Set limit to 24h
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { cancellationLimit: '24h' }
+      });
+
+      const newTime = new Date();
+      newTime.setDate(newTime.getDate() + 2); // 2 days in the future
+
+      // Try to reschedule near appointment
+      await request(app.getHttpServer())
+        .post(`/api/public/appointments/${testToken}/reschedule`)
+        .send({ startTime: newTime.toISOString() })
+        .expect(400); // Bad Request because cancellation limit is enforced on reschedule too
+    });
+
+    it('should allow cancellation if time is outside limit (e.g. limit 24h, appt in 30h)', async () => {
+      await request(app.getHttpServer())
+        .post(`/api/public/appointments/${farToken}/cancel`)
+        .expect(200); // Allowed
+
+      const appt = await prisma.appointment.findUnique({ where: { id: farApptId } });
+      expect(appt?.status).toBe('CANCELLED');
+    });
+
+    it('should reject cancel/reschedule completely if limit is never', async () => {
+      // Set limit to never
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { cancellationLimit: 'never' }
+      });
+
+      // Try to cancel near appointment
+      await request(app.getHttpServer())
+        .post(`/api/public/appointments/${testToken}/cancel`)
+        .expect(403); // Forbidden
+    });
+  });
 })

@@ -33,6 +33,8 @@ export interface Tenant {
   confirmEmail?: boolean;
   allowReschedule?: boolean;
   whatsappCancellation?: boolean;
+  publicActive?: boolean;
+  cancellationLimit?: string;
   services?: any[];
   branches?: any[];
 }
@@ -64,6 +66,8 @@ export interface UpdateTenantDto {
   confirmEmail?: boolean;
   allowReschedule?: boolean;
   whatsappCancellation?: boolean;
+  publicActive?: boolean;
+  cancellationLimit?: string;
 }
 
 @Injectable({

@@ -31,49 +31,76 @@
         <!-- Content Area -->
         <main class="flex-1 glass rounded-2xl overflow-hidden flex flex-col border border-border">
             <div class="h-full overflow-y-auto custom-scrollbar"
-                [class.p-4]="!['professionals', 'branches', 'services', 'appearance'].includes(activeSection)"
-                [class.md:p-6]="!['professionals', 'branches', 'services', 'appearance'].includes(activeSection)"
-                [class.p-0]="['professionals', 'branches', 'services'].includes(activeSection)"
-                [class.p-6]="activeSection === 'appearance'">
+                [class.p-4]="!['professionals', 'branches', 'services'].includes(activeSection)"
+                [class.md:p-6]="!['professionals', 'branches', 'services'].includes(activeSection)"
+                [class.p-0]="['professionals', 'branches', 'services'].includes(activeSection)">
 
-                <!-- Business Info Section -->
-                <app-settings-general
-                    *ngIf="activeSection === 'business-info'"
-                    [form]="settingsForm"
-                    [tenantId]="tenantId()"
-                    [slugStatus]="slugStatus()"
-                    [categoryConfig]="categoryConfig"
-                    [categories]="categories"
-                    (copyLink)="copyToClipboard()"
-                    (visitPage)="visitPublicPage()"
-                    (generateQR)="generateQR()">
-                </app-settings-general>
+                <!-- Portal de Reservas / Sitio Público -->
+                <div *ngIf="activeSection === 'public-site'" class="h-full flex flex-col gap-6 animate-in fade-in duration-500">
+                    <!-- Sub-tabs navigation -->
+                    <div class="flex border-b border-border pb-px gap-6 shrink-0 overflow-x-auto custom-scrollbar">
+                        <button (click)="setActivePublicSubTab('general')"
+                            [class.text-primary]="activePublicSubTab === 'general'"
+                            [class.border-primary]="activePublicSubTab === 'general'"
+                            class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
+                            <app-icon name="store" class="text-sm"></app-icon> Información General
+                        </button>
+                        <button (click)="setActivePublicSubTab('appearance')"
+                            [class.text-primary]="activePublicSubTab === 'appearance'"
+                            [class.border-primary]="activePublicSubTab === 'appearance'"
+                            class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
+                            <app-icon name="palette" class="text-sm"></app-icon> Apariencia y Colores
+                        </button>
+                        <button (click)="setActivePublicSubTab('booking')"
+                            [class.text-primary]="activePublicSubTab === 'booking'"
+                            [class.border-primary]="activePublicSubTab === 'booking'"
+                            class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
+                            <app-icon name="calendar_month" class="text-sm"></app-icon> Reglas de Reserva
+                        </button>
+                    </div>
 
-                <!-- Appearance Section -->
-                <app-settings-appearance
-                    *ngIf="activeSection === 'appearance'"
-                    [form]="settingsForm"
-                    [colorPresets]="colorPresets"
-                    [activeTheme]="activeTheme()"
-                    [showThemeSelector]="showThemeSelector()"
-                    (applyPreset)="applyPreset($event)"
-                    (toggleThemeSelector)="showThemeSelector.set(!showThemeSelector())"
-                    (closeThemeSelector)="showThemeSelector.set(false)">
-                </app-settings-appearance>
+                    <!-- Sub-tab contents -->
+                    <div class="flex-1">
+                        <!-- General Info -->
+                        <app-settings-general
+                            *ngIf="activePublicSubTab === 'general'"
+                            [form]="settingsForm"
+                            [tenantId]="tenantId()"
+                            [slugStatus]="slugStatus()"
+                            [categoryConfig]="categoryConfig"
+                            [categories]="categories"
+                            (copyLink)="copyToClipboard()"
+                            (visitPage)="visitPublicPage()"
+                            (generateQR)="generateQR()">
+                        </app-settings-general>
 
-                <!-- Booking Settings Section -->
-                <app-settings-booking
-                    *ngIf="activeSection === 'booking-settings'"
-                    [form]="settingsForm"
-                    [anticipationMinConfig]="anticipationMinConfig"
-                    [anticipationMinOptions]="anticipationMinOptions"
-                    [anticipationMaxConfig]="anticipationMaxConfig"
-                    [anticipationMaxOptions]="anticipationMaxOptions"
-                    [overlapConfig]="overlapConfig"
-                    [overlapOptions]="overlapOptions"
-                    [cancellationConfig]="cancellationConfig"
-                    [cancellationOptions]="cancellationOptions">
-                </app-settings-booking>
+                        <!-- Appearance -->
+                        <app-settings-appearance
+                            *ngIf="activePublicSubTab === 'appearance'"
+                            [form]="settingsForm"
+                            [colorPresets]="colorPresets"
+                            [activeTheme]="activeTheme()"
+                            [showThemeSelector]="showThemeSelector()"
+                            (applyPreset)="applyPreset($event)"
+                            (toggleThemeSelector)="showThemeSelector.set(!showThemeSelector())"
+                            (closeThemeSelector)="showThemeSelector.set(false)">
+                        </app-settings-appearance>
+
+                        <!-- Booking Rules -->
+                        <app-settings-booking
+                            *ngIf="activePublicSubTab === 'booking'"
+                            [form]="settingsForm"
+                            [anticipationMinConfig]="anticipationMinConfig"
+                            [anticipationMinOptions]="anticipationMinOptions"
+                            [anticipationMaxConfig]="anticipationMaxConfig"
+                            [anticipationMaxOptions]="anticipationMaxOptions"
+                            [overlapConfig]="overlapConfig"
+                            [overlapOptions]="overlapOptions"
+                            [cancellationConfig]="cancellationConfig"
+                            [cancellationOptions]="cancellationOptions">
+                        </app-settings-booking>
+                    </div>
+                </div>
 
                 <!-- Notifications Section -->
                 <app-settings-notifications

@@ -349,6 +349,10 @@ export class AppointmentsService {
             textColor: true,
             allowReschedule: true,
             whatsappCancellation: true,
+            publicActive: true,
+            cancellationLimit: true,
+            phone: true,
+            email: true,
             branches: {
               where: { active: true },
               select: {
@@ -394,6 +398,10 @@ export class AppointmentsService {
               textColor: true,
               allowReschedule: true,
               whatsappCancellation: true,
+              publicActive: true,
+              cancellationLimit: true,
+              phone: true,
+              email: true,
               branches: {
                 where: { active: true },
                 select: {
@@ -408,12 +416,55 @@ export class AppointmentsService {
       });
     }
 
+    if (!appointment.tenant.publicActive) {
+      throw new NotFoundException('Negocio no encontrado');
+    }
+
     return appointment;
+  }
+
+  private validateCancellationLimit(appointment: any) {
+    const limit = appointment.tenant.cancellationLimit || '24h';
+
+    if (limit === 'never') {
+      throw new ForbiddenException('Este negocio no permite cancelaciones o reprogramaciones online.');
+    }
+
+    // Convert limit to minutes
+    let limitMins = 24 * 60; // default 24h
+    const match = limit.match(/^(\d+)([hm])$/);
+    if (match) {
+      const value = parseInt(match[1], 10);
+      const unit = match[2];
+      if (unit === 'h') {
+        limitMins = value * 60;
+      } else if (unit === 'm') {
+        limitMins = value;
+      }
+    }
+
+    const now = new Date();
+    const appointmentStart = new Date(appointment.startTime);
+    const diffMs = appointmentStart.getTime() - now.getTime();
+    const diffMins = diffMs / 60000;
+
+    if (diffMins < limitMins) {
+      const limitHours = limitMins / 60;
+      const limitText = limitHours >= 1 
+        ? `${limitHours} ${limitHours === 1 ? 'hora' : 'horas'}`
+        : `${limitMins} minutos`;
+        
+      throw new BadRequestException(
+        `El plazo para cancelar o reprogramar online ha expirado. Debe realizarse con al menos ${limitText} de anticipación.`
+      );
+    }
   }
 
   async cancelByToken(tokenOrId: string, notifyClient = true) {
     const appointment = await this.findOneByToken(tokenOrId);
     
+    this.validateCancellationLimit(appointment);
+
     if (appointment.status === 'CANCELLED') {
       return appointment;
     }
@@ -448,6 +499,8 @@ export class AppointmentsService {
     if (!appointment.tenant.allowReschedule) {
       throw new ForbiddenException('Este negocio no permite reprogramar turnos online.');
     }
+
+    this.validateCancellationLimit(appointment);
 
     const start = new Date(newStartTime);
     

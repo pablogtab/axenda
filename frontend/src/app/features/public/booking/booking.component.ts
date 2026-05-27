@@ -6,11 +6,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TenantsService, Tenant } from '../../../core/services/tenants.service';
 import { PublicBookingService } from '../../../core/services/public-booking.service';
 import { StoragePipe } from '../../../shared/pipes/storage.pipe';
+import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, StoragePipe, FormsModule],
+  imports: [CommonModule, StoragePipe, FormsModule, IconComponent],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
@@ -32,6 +33,8 @@ export class BookingComponent implements OnInit {
   appointment = signal<any | null>(null);
   isCancelMode = signal(false);
   isRescheduling = signal(false);
+  isActionTimeLimitPassed = signal(false);
+  timeLimitMessage = signal('');
 
   // Stepper State
   currentStep = signal(1);
@@ -217,6 +220,48 @@ export class BookingComponent implements OnInit {
     }
   }
 
+  checkCancellationLimit(appt: any) {
+    const limit = appt.tenant.cancellationLimit || '24h';
+
+    if (limit === 'never') {
+      this.isActionTimeLimitPassed.set(true);
+      this.timeLimitMessage.set('Este negocio no permite cancelaciones o reprogramaciones online.');
+      return;
+    }
+
+    // Convert limit to minutes
+    let limitMins = 24 * 60; // default 24h
+    const match = limit.match(/^(\d+)([hm])$/);
+    if (match) {
+      const value = parseInt(match[1], 10);
+      const unit = match[2];
+      if (unit === 'h') {
+        limitMins = value * 60;
+      } else if (unit === 'm') {
+        limitMins = value;
+      }
+    }
+
+    const now = new Date();
+    const appointmentStart = new Date(appt.startTime);
+    const diffMs = appointmentStart.getTime() - now.getTime();
+    const diffMins = diffMs / 60000;
+
+    if (diffMins < limitMins) {
+      this.isActionTimeLimitPassed.set(true);
+      const limitHours = limitMins / 60;
+      const limitText = limitHours >= 1 
+        ? `${limitHours} ${limitHours === 1 ? 'hora' : 'horas'}`
+        : `${limitMins} minutos`;
+      this.timeLimitMessage.set(
+        `El plazo para cancelar o reprogramar online ha expirado (debe realizarse con al menos ${limitText} de anticipación).`
+      );
+    } else {
+      this.isActionTimeLimitPassed.set(false);
+      this.timeLimitMessage.set('');
+    }
+  }
+
   loadAppointment(token: string) {
     this.loading.set(true);
     this.error.set(false);
@@ -231,6 +276,9 @@ export class BookingComponent implements OnInit {
         this.selectedBranch.set(appt.branch);
         this.selectedService.set(appt.service);
         this.selectedProfessional.set(appt.professional);
+
+        // Check limit
+        this.checkCancellationLimit(appt);
         
         this.loading.set(false);
       },
@@ -404,7 +452,7 @@ export class BookingComponent implements OnInit {
 
   cancelAppointment() {
     const token = this.token();
-    if (!token || this.isBooking()) return;
+    if (!token || this.isBooking() || this.isActionTimeLimitPassed()) return;
 
     if (!confirm('¿Estás seguro de que deseas cancelar este turno? Esta acción no se puede deshacer.')) {
       return;
@@ -429,6 +477,7 @@ export class BookingComponent implements OnInit {
   }
 
   startRescheduling() {
+    if (this.isActionTimeLimitPassed()) return;
     this.selectedDate.set(null);
     this.selectedTime.set(null);
     this.availableSlots.set([]);

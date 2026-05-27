@@ -69,7 +69,7 @@ import { IconComponent } from '@shared/components/icon/icon.component';
         </div>
 
         <div class="space-y-4">
-          <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-border pb-2">Cancelaciones</h3>
+          <h3 class="text-sm font-bold text-text-dim uppercase tracking-widest border-b border-border pb-2">Cancelaciones y reprogramación</h3>
           <app-select
             [config]="cancellationConfig"
             [options]="cancellationOptions"

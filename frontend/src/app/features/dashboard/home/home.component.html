@@ -174,7 +174,7 @@
       <!-- Right Column (Sidebar) (4 cols) -->
       <div class="md:col-span-4 flex flex-col gap-6">
         <!-- Link de Reservas Premium -->
-        @if (tenant()?.publicSlug) {
+        @if (tenant()?.publicSlug && tenant()?.publicActive) {
           <div class="card-glass border-primary/30 relative overflow-hidden group">
             <!-- Background Decoration -->
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-primary/20 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-700"></div>
@@ -190,7 +190,7 @@
                 <div class="text-right">
                   <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-1">Public Link</span>
                   <span class="flex items-center gap-1 text-[10px] text-success font-bold">
-                    <span class="w.1.5 h-1.5 bg-success rounded-full animate-ping"></span>
+                    <span class="w-1.5 h-1.5 bg-success rounded-full animate-ping"></span>
                     Activo
                   </span>
                 </div>
@@ -222,10 +222,41 @@
               </div>
             </div>
           </div>
+        } @else if (tenant()?.publicSlug && !tenant()?.publicActive) {
+          <!-- Sitio público desactivado -->
+          <div class="card-glass border-warning/30 bg-warning/5 transition-all group relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute -right-8 -top-8 w-32 h-32 bg-warning/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+            
+            <div class="relative z-10">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 flex items-center justify-center bg-warning/20 rounded-2xl text-warning">
+                  <app-icon name="link_off" class="text-3xl"></app-icon>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-black text-warning uppercase tracking-[0.2em] block mb-1">Public Link</span>
+                  <span class="flex items-center gap-1 text-[10px] text-warning font-bold">
+                    <span class="w-1.5 h-1.5 bg-warning rounded-full"></span>
+                    Desactivado
+                  </span>
+                </div>
+              </div>
+
+              <h3 class="text-xl font-black text-text-main mb-2">Sitio de Reservas Inactivo</h3>
+              <p class="text-xs text-text-muted mb-6 leading-relaxed">
+                Tu portal de reservas online está desactivado. Tus clientes no pueden reservar ni gestionar turnos.
+              </p>
+
+              <button routerLink="/dashboard/settings" [queryParams]="{section: 'public-site', subtab: 'booking'}" class="w-full py-3 bg-warning/10 hover:bg-warning/20 border border-warning/25 rounded-xl text-xs font-bold text-warning transition-all active:scale-95 flex items-center justify-center gap-2">
+                <app-icon name="settings" class="text-sm"></app-icon>
+                Activar en Ajustes
+              </button>
+            </div>
+          </div>
         } @else {
           <!-- Invitación a generar link -->
           <div class="card-glass border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
-               routerLink="/dashboard/settings" [queryParams]="{section: 'business-info'}">
+               routerLink="/dashboard/settings" [queryParams]="{section: 'public-site', subtab: 'general'}">
             <div class="flex flex-col items-center text-center py-6">
               <div class="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl text-primary mb-4 group-hover:scale-110 transition-transform">
                 <app-icon name="add_link" class="text-4xl"></app-icon>

@@ -80,8 +80,35 @@
           </div>
         </div>
 
+        <!-- Alerta de Límite de Tiempo Superado -->
+        <div *ngIf="isActionTimeLimitPassed() && appointment()?.status !== 'CANCELLED'" 
+             class="mt-6 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 text-text-main animate-in fade-in duration-300">
+          <div class="flex gap-3 items-start">
+            <app-icon name="warning" class="text-yellow-500 text-xl shrink-0 mt-0.5"></app-icon>
+            <div class="flex flex-col gap-1">
+              <span class="font-bold text-sm text-text-main">Plazo de modificación vencido</span>
+              <p class="text-xs text-text-muted leading-relaxed">
+                {{ timeLimitMessage() }}
+              </p>
+              <div class="mt-3 text-xs text-text-main font-semibold flex flex-col gap-1.5 border-t border-border/30 pt-2.5">
+                <span>Para cancelar o reprogramar este turno, comunícate directamente con el negocio:</span>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1 font-medium text-text-muted">
+                  <span class="flex items-center gap-1.5" *ngIf="appointment()?.tenant?.phone">
+                    <app-icon name="call" class="text-sm text-primary"></app-icon>
+                    {{ appointment()?.tenant?.phone }}
+                  </span>
+                  <span class="flex items-center gap-1.5" *ngIf="appointment()?.tenant?.email">
+                    <app-icon name="mail" class="text-sm text-primary"></app-icon>
+                    {{ appointment()?.tenant?.email }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
-        <div class="step-footer mt-8 flex flex-col sm:flex-row gap-4" *ngIf="appointment()?.status !== 'CANCELLED'">
+        <div class="step-footer mt-8 flex flex-col sm:flex-row gap-4" *ngIf="appointment()?.status !== 'CANCELLED' && !isActionTimeLimitPassed()">
           <button class="btn-danger flex-1 cursor-pointer" [disabled]="isBooking()" (click)="cancelAppointment()">
             <span *ngIf="!isBooking()">Cancelar Turno</span>
             <div class="spinner-sm white" *ngIf="isBooking()"></div>
@@ -92,7 +119,7 @@
           </button>
         </div>
 
-        <div class="step-footer mt-8 justify-center" *ngIf="appointment()?.status === 'CANCELLED'">
+        <div class="step-footer mt-8 justify-center" *ngIf="appointment()?.status === 'CANCELLED' || (appointment()?.status !== 'CANCELLED' && isActionTimeLimitPassed())">
           <button class="btn-primary w-full cursor-pointer" (click)="goBackToBusiness()">Agendar nuevo turno</button>
         </div>
       </div>

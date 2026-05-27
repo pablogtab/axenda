@@ -50,7 +50,7 @@ Las fases del roadmap se detallan a continuación (`ROADMAP.md`):
 - **Fase 4 — UX de Gestión Interna** [Completado]: Integración de Auth en el frontend, agenda interactiva (diaria/semanal, drag & drop, y vista de lista funcional), carga rápida de clientes desde el modal de citas, estados detallados de reserva (*Confirmado, En Espera, Asiste, No asistió*), bloqueos rápidos con motivo, y vista de lista con filtros y agrupamiento dinámico.
 - **Campos personalizados de clientes** [Completado]: Hasta 4 campos por tenant con tipos TEXT/NUMBER/DATE/SELECT/BOOLEAN, listas propias, filtros booleanos, reordenamiento por drag & drop y valor por defecto configurable por tipo.
 - **Fase 5 — Reglas de Negocio y Lógica Avanzada** [En Progreso]: Políticas de anticipación mín/máx [Completado]. Pendiente: modalidad presencial/virtual con links, horarios restringidos por servicio, turnos genéricos y reservas recurrentes.
-- **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado], configuración de visualización pública y precios en servicios [Completado]. Pendiente: Google Login para clientes públicos.
+- **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado], configuración de visualización pública y precios en servicios [Completado], posibilidad de habilitar/deshabilitar el sitio público [Completado], cancelación y reprogramación online con límite de tiempo configurable (`cancellationLimit`) [Completado], ajustes del sitio público reorganizados en sub-pestañas unificadas [Completado]. Pendiente: Google Login para clientes públicos.
 - **Fase 7 — Pagos y Notificaciones (Post-MVP)** [Pendiente]: Integración MercadoPago para señas en turnos públicos, estados de pago (Pendiente, Señado, Pagado), y recordatorios automáticos o bots por WhatsApp.
 - **Fase 8 — Valor Agregado y Cierre** [Pendiente]: Integración con Google Reviews, guía de onboarding, tutoriales, templates por rubro, impresión de agenda física, y pantalla para sala de espera.
 
@@ -97,6 +97,12 @@ Los profesionales se pueden configurar para que realicen automáticamente todos 
   - En `setServices()` (actualización manual de servicios), si el profesional tiene `allServices: true`, se ignora el payload y se fuerzan todos los servicios activos del tenant.
   - Al crear o reactivar un servicio, el backend asocia automáticamente este nuevo servicio a todos los profesionales activos del inquilino que tengan `allServices: true`.
   - El primer profesional creado durante el flujo de onboarding se inicializa con `allServices: true` por defecto.
+
+### Configuración del Sitio Público de Reservas
+Los administradores gestionan el sitio público desde el panel de control en **"Configuración > Sitio Público"**, que agrupa en sub-pestañas: *Información General*, *Apariencia y Colores*, y *Reglas de Reserva*:
+- `publicActive` (Boolean, por defecto `true`): Si está en `false`, las consultas públicas al portal (ej: al cargar el slug en `findByPublicSlug` o al buscar un turno por token en `findOneByToken`) lanzarán `NotFoundException`, deshabilitando por completo el portal y las páginas de cancelación/reprogramación. Al desactivarlo desde el dashboard, se muestra una modal de confirmación para prevenir desactivaciones accidentales.
+- `cancellationLimit` (String, por defecto `'24h'`): Ventana de tiempo mínima antes del turno en la que el cliente puede **cancelar o reprogramar** desde el portal público. Formatos aceptados: `Xh` (horas) o `Xm` (minutos). Si es `'never'`, ninguna acción online está permitida. La validación se aplica en el backend en los métodos `cancelByToken` y `rescheduleByToken` de `AppointmentsService`, y en el frontend muestra un banner de advertencia con los datos de contacto del negocio, ocultando los botones de acción.
+- `allowReschedule` (Boolean, por defecto `true`): Si está en `false`, el botón de reprogramar no se muestra en el portal público aunque `cancellationLimit` lo permita.
 
 ## Notificaciones & Integraciones
 
@@ -193,7 +199,7 @@ Tablas principales definidas en Prisma:
 
 | Tabla | Rol / Descripción |
 |---|---|
-| `tenants` | Negocios registrados. Contiene configuraciones estéticas, límites de reserva y estado del onboarding. |
+| `tenants` | Negocios registrados. Contiene configuraciones estéticas (`primaryColor`, `backgroundColor`, `textColor`, `logoUrl`, `bannerUrl`), parámetros del portal público (`publicSlug`, `publicActive`, `publicMinBookingTime`, `publicMaxBookingDays`, `publicMaxOverlapMins`, `publicShowBranchSelection`, `publicShowProfessionalSelection`), política de cancelaciones (`cancellationLimit`, `allowReschedule`), preferencias de notificaciones (`confirmEmail`, `whatsappReminder`, `whatsappCancellation`) y estado del onboarding. |
 | `branches` | Sucursales de un negocio. Vinculadas a un `tenantId`. |
 | `users` | Usuarios internos del panel (administradores, recepcionistas, profesionales). |
 | `refresh_tokens` | Tokens de actualización vinculados a un usuario para renovar la sesión de JWT. |
