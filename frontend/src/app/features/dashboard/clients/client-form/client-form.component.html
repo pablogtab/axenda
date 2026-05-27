@@ -74,6 +74,64 @@
                 placeholder="Detalles relevantes del cliente..."></textarea>
     </div>
 
+    @if (isLoadingCustomFields) {
+      <div class="py-2 text-xs text-text-dim">Cargando campos personalizados...</div>
+    }
+
+    @if (customFieldDefinitions().length > 0) {
+      <div [formGroup]="customFieldsForm" class="space-y-3 pt-2">
+        <div class="flex items-center gap-3">
+          <div class="h-px flex-1 bg-border"></div>
+          <h3 class="text-xs font-bold text-text-dim uppercase tracking-wider whitespace-nowrap">Campos personalizados</h3>
+          <div class="h-px flex-1 bg-border"></div>
+          <span class="text-[10px] text-text-dim whitespace-nowrap">{{ customFieldDefinitions().length }} configurados</span>
+        </div>
+
+        @for (definition of customFieldDefinitions(); track definition.id) {
+          <div class="space-y-2 py-1">
+            <label class="text-xs font-bold text-text-dim uppercase tracking-wider" [for]="customControlName(definition.id)">
+              {{ definition.name }}
+              @if (definition.required) {
+                <span class="text-error">*</span>
+              }
+            </label>
+
+            @if (isSelectField(definition)) {
+              <select
+                [id]="customControlName(definition.id)"
+                [formControlName]="customControlName(definition.id)"
+                class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all">
+                <option value="">Seleccionar opción...</option>
+                @for (option of getSelectOptions(definition); track option.id) {
+                  <option [value]="option.id">{{ option.label }}</option>
+                }
+              </select>
+            } @else if (definition.type === 'BOOLEAN') {
+              <label class="inline-flex items-center gap-2 text-sm text-text-main">
+                <input
+                  type="checkbox"
+                  [id]="customControlName(definition.id)"
+                  [formControlName]="customControlName(definition.id)"
+                  class="w-4 h-4 rounded border-border bg-surface-subtle text-primary focus:ring-primary/20 cursor-pointer">
+                Sí
+              </label>
+            } @else {
+              <input
+                [id]="customControlName(definition.id)"
+                [type]="getInputType(definition.type)"
+                [formControlName]="customControlName(definition.id)"
+                class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                [placeholder]="definition.type === 'DATE' ? '' : 'Ingresa un valor'">
+            }
+
+            @if (customFieldsForm.get(customControlName(definition.id))?.touched && customFieldsForm.get(customControlName(definition.id))?.invalid) {
+              <span class="text-[10px] text-error font-medium block ml-1">Campo obligatorio</span>
+            }
+          </div>
+        }
+      </div>
+    }
+
     <!-- Estado -->
     <div class="flex items-center gap-3 pt-2">
       <input id="active" type="checkbox" formControlName="active" 

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsBoolean, IsEmail, IsOptional, IsString } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsArray, IsBoolean, IsEmail, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator'
 
 export class CreateClientDto {
   @ApiProperty({ example: 'Lionel' })
@@ -81,4 +82,23 @@ export class UpdateClientDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean
+}
+
+export class UpsertClientCustomFieldValueDto {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
+  fieldId: string
+
+  @ApiPropertyOptional({ example: 'true', nullable: true })
+  @IsOptional()
+  @IsString()
+  value?: string
+}
+
+export class SaveClientCustomFieldsDto {
+  @ApiProperty({ type: [UpsertClientCustomFieldValueDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpsertClientCustomFieldValueDto)
+  values: UpsertClientCustomFieldValueDto[]
 }

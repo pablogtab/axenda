@@ -23,6 +23,25 @@
       placeholder="Buscar por nombre o email...">
   </div>
 
+  @if (booleanFieldDefinitions().length > 0) {
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-[11px] uppercase tracking-wider text-text-dim font-bold">Filtros:</span>
+      @for (field of booleanFieldDefinitions(); track field.id) {
+        <button
+          type="button"
+          (click)="toggleBooleanFieldFilter(field.id)"
+          class="px-3 py-1.5 rounded-full border text-xs font-semibold transition-all"
+          [class.border-primary]="activeBooleanFieldId() === field.id"
+          [class.bg-primary/15]="activeBooleanFieldId() === field.id"
+          [class.text-primary]="activeBooleanFieldId() === field.id"
+          [class.border-border]="activeBooleanFieldId() !== field.id"
+          [class.text-text-muted]="activeBooleanFieldId() !== field.id">
+          {{ field.name }}
+        </button>
+      }
+    </div>
+  }
+
   <div class="card-glass !p-0 overflow-hidden border-border flex flex-col h-full">
     <div class="flex-1 overflow-y-auto custom-scrollbar">
       <app-data-table

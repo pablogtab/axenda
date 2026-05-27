@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -14,7 +15,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { ClientsService } from './clients.service'
-import { CreateClientDto, UpdateClientDto } from './dto/client.dto'
+import { CreateClientDto, SaveClientCustomFieldsDto, UpdateClientDto } from './dto/client.dto'
 import { CreateClientTagDto } from './dto/client-tag.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
@@ -38,12 +39,16 @@ export class ClientsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('q') query?: string,
+    @Query('fieldId') fieldId?: string,
+    @Query('fieldValue') fieldValue?: string,
   ) {
     return this.clientsService.findAll(
       user.tenantId,
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
       query,
+      fieldId,
+      fieldValue,
     )
   }
 
@@ -99,5 +104,21 @@ export class ClientsController {
     @Param('tagId') tagId: string,
   ) {
     return this.clientsService.removeTag(user.tenantId, id, tagId)
+  }
+
+  @Get(':id/custom-fields')
+  @ApiOperation({ summary: 'Obtener definiciones y valores de campos personalizados del cliente' })
+  getCustomFields(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.clientsService.getCustomFields(user.tenantId, id)
+  }
+
+  @Put(':id/custom-fields')
+  @ApiOperation({ summary: 'Guardar valores de campos personalizados del cliente' })
+  saveCustomFields(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: SaveClientCustomFieldsDto,
+  ) {
+    return this.clientsService.saveCustomFields(user.tenantId, id, dto)
   }
 }

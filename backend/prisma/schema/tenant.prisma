@@ -32,6 +32,8 @@ model Tenant {
   phone                           String?
   appointments                    Appointment[]
   branches                        Branch[]
+  clientFieldDefinitions          ClientFieldDefinition[]
+  clientFieldLists                ClientFieldList[]
   clients                         Client[]
   professionals                   Professional[]
   serviceCategories               ServiceCategory[]

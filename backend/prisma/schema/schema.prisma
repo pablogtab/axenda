@@ -54,3 +54,11 @@ enum AuthProvider {
   EMAIL
   GOOGLE
 }
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  BOOLEAN
+}

@@ -8,6 +8,7 @@ import { SnackbarService } from '@services/snackbar.service';
 import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { ClientFieldDefinition, CustomFieldsService } from '@services/custom-fields.service';
 
 @Component({
   selector: 'app-clients-list',
@@ -21,9 +22,12 @@ export class ClientsListComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private dialog = inject(DialogService);
   private modal = inject(ModalService);
+  private customFieldsService = inject(CustomFieldsService);
 
   clients = signal<Client[]>([]);
   searchTerm = signal('');
+  activeBooleanFieldId = signal<string | null>(null);
+  booleanFieldDefinitions = signal<ClientFieldDefinition[]>([]);
   isLoading = signal(true);
   
   // Paginación
@@ -39,6 +43,7 @@ export class ClientsListComponent implements OnInit {
     effect(() => {
       const term = this.searchTerm();
       const page = this.currentPage();
+      const activeFieldId = this.activeBooleanFieldId();
       // Debounce implícito por el ciclo de vida de signals si se usa con cuidado, 
       // pero aquí llamaremos a load directamente.
       this.loadClients();
@@ -46,14 +51,32 @@ export class ClientsListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // El efecto inicial se encarga de la carga
+    this.loadBooleanFieldDefinitions();
+  }
+
+  private loadBooleanFieldDefinitions(): void {
+    this.customFieldsService.getDefinitions().subscribe({
+      next: (definitions) => {
+        this.booleanFieldDefinitions.set(definitions.filter((definition) => definition.type === 'BOOLEAN'));
+      },
+      error: () => {
+        this.booleanFieldDefinitions.set([]);
+      },
+    });
+  }
+
+  toggleBooleanFieldFilter(fieldId: string): void {
+    this.activeBooleanFieldId.set(this.activeBooleanFieldId() === fieldId ? null : fieldId);
+    this.currentPage.set(1);
+    this.prefetchCache.clear();
   }
 
   loadClients(): void {
     const term = this.searchTerm();
     const page = this.currentPage();
     const limit = this.pageSize();
-    const cacheKey = `${term}_${page}`;
+    const fieldId = this.activeBooleanFieldId();
+    const cacheKey = `${term}_${page}_${fieldId ?? 'nofilter'}`;
 
     if (this.prefetchCache.has(cacheKey)) {
       const cached = this.prefetchCache.get(cacheKey)!;
@@ -65,7 +88,7 @@ export class ClientsListComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.clientsService.findAll(page, limit, term).subscribe({
+    this.clientsService.findAll(page, limit, term, fieldId ?? undefined, fieldId ? 'true' : undefined).subscribe({
       next: (res) => {
         this.clients.set(res.items);
         this.totalItems.set(res.total);
@@ -83,13 +106,14 @@ export class ClientsListComponent implements OnInit {
     const term = this.searchTerm();
     const nextPage = this.currentPage() + 1;
     const limit = this.pageSize();
+    const fieldId = this.activeBooleanFieldId();
     
     if (nextPage > this.totalPages()) return;
 
-    const cacheKey = `${term}_${nextPage}`;
+    const cacheKey = `${term}_${nextPage}_${fieldId ?? 'nofilter'}`;
     if (this.prefetchCache.has(cacheKey)) return;
 
-    this.clientsService.findAll(nextPage, limit, term).subscribe({
+    this.clientsService.findAll(nextPage, limit, term, fieldId ?? undefined, fieldId ? 'true' : undefined).subscribe({
       next: (res) => {
         this.prefetchCache.set(cacheKey, res);
       }

@@ -48,6 +48,7 @@ Las fases del roadmap se detallan a continuación (`ROADMAP.md`):
 - **Fase 2 — Core del Negocio** [Completado]: ABM de Tenants, Sucursales (branches), Usuarios Administrativos (Managers, Receptionists), Profesionales con disponibilidad y excepciones (vacaciones/bloqueos), y Catálogo de Servicios vinculados a profesionales.
 - **Fase 3 — Motor de Reservas y Clientes** [Completado]: CRM básico de clientes, módulo de turnos (Appointments), motor de disponibilidad en tiempo real y estados del turno (Pendiente, Confirmado, En curso, Completado, Ausente, Cancelado).
 - **Fase 4 — UX de Gestión Interna** [Completado]: Integración de Auth en el frontend, agenda interactiva (diaria/semanal, drag & drop, y vista de lista funcional), carga rápida de clientes desde el modal de citas, estados detallados de reserva (*Confirmado, En Espera, Asiste, No asistió*), bloqueos rápidos con motivo, y vista de lista con filtros y agrupamiento dinámico.
+- **Campos personalizados de clientes** [Completado]: Hasta 4 campos por tenant con tipos TEXT/NUMBER/DATE/SELECT/BOOLEAN, listas propias, filtros booleanos, reordenamiento por drag & drop y valor por defecto configurable por tipo.
 - **Fase 5 — Reglas de Negocio y Lógica Avanzada** [En Progreso]: Políticas de anticipación mín/máx [Completado]. Pendiente: modalidad presencial/virtual con links, horarios restringidos por servicio, turnos genéricos y reservas recurrentes.
 - **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado]. Pendiente: Google Login para clientes públicos.
 - **Fase 7 — Pagos y Notificaciones (Post-MVP)** [Pendiente]: Integración MercadoPago para señas en turnos públicos, estados de pago (Pendiente, Señado, Pagado), y recordatorios automáticos o bots por WhatsApp.
@@ -181,6 +182,10 @@ Tablas principales definidas en Prisma:
 | `user_identities` | Credenciales de usuario (contraseña encriptada o enlaces OAuth como Google). |
 | `verification_codes` | Códigos de verificación temporales para el registro de cuentas. |
 | `clients` | CRM de clientes del negocio. Soporta notas, información de contacto y campos de identificación. |
+| `client_field_definitions` | Definiciones de campos personalizados por tenant, con tipo, lista, orden y valor por defecto. |
+| `client_field_lists` | Listas personalizadas del negocio para campos SELECT. |
+| `client_field_list_options` | Opciones asociadas a cada lista personalizada. |
+| `client_field_values` | Valores personalizados guardados por cliente y por campo. |
 | `client_tags` | Etiquetas de color asignadas a clientes (ej: "VIP", "Frecuente"). |
 | `professionals` | Profesionales que atienden turnos. Pueden tener biografía, color identificativo y foto. |
 | `professional_branches` | Tabla pivote que vincula profesionales a una o más sucursales (`Branch`). |
@@ -216,6 +221,7 @@ Tablas principales definidas en Prisma:
 - **Reactive Forms:** Declarar formularios reactivos utilizando la opción `nonNullable` del constructor (`FormBuilder.nonNullable.group(...)`) para asegurar el tipado correcto de los valores.
 - **Visuales & Temas:** Respetar el diseño basado en Glassmorphism y la consistencia de colores configurados a través de las variables CSS cargadas dinámicamente según la preferencia del tema oscuro/claro y la marca del tenant.
 - **Agenda List View:** La agenda incluye una vista de lista funcional (`agenda-list-view`) que permite visualizar los turnos en un rango de fechas. Permite filtrar por profesional, estado y búsqueda de cliente (nombre, teléfono, email, profesional o servicio). Soporta agrupamientos dinámicos (`groupBy` con `computed` signals) por Profesional, Sucursal (Sede), Día o Estado, mostrando acordeones colapsables con subtotales de cantidad y facturación estimada. Dispone de acciones rápidas para cambiar el estado (dropdown) o cancelar (cancelación en línea). El atajo de teclado 'l' alterna la vista de lista instantáneamente.
+- **Campos personalizados de clientes:** El módulo `custom-fields` ya está operativo. Permite administrar definiciones, listas y opciones, usar `defaultValue` al crear clientes nuevos, y persistir valores por cliente desde el formulario dinámico.
 
 ## Cómo correr el proyecto
 

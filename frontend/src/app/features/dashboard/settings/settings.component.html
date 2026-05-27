@@ -96,6 +96,11 @@
                     <app-services-list></app-services-list>
                 </div>
 
+                <!-- Custom Fields Section -->
+                <div *ngIf="activeSection === 'custom-fields'" class="animate-in fade-in duration-500">
+                    <app-settings-custom-fields></app-settings-custom-fields>
+                </div>
+
                 <!-- Billing Section -->
                 <app-settings-billing
                     *ngIf="activeSection === 'billing'">
