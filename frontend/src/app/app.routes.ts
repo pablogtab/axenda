@@ -25,6 +25,16 @@ export const appRoutes: Routes = [
     title: 'Axenda - Comparativa de Planes',
     loadComponent: () => import('./features/pricing-comparison/pricing-comparison.component').then(m => m.PricingComparisonComponent)
   },
+  {
+    path: 'terminos',
+    title: 'Axenda - Términos y Condiciones',
+    loadComponent: () => import('./features/terms/terms.component').then(m => m.TermsComponent)
+  },
+  {
+    path: 'privacidad',
+    title: 'Axenda - Política de Privacidad',
+    loadComponent: () => import('./features/privacy/privacy.component').then(m => m.PrivacyComponent)
+  },
   { 
     path: 'dashboard', 
     canActivate: [authGuard],

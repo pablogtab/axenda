@@ -1,0 +1,21 @@
+@reference "../../../styles.css";
+
+.privacy-shell {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-main);
+}
+
+.glow-bg {
+  position: absolute;
+  filter: blur(120px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+}
