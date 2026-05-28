@@ -11,6 +11,7 @@ import { AppointmentMailListener } from './listeners/appointment-mail.listener'
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
 import { WhatsappModule } from '../whatsapp/whatsapp.module'
 import { AppointmentWhatsappListener } from './listeners/appointment-whatsapp.listener'
+import { AppointmentReminderService } from './appointment-reminder.service'
 
 @Module({
   imports: [TenantsModule, MailModule, SubscriptionsModule, WhatsappModule],
@@ -19,7 +20,8 @@ import { AppointmentWhatsappListener } from './listeners/appointment-whatsapp.li
     AppointmentsService, 
     AvailabilityEngineService, 
     AppointmentMailListener,
-    AppointmentWhatsappListener
+    AppointmentWhatsappListener,
+    AppointmentReminderService
   ],
   exports: [AppointmentsService],
 })
