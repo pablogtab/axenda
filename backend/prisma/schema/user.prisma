@@ -12,6 +12,7 @@ model User {
   refreshTokens RefreshToken[]
   identities    UserIdentity[]
   tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  referralCodes ReferralCode[] @relation("UserReferrals")
 
   @@unique([tenantId, email])
   @@map("users")

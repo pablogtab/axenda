@@ -39,7 +39,7 @@ export class SubscriptionsController {
     @CurrentUser('sub') userId: string,
     @Body() body: CreateCheckoutDto
   ) {
-    return this.subscriptionsService.createCheckout(userId, body.planId, body.billingCycle, body.quantity || 1);
+    return this.subscriptionsService.createCheckout(userId, body.planId, body.billingCycle, body.quantity || 1, body.referralCode);
   }
 
   @Post('checkout-pack')

@@ -5,14 +5,21 @@ import { MercadoPagoService } from '../mercadopago/mercadopago.service';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { WHATSAPP_PACKS } from './constants/whatsapp-packs';
+import { ReferralsService } from './referrals.service';
 
 describe('SubscriptionsService - Packs & Billing', () => {
   let service: SubscriptionsService;
   let prismaMock: any;
   let mpServiceMock: any;
   let configServiceMock: any;
+  let referralsServiceMock: any;
 
   beforeEach(async () => {
+    referralsServiceMock = {
+      validateCode: jest.fn(),
+      getOrCreateUserCode: jest.fn(),
+    };
+    
     prismaMock = {
       tenantWhatsappPack: {
         findMany: jest.fn(),
@@ -66,6 +73,7 @@ describe('SubscriptionsService - Packs & Billing', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: MercadoPagoService, useValue: mpServiceMock },
         { provide: ConfigService, useValue: configServiceMock },
+        { provide: ReferralsService, useValue: referralsServiceMock },
       ],
     }).compile();
 

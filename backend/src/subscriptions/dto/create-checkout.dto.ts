@@ -15,4 +15,8 @@ export class CreateCheckoutDto {
   @Min(1, { message: 'La cantidad mínima es 1' })
   @Max(12, { message: 'La cantidad máxima es 12' })
   quantity?: number;
+
+  @IsString()
+  @IsOptional()
+  referralCode?: string;
 }

@@ -4,6 +4,7 @@ import { MercadoPagoService } from '../mercadopago/mercadopago.service';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { ConfigService } from '@nestjs/config';
 import { WHATSAPP_PACKS } from './constants/whatsapp-packs';
+import { ReferralsService } from './referrals.service';
 
 @Injectable()
 export class SubscriptionsService implements OnModuleInit {
@@ -13,6 +14,7 @@ export class SubscriptionsService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly mercadopagoService: MercadoPagoService,
     private readonly configService: ConfigService,
+    private readonly referralsService: ReferralsService,
   ) { }
 
   async onModuleInit() {
@@ -258,7 +260,7 @@ export class SubscriptionsService implements OnModuleInit {
   /**
    * Crea un link de pago (suscripción) para el plan seleccionado.
    */
-  async createCheckout(userId: string, planCode: string, billingCycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY', quantity: number = 1) {
+  async createCheckout(userId: string, planCode: string, billingCycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY', quantity: number = 1, referralCode?: string) {
     if (!this.isPaymentsEnabled()) {
       throw new ForbiddenException('Los pagos online están temporalmente fuera de servicio.');
     }
@@ -329,14 +331,26 @@ export class SubscriptionsService implements OnModuleInit {
     const finalQuantity = billingCycle === 'YEARLY' ? 1 : quantity;
     const planPrice = billingCycle === 'MONTHLY' ? Number(plan.priceMonthly) : Number(plan.priceYearly);
     const baseAmount = planPrice * finalQuantity;
-    const amountToCharge = Math.max(10, baseAmount - credit); // Mínimo de 10 ARS para evitar errores de MP
+    let amountToCharge = Math.max(10, baseAmount - credit); // Mínimo de 10 ARS para evitar errores de MP
 
-    this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}). Crédito: ${credit}. Total: ${amountToCharge}.`);
+    let referralCodeId: string | undefined = undefined;
+    if (referralCode) {
+      const validation = await this.referralsService.validateCode(referralCode, user.tenantId, plan.code);
+      if (validation.valid) {
+        referralCodeId = validation.id;
+        const discountAmount = amountToCharge * (validation.discountPercent / 100);
+        amountToCharge = Math.max(10, amountToCharge - discountAmount);
+      }
+    }
+
+    this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}). Crédito: ${credit}. Código: ${referralCode || 'Ninguno'}. Total: ${amountToCharge}.`);
 
     const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
     const backUrl = `${baseUrl}/payment/success`;
 
-    const externalReference = `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}`;
+    const externalReference = referralCodeId
+      ? `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}:${referralCodeId}`
+      : `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}`;
 
     const preference = await this.mercadopagoService.createPreference({
       title: isPlanChange 
@@ -449,14 +463,16 @@ export class SubscriptionsService implements OnModuleInit {
     let planCode: string | undefined;
     let billingCycle: string | undefined;
     let quantity: number = 1;
+    let referralCodeId: string | undefined;
 
-    // 1. Identificamos la información vía external_reference (tenantId:planCode:billingCycle:quantity)
+    // 1. Identificamos la información vía external_reference (tenantId:planCode:billingCycle:quantity:referralCodeId)
     if (mpPayment.external_reference) {
       const parts = mpPayment.external_reference.split(':');
       if (parts.length >= 1) tenantId = parts[0];
       if (parts.length >= 2) planCode = parts[1];
       if (parts.length >= 3) billingCycle = parts[2];
       if (parts.length >= 4) quantity = parseInt(parts[3]) || 1;
+      if (parts.length >= 5) referralCodeId = parts[4];
     }
 
     if (!tenantId) {
@@ -576,7 +592,7 @@ export class SubscriptionsService implements OnModuleInit {
     if (mpPayment.status === 'approved') {
       this.logger.log(`Extendiendo suscripción del tenant ${tenantId} al plan ${planCode || 'actual'} (${cycleToApply}) x${quantity} hasta ${newEndDate.toISOString()}`);
 
-      await this.prisma.$transaction([
+      const [updatedSub, createdInvoice] = await this.prisma.$transaction([
         this.prisma.tenantSubscription.update({
           where: { tenantId },
           data: {
@@ -603,6 +619,82 @@ export class SubscriptionsService implements OnModuleInit {
         })
       ]);
       this.logger.log(`Suscripción del tenant ${tenantId} actualizada exitosamente.`);
+
+      if (referralCodeId) {
+        try {
+          const refCode = await this.prisma.referralCode.findUnique({
+            where: { id: referralCodeId }
+          });
+          if (refCode) {
+            const discountPercent = Number(refCode.discountPercent);
+            let discountAmount = 0;
+            if (discountPercent > 0 && discountPercent < 100) {
+              const paidAmount = Number(mpPayment.transaction_amount || 0);
+              discountAmount = paidAmount * (discountPercent / (100 - discountPercent));
+            }
+
+            // Determinar días gratis en función del plan del referidor
+            let rewardDays = 0;
+            if (!refCode.isSystem && refCode.referrerTenantId) {
+              const referrerSub = await this.prisma.tenantSubscription.findUnique({
+                where: { tenantId: refCode.referrerTenantId },
+                include: { plan: true }
+              });
+              if (referrerSub) {
+                const referrerPlanCode = referrerSub.plan?.code || 'PRO';
+                rewardDays = 5; // Elite / otros por defecto
+                if (referrerPlanCode === 'PRO') {
+                  rewardDays = 15;
+                } else if (referrerPlanCode === 'BUSINESS') {
+                  rewardDays = 10;
+                }
+              }
+            }
+
+            await this.prisma.referralUsage.create({
+              data: {
+                referralCodeId,
+                tenantId,
+                invoiceId: createdInvoice.id,
+                discountAmount: discountAmount || 0,
+                rewardedDays: rewardDays,
+              }
+            });
+
+            await this.prisma.referralCode.update({
+              where: { id: referralCodeId },
+              data: {
+                usesCount: { increment: 1 }
+              }
+            });
+
+            this.logger.log(`Uso de código de referido registrado para tenant ${tenantId}. Código: ${refCode.code}. Descuento estimado: ${discountAmount}`);
+
+            if (rewardDays > 0 && refCode.referrerTenantId) {
+              const referrerSub = await this.prisma.tenantSubscription.findUnique({
+                where: { tenantId: refCode.referrerTenantId },
+              });
+              if (referrerSub) {
+                const currentReferrerEndDate = (referrerSub.endDate && referrerSub.endDate > now) 
+                  ? new Date(referrerSub.endDate) 
+                  : new Date(now);
+                
+                currentReferrerEndDate.setDate(currentReferrerEndDate.getDate() + rewardDays);
+
+                await this.prisma.tenantSubscription.update({
+                  where: { tenantId: refCode.referrerTenantId },
+                  data: {
+                    endDate: currentReferrerEndDate
+                  }
+                });
+                this.logger.log(`Recompensa aplicada: Se extendió ${rewardDays} días la suscripción del referidor ${refCode.referrerTenantId} hasta ${currentReferrerEndDate.toISOString()}`);
+              }
+            }
+          }
+        } catch (err) {
+          this.logger.error(`Error al procesar el código de referido en el pago: ${err.message}`, err.stack);
+        }
+      }
     } else {
       this.logger.log(`Pago de MP ${mpPayment.id} recibido con estado: ${mpPayment.status}. No se requiere acción inmediata.`);
     }

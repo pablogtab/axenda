@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { IconComponent } from '@shared/components/icon/icon.component';
@@ -164,7 +164,7 @@ interface Plan {
                   </div>
                 </div>
 
-                <div class="p-4 rounded-2xl bg-surface-subtle border border-border space-y-3">
+                <div class="p-4 rounded-2xl bg-surface-subtle border border-border space-y-4">
                   <div class="flex justify-between items-center text-xs pb-3 border-b border-border">
                     <span class="text-text-muted">Período de cobertura</span>
                     <span class="font-bold text-text-main">
@@ -188,6 +188,52 @@ interface Plan {
                     </div>
                   </div>
 
+                  <!-- Coupon / Referral Field -->
+                  <div class="pt-2 pb-2 border-b border-border">
+                    <span class="text-xs text-text-muted block mb-2">¿Tenés un código de descuento o referido?</span>
+                    <div class="flex gap-2">
+                      <div class="relative flex-1">
+                        <input 
+                          type="text" 
+                          [value]="referralCode()"
+                          (input)="referralCode.set($any($event.target).value)"
+                          placeholder="Ej: REFERIDO10"
+                          [disabled]="appliedReferralCode() !== null"
+                          class="w-full bg-surface-subtle border border-border/60 rounded-xl px-4 py-2 text-xs font-bold text-text-main focus:outline-none focus:border-primary/50 disabled:opacity-60 uppercase"
+                        />
+                        <div *ngIf="appliedReferralCode() !== null" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                          <app-icon name="check_circle" class="text-success text-sm"></app-icon>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        *ngIf="appliedReferralCode() === null"
+                        type="button" 
+                        (click)="applyReferralCode()" 
+                        [disabled]="isValidatingReferral() || !referralCode().trim()"
+                        class="btn-primary py-2 px-4 rounded-xl text-xs font-bold shrink-0 cursor-pointer disabled:opacity-50"
+                      >
+                        <span *ngIf="!isValidatingReferral()">Aplicar</span>
+                        <div *ngIf="isValidatingReferral()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      </button>
+
+                      <button 
+                        *ngIf="appliedReferralCode() !== null"
+                        type="button" 
+                        (click)="removeReferralCode()" 
+                        class="w-8 h-8 rounded-xl bg-error/15 border border-error/20 flex items-center justify-center shrink-0 cursor-pointer hover:bg-error/20 transition-all"
+                      >
+                        <app-icon name="close" class="text-error text-xs"></app-icon>
+                      </button>
+                    </div>
+                    <p *ngIf="referralError()" class="text-error text-[10px] font-medium mt-1 animate-in fade-in duration-200">
+                      {{ referralError() }}
+                    </p>
+                    <p *ngIf="appliedReferralCode() !== null" class="text-success text-[10px] font-bold mt-1 animate-in fade-in duration-200">
+                      ¡Código aplicado! {{ appliedDiscountPercent() }}% de descuento.
+                    </p>
+                  </div>
+
                   <div class="flex justify-between items-center text-[10px]" *ngIf="subService.status()?.status === 'ACTIVE' && subService.endDate()">
                     <span class="text-text-dim">Nota de renovación</span>
                     <span class="text-primary font-bold text-right">
@@ -206,6 +252,11 @@ interface Plan {
                     <div class="flex justify-between items-center text-xs text-success" *ngIf="upgradeCredit() > 0">
                       <span>Crédito a favor (Plan anterior)</span>
                       <span class="font-bold">- $ {{ upgradeCredit() | number:'1.0-0' }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-success" *ngIf="appliedDiscountPercent() > 0">
+                      <span>Descuento Código ({{ appliedReferralCode() }})</span>
+                      <span class="font-bold">- $ {{ discountAmount() | number:'1.0-0' }}</span>
                     </div>
 
                     <div class="flex justify-between items-center text-xs text-success" *ngIf="billingCycle() === 'YEARLY'">
@@ -243,7 +294,6 @@ interface Plan {
       </div>
     </div>
   `,
-
 })
 export class SubscriptionPlansComponent implements OnInit {
   currentStep = signal(1);
@@ -253,7 +303,26 @@ export class SubscriptionPlansComponent implements OnInit {
   quantity = signal(1);
   plans = signal<any[]>([]);
 
+  // Referidos y cupones
+  referralCode = signal<string>('');
+  appliedDiscountPercent = signal<number>(0);
+  appliedReferralCode = signal<string | null>(null);
+  referralError = signal<string>('');
+  isValidatingReferral = signal<boolean>(false);
+
   public subService = inject(SubscriptionService);
+
+  constructor() {
+    effect(() => {
+      const plan = this.selectedPlan();
+      const step = this.currentStep();
+      const savedCode = localStorage.getItem('referral_code');
+      if (plan && step === 3 && savedCode && !this.appliedReferralCode() && !this.isValidatingReferral()) {
+        this.referralCode.set(savedCode);
+        this.applyReferralCode();
+      }
+    }, { allowSignalWrites: true });
+  }
 
   currentPlanDetails = computed(() => {
     const status = this.subService.status();
@@ -295,8 +364,6 @@ export class SubscriptionPlansComponent implements OnInit {
     const targetPlan = this.selectedPlan();
     const now = new Date();
     
-    // Si es renovación del mismo plan, se inicia al terminar el actual.
-    // Si es cambio de plan, inicia HOY.
     const isPlanChange = status && targetPlan && status.plan.code !== targetPlan.code;
     
     if (!isPlanChange && status && status.status === 'ACTIVE' && status.endDate) {
@@ -320,6 +387,21 @@ export class SubscriptionPlansComponent implements OnInit {
     return end;
   });
 
+  discountAmount = computed(() => {
+    const plan = this.selectedPlan();
+    if (!plan) return 0;
+    const price = this.billingCycle() === 'MONTHLY' ? plan.priceMonthly : plan.priceYearly;
+    const qty = this.billingCycle() === 'YEARLY' ? 1 : this.quantity();
+    const base = price * qty;
+    const credit = this.upgradeCredit();
+    const baseCharged = Math.max(10, base - credit);
+    
+    const pct = this.appliedDiscountPercent();
+    if (pct <= 0) return 0;
+    
+    return Math.round(baseCharged * (pct / 100));
+  });
+
   totalPrice = computed(() => {
     const plan = this.selectedPlan();
     if (!plan) return 0;
@@ -327,7 +409,10 @@ export class SubscriptionPlansComponent implements OnInit {
     const qty = this.billingCycle() === 'YEARLY' ? 1 : this.quantity();
     const base = price * qty;
     const credit = this.upgradeCredit();
-    return Math.max(10, base - credit); // Mínimo de $10 para Mercado Pago
+    const baseCharged = Math.max(10, base - credit);
+    
+    const discount = this.discountAmount();
+    return Math.max(10, baseCharged - discount);
   });
 
   increaseQuantity() {
@@ -336,6 +421,42 @@ export class SubscriptionPlansComponent implements OnInit {
 
   decreaseQuantity() {
     this.quantity.update(q => q > 1 ? q - 1 : q);
+  }
+
+  async applyReferralCode() {
+    const code = this.referralCode().trim();
+    if (!code) return;
+    
+    this.isValidatingReferral.set(true);
+    this.referralError.set('');
+    try {
+      const plan = this.selectedPlan();
+      const res = await this.subService.validateReferralCode(code, plan?.code);
+      if (res.valid) {
+        this.appliedDiscountPercent.set(res.discountPercent);
+        this.appliedReferralCode.set(res.code);
+        this.referralError.set('');
+      } else {
+        this.referralError.set('El código ingresado no es válido.');
+        this.appliedDiscountPercent.set(0);
+        this.appliedReferralCode.set(null);
+      }
+    } catch (err: any) {
+      const msg = err.error?.error?.message || err.error?.message || 'Error al validar el código.';
+      this.referralError.set(msg);
+      this.appliedDiscountPercent.set(0);
+      this.appliedReferralCode.set(null);
+    } finally {
+      this.isValidatingReferral.set(false);
+    }
+  }
+
+  removeReferralCode() {
+    this.referralCode.set('');
+    this.appliedDiscountPercent.set(0);
+    this.appliedReferralCode.set(null);
+    this.referralError.set('');
+    localStorage.removeItem('referral_code');
   }
 
   async ngOnInit() {
@@ -385,8 +506,10 @@ export class SubscriptionPlansComponent implements OnInit {
     this.isProcessing.set(true);
     try {
       const qty = this.billingCycle() === 'YEARLY' ? 1 : this.quantity();
-      const res = await this.subService.checkout(plan.id, this.billingCycle(), qty);
+      const codeToPass = this.appliedReferralCode() || undefined;
+      const res = await this.subService.checkout(plan.id, this.billingCycle(), qty, codeToPass);
       if (res.initPoint) {
+        localStorage.removeItem('referral_code');
         window.location.href = res.initPoint;
       }
     } catch (error) {

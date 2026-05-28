@@ -60,6 +60,7 @@ model SubscriptionInvoice {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   subscription       TenantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  referralUsage      ReferralUsage?
 
   @@map("subscription_invoices")
 }

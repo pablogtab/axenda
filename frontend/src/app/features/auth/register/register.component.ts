@@ -1,9 +1,9 @@
-import { Component, inject, signal, ViewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, inject, signal, ViewChild, AfterViewInit, OnInit, effect } from '@angular/core';
 
 declare var google: any;
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@services/auth.service';
 import { TurnstileComponent } from '@shared/components/turnstile/turnstile.component';
 import { environment } from '@env/environment';
@@ -15,11 +15,21 @@ import { environment } from '@env/environment';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent implements AfterViewInit {
+export class RegisterComponent implements AfterViewInit, OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   @ViewChild(TurnstileComponent) turnstile!: TurnstileComponent;
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      const ref = params['ref'];
+      if (ref) {
+        localStorage.setItem('referral_code', ref);
+      }
+    });
+  }
 
   // Signals para el estado
   step = signal<1 | 2>(1);

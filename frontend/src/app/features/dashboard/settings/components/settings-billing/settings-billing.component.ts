@@ -4,7 +4,6 @@ import { RouterModule } from '@angular/router';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
 import { SnackbarService } from '../../../../../core/services/snackbar.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
-import { PlansGridComponent } from '../../../subscription/plans-grid.component';
 
 @Component({
   selector: 'app-settings-billing',
@@ -98,7 +97,7 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
                     <app-icon name="chat" class="text-[#25D366] text-xs"></app-icon> Mensajes de Plan
                   </span>
                   <span class="text-text-main font-black">
-                    {{ subService.usage()?.whatsappMonth || 0 }} / {{ subService.limits()!.maxWhatsapp >= 999999 ? '∞' : subService.limits()?.maxWhatsapp }}
+                    {{ subService.usage()?.whatsappMonth || 0 }} / {{ subService.limits()!.maxWhatsapp >= 999999 ? '∞' : subService.limits()!.maxWhatsapp }}
                   </span>
                 </div>
                 <div class="h-1.5 w-full bg-surface-subtle rounded-full overflow-hidden relative">
@@ -160,6 +159,128 @@ import { PlansGridComponent } from '../../../subscription/plans-grid.component';
                 <div class="h-full bg-white/20 rounded-full transition-all duration-1000" 
                   [style.width.%]="subService.limits()!.maxBranches >= 999999 ? 0 : (subService.usage()!.branches / subService.limits()!.maxBranches) * 100"></div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teaser / Upgrade Card for STARTER plan users -->
+      <div *ngIf="subService.plan()?.code === 'STARTER'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group">
+        <!-- Gorgeous background glows -->
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/15 transition-all duration-700"></div>
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-accent/10 blur-[100px] rounded-full group-hover:bg-accent/15 transition-all duration-700"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="space-y-4 max-w-xl text-left">
+            <span class="text-[10px] font-black text-primary uppercase tracking-[0.3em] flex items-center gap-1.5">
+              <app-icon name="lock" class="text-primary text-sm"></app-icon> Programa de Invitados Bloqueado
+            </span>
+            <h3 class="text-2xl md:text-3xl font-black text-text-main tracking-tight">¡Ganá días premium recomendando Axenda!</h3>
+            <p class="text-sm text-text-muted leading-relaxed">
+              El programa de referidos está reservado para nuestros miembros con planes activos. Mejorá tu suscripción a un plan de pago para desbloquear tu propio código de descuento, compartirlo y ganar <strong class="text-primary">hasta 15 días gratis</strong> de suscripción premium por cada persona que invites.
+            </p>
+          </div>
+          
+          <button routerLink="/dashboard/subscription/plans" class="px-6 py-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-2xl text-xs font-bold transition-all shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto text-center cursor-pointer">
+            Mejorar Plan y Desbloquear
+          </button>
+        </div>
+      </div>
+
+      <!-- Referral / Invite Section -->
+      <div *ngIf="subService.plan()?.code !== 'STARTER'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group animate-in fade-in duration-500">
+        <!-- Subtle back glow -->
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-success/10 blur-[100px] rounded-full group-hover:bg-success/15 transition-all duration-700"></div>
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/15 transition-all duration-700"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <!-- Text info -->
+          <div class="space-y-4 max-w-xl">
+            <span class="text-[10px] font-black text-success uppercase tracking-[0.3em] flex items-center gap-1.5">
+              <app-icon name="celebration" class="text-success text-sm"></app-icon> Programa de Invitados
+            </span>
+            <h3 class="text-2xl md:text-3xl font-black text-text-main tracking-tight">Compartí Axenda y ganá beneficios</h3>
+            <p class="text-sm text-text-muted leading-relaxed">
+              Invitá a tus amigos y colegas a digitalizar su agenda. Ellos obtienen un <strong class="text-success">10% de descuento</strong> en su primer pago de suscripción y vos recibís <strong class="text-primary">{{ getRewardDays() }} días gratis</strong> en tu plan actual por cada referido exitoso.
+            </p>
+            
+            <!-- Statistics row -->
+            <div class="grid grid-cols-2 gap-4 pt-2" *ngIf="referralCodeInfo()">
+              <div class="bg-surface-subtle/40 border border-border/40 p-4 rounded-2xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1">Invitaciones Exitosas</span>
+                <span class="text-2xl font-black text-text-main">{{ referralCodeInfo()?.totalReferrals }}</span>
+              </div>
+              <div class="bg-surface-subtle/40 border border-border/40 p-4 rounded-2xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1">Tiempo Gratis Acumulado</span>
+                <span class="text-2xl font-black text-success">{{ referralCodeInfo()?.benefitsEarned }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Code Box -->
+          <div class="shrink-0 flex flex-col items-center justify-center p-6 bg-surface-subtle/30 border border-border/40 rounded-3xl w-full lg:w-80">
+            <span class="text-[10px] font-black text-text-dim uppercase tracking-widest mb-3">Tu Código Único</span>
+            
+            <div *ngIf="isLoadingReferral()" class="h-10 flex items-center justify-center">
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+            </div>
+
+            <div *ngIf="!isLoadingReferral() && referralCodeInfo()" class="w-full space-y-4">
+              
+              <!-- Modo Lectura -->
+              <div *ngIf="!isEditingCode()" class="space-y-4 w-full animate-in fade-in duration-300">
+                <div class="w-full bg-bg-primary/60 border border-border/50 rounded-2xl py-3 px-4 flex items-center justify-between">
+                  <span class="text-sm font-black tracking-widest text-text-main uppercase">{{ referralCodeInfo()?.code }}</span>
+                  <div class="flex items-center gap-1">
+                    <button (click)="copyCode()" title="Copiar código" class="w-8 h-8 rounded-lg bg-surface-subtle hover:bg-surface-subtle-hover flex items-center justify-center transition-all cursor-pointer">
+                      <app-icon name="content_copy" class="text-text-muted text-xs"></app-icon>
+                    </button>
+                    <button (click)="startEditingCode()" title="Personalizar código" class="w-8 h-8 rounded-lg bg-surface-subtle hover:bg-surface-subtle-hover flex items-center justify-center transition-all cursor-pointer">
+                      <app-icon name="edit" class="text-text-muted text-xs"></app-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex gap-2 w-full">
+                  <button (click)="shareOnWhatsApp()" class="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-[#25D366]/20">
+                    <app-icon name="share" class="text-white text-xs"></app-icon> Compartir por WhatsApp
+                  </button>
+                </div>
+              </div>
+
+              <!-- Modo Edición -->
+              <div *ngIf="isEditingCode()" class="space-y-3 w-full animate-in zoom-in-95 duration-200">
+                <div class="w-full bg-bg-primary/60 border border-border/50 rounded-2xl p-2 flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    [value]="customCodeInput()"
+                    (input)="onCodeInputChange($event)"
+                    placeholder="ELEGÍ-TU-CÓDIGO"
+                    class="flex-1 bg-transparent border-0 px-2 py-1 text-sm font-bold text-text-main focus:outline-none uppercase tracking-wider"
+                    [disabled]="isSavingCustomCode()"
+                  />
+                  
+                  <div class="flex gap-1 shrink-0">
+                    <button (click)="suggestCode()" [disabled]="isSavingCustomCode()" title="Sugerir código" class="w-8 h-8 rounded-lg bg-surface-subtle hover:bg-surface-subtle-hover flex items-center justify-center transition-all cursor-pointer">
+                      <app-icon name="auto_awesome" class="text-text-muted text-xs"></app-icon>
+                    </button>
+                    <button (click)="saveCustomCode()" [disabled]="isSavingCustomCode() || !customCodeInput().trim() || !!customCodeError()" class="w-8 h-8 rounded-lg bg-primary hover:bg-primary-hover flex items-center justify-center transition-all cursor-pointer disabled:opacity-50">
+                      <div *ngIf="isSavingCustomCode()" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <app-icon *ngIf="!isSavingCustomCode()" name="check" class="text-white text-xs"></app-icon>
+                    </button>
+                    <button (click)="cancelEditingCode()" [disabled]="isSavingCustomCode()" class="w-8 h-8 rounded-lg bg-surface-subtle hover:bg-surface-subtle-hover flex items-center justify-center transition-all cursor-pointer">
+                      <app-icon name="close" class="text-text-muted text-xs"></app-icon>
+                    </button>
+                  </div>
+                </div>
+                <p *ngIf="customCodeError()" class="text-error text-[9px] font-medium leading-tight text-center">
+                  {{ customCodeError() }}
+                </p>
+                <p class="text-[9px] text-text-dim text-center leading-normal">
+                  Entre 5 y 15 caracteres. Solo letras, números y guiones. Sin palabras reservadas.
+                </p>
+              </div>
+
             </div>
           </div>
         </div>
@@ -272,16 +393,159 @@ export class SettingsBillingComponent implements OnInit {
   public invoices = signal<any[]>([]);
   public isLoadingInvoices = signal<boolean>(true);
 
+  // Programa de Referidos
+  public referralCodeInfo = signal<{ code: string; discountPercent: number; totalReferrals: number; benefitsEarned: string } | null>(null);
+  public isLoadingReferral = signal<boolean>(true);
+
+  // Personalización de código
+  public isEditingCode = signal<boolean>(false);
+  public customCodeInput = signal<string>('');
+  public customCodeError = signal<string>('');
+  public isSavingCustomCode = signal<boolean>(false);
+
   async ngOnInit() {
     try {
+      // Cargamos el estado de la suscripción primero para conocer el plan actual
+      await this.subService.loadStatus();
+      
       await Promise.all([
-        this.subService.loadStatus(),
-        this.subService.getInvoices().then(data => this.invoices.set(data || []))
+        this.subService.getInvoices().then(data => this.invoices.set(data || [])),
+        this.loadReferralCode()
       ]);
     } catch (err) {
       console.error('Error al cargar datos de facturación:', err);
     } finally {
       this.isLoadingInvoices.set(false);
     }
+  }
+
+  async loadReferralCode() {
+    if (this.subService.plan()?.code === 'STARTER') {
+      this.isLoadingReferral.set(false);
+      return;
+    }
+    
+    this.isLoadingReferral.set(true);
+    try {
+      const data = await this.subService.getMyReferralCode();
+      this.referralCodeInfo.set(data);
+    } catch (err) {
+      console.error('Error al cargar el código de referido:', err);
+    } finally {
+      this.isLoadingReferral.set(false);
+    }
+  }
+
+  copyCode() {
+    const code = this.referralCodeInfo()?.code;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      this.snackbar.success('Código de referido copiado al portapapeles');
+    });
+  }
+
+  shareOnWhatsApp() {
+    const code = this.referralCodeInfo()?.code;
+    if (!code) return;
+    const text = `¡Hola! Te recomiendo Axenda para gestionar tus turnos y clientes. Registrate usando mi código ${code} y obtené un 10% de descuento en tu primer pago: ${window.location.origin}/register?ref=${code}`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  }
+
+  startEditingCode() {
+    this.customCodeError.set('');
+    const code = this.referralCodeInfo()?.code || '';
+    this.customCodeInput.set(code);
+    this.isEditingCode.set(true);
+    this.validateCodeRealtime(code);
+  }
+
+  cancelEditingCode() {
+    this.isEditingCode.set(false);
+    this.customCodeError.set('');
+  }
+
+  onCodeInputChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    // Convertir a mayúsculas y filtrar caracteres no permitidos (letras, números y guiones)
+    let value = input.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    input.value = value; // Sincronizar el campo de texto visualmente
+    this.customCodeInput.set(value);
+    this.validateCodeRealtime(value);
+  }
+
+  private readonly reservedWords = [
+    'AXENDA', 'ADMIN', 'SYSTEM', 'DESCUENTO', 'DISCOUNT', 'PROMO', 'OFFER',
+    'GRATIS', 'FREE', 'TEST', 'CUPON', 'COUPON', 'SUPERADMIN', 'SUPPORT', 'SOPORTE',
+    'REGLAS', 'PLAN'
+  ];
+
+  validateCodeRealtime(code: string) {
+    if (!code) {
+      this.customCodeError.set('El código no puede estar vacío.');
+      return;
+    }
+
+    if (code.length < 5) {
+      this.customCodeError.set('El código debe tener al menos 5 caracteres.');
+      return;
+    }
+
+    if (code.length > 15) {
+      this.customCodeError.set('El código no puede superar los 15 caracteres.');
+      return;
+    }
+
+    const regex = /^[A-Z0-9-]{5,15}$/;
+    if (!regex.test(code)) {
+      this.customCodeError.set('Solo se permiten letras mayúsculas, números y guiones.');
+      return;
+    }
+
+    this.customCodeError.set('');
+  }
+
+  suggestCode() {
+    const rawName = (this.referralCodeInfo()?.code || 'REFERIDO').split('-')[0].toUpperCase();
+    const cleanName = rawName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+      .replace(/[^A-Z0-9]/g, '');      // Solo letras y números
+
+    const prefix = cleanName.length >= 3 ? cleanName.substring(0, 10) : 'REFERIDO';
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const suggested = `${prefix}-${randomSuffix}`;
+
+    this.customCodeInput.set(suggested);
+    this.validateCodeRealtime(suggested);
+  }
+
+  async saveCustomCode() {
+    const code = this.customCodeInput().trim().toUpperCase();
+    if (!code) return;
+
+    this.validateCodeRealtime(code);
+    if (this.customCodeError()) return;
+
+    this.isSavingCustomCode.set(true);
+    this.customCodeError.set('');
+    try {
+      const data = await this.subService.updateMyReferralCode(code);
+      this.referralCodeInfo.set(data);
+      this.isEditingCode.set(false);
+      this.snackbar.success('Código de referido personalizado exitosamente.');
+    } catch (err: any) {
+      const msg = err.error?.error?.message || err.error?.message || 'Error al actualizar el código.';
+      this.customCodeError.set(msg);
+    } finally {
+      this.isSavingCustomCode.set(false);
+    }
+  }
+
+  getRewardDays(): number {
+    const planCode = this.subService.plan()?.code || 'PRO';
+    if (planCode === 'PRO') return 15;
+    if (planCode === 'BUSINESS') return 10;
+    return 5;
   }
 }

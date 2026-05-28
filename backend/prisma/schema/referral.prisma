@@ -1,0 +1,41 @@
+model ReferralCode {
+  id                 String          @id @default(uuid())
+  code               String          @unique
+  discountPercent    Decimal         @db.Decimal(5, 2)
+  active             Boolean         @default(true)
+  isSystem           Boolean         @default(false)
+  maxUses            Int?
+  usesCount          Int             @default(0)
+  expiresAt          DateTime?
+  
+  applicablePlanCode String?
+  onlyFirstPayment   Boolean         @default(true)
+
+  referrerId         String?
+  referrerTenantId   String?
+  
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  referrer           User?           @relation("UserReferrals", fields: [referrerId], references: [id], onDelete: SetNull)
+  usages             ReferralUsage[]
+
+  @@map("referral_codes")
+}
+
+model ReferralUsage {
+  id             String               @id @default(uuid())
+  referralCodeId String
+  tenantId       String
+  invoiceId      String?              @unique
+  discountAmount Decimal              @db.Decimal(10, 2)
+  rewardedDays   Int                  @default(0)
+  createdAt      DateTime             @default(now())
+
+  referralCode   ReferralCode         @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  tenant         Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice        SubscriptionInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@unique([referralCodeId, tenantId])
+  @@map("referral_usages")
+}

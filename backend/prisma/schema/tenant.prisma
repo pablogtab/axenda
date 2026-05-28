@@ -45,6 +45,7 @@ model Tenant {
   whatsappConfig                  TenantWhatsappConfig?
   whatsappPacks                   TenantWhatsappPack[]
   users                           User[]
+  referralUsages                  ReferralUsage[]
 
   @@map("tenants")
 }

@@ -137,13 +137,40 @@ export class SubscriptionService {
   /**
    * Crea un link de pago para la suscripción
    */
-  async checkout(planId: string, billingCycle: 'MONTHLY' | 'YEARLY', quantity: number = 1): Promise<{ initPoint: string }> {
+  async checkout(planId: string, billingCycle: 'MONTHLY' | 'YEARLY', quantity: number = 1, referralCode?: string): Promise<{ initPoint: string }> {
     return firstValueFrom(
       this.http.post<{ initPoint: string }>(`${this.apiUrl}/checkout`, {
         planId,
         billingCycle,
-        quantity
+        quantity,
+        referralCode
       })
+    );
+  }
+
+  /**
+   * Valida un código de referido o cupón
+   */
+  async validateReferralCode(code: string, planCode?: string): Promise<any> {
+    const url = planCode
+      ? `${this.apiUrl}/referrals/validate?code=${encodeURIComponent(code)}&planCode=${encodeURIComponent(planCode)}`
+      : `${this.apiUrl}/referrals/validate?code=${encodeURIComponent(code)}`;
+    return firstValueFrom(this.http.get<any>(url));
+  }
+
+  /**
+   * Obtiene o genera el código de referido propio del usuario
+   */
+  async getMyReferralCode(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/referrals/my-code`));
+  }
+
+  /**
+   * Personaliza el código de referido del usuario
+   */
+  async updateMyReferralCode(code: string): Promise<any> {
+    return firstValueFrom(
+      this.http.put<any>(`${this.apiUrl}/referrals/my-code`, { code })
     );
   }
 

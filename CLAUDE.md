@@ -128,6 +128,19 @@ Los administradores gestionan el sitio público desde el panel de control en **"
   - Para planes: extiende la fecha de finalización (`endDate`) de la suscripción del tenant en la DB y registra la factura (`SubscriptionInvoice`) detallando el plan.
   - Para paquetes de WhatsApp: crea un registro en `TenantWhatsappPack` con su fecha de vencimiento (`now() + 3 meses`) y cantidad restante (`remaining`), e inserta la factura (`SubscriptionInvoice`) con la descripción correspondiente (ej. `Pack 500 Mensajes WhatsApp`).
 
+### Sistema de Referidos
+- **Funcionamiento**: Permite a los usuarios invitar a otros negocios. Los invitados obtienen un 10% de descuento en su primer pago de suscripción y el referidor obtiene días gratis de suscripción.
+- **Días de Recompensa**: Se calculan en función del plan del referidor en el momento del pago del invitado: **Pro** (15 días), **Business** (10 días), **otros** (5 días).
+- **Consistencia Histórica**: Los días concedidos se guardan estáticamente en el campo `rewardedDays` de `ReferralUsage` al momento del pago. Las estadísticas acumuladas en el panel ("Invita y Gana") del frontend suman este campo directamente en lugar de calcular dinámicamente, haciendo el historial inmune a futuros upgrades o downgrades del referidor.
+- **Exclusividad de Planes**: El programa está restringido a usuarios con planes de pago activos (Pro o superior). Los usuarios en el plan `STARTER` tienen el acceso bloqueado en la API (`ForbiddenException`) y ven una tarjeta teaser de conversión premium en el frontend para incentivar el upgrade.
+- **Control de Abuso y Fraude**:
+  - Restricción física en base de datos para impedir que un negocio use el mismo código de referido más de una vez.
+  - Ventana máxima de 14 días desde la creación del negocio para aplicar códigos de usuario.
+  - Límite de un único código de referidos no-sistema por negocio en toda su vida útil.
+  - Bloqueo absoluto de auto-referidos.
+  - Algoritmo recursivo para detectar y bloquear bucles de referidos circulares de cualquier longitud (ej: A -> B -> C -> A).
+  - Sanitización en caliente en el cliente y filtro estricto de profanidades/palabras reservadas únicamente en el backend (con de-leetspeaking para evitar bypasses como `C0nCH4` o `P_U_T_O`).
+
 ## Estructura del repo
 
 ```
