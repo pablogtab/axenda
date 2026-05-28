@@ -286,6 +286,28 @@ export class SubscriptionsService implements OnModuleInit {
       include: { plan: true }
     });
 
+    // Validar si es un downgrade
+    if (currentSub && currentSub.status === 'ACTIVE') {
+      const getPlanRank = (code: string): number => {
+        const ranks: Record<string, number> = {
+          STARTER: 0,
+          PRO: 1,
+          BUSINESS: 2,
+          ELITE: 3,
+        };
+        return ranks[code] ?? 0;
+      };
+
+      const currentRank = getPlanRank(currentSub.plan.code);
+      const targetRank = getPlanRank(plan.code);
+
+      if (targetRank < currentRank) {
+        throw new BadRequestException(
+          'No puedes cambiar directamente a un plan inferior si tienes un plan superior activo. Por favor, espera a que expire tu plan actual o contáctanos para gestionar el cambio.'
+        );
+      }
+    }
+
     let credit = 0;
     const now = new Date();
     const isPlanChange = currentSub && currentSub.status === 'ACTIVE' && currentSub.plan.code !== plan.code;

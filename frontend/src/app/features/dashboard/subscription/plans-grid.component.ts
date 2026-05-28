@@ -42,6 +42,22 @@ export class PlansGridComponent implements OnInit {
   isYearly = computed(() => this.billingCycle() === 'YEARLY');
   paymentsEnabled = computed(() => this.subscriptionService.paymentsEnabled());
 
+  getPlanRank(code: string): number {
+    const ranks: Record<string, number> = {
+      STARTER: 0,
+      PRO: 1,
+      BUSINESS: 2,
+      ELITE: 3
+    };
+    return ranks[code] ?? 0;
+  }
+
+  isDowngrade(planCode: string): boolean {
+    const currentCode = this.currentPlanCode();
+    if (!currentCode) return false;
+    return this.getPlanRank(planCode) < this.getPlanRank(currentCode);
+  }
+
   ngOnInit() {
     this.subscriptionService.loadConfig();
     this.loadPlans();

@@ -96,26 +96,31 @@
 
       <button 
         (click)="subscribe(plan.id)"
-        [disabled]="isProcessing() || activePlanId() === plan.id || !paymentsEnabled()"
+        [disabled]="isProcessing() || activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
         class="mt-auto block w-full rounded-2xl py-4 text-center text-sm font-bold transition-all active:scale-[0.98] cursor-pointer"
-        [class.btn-primary]="(plan.code === 'BUSINESS' || plan.code === 'ELITE') && paymentsEnabled()"
-        [class.btn-secondary]="plan.code !== 'BUSINESS' && plan.code !== 'ELITE' && activePlanId() !== plan.id && paymentsEnabled()"
-        [class.bg-surface-subtle]="activePlanId() === plan.id || !paymentsEnabled()"
-        [class.text-text-dim]="activePlanId() === plan.id || !paymentsEnabled()"
-        [class.border]="activePlanId() === plan.id || !paymentsEnabled()"
-        [class.border-border]="activePlanId() === plan.id || !paymentsEnabled()"
+        [class.btn-primary]="(plan.code === 'BUSINESS' || plan.code === 'ELITE') && activePlanId() !== plan.id && !isDowngrade(plan.code) && paymentsEnabled()"
+        [class.btn-secondary]="plan.code !== 'BUSINESS' && plan.code !== 'ELITE' && activePlanId() !== plan.id && !isDowngrade(plan.code) && paymentsEnabled()"
+        [class.bg-surface-subtle]="activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
+        [class.text-text-dim]="activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
+        [class.border]="activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
+        [class.border-border]="activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
         [class.opacity-50]="isProcessing()"
-        [class.cursor-not-allowed]="isProcessing() || activePlanId() === plan.id || !paymentsEnabled()"
+        [class.cursor-not-allowed]="isProcessing() || activePlanId() === plan.id || isDowngrade(plan.code) || !paymentsEnabled()"
       >
-        <span *ngIf="!isProcessing() && activePlanId() !== plan.id">
+        <span *ngIf="!isProcessing() && activePlanId() !== plan.id && !isDowngrade(plan.code)">
           {{ mode === 'selection' ? (currentPlanCode() === plan.code ? 'Extender plan ' + plan.name : 'Seleccionar ' + plan.name) : 'Suscribirse a ' + plan.name }}
         </span>
         <span *ngIf="activePlanId() === plan.id">Plan Actual</span>
+        <span *ngIf="isDowngrade(plan.code) && activePlanId() !== plan.id">Plan Inferior</span>
         <div *ngIf="isProcessing() && activePlanId() !== plan.id" class="flex justify-center items-center gap-2">
           <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
           <span>Procesando...</span>
         </div>
       </button>
+
+      <p *ngIf="isDowngrade(plan.code) && activePlanId() !== plan.id" class="mt-4 text-center text-[10px] text-text-dim leading-relaxed animate-in fade-in duration-300">
+        Tienes el plan {{ currentPlanCode() }} activo. Para bajar de plan, espera a que expire tu periodo de cobertura actual o contáctanos.
+      </p>
     </div>
   </div>
   
