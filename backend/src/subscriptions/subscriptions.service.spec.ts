@@ -145,7 +145,7 @@ describe('SubscriptionsService - Packs & Billing', () => {
         amount: WHATSAPP_PACKS.WPP_PACK_500.price,
         quantity: 1,
         externalReference: 'tenant-123:WPP_PACK_500:ONETIME:1',
-        backUrl: expect.stringContaining('/dashboard/subscription/success'),
+        backUrl: expect.stringContaining('/payment/success'),
         payerEmail: 'user@axenda.com',
       });
       expect(result).toEqual({ initPoint: 'http://mercadopago.com/init-point-123' });

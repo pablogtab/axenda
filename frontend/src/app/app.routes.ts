@@ -48,6 +48,11 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./features/onboarding/getting-started/getting-started.component').then(m => m.GettingStartedComponent)
   },
   {
+    path: 'payment/success',
+    title: 'Axenda - Pago Exitoso',
+    loadComponent: () => import('./features/public/payment-success/payment-success.component').then(m => m.PaymentSuccessComponent)
+  },
+  {
     path: 'booking/cancel/:token',
     title: 'Axenda - Gestionar Turno',
     loadComponent: () => import('./features/public/booking/booking.component').then(m => m.BookingComponent)

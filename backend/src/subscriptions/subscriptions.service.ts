@@ -311,9 +311,8 @@ export class SubscriptionsService implements OnModuleInit {
 
     this.logger.log(`Iniciando checkout para tenant ${user.tenantId}. Plan: ${plan.code} (${billingCycle}). Crédito: ${credit}. Total: ${amountToCharge}.`);
 
-    // Priorizamos la URL del túnel (HTTPS) si está configurada, para que Mercado Pago permita el auto_return
     const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
-    const backUrl = `${baseUrl}/dashboard/subscription/success`;
+    const backUrl = `${baseUrl}/payment/success`;
 
     const externalReference = `${user.tenantId}:${plan.code}:${billingCycle}:${finalQuantity}`;
 
@@ -347,7 +346,7 @@ export class SubscriptionsService implements OnModuleInit {
     this.logger.log(`Iniciando checkout de pack para tenant ${user.tenantId}. Pack: ${packCode} ($${pack.price}).`);
 
     const baseUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:4200';
-    const backUrl = `${baseUrl}/dashboard/subscription/success`;
+    const backUrl = `${baseUrl}/payment/success`;
 
     const externalReference = `${user.tenantId}:${packCode}:ONETIME:1`;
 
@@ -384,6 +383,28 @@ export class SubscriptionsService implements OnModuleInit {
       };
     } catch (error) {
       this.logger.error(`Error en verificación de pago para tenant ${tenantId}`, error);
+      throw new Error('No se pudo verificar el pago en este momento.');
+    }
+  }
+
+  /**
+   * Verifica activamente con Mercado Pago el estado de un pago manual de forma pública (sin auth)
+   */
+  async verifySubscriptionPublic(paymentId: string) {
+    try {
+      this.logger.log(`Verificación proactiva pública de pago iniciada para pago ${paymentId}`);
+
+      const payment = await this.mercadopagoService.getPayment(paymentId);
+      
+      // Procesamos el pago y obtenemos el resultado (sin pasar tenantId para extraer de external_reference)
+      const result = await this.handleMercadoPagoPayment(payment);
+
+      return { 
+        success: true, 
+        status: result?.status || payment.status 
+      };
+    } catch (error) {
+      this.logger.error(`Error en verificación pública de pago para ID ${paymentId}`, error);
       throw new Error('No se pudo verificar el pago en este momento.');
     }
   }

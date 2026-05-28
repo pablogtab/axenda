@@ -177,6 +177,15 @@ export class SubscriptionService {
   }
 
   /**
+   * Verifica activamente el estado de un pago o suscripción de Mercado Pago (público, sin auth)
+   */
+  async verifySubscriptionPublic(paymentId: string): Promise<any> {
+    return firstValueFrom(
+      this.http.get<any>(`${this.apiUrl}/public-verify?payment_id=${paymentId}`)
+    );
+  }
+
+  /**
    * Obtiene el historial de facturas/pagos del tenant actual
    */
   async getInvoices(): Promise<any[]> {
