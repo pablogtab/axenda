@@ -63,8 +63,8 @@ export class AppointmentWhatsappListener {
 
     // 4. Determinar la plantilla a usar según la opción de cancelar/modificar turnos
     const templateName = tenant.allowReschedule 
-      ? 'axenda_booking_confirmation_v2' 
-      : 'axenda_booking_confirmation_no_cancel_v2';
+      ? 'axenda_booking_confirmation' 
+      : 'axenda_booking_confirmation_no_cancel';
 
     try {
       await this.whatsappService.sendTemplateMessage(
@@ -135,11 +135,11 @@ export class AppointmentWhatsappListener {
       await this.whatsappService.sendTemplateMessage(
         appointment.tenantId,
         client.phone,
-        'axenda_booking_cancellation_v2',
+        'axenda_booking_cancellation',
         variables
       );
 
-      this.logger.log(`WhatsApp cancellation (axenda_booking_cancellation_v2) sent to ${client.phone} for tenant ${appointment.tenantId}`);
+      this.logger.log(`WhatsApp cancellation (axenda_booking_cancellation) sent to ${client.phone} for tenant ${appointment.tenantId}`);
     } catch (error) {
       this.logger.error(`Failed to send WhatsApp cancellation: ${error.message}`);
     }

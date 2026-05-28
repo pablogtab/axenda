@@ -491,7 +491,7 @@
 </div>
 
 <ng-template #loadingOrError>
-  <div class="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-4">
+  <div class="public-booking-container min-h-screen flex flex-col items-center justify-center p-4" [ngStyle]="brandStyles()">
     <div *ngIf="loading()" class="flex flex-col items-center gap-6">
       <div class="loader-ripple"><div></div><div></div></div>
       <p class="text-text-muted font-medium">Cargando...</p>

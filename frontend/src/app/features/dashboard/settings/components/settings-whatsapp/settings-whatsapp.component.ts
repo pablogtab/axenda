@@ -51,16 +51,16 @@ export class SettingsWhatsappComponent implements OnInit {
       next: (templates) => {
         // Filter out no-cancel templates to only show high-level actions
         const visibleTemplates = templates.filter(t => 
-          t.name === 'axenda_booking_confirmation_v2' ||
-          t.name === 'axenda_booking_reminder_v2' ||
-          t.name === 'axenda_booking_cancellation_v2'
+          t.name === 'axenda_booking_confirmation' ||
+          t.name === 'axenda_booking_reminder' ||
+          t.name === 'axenda_booking_cancellation'
         );
         
         // Sort: confirmation first, then reminder, then cancellation
         const orderMap: Record<string, number> = {
-          axenda_booking_confirmation_v2: 1,
-          axenda_booking_reminder_v2: 2,
-          axenda_booking_cancellation_v2: 3
+          axenda_booking_confirmation: 1,
+          axenda_booking_reminder: 2,
+          axenda_booking_cancellation: 3
         };
         visibleTemplates.sort((a, b) => (orderMap[a.name] || 99) - (orderMap[b.name] || 99));
 
@@ -107,18 +107,18 @@ export class SettingsWhatsappComponent implements OnInit {
 
   getFriendlyName(name: string): string {
     const names: Record<string, string> = {
-      axenda_booking_confirmation_v2: 'Confirmación de Reserva',
-      axenda_booking_reminder_v2: 'Recordatorio de Turno',
-      axenda_booking_cancellation_v2: 'Cancelación de Turno'
+      axenda_booking_confirmation: 'Confirmación de Reserva',
+      axenda_booking_reminder: 'Recordatorio de Turno',
+      axenda_booking_cancellation: 'Cancelación de Turno'
     };
     return names[name] || name;
   }
 
   getFriendlyDescription(name: string): string {
     const desc: Record<string, string> = {
-      axenda_booking_confirmation_v2: 'Enviado automáticamente al agendar un turno desde la web pública.',
-      axenda_booking_reminder_v2: 'Recordatorio automático enviado al cliente 24 horas antes del turno.',
-      axenda_booking_cancellation_v2: 'Notificación enviada cuando cancelas la reserva desde el panel de administración.'
+      axenda_booking_confirmation: 'Enviado automáticamente al agendar un turno desde la web pública.',
+      axenda_booking_reminder: 'Recordatorio automático enviado al cliente 24 horas antes del turno.',
+      axenda_booking_cancellation: 'Notificación enviada cuando cancelas la reserva desde el panel de administración.'
     };
     return desc[name] || '';
   }

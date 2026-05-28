@@ -1,5 +1,5 @@
 {
-  "name": "axenda_booking_confirmation_v2",
+  "name": "axenda_booking_confirmation",
   "category": "UTILITY",
   "language": "es_AR",
   "body": "*Reserva Confirmada* ✨\n\nHola *{{clientName}}*, tu turno en *{{businessName}}* fue agendado con éxito.\n\n🔹 *Servicio:* {{serviceName}}\n📅 *Fecha:* {{appointmentDate}}\n🕒 *Hora:* {{appointmentTime}}\n📍 *Lugar:* {{branchAddress}}\n\n¡Te esperamos!",

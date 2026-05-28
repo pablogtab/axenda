@@ -70,21 +70,19 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
     }
 
     const files = fs.readdirSync(templatesDir).filter(f => f.endsWith('.json'));
+    const loadedNames: string[] = [];
     
     for (const file of files) {
       try {
         const filePath = path.join(templatesDir, file);
-        let rawContent = fs.readFileSync(filePath, 'utf8');
-
-        // Parametrizar la URL del frontend usando la variable de entorno FRONTEND_URL
-        const frontendUrl = this.configService.get('FRONTEND_URL')?.trim().replace(/\/$/, '') || 'https://axenda.ar';
-        rawContent = rawContent.replace(/https:\/\/axenda\.ar/g, frontendUrl);
-
+        const rawContent = fs.readFileSync(filePath, 'utf8');
         const content = JSON.parse(rawContent);
         
         if (!content.name || !content.body) {
           continue;
         }
+
+        loadedNames.push(content.name);
 
         // Upsert en la DB usando la nueva clave compuesta [name, wabaId]
         await this.prisma.whatsappTemplate.upsert({
@@ -109,12 +107,29 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
             language: content.language || 'es_AR',
             body: content.body,
             buttons: content.buttons || null,
-            status: (process.env['NODE_ENV'] === 'test' || this.configService.get('WPP_REAL_SEND') !== 'true') ? 'APPROVED' : 'PENDING'
           }
         });
       } catch (error) {
         this.logger.error(`Error procesando archivo de plantilla ${file}: ${error.message}`);
       }
+    }
+
+    // Limpieza automática de plantillas globales obsoletas
+    try {
+      const deleteResult = await this.prisma.whatsappTemplate.deleteMany({
+        where: {
+          tenantId: null,
+          wabaId: defaultWabaId || null,
+          name: {
+            notIn: loadedNames
+          }
+        }
+      });
+      if (deleteResult.count > 0) {
+        this.logger.log(`Se eliminaron ${deleteResult.count} plantillas globales obsoletas de la base de datos.`);
+      }
+    } catch (cleanupError) {
+      this.logger.error(`Error al limpiar plantillas obsoletas: ${cleanupError.message}`);
     }
   }
 
@@ -212,11 +227,16 @@ export class WhatsappTemplateService implements OnApplicationBootstrap {
           if (hasChanges) {
             if (['APPROVED', 'REJECTED', 'PAUSED'].includes(metaTemplate.status)) {
               await this.editMetaTemplate(metaTemplate.id, accessToken, dbTemplate);
+              await this.prisma.whatsappTemplate.update({
+                where: { id: dbTemplate.id },
+                data: { status: 'PENDING' }
+              });
+              results.updated++;
             } else {
-              await this.deleteMetaTemplate(wabaId, accessToken, dbTemplate.name);
-              await this.createMetaTemplate(wabaId, accessToken, dbTemplate);
+              this.logger.warn(
+                `La plantilla '${dbTemplate.name}' tiene cambios locales pero su estado en Meta es '${metaTemplate.status}'. Se omite la actualización/recreación automática para evitar el bloqueo por cooldown de eliminación en Meta. Si deseas forzar la actualización, bórrala manualmente en Meta Business Suite o renómbrala.`
+              );
             }
-            results.updated++;
           } else if (dbTemplate.status !== metaTemplate.status) {
             await this.prisma.whatsappTemplate.update({
               where: { id: dbTemplate.id },
