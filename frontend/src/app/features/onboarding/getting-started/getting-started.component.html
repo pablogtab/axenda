@@ -3,25 +3,22 @@
   <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[60%] bg-[radial-gradient(circle,var(--color-primary-glow)_0%,transparent_70%)] blur-[80px] z-0"></div>
   <div class="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[radial-gradient(circle,rgba(168,85,247,0.15)_0%,transparent_70%)] blur-[80px] z-0"></div>
 
-  <div class="card-glass w-full z-10 relative transition-all duration-500" 
-       [class.max-w-[900px]]="currentStep() === 4" 
-       [class.max-w-[500px]]="currentStep() !== 4">
+  <div class="card-glass w-full max-w-[500px] z-10 relative transition-all duration-500">
     <!-- Header -->
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-gradient mb-2">Hola!</h1>
       <p class="text-text-muted">Personalicemos tu experiencia en Axenda</p>
     </div>
 
-    <!-- Progress -->
     <div class="progress-bar">
-      <div class="progress-fill" [style.width.%]="(currentStep() / 6) * 100"></div>
+      <div class="progress-fill" [style.width.%]="(currentStep() / 5) * 100"></div>
     </div>
 
     <!-- Step 1: Business Profile -->
     <div class="step-container" [class.step-active]="currentStep() === 1" [class.step-inactive]="currentStep() !== 1">
       <div class="max-w-md mx-auto space-y-8">
         <div class="text-center">
-          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 1 de 6</p>
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 1 de 5</p>
           <h3 class="text-2xl font-black">Tu Marca</h3>
           <p class="text-sm text-text-muted">¿Cómo se llama tu negocio?</p>
         </div>
@@ -74,7 +71,7 @@
     <div class="step-container" [class.step-active]="currentStep() === 3" [class.step-inactive]="currentStep() !== 3">
       <div class="max-w-md mx-auto space-y-8">
         <div class="text-center">
-          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 3 de 6</p>
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 3 de 5</p>
           <h3 class="text-2xl font-black">Donde sucede la magia</h3>
           <p class="text-sm text-text-muted leading-relaxed">Configurá tu local para que tus clientes sepan <b>exactamente cómo llegar</b> y conocé a tu primer profesional.</p>
         </div>
@@ -182,184 +179,11 @@
       </div>
     </div>
 
-    <!-- Step 4: Plan Advisor -->
+    <!-- Step 4: Services Configuration -->
     <div class="step-container" [class.step-active]="currentStep() === 4" [class.step-inactive]="currentStep() !== 4">
-      <div class="max-w-4xl mx-auto">
-        <!-- Header del Paso -->
-        <div class="flex justify-between items-center mb-8">
-          <div>
-            <p class="text-xs font-bold text-primary uppercase tracking-widest mb-1">Paso 4 de 6</p>
-            <h3 class="text-2xl font-black">Plan a tu medida</h3>
-          </div>
-          <button (click)="currentStep.set(5)" class="px-4 py-2 rounded-2xl bg-surface-subtle border border-border text-xs text-text-muted hover:text-text-main hover:border-primary/30 transition-all font-bold uppercase tracking-widest">
-            Omitir →
-          </button>
-        </div>
-
-        <div class="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-8 items-start">
-          <!-- Opciones (Izquierda) -->
-          <div class="w-full space-y-6 lg:order-1">
-            <div class="space-y-6">
-              <!-- Contiguous Solid Stepper 1: Appointments -->
-              <div class="slider-group p-6 rounded-[2rem] bg-surface-subtle border border-border">
-                <div class="flex justify-between mb-6">
-                  <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Turnos Mensuales</label>
-                  <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
-                    {{ appointmentsLevel() === 0 ? 'Hasta 25' : appointmentsLevel() === 1 ? 'Hasta 100' : 'Más de 500' }}
-                  </span>
-                </div>
-                
-                <div class="flex items-center px-2">
-                  <div class="relative w-full h-1 bg-surface-subtle-hover rounded-full flex items-center justify-between">
-                    <div class="absolute left-0 h-full bg-primary rounded-full transition-all duration-300" 
-                         [style.width.%]="appointmentsLevel() * 50"></div>
-                    
-                    @for (i of [0, 1, 2]; track i) {
-                      <div class="relative z-10 w-8 h-8 flex items-center justify-center cursor-pointer group" (click)="appointmentsLevel.set(i)">
-                        <div class="w-5 h-5 rounded-full border-4 transition-all duration-300"
-                             [class.bg-primary]="appointmentsLevel() >= i"
-                             [class.border-primary]="appointmentsLevel() >= i"
-                             [class.bg-bg-primary]="appointmentsLevel() < i"
-                             [class.border-border]="appointmentsLevel() < i"
-                             [class.scale-125]="appointmentsLevel() === i"></div>
-                        <span class="absolute -bottom-8 text-[10px] font-bold transition-all"
-                              [class.text-primary]="appointmentsLevel() === i"
-                              [class.text-text-muted]="appointmentsLevel() !== i">
-                          {{ i === 0 ? '25' : i === 1 ? '100' : '500+' }}
-                        </span>
-                      </div>
-                    }
-                  </div>
-                </div>
-                <div class="h-8"></div>
-              </div>
-
-              <!-- Contiguous Solid Stepper 2: Professionals -->
-              <div class="slider-group p-6 rounded-[2rem] bg-surface-subtle border border-border">
-                <div class="flex justify-between mb-6">
-                  <label class="text-[10px] font-black uppercase tracking-widest text-text-muted">Equipo (Profesionales)</label>
-                  <span class="px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
-                    {{ professionalsLevel() === 0 ? 'Solo yo' : professionalsLevel() === 1 ? 'Hasta 5' : 'Más de 5' }}
-                  </span>
-                </div>
-
-                <div class="flex items-center px-2">
-                  <div class="relative w-full h-1 bg-white/10 rounded-full flex items-center justify-between">
-                    <div class="absolute left-0 h-full bg-primary rounded-full transition-all duration-300" 
-                         [style.width.%]="professionalsLevel() * 50"></div>
-                    
-                    @for (i of [0, 1, 2]; track i) {
-                      <div class="relative z-10 w-8 h-8 flex items-center justify-center cursor-pointer group" (click)="professionalsLevel.set(i)">
-                        <div class="w-5 h-5 rounded-full border-4 transition-all duration-300"
-                             [class.bg-primary]="professionalsLevel() >= i"
-                             [class.border-primary]="professionalsLevel() >= i"
-                             [class.bg-bg-primary]="professionalsLevel() < i"
-                             [class.border-white/20]="professionalsLevel() < i"
-                             [class.scale-125]="professionalsLevel() === i"></div>
-                        <span class="absolute -bottom-8 text-[10px] font-bold transition-all"
-                              [class.text-primary]="professionalsLevel() === i"
-                              [class.text-text-muted]="professionalsLevel() !== i">
-                          {{ i === 0 ? 'Solo yo' : i === 1 ? 'Hasta 5' : 'Más de 5' }}
-                        </span>
-                      </div>
-                    }
-                  </div>
-                </div>
-                <div class="h-8"></div>
-              </div>
-
-              <!-- Toggles -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="check-card p-5" [class.active-card]="wantsWhatsApp()" (click)="wantsWhatsApp.set(!wantsWhatsApp())">
-                  <div class="w-10 h-10 rounded-xl bg-surface-subtle flex items-center justify-center">
-                    <app-icon name="chat" class="text-lg"></app-icon>
-                  </div>
-                  <div class="flex-1">
-                    <p class="text-sm font-bold">Automatizar WhatsApp</p>
-                    <p class="text-[10px] text-text-muted">Recordatorios automáticos</p>
-                  </div>
-                  <div class="custom-check" [class.checked]="wantsWhatsApp()"></div>
-                </div>
-
-                <div class="check-card p-5" [class.active-card]="wantsPayments()" (click)="wantsPayments.set(!wantsPayments())">
-                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                    <app-icon name="payments" class="text-lg"></app-icon>
-                  </div>
-                  <div class="flex-1">
-                    <p class="text-sm font-bold">Cobrar señas online</p>
-                    <p class="text-[10px] text-text-muted">Mercado Pago integrado</p>
-                  </div>
-                  <div class="custom-check" [class.checked]="wantsPayments()"></div>
-                </div>
-
-                <div class="check-card p-5" [class.active-card]="branchesCount() > 1" (click)="branchesCount.set(branchesCount() > 1 ? 1 : 2)">
-                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                    <app-icon name="location_city" class="text-lg"></app-icon>
-                  </div>
-                  <div class="flex-1">
-                    <p class="text-sm font-bold">Múltiples sucursales</p>
-                    <p class="text-[10px] text-text-muted">Gestión de varias sedes</p>
-                  </div>
-                  <div class="custom-check" [class.checked]="branchesCount() > 1"></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex gap-3 pt-4">
-              <button (click)="prevStep()" class="btn-secondary flex-1">Atrás</button>
-              <button (click)="nextStep()" class="btn-primary flex-[2]">
-                Continuar con <span class="font-black ml-1">Plan {{ recommendedPlan().name }}</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Card de Recomendación (Derecha - Sticky) -->
-          <div class="w-full lg:sticky lg:top-8 lg:order-2">
-            <div class="relative p-8 rounded-[2.5rem] bg-primary/10 border border-primary/20 text-center flex flex-col items-center overflow-hidden shadow-2xl">
-              <div class="absolute -top-12 -right-12 w-40 h-40 bg-primary/20 blur-3xl rounded-full"></div>
-              
-              <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-4 shadow-inner">
-                <app-icon name="{{ recommendedPlan().icon }}" class="text-3xl text-primary"></app-icon>
-              </div>
-              
-              <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">Plan Recomendado</p>
-              <h4 class="text-3xl font-black mb-2">Plan {{ recommendedPlan().name }}</h4>
-              
-              <div class="flex items-baseline gap-1 mb-4">
-                <span class="text-4xl font-black text-text-main">{{ recommendedPlan().price }}</span>
-                <span class="text-xs text-text-muted">/mes</span>
-              </div>
-              
-              <p class="text-xs text-text-muted leading-relaxed mb-6">{{ recommendedPlan().desc }}</p>
-              
-              <div class="w-full space-y-2">
-                @if (recommendedPlan().name !== 'Starter') {
-                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
-                    <app-icon name="check_circle" class="text-emerald-400 text-sm"></app-icon>
-                    <span>7 días de prueba gratis</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
-                    <app-icon name="check_circle" class="text-emerald-400 text-sm"></app-icon>
-                    <span>Sin tarjeta de crédito</span>
-                  </div>
-                } @else {
-                  <div class="flex items-center gap-2 text-[10px] text-text-muted justify-center">
-                    <app-icon name="check_circle" class="text-emerald-400 text-sm"></app-icon>
-                    <span>Gratis para siempre</span>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 5: Services Configuration -->
-    <div class="step-container" [class.step-active]="currentStep() === 5" [class.step-inactive]="currentStep() !== 5">
       <div class="max-w-xl mx-auto space-y-8">
         <div class="text-center">
-          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 5 de 6</p>
+          <p class="text-xs font-bold text-primary uppercase tracking-widest mb-2">Paso 4 de 5</p>
           <h3 class="text-2xl font-black">Configuración Final</h3>
           <p class="text-sm text-text-muted">¿Cómo quieres empezar con tus servicios?</p>
         </div>
@@ -423,8 +247,8 @@
       </div>
     </div>
 
-    <!-- Step 6: Success & Summary -->
-    <div class="step-container" [class.step-active]="currentStep() === 6" [class.step-inactive]="currentStep() !== 6">
+    <!-- Step 5: Success & Summary -->
+    <div class="step-container" [class.step-active]="currentStep() === 5" [class.step-inactive]="currentStep() !== 5">
       <div class="max-w-md mx-auto text-center space-y-8 animate-fade-in">
         <div class="relative inline-block">
           <div class="absolute -inset-4 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
@@ -444,11 +268,11 @@
           
           <div class="flex items-center gap-4 mb-6">
             <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
-              <app-icon name="{{ recommendedPlan().icon }}" class="text-primary text-xl"></app-icon>
+              <app-icon name="stars" class="text-primary text-xl"></app-icon>
             </div>
             <div>
               <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Tu Suscripción</p>
-              <h4 class="text-xl font-black">Plan {{ recommendedPlan().name }}</h4>
+              <h4 class="text-xl font-black">Plan Pro</h4>
             </div>
           </div>
 
@@ -463,21 +287,15 @@
             </div>
           </div>
 
-          @if (recommendedPlan().name !== 'Starter') {
-            <div class="p-4 rounded-2xl bg-primary/10 border border-primary/20">
-              <div class="flex gap-3">
-                <app-icon name="info" class="text-primary"></app-icon>
-                <div>
-                  <p class="text-[10px] font-black text-primary uppercase tracking-wider mb-1">Periodo de Prueba Activo</p>
-                  <p class="text-xs leading-relaxed">Disfrutás de <b>7 días gratis</b> para explorar todas las funciones. No se requiere tarjeta hoy.</p>
-                </div>
+          <div class="p-4 rounded-2xl bg-primary/10 border border-primary/20">
+            <div class="flex gap-3">
+              <app-icon name="info" class="text-primary"></app-icon>
+              <div>
+                <p class="text-[10px] font-black text-primary uppercase tracking-wider mb-1">Periodo de Prueba Activo</p>
+                <p class="text-xs leading-relaxed">Disfrutás de <b>14 días gratis</b> para explorar todas las funciones. No se requiere tarjeta hoy.</p>
               </div>
             </div>
-          } @else {
-            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p class="text-xs">Tu Plan Gratuito está activo de por vida.</p>
-            </div>
-          }
+          </div>
         </div>
 
         <button (click)="finishOnboarding()" class="btn-primary w-full h-16 text-lg font-black tracking-wide shadow-lg shadow-primary/20">

@@ -330,7 +330,19 @@ describe('ReferralsService', () => {
   describe('getOrCreateUserCode', () => {
     it('should throw ForbiddenException if user is on STARTER plan', async () => {
       prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'ACTIVE',
         plan: { code: 'STARTER' }
+      });
+
+      await expect(
+        service.getOrCreateUserCode('user-1', 'tenant-1')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if user is in trial (status: TRIALING)', async () => {
+      prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'TRIALING',
+        plan: { code: 'PRO' }
       });
 
       await expect(
@@ -340,6 +352,7 @@ describe('ReferralsService', () => {
 
     it('should return existing code if user already has one and sum rewardedDays correctly', async () => {
       prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'ACTIVE',
         plan: { code: 'BUSINESS' }
       });
 
@@ -366,6 +379,7 @@ describe('ReferralsService', () => {
 
     it('should generate a new code and return it if user does not have one', async () => {
       prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'ACTIVE',
         plan: { code: 'PRO' }
       });
       prismaMock.referralCode.findFirst.mockResolvedValue(null);
@@ -407,12 +421,25 @@ describe('ReferralsService', () => {
         tenantId: 'tenant-1',
       });
       prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'ACTIVE',
         plan: { code: 'PRO' },
       });
     });
 
+    it('should throw ForbiddenException if user is in trial (status: TRIALING)', async () => {
+      prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'TRIALING',
+        plan: { code: 'PRO' },
+      });
+
+      await expect(
+        service.updateMyCode('user-1', 'NEWCODE')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
     it('should throw ForbiddenException if user is on STARTER plan', async () => {
       prismaMock.tenantSubscription.findUnique.mockResolvedValue({
+        status: 'ACTIVE',
         plan: { code: 'STARTER' },
       });
 

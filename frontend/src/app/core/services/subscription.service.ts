@@ -74,9 +74,20 @@ export class SubscriptionService {
   // Lógica de visibilidad del banner (reaparece cada 2 horas)
   private readonly DISMISSED_KEY = 'axenda_trial_banner_dismissed';
   private _dismissTrigger = signal(Date.now());
+  private _currentUrl = signal<string>('');
+
+  constructor() {
+    this.router.events.subscribe(() => {
+      this._currentUrl.set(this.router.url);
+    });
+  }
   
   bannerVisible = computed(() => {
     this._dismissTrigger();
+    
+    const url = this._currentUrl();
+    if (url.includes('/subscription/plans')) return false;
+
     if (!this.isTrial()) return false;
     
     const lastDismissed = this.storage.get<string | null>(this.DISMISSED_KEY, null);

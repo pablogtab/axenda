@@ -132,7 +132,7 @@ Los administradores gestionan el sitio público desde el panel de control en **"
 - **Funcionamiento**: Permite a los usuarios invitar a otros negocios. Los invitados obtienen un 10% de descuento en su primer pago de suscripción y el referidor obtiene días gratis de suscripción.
 - **Días de Recompensa**: Se calculan en función del plan del referidor en el momento del pago del invitado: **Pro** (15 días), **Business** (10 días), **otros** (5 días).
 - **Consistencia Histórica**: Los días concedidos se guardan estáticamente en el campo `rewardedDays` de `ReferralUsage` al momento del pago. Las estadísticas acumuladas en el panel ("Invita y Gana") del frontend suman este campo directamente en lugar de calcular dinámicamente, haciendo el historial inmune a futuros upgrades o downgrades del referidor.
-- **Exclusividad de Planes**: El programa está restringido a usuarios con planes de pago activos (Pro o superior). Los usuarios en el plan `STARTER` tienen el acceso bloqueado en la API (`ForbiddenException`) y ven una tarjeta teaser de conversión premium en el frontend para incentivar el upgrade.
+- **Exclusividad de Planes**: El programa está restringido a usuarios con planes de pago activos y con suscripción activa (estado `ACTIVE`, excluyendo `TRIALING` y plan `STARTER`). Los usuarios en período de prueba o en plan gratuito tienen el acceso bloqueado en la API (`ForbiddenException`) y ven una tarjeta teaser de conversión premium personalizada en el frontend para incentivar el inicio/upgrade de su suscripción.
 - **Control de Abuso y Fraude**:
   - Restricción física en base de datos para impedir que un negocio use el mismo código de referido más de una vez.
   - Ventana máxima de 14 días desde la creación del negocio para aplicar códigos de usuario.

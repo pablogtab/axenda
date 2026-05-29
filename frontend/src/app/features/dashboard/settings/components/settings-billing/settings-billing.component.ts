@@ -164,8 +164,8 @@ import { IconComponent } from '@shared/components/icon/icon.component';
         </div>
       </div>
 
-      <!-- Teaser / Upgrade Card for STARTER plan users -->
-      <div *ngIf="subService.plan()?.code === 'STARTER'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group">
+      <!-- Teaser / Upgrade Card for STARTER plan users or TRIAL users -->
+      <div *ngIf="subService.plan()?.code === 'STARTER' || subService.status()?.status !== 'ACTIVE'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group">
         <!-- Gorgeous background glows -->
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/15 transition-all duration-700"></div>
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-accent/10 blur-[100px] rounded-full group-hover:bg-accent/15 transition-all duration-700"></div>
@@ -176,19 +176,23 @@ import { IconComponent } from '@shared/components/icon/icon.component';
               <app-icon name="lock" class="text-primary text-sm"></app-icon> Programa de Invitados Bloqueado
             </span>
             <h3 class="text-2xl md:text-3xl font-black text-text-main tracking-tight">¡Ganá días premium recomendando Axenda!</h3>
-            <p class="text-sm text-text-muted leading-relaxed">
+            
+            <p *ngIf="subService.plan()?.code === 'STARTER'" class="text-sm text-text-muted leading-relaxed">
               El programa de referidos está reservado para nuestros miembros con planes activos. Mejorá tu suscripción a un plan de pago para desbloquear tu propio código de descuento, compartirlo y ganar <strong class="text-primary">hasta 15 días gratis</strong> de suscripción premium por cada persona que invites.
+            </p>
+            <p *ngIf="subService.plan()?.code !== 'STARTER' && subService.status()?.status === 'TRIALING'" class="text-sm text-text-muted leading-relaxed">
+              El programa de referidos se habilitará al iniciar tu suscripción de pago. ¡Comenzá tu suscripción hoy en **Pro o Business** para desbloquear tu código de referidos y empezar a acumular <strong class="text-primary">hasta 15 días gratis</strong>!
             </p>
           </div>
           
           <button routerLink="/dashboard/subscription/plans" class="px-6 py-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-2xl text-xs font-bold transition-all shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto text-center cursor-pointer">
-            Mejorar Plan y Desbloquear
+            {{ subService.plan()?.code === 'STARTER' ? 'Mejorar Plan y Desbloquear' : 'Iniciar Suscripción y Desbloquear' }}
           </button>
         </div>
       </div>
 
       <!-- Referral / Invite Section -->
-      <div *ngIf="subService.plan()?.code !== 'STARTER'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group animate-in fade-in duration-500">
+      <div *ngIf="subService.plan()?.code !== 'STARTER' && subService.status()?.status === 'ACTIVE'" class="glass p-6 md:p-8 rounded-[2.5rem] border border-border/50 relative overflow-hidden group animate-in fade-in duration-500">
         <!-- Subtle back glow -->
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-success/10 blur-[100px] rounded-full group-hover:bg-success/15 transition-all duration-700"></div>
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/15 transition-all duration-700"></div>
@@ -420,7 +424,7 @@ export class SettingsBillingComponent implements OnInit {
   }
 
   async loadReferralCode() {
-    if (this.subService.plan()?.code === 'STARTER') {
+    if (this.subService.plan()?.code === 'STARTER' || this.subService.status()?.status !== 'ACTIVE') {
       this.isLoadingReferral.set(false);
       return;
     }

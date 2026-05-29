@@ -2,6 +2,8 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { TenantsService } from '@services/tenants.service';
 import { AuthService } from '@services/auth.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
@@ -18,6 +20,7 @@ export class GettingStartedComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   businessName = signal<string>('');
   logoUrl = signal<string | null>(null);
@@ -32,21 +35,10 @@ export class GettingStartedComponent implements OnInit {
   professionalFirstName = signal<string>('');
   professionalLastName = signal<string>('');
 
-  // Plan Advisor Levels (Indices for discrete sliders)
-  appointmentsLevel = signal<number>(0); // 0: 25, 1: 100, 2: 500
-  professionalsLevel = signal<number>(0); // 0: 1, 1: 5, 2: 20
-  branchesCount = signal<number>(1);
-  wantsWhatsApp = signal<boolean>(false);
-  wantsPayments = signal<boolean>(false);
-
   // Schedule Signals
   workingDays = signal<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
   startTime = signal<string>('09:00');
   endTime = signal<string>('18:00');
-
-  // Constants for slider values
-  readonly APP_LEVELS = [25, 100, 500];
-  readonly PRO_LEVELS = [1, 5, 20];
 
   // Service Selection Signal
   loadDefaultServices = signal<boolean>(true);
@@ -66,22 +58,6 @@ export class GettingStartedComponent implements OnInit {
     };
     
     return defaults[category.toLowerCase()] || [];
-  });
-
-  // Recommendation Logic
-  recommendedPlan = computed(() => {
-    const vol = this.APP_LEVELS[this.appointmentsLevel()];
-    const pros = this.PRO_LEVELS[this.professionalsLevel()];
-    const branches = this.branchesCount();
-
-    const isElite = branches > 1 || pros > 5 || vol > 100;
-    const isBusiness = this.wantsWhatsApp() || pros > 1 || vol > 100;
-    const isPro = this.wantsPayments() || vol > 25;
-
-    if (isElite) return { name: 'Elite', icon: 'rocket_launch', price: '$45.000', color: 'text-primary', desc: 'Para grandes cadenas y franquicias.' };
-    if (isBusiness) return { name: 'Business', icon: 'business_center', price: '$25.000', color: 'text-primary', desc: 'Ideal para equipos con automatización.' };
-    if (isPro) return { name: 'Pro', icon: 'stars', color: 'text-primary', price: '$12.000', desc: 'Perfecto para profesionales en crecimiento.' };
-    return { name: 'Starter', icon: 'person', color: 'text-white/40', price: '$0', desc: 'Todo lo necesario para empezar.' };
   });
 
 
@@ -111,10 +87,20 @@ export class GettingStartedComponent implements OnInit {
         }
       }
     });
+
+    this.http.get<any>(`${environment.apiUrl}/users/me`).subscribe({
+      next: (user) => {
+        if (user) {
+          this.professionalFirstName.set(user.firstName || '');
+          this.professionalLastName.set(user.lastName || '');
+        }
+      },
+      error: (err) => console.error('Error al cargar datos del usuario para el onboarding:', err)
+    });
   }
 
   nextStep() {
-    if (this.currentStep() < 6) {
+    if (this.currentStep() < 5) {
       this.currentStep.update(s => s + 1);
     }
   }
@@ -142,15 +128,15 @@ export class GettingStartedComponent implements OnInit {
         startTime: this.startTime(),
         endTime: this.endTime()
       })),
-      // Metadata for setup logic in backend
+      // Metadata for setup logic in backend (static defaults to satisfy backend DTO validation)
       metadata: {
-        plan: this.recommendedPlan().name,
+        plan: 'Pro',
         loadDefaults: this.loadDefaultServices(),
         setup: {
-          volume: this.APP_LEVELS[this.appointmentsLevel()],
-          teamSize: this.PRO_LEVELS[this.professionalsLevel()],
-          whatsapp: this.wantsWhatsApp(),
-          payments: this.wantsPayments()
+          volume: 100,
+          teamSize: 5,
+          whatsapp: false,
+          payments: false
         }
       }
     };
@@ -158,7 +144,7 @@ export class GettingStartedComponent implements OnInit {
     this.tenantsService.completeOnboarding(onboardingData).subscribe({
       next: () => {
         this.isLoading = false;
-        this.currentStep.set(6);
+        this.currentStep.set(5);
       },
       error: (err) => {
         this.isLoading = false;

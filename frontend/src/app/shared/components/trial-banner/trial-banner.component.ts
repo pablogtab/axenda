@@ -29,7 +29,7 @@ import { IconComponent } from '../icon/icon.component';
         </div>
 
         <div class="flex items-center gap-2">
-          <button class="text-[10px] font-black uppercase tracking-widest text-text-main/60 hover:text-primary transition-colors cursor-pointer px-3 py-1.5 hover:bg-surface-subtle rounded-lg">
+          <button routerLink="/dashboard/subscription/plans" class="text-[10px] font-black uppercase tracking-widest text-text-main/60 hover:text-primary transition-colors cursor-pointer px-3 py-1.5 hover:bg-surface-subtle rounded-lg">
             Ver Planes
           </button>
           

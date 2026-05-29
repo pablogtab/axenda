@@ -180,9 +180,9 @@ export class ReferralsService {
       include: { plan: true },
     });
 
-    if (!tenantSub || tenantSub.plan.code === 'STARTER') {
+    if (!tenantSub || tenantSub.plan.code === 'STARTER' || tenantSub.status !== 'ACTIVE') {
       throw new ForbiddenException(
-        'El programa de referidos sólo está disponible para planes de pago (Pro o superior).'
+        'El programa de referidos sólo está disponible para suscripciones de pago activas (Pro o superior).'
       );
     }
 
@@ -303,9 +303,9 @@ export class ReferralsService {
       include: { plan: true },
     });
 
-    if (!tenantSub || tenantSub.plan.code === 'STARTER') {
+    if (!tenantSub || tenantSub.plan.code === 'STARTER' || tenantSub.status !== 'ACTIVE') {
       throw new ForbiddenException(
-        'El programa de referidos sólo está disponible para planes de pago (Pro o superior).'
+        'El programa de referidos sólo está disponible para suscripciones de pago activas (Pro o superior).'
       );
     }
 

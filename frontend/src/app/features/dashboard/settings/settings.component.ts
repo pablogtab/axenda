@@ -54,7 +54,7 @@ export class SettingsComponent implements OnInit {
     { id: 'professionals', title: 'Profesionales', icon: 'group', description: 'Gestiona tu equipo de trabajo' },
     { id: 'branches', title: 'Sucursales', icon: 'location_on', description: 'Ubicaciones de tu negocio' },
     { id: 'services', title: 'Servicios', icon: 'content_cut', description: 'Catálogo de servicios y precios' },
-    { id: 'custom-fields', title: 'Campos de Clientes', icon: 'label', description: 'Campos personalizados para el CRM' },
+    { id: 'custom-fields', title: 'Clientes', icon: 'contacts', description: 'Campos personalizados para el CRM' },
     { id: 'whatsapp', title: 'WhatsApp', icon: 'chat', description: 'Automatiza tus recordatorios' },
     { id: 'billing', title: 'Cuenta y Plan', icon: 'credit_card', description: 'Gestiona tu suscripción y pagos' }
   ];
