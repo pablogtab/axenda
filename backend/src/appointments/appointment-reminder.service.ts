@@ -97,9 +97,8 @@ export class AppointmentReminderService {
           appointmentId: appointment.cancelToken || appointment.id,
         };
 
-        const templateName = tenant.allowReschedule
-          ? 'axenda_booking_reminder'
-          : 'axenda_booking_reminder_no_cancel';
+        // TEMPORAL: Deshabilitado cancelaciones por whatsapp, solo notificacion sin cancelacion
+        const templateName = 'axenda_booking_reminder_no_cancel';
 
         try {
           this.logger.log(`Enviando recordatorio (${templateName}) a ${client.phone} para el negocio ${tenant.name}...`);
