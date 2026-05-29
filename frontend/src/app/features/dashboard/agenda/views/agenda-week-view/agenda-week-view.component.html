@@ -16,7 +16,11 @@
              [style.grid-column]="i + 2"
              [style.grid-row]="1">
           <span class="text-[8px] sm:text-[10px] uppercase tracking-tighter sm:tracking-widest text-text-dim leading-none">{{ day | date:'EEE':'': 'es' }}</span>
-          <span class="text-[10px] sm:text-xs font-bold text-text-main">{{ day | date:'dd' }}</span>
+          @if (isToday(day)) {
+            <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-md shadow-primary/20 mt-0.5">{{ day | date:'dd' }}</span>
+          } @else {
+            <span class="text-[10px] sm:text-xs font-bold text-text-main mt-0.5">{{ day | date:'dd' }}</span>
+          }
         </div>
       }
 

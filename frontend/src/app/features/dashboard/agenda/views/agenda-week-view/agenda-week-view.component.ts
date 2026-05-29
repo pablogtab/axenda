@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject, OnChanges, SimpleChanges, ElementRef, OnInit, OnDestroy, effect, HostListener, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { format, addDays, startOfWeek, endOfWeek, startOfDay, isSameDay } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, startOfDay, isSameDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AppointmentsService, Appointment } from '@services/appointments.service';
 import { AvailabilityException, Professional } from '@services/professionals.service';
@@ -286,6 +286,10 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   isSameDayAsView(otherDate: Date | null): boolean {
     if (!otherDate) return false;
     return this.weekDaysSignal().some(d => isSameDay(d, otherDate!));
+  }
+
+  isToday(day: Date): boolean {
+    return isToday(day);
   }
 
   computeGridStatus(): void {

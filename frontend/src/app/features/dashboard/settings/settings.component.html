@@ -52,19 +52,25 @@
                             [class.text-primary]="activePublicSubTab === 'general'"
                             [class.border-primary]="activePublicSubTab === 'general'"
                             class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
-                            <app-icon name="store" class="text-sm"></app-icon> Información General
+                            <app-icon name="store" class="text-sm"></app-icon>
+                            <span class="md:hidden">Información</span>
+                            <span class="hidden md:inline">Información General</span>
                         </button>
                         <button (click)="setActivePublicSubTab('appearance')"
                             [class.text-primary]="activePublicSubTab === 'appearance'"
                             [class.border-primary]="activePublicSubTab === 'appearance'"
                             class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
-                            <app-icon name="palette" class="text-sm"></app-icon> Apariencia y Colores
+                            <app-icon name="palette" class="text-sm"></app-icon>
+                            <span class="md:hidden">Apariencia</span>
+                            <span class="hidden md:inline">Apariencia y Colores</span>
                         </button>
                         <button (click)="setActivePublicSubTab('booking')"
                             [class.text-primary]="activePublicSubTab === 'booking'"
                             [class.border-primary]="activePublicSubTab === 'booking'"
                             class="pb-3 text-sm font-bold text-text-muted border-b-2 border-transparent transition-all hover:text-text-main flex items-center gap-2 whitespace-nowrap">
-                            <app-icon name="calendar_month" class="text-sm"></app-icon> Reglas de Reserva
+                            <app-icon name="calendar_month" class="text-sm"></app-icon>
+                            <span class="md:hidden">Reglas</span>
+                            <span class="hidden md:inline">Reglas de Reserva</span>
                         </button>
                     </div>
 
