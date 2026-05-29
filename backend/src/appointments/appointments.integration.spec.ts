@@ -550,6 +550,15 @@ describe('Appointments — Integration', () => {
       expect(res.body.data.client.id).toBe(clientId)
       expect(res.body.data.branch.id).toBe(branchId)
     })
+
+    it('should fetch appointments filtering by date-only strings (YYYY-MM-DD)', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/appointments?startDate=${queryDate}&endDate=${queryDate}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+
+      expect(res.body.data.length).toBeGreaterThan(0)
+    })
   })
 
   // ── Status Changes ─────────────────────────────────────────────────────────

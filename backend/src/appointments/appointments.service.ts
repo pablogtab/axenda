@@ -41,10 +41,18 @@ export class AppointmentsService {
     if (query.startDate || query.endDate) {
       where.startTime = {}
       if (query.startDate) {
-        where.startTime.gte = new Date(query.startDate)
+        let start = query.startDate
+        if (/^\d{4}-\d{2}-\d{2}$/.test(start)) {
+          start = `${start}T00:00:00.000Z`
+        }
+        where.startTime.gte = new Date(start)
       }
       if (query.endDate) {
-        where.startTime.lte = new Date(query.endDate)
+        let end = query.endDate
+        if (/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+          end = `${end}T23:59:59.999Z`
+        }
+        where.startTime.lte = new Date(end)
       }
     }
 

@@ -9,6 +9,7 @@ import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialo
 import { SubscriptionService } from '@core/services/subscription.service';
 import { forkJoin, map } from 'rxjs';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { startOfLocalDate, endOfLocalDate } from '@core/utils/date-utils';
 
 @Component({
   selector: 'app-home',
@@ -68,10 +69,12 @@ export class HomeComponent implements OnInit {
   loadDashboardData(): void {
     this.isLoading.set(true);
     
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const startDate = startOfLocalDate(now).toISOString();
+    const endDate = endOfLocalDate(now).toISOString();
     
     forkJoin({
-      appointments: this.appointmentsService.findAll({ startDate: today, endDate: today }),
+      appointments: this.appointmentsService.findAll({ startDate, endDate }),
       clients: this.clientsService.findAll(1, 1)
     }).subscribe({
       next: (data) => {
