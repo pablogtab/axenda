@@ -10,7 +10,8 @@
     "prisma:studio": "prisma studio",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "create-superadmin": "ts-node prisma/create-superadmin.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts",

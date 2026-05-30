@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "primeicons/primeicons.css";
+
+/* Global Body Reset & styling */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #0f172a;
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Custom Scrollbar Styles for Dark Mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Dark theme overrides for input elements globally */
+input, select, textarea {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Ensure PrimeNG validation / design patterns are dark-mode aligned */
+.p-message {
+  border-radius: 8px;
+}
+
+/* ─── Premium Glassmorphism & Custom Overrides ────────────────────────── */
+
+/* Glassmorphism Cards */
+.p-card {
+  background: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glassmorphism Dialogs */
+.p-dialog {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.5) !important;
+  border-radius: 16px !important;
+}
+
+.p-dialog-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 1.5rem !important;
+}
+
+.p-dialog-content {
+  background: transparent !important;
+  padding: 1.5rem !important;
+}
+
+/* Native Inputs styling */
+input[type="text"], input[type="number"], input[type="password"], input[type="email"] {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Custom Table Premium Styling */
+.admin-table {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.admin-table th {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  font-weight: 700 !important;
+}
+
+.admin-table td {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.admin-table tr:hover td {
+  background-color: rgba(51, 65, 85, 0.6) !important;
+}
+

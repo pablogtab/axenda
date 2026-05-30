@@ -14,14 +14,21 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
 
   // ─── CORS ───────────────────────────────────────────────────────────
-  app.enableCors({
-    origin: process.env['NODE_ENV'] === 'production'
-      ? (process.env['FRONTEND_URL'] ?? 'https://axenda.ar')
-      : [
+  const allowedOrigins = process.env['NODE_ENV'] === 'production'
+    ? [
+        process.env['FRONTEND_URL'] ?? 'https://axenda.ar',
+        process.env['BACKOFFICE_URL'] ?? 'https://admin.axenda.ar',
+      ].filter(Boolean) as string[]
+    : [
         'http://localhost:4200',
+        'http://localhost:4201',
         'https://development.axenda.ar',
         process.env['FRONTEND_URL'],
-      ].filter(Boolean) as string[],
+        process.env['BACKOFFICE_URL'],
+      ].filter(Boolean) as string[];
+
+  app.enableCors({
+    origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',

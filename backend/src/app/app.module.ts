@@ -23,6 +23,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
 import { WhatsappModule } from '../whatsapp/whatsapp.module'
 import { MercadoPagoModule } from '../mercadopago/mercadopago.module'
 import { CustomFieldsModule } from '../custom-fields/custom-fields.module'
+import { AdminModule } from '../admin/admin.module'
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { CustomFieldsModule } from '../custom-fields/custom-fields.module'
     WhatsappModule,
     MercadoPagoModule,
     CustomFieldsModule,
+    AdminModule,
   ],
 
   providers: [

@@ -64,6 +64,17 @@ services:
     networks:
       - axenda-network
 
+  backoffice:
+    image: ghcr.io/pablogtab/axenda-backoffice:latest
+    container_name: axenda_backoffice
+    restart: unless-stopped
+    ports:
+      - "4201:80"
+    depends_on:
+      - backend
+    networks:
+      - axenda-network
+
 volumes:
   postgres_data:
   redis_data:

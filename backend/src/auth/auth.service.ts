@@ -344,15 +344,8 @@ export class AuthService {
     })
   }
 
+
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-  private async findUser(id: string) {
-    return this.prisma.user.findUnique({
-      where: { id },
-      include: { identities: true }
-    })
-  }
-
   private async generateTokens(userId: string, tenantId: string, role: UserRole) {
     const payload: AuthenticatedUser = { sub: userId, tenantId, role }
 

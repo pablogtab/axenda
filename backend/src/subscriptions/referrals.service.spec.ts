@@ -45,12 +45,12 @@ describe('ReferralsService', () => {
   });
 
   describe('validateCode', () => {
-    it('should throw NotFoundException if code does not exist', async () => {
+    it('should throw BadRequestException if code does not exist', async () => {
       prismaMock.referralCode.findFirst.mockResolvedValue(null);
 
       await expect(
         service.validateCode('INVALID_CODE', 'tenant-123', 'PRO')
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(new BadRequestException('Este código de descuento no está disponible.'));
     });
 
     it('should throw BadRequestException if code is inactive', async () => {
@@ -295,6 +295,60 @@ describe('ReferralsService', () => {
       await expect(
         service.validateCode('CODE_C', 'tenant-a', 'PRO')
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if coupon has referrerId and is used by a DIFFERENT tenant', async () => {
+      prismaMock.referralCode.findFirst.mockResolvedValue({
+        id: 'code-personal',
+        code: 'PABLO-PROMO',
+        active: true,
+        isSystem: true,
+        referrerId: 'user-pablo',       // asignado al usuario pablo
+        referrerTenantId: null,         // cupón de sistema (creado desde backoffice)
+        applicablePlanCode: null,
+        maxUses: null,
+        usesCount: 0,
+        expiresAt: null,
+      });
+
+      // El usuario pablo pertenece al tenant 'tenant-pablo'
+      prismaMock.user.findUnique.mockResolvedValue({ tenantId: 'tenant-pablo' });
+
+      // Pero quien intenta usarlo es 'tenant-otro'
+      await expect(
+        service.validateCode('PABLO-PROMO', 'tenant-otro', 'PRO')
+      ).rejects.toThrow(new BadRequestException('Este código de descuento no está disponible.'));
+    });
+
+    it('should allow the correct tenant to apply a coupon with referrerId assigned to their user', async () => {
+      prismaMock.referralCode.findFirst.mockResolvedValue({
+        id: 'code-personal',
+        code: 'PABLO-PROMO',
+        active: true,
+        isSystem: true,
+        referrerId: 'user-pablo',
+        referrerTenantId: null,
+        applicablePlanCode: null,
+        maxUses: null,
+        usesCount: 0,
+        expiresAt: null,
+        onlyFirstPayment: false,
+      });
+
+      // El usuario pablo pertenece al tenant 'tenant-pablo'
+      prismaMock.user.findUnique.mockResolvedValue({ tenantId: 'tenant-pablo' });
+
+      prismaMock.tenant.findUnique.mockResolvedValue({
+        id: 'tenant-pablo',
+        createdAt: new Date(),
+        subscription: { invoices: [] },
+      });
+
+      prismaMock.referralUsage.findFirst.mockResolvedValue(null);
+
+      const res = await service.validateCode('PABLO-PROMO', 'tenant-pablo', 'PRO');
+      expect(res.valid).toBe(true);
+      expect(res.code).toBe('PABLO-PROMO');
     });
 
     it('should succeed and return details if all validations pass', async () => {

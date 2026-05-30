@@ -12,17 +12,16 @@ El sistema se adapta a múltiples rubros de servicios (barberías, peluquerías,
 
 El MVP cubre: perfil del tenant editable, sucursales independientes, catálogo de categorías y servicios vinculados a profesionales, agenda interactiva (vistas diaria/semanal con drag & drop y bloqueos rápidos, y vista de lista interactiva con filtros y agrupamiento dinámico), CRM con creación de clientes "on-the-fly" desde la agenda, motor de disponibilidad inteligente (que cruza horarios, excepciones, feriados y solapamientos), checkout de suscripción integrado con MercadoPago (planes Starter, Pro, Business y Elite), y notificaciones automatizadas por WhatsApp (Meta Cloud API).
 
-## Stack
-
 | Capa | Tecnología |
 |---|---|
-| Frontend | Angular 18 standalone (signals, functional guards/interceptors, CDK para Drag & Drop) |
-| Styling | Tailwind CSS v4 (variables y utilidades personalizadas en `styles.css`) |
+| Frontend Principal | Angular 21 standalone (signals, functional guards/interceptors, CDK para Drag & Drop) |
+| Styling Principal | Tailwind CSS v4 (variables y utilidades personalizadas en `styles.css`) |
+| Backoffice Frontend | Angular 21 standalone + PrimeNG v21 (sin Tailwind CSS, visuales nativos Aura Dark y Glassmorphism) |
 | Backend | NestJS 11 |
 | ORM | Prisma ORM (con preview feature `prismaSchemaFolder`) |
 | DB | PostgreSQL 16 |
 | Caché / Colas | Redis 7 (utilizado en background por NestJS) |
-| Infra local | Docker Compose (PostgreSQL + Redis + backend + frontend) |
+| Infra local | Docker Compose (PostgreSQL + Redis + backend + frontend + backoffice) |
 
 ## Filosofía de arquitectura
 
@@ -53,6 +52,7 @@ Las fases del roadmap se detallan a continuación (`ROADMAP.md`):
 - **Fase 6 — Canal Público y Link de Reserva** [En Progreso]: Link público por tenant `/p/:publicSlug` [Completado], temas estéticos personalizados (colores, logo, banner) [Completado], generación de código QR [Completado], configuración de visualización pública y precios en servicios [Completado], posibilidad de habilitar/deshabilitar el sitio público [Completado], cancelación y reprogramación online con límite de tiempo configurable (`cancellationLimit`) [Completado], ajustes del sitio público reorganizados en sub-pestañas unificadas [Completado]. Pendiente: Google Login para clientes públicos.
 - **Fase 7 — Pagos y Notificaciones (Post-MVP)** [Pendiente]: Integración MercadoPago para señas en turnos públicos, estados de pago (Pendiente, Señado, Pagado), y recordatorios automáticos o bots por WhatsApp.
 - **Fase 8 — Valor Agregado y Cierre** [Pendiente]: Integración con Google Reviews, guía de onboarding, tutoriales, templates por rubro, impresión de agenda física, y pantalla para sala de espera.
+- **Backoffice Administrativo** [Completado]: Portal web de administración aislado (`/backoffice`) en Angular 21 + PrimeNG v21 (sin dependencias de Tailwind) expuesto en el puerto **4201** en Docker / desarrollo. Permite acceder como `SUPER_ADMIN` (`superadmin@axenda.com`) para consultar métricas del sistema en un layout de 3x3 (9 métricas globales), buscar y listar cuentas (tenants), modificar manualmente parámetros de suscripción (plan, ciclo, vencimiento) y crear/gestionar cupones del sistema con la opción opcional de asociarlos a un usuario referidor del sistema (`referrerId`). Se auto-siembra el usuario administrador por defecto con `npx prisma db seed`.
 
 ## Autenticación
 
@@ -201,8 +201,18 @@ axenda/
 │                   ├── settings/       # Configuración agrupada por pestañas (profesionales, servicios, etc.)
 │                   └── subscription/   # Visualización de plan y pasarela de pago
 │
-├── docker-compose.yml                  # Postgres + Redis + Backend + Frontend
-├── package.json                        # Workspaces de npm y scripts generales
+├── backoffice/                         # Panel administrativo separado (Angular 21 + PrimeNG)
+│   ├── src/
+│   │   ├── index.html                  # Contiene la clase dark-theme para activar PrimeNG Dark Mode
+│   │   ├── main.ts                     # Carga de polyfills (zone.js) e inicio
+│   │   ├── styles.css                  # Estilos de PrimeIcons, Inter y Glassmorphism global
+│   │   └── app/
+│   │       ├── app.routes.ts           # Enrutamiento de administración (Dashboard, Tenants, Coupons)
+│   │       ├── core/                   # Interceptores, guards de guest/auth y servicios (Admin, Auth)
+│   │       └── views/                  # LoginComponent, LayoutComponent, Dashboard, Tenants, Coupons
+│   
+├── docker-compose.yml                  # Postgres + Redis + Backend + Frontend + Backoffice
+├── package.json                        # Workspaces de npm y scripts generales (npm run start:backoffice)
 └── CLAUDE.md                           # Este archivo
 ```
 
@@ -274,11 +284,16 @@ Copiar el archivo `.env.example` del backend como `.env` en la raíz del proyect
 ### 3. Ejecutar en Modo Desarrollo (Simultáneo)
 Desde la raíz del proyecto, ejecuta el comando que levanta frontend y backend de manera concurrente:
 ```bash
+# Levantar Frontend y Backend principal
 npm run dev
+
+# Levantar Backoffice administrativo (en otra terminal)
+npm run start:backoffice
 ```
 - **API Backend:** http://localhost:3000/api
 - **Documentación Swagger:** http://localhost:3000/api/docs
 - **Frontend App:** http://localhost:4200
+- **Backoffice Frontend:** http://localhost:4201
 
 ### 4. Comandos de Base de Datos (Prisma)
 Dentro de la carpeta `backend/`:
@@ -325,3 +340,9 @@ npx prisma db seed -- --danger-reset-all
 - **Mensajes de WhatsApp:** Recuerda que la simulación de envío a través de la cuenta global requiere que el número destino esté registrado como destinatario de prueba en la consola de Meta Developers, a menos que el tenant use una cuenta propia verificada.
 - **Prisma Schema Folder:** Si creas un nuevo modelo de datos, agrégalo en un archivo `.prisma` dentro de `backend/prisma/schema/` en lugar de tocar el archivo raíz `schema.prisma`. Luego ejecuta `prisma generate` y `prisma migrate dev`.
 - **Instalar dependencias:** Si agregas un paquete a `package.json` de frontend o backend, indícale al usuario que debe ejecutar `npm install` en la sección del workspace correspondiente.
+- **Backoffice Administrativo:**
+  - El servidor de desarrollo de Backoffice corre en el puerto **4201** (`npm run start:backoffice`).
+  - Las credenciales por defecto para superadmin son `superadmin@axenda.com` / `SuperAdminPass123!`.
+  - Los endpoints administrativos están bajo `/api/admin` en el backend, protegidos por `SUPER_ADMIN` rol.
+  - El diseño visual del Backoffice es **Tailwind-free**, basado en PrimeNG (Aura Dark) con personalizaciones de Glassmorphism cargadas en el `styles.css` global del backoffice. Usa `p-select` para menús desplegables (PrimeNG v18+).
+  - Al gestionar cupones de sistema (`isSystem: true`), se puede buscar un usuario para asociarlo (`referrerId`) con el endpoint de búsqueda `GET /api/admin/users?search=...`.

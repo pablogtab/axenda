@@ -31,7 +31,7 @@ export class ReferralsService {
     });
 
     if (!referralCode) {
-      throw new NotFoundException(`El código de descuento "${code}" no existe.`);
+      throw new BadRequestException('Este código de descuento no está disponible.');
     }
 
     // 1. Validar si está activo
@@ -59,6 +59,22 @@ export class ReferralsService {
       if (referralCode.applicablePlanCode.toUpperCase() !== currentPlanCode.toUpperCase()) {
         throw new BadRequestException(
           `Este cupón sólo es válido para el plan ${referralCode.applicablePlanCode}.`
+        );
+      }
+    }
+
+    // 5bis. Validar exclusividad por usuario: si el cupón tiene referrerId, solo
+    //       el tenant de ese usuario puede usarlo (cupón personalizado de sistema).
+    if (referralCode.referrerId && !referralCode.referrerTenantId) {
+      // Es un cupón de sistema asignado a un usuario particular
+      const ownerUser = await this.prisma.user.findUnique({
+        where: { id: referralCode.referrerId },
+        select: { tenantId: true },
+      });
+
+      if (!ownerUser || ownerUser.tenantId !== tenantId) {
+        throw new BadRequestException(
+          'Este código de descuento no está disponible.'
         );
       }
     }

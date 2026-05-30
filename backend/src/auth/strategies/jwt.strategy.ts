@@ -19,6 +19,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: AuthenticatedUser) {
+    // 1. Primero intentar como SystemUser (Backoffice SUPER_ADMIN)
+    //    Los tokens de SystemUser tienen role='SUPER_ADMIN' y no tienen tenantId
+    if (payload.role === 'SUPER_ADMIN' && !payload.tenantId) {
+      const systemUser = await this.prisma.systemUser.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, active: true },
+      })
+
+      if (!systemUser || !systemUser.active) {
+        throw new UnauthorizedException('Token inválido o administrador inactivo')
+      }
+
+      return {
+        sub: systemUser.id,
+        role: 'SUPER_ADMIN' as const,
+        tenantId: undefined,
+      }
+    }
+
+    // 2. Usuarios de tenant regulares (ADMIN, MANAGER, RECEPTIONIST, PROFESSIONAL)
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, tenantId: true, email: true, role: true, active: true },

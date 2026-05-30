@@ -1,6 +1,6 @@
 // c:\projects\personal\axenda\backend\prisma\seed.ts
 
-import { PrismaClient, TenantMode, UserRole, ExceptionType, AuthProvider, Prisma } from '@prisma/client'
+import { PrismaClient, TenantMode, ExceptionType, AuthProvider, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import * as bcrypt from 'bcrypt'
@@ -235,6 +235,53 @@ async function seedSampleBusiness() {
   console.log('✅ Negocio de prueba creado con éxito.')
 }
 
+async function seedSuperAdmin() {
+  console.log('🚀 Creando/Verificando Super Administrador del Sistema (system_users)...')
+  const email = 'superadmin@axenda.com'
+  const passwordHash = await bcrypt.hash('SuperAdminPass123!', 12)
+
+  // Upsert en la tabla separada system_users (no en users de tenants)
+  const existing = await prisma.systemUser.findUnique({ where: { email } })
+
+  if (!existing) {
+    await prisma.systemUser.create({
+      data: {
+        email,
+        firstName: 'System',
+        lastName: 'Administrator',
+        passwordHash,
+        active: true,
+      },
+    })
+    console.log('✅ SystemUser SUPER_ADMIN creado en system_users.')
+  } else {
+    await prisma.systemUser.update({
+      where: { email },
+      data: { passwordHash, active: true },
+    })
+    console.log('✅ SystemUser SUPER_ADMIN verificado/actualizado en system_users.')
+  }
+
+  // Limpiar el User viejo con SUPER_ADMIN de la tabla de tenants (si existe de migración anterior)
+  const oldSuperAdmin = await prisma.user.findFirst({
+    where: { email, role: 'SUPER_ADMIN' },
+  })
+  if (oldSuperAdmin) {
+    await prisma.user.delete({ where: { id: oldSuperAdmin.id } })
+    console.log('🧹 User SUPER_ADMIN viejo eliminado de la tabla users.')
+
+    // También limpiar el tenant ficticio "admin" si quedó sin usuarios
+    const adminTenant = await prisma.tenant.findUnique({ where: { slug: 'admin' } })
+    if (adminTenant) {
+      const tenantUserCount = await prisma.user.count({ where: { tenantId: adminTenant.id } })
+      if (tenantUserCount === 0) {
+        await prisma.tenant.delete({ where: { id: adminTenant.id } })
+        console.log('🧹 Tenant ficticio "admin" eliminado.')
+      }
+    }
+  }
+}
+
 async function main() {
   if (DANGER_RESET) {
     console.log('⚠️  DANGER: Reseteando base de datos por completo...');
@@ -246,6 +293,7 @@ async function main() {
 
   // 1. Siempre sincronizar datos del sistema
   await seedSubscriptionPlans();
+  await seedSuperAdmin();
 
   // 2. Opcionalmente sembrar datos de muestra
   if (WITH_SAMPLES) {
