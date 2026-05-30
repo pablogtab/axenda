@@ -28,18 +28,18 @@
               </th>
               <th class="p-8 text-center w-1/5 border-x border-border bg-primary-glow">
                 <span class="block text-lg font-bold text-primary mb-1">Pro</span>
-                <span class="block text-xs text-text-main font-bold">$12.500/mes</span>
-                <span class="block text-[10px] text-text-muted mt-0.5">$10.000/mes anual</span>
+                <span class="block text-xs text-text-main font-bold">${{ proPriceMonthly() | number:'1.0-0' }}/mes</span>
+                <span class="block text-[10px] text-text-muted mt-0.5">${{ proPriceYearlyMonthly() | number:'1.0-0' }}/mes anual</span>
               </th>
               <th class="p-8 text-center w-1/5">
                 <span class="block text-lg font-bold text-text-main mb-1">Business</span>
-                <span class="block text-xs text-text-main font-bold">$24.500/mes</span>
-                <span class="block text-[10px] text-text-muted mt-0.5">$19.600/mes anual</span>
+                <span class="block text-xs text-text-main font-bold">${{ businessPriceMonthly() | number:'1.0-0' }}/mes</span>
+                <span class="block text-[10px] text-text-muted mt-0.5">${{ businessPriceYearlyMonthly() | number:'1.0-0' }}/mes anual</span>
               </th>
               <th class="p-8 text-center w-1/5">
                 <span class="block text-lg font-bold text-accent mb-1">Elite</span>
-                <span class="block text-xs text-text-main font-bold">$48.000/mes</span>
-                <span class="block text-[10px] text-text-muted mt-0.5">$38.400/mes anual</span>
+                <span class="block text-xs text-text-main font-bold">${{ elitePriceMonthly() | number:'1.0-0' }}/mes</span>
+                <span class="block text-[10px] text-text-muted mt-0.5">${{ elitePriceYearlyMonthly() | number:'1.0-0' }}/mes anual</span>
               </th>
             </tr>
           </thead>

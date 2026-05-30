@@ -17,10 +17,9 @@ export class SubscriptionsController {
   }
 
   @Get('plans')
-  @UseGuards(JwtAuthGuard)
   async getPlans() {
     return this.subscriptionsService['prisma'].subscriptionPlan.findMany({
-      where: { active: true, code: { not: 'STARTER' } },
+      where: { active: true },
       orderBy: { priceMonthly: 'asc' }
     });
   }

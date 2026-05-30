@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { SubscriptionService } from '@core/services/subscription.service';
 
 @Component({
   selector: 'app-pricing-comparison',
@@ -10,7 +11,48 @@ import { IconComponent } from '@shared/components/icon/icon.component';
   templateUrl: './pricing-comparison.component.html',
   styleUrl: './pricing-comparison.component.css'
 })
-export class PricingComparisonComponent {
+export class PricingComparisonComponent implements OnInit {
+  private subscriptionService = inject(SubscriptionService);
+
+  // Precios dinámicos con fallbacks
+  proPriceMonthly = signal<number>(15000);
+  proPriceYearlyMonthly = signal<number>(12000);
+
+  businessPriceMonthly = signal<number>(24500);
+  businessPriceYearlyMonthly = signal<number>(19600);
+
+  elitePriceMonthly = signal<number>(48000);
+  elitePriceYearlyMonthly = signal<number>(38400);
+
+  ngOnInit() {
+    this.loadPlans();
+  }
+
+  async loadPlans() {
+    try {
+      const plans = await this.subscriptionService.getPlans();
+      
+      const pro = plans.find(p => p.code === 'PRO');
+      if (pro) {
+        this.proPriceMonthly.set(Number(pro.priceMonthly));
+        this.proPriceYearlyMonthly.set(Number(pro.priceYearly) / 12);
+      }
+
+      const business = plans.find(p => p.code === 'BUSINESS');
+      if (business) {
+        this.businessPriceMonthly.set(Number(business.priceMonthly));
+        this.businessPriceYearlyMonthly.set(Number(business.priceYearly) / 12);
+      }
+
+      const elite = plans.find(p => p.code === 'ELITE');
+      if (elite) {
+        this.elitePriceMonthly.set(Number(elite.priceMonthly));
+        this.elitePriceYearlyMonthly.set(Number(elite.priceYearly) / 12);
+      }
+    } catch (error) {
+      console.error('Error fetching plans in comparison page', error);
+    }
+  }
   comparisonData = [
     {
       category: 'Gestión de Agenda',

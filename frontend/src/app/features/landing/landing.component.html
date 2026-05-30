@@ -234,10 +234,10 @@
           <h3 class="text-2xl font-bold mb-1">Pro</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-text-main">$12.500</span>
+              <span class="text-4xl font-extrabold text-text-main">${{ proPriceMonthly() | number:'1.0-0' }}</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
-            <span class="text-[10px] text-primary font-semibold mt-1">$10.000/mes pagando anual</span>
+            <span class="text-[10px] text-primary font-semibold mt-1">${{ proPriceYearlyMonthly() | number:'1.0-0' }}/mes pagando anual</span>
           </div>
           <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
             <li class="flex items-start gap-3">
@@ -270,10 +270,10 @@
           <h3 class="text-2xl font-bold mb-1">Business</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-text-main">$24.500</span>
+              <span class="text-4xl font-extrabold text-text-main">${{ businessPriceMonthly() | number:'1.0-0' }}</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
-            <span class="text-[10px] text-primary font-semibold mt-1">$19.600/mes pagando anual</span>
+            <span class="text-[10px] text-primary font-semibold mt-1">${{ businessPriceYearlyMonthly() | number:'1.0-0' }}/mes pagando anual</span>
           </div>
           <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
             <li class="flex items-start gap-3">
@@ -305,10 +305,10 @@
           <h3 class="text-2xl font-bold mb-1">Elite</h3>
           <div class="flex flex-col mb-8">
             <div class="flex items-baseline gap-1">
-              <span class="text-4xl font-extrabold text-text-main">$48.000</span>
+              <span class="text-4xl font-extrabold text-text-main">${{ elitePriceMonthly() | number:'1.0-0' }}</span>
               <span class="text-text-muted text-xs">/mes</span>
             </div>
-            <span class="text-[10px] text-primary font-semibold mt-1">$38.400/mes pagando anual</span>
+            <span class="text-[10px] text-primary font-semibold mt-1">${{ elitePriceYearlyMonthly() | number:'1.0-0' }}/mes pagando anual</span>
           </div>
           <ul class="flex flex-col gap-4 text-xs text-text-muted mb-10">
             <li class="flex items-start gap-3">

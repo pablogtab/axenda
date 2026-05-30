@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, signal, HostListener, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, signal, HostListener, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { IconComponent } from '@shared/components/icon/icon.component';
+import { SubscriptionService } from '@core/services/subscription.service';
 
 @Component({
   selector: 'app-landing',
@@ -13,6 +14,17 @@ import { IconComponent } from '@shared/components/icon/icon.component';
 })
 export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   windowWidth = signal(window.innerWidth);
+  private subscriptionService = inject(SubscriptionService);
+
+  // Precios dinámicos (valores fallback iniciales por si falla la API)
+  proPriceMonthly = signal<number>(15000);
+  proPriceYearlyMonthly = signal<number>(12000);
+
+  businessPriceMonthly = signal<number>(24500);
+  businessPriceYearlyMonthly = signal<number>(19600);
+
+  elitePriceMonthly = signal<number>(48000);
+  elitePriceYearlyMonthly = signal<number>(38400);
 
   constructor(private ngZone: NgZone) {}
 
@@ -146,6 +158,33 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     this.shuffleTestimonials();
     this.displayTestimonials = [...this.testimonials, ...this.testimonials, ...this.testimonials];
     this.currentIndex.set(this.testimonials.length); // Empezamos en el medio
+    this.loadPlans();
+  }
+
+  async loadPlans() {
+    try {
+      const plans = await this.subscriptionService.getPlans();
+      
+      const pro = plans.find(p => p.code === 'PRO');
+      if (pro) {
+        this.proPriceMonthly.set(Number(pro.priceMonthly));
+        this.proPriceYearlyMonthly.set(Number(pro.priceYearly) / 12);
+      }
+
+      const business = plans.find(p => p.code === 'BUSINESS');
+      if (business) {
+        this.businessPriceMonthly.set(Number(business.priceMonthly));
+        this.businessPriceYearlyMonthly.set(Number(business.priceYearly) / 12);
+      }
+
+      const elite = plans.find(p => p.code === 'ELITE');
+      if (elite) {
+        this.elitePriceMonthly.set(Number(elite.priceMonthly));
+        this.elitePriceYearlyMonthly.set(Number(elite.priceYearly) / 12);
+      }
+    } catch (error) {
+      console.error('Error fetching plans in landing', error);
+    }
   }
 
   ngAfterViewInit(): void {
