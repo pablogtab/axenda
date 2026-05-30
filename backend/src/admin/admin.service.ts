@@ -137,6 +137,72 @@ export class AdminService {
       }
     }
 
+    // Obtener todas las facturas cobradas (status = PAID) del último año
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const invoices = await this.prisma.subscriptionInvoice.findMany({
+      where: {
+        status: 'PAID',
+        paymentDate: {
+          gte: oneYearAgo,
+        },
+      },
+      select: {
+        amount: true,
+        paymentDate: true,
+      },
+      orderBy: {
+        paymentDate: 'asc',
+      },
+    });
+
+    // Agrupar ventas por semana del año
+    // Para simplificar y ser precisos, calculamos la fecha de inicio de semana (Lunes o Domingo)
+    // o el número de semana "YYYY-Www"
+    const weeklySalesMap = new Map<string, { weekLabel: string; count: number; totalAmount: number; sortKey: number }>();
+
+    for (const inv of invoices) {
+      const date = inv.paymentDate ? new Date(inv.paymentDate) : new Date();
+      
+      // Obtener el lunes de esa semana
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // lunes es el primer día
+      const monday = new Date(date.setDate(diff));
+      monday.setHours(0, 0, 0, 0);
+
+      const year = monday.getFullYear();
+      // Calcular número de semana simple
+      const firstDayOfYear = new Date(year, 0, 1);
+      const pastDaysOfYear = (monday.getTime() - firstDayOfYear.getTime()) / 86400000;
+      const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+
+      const key = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+      const label = `${monday.getDate().toString().padStart(2, '0')}/${(monday.getMonth() + 1).toString().padStart(2, '0')}/${year}`;
+
+      const existing = weeklySalesMap.get(key);
+      if (existing) {
+        existing.count += 1;
+        existing.totalAmount += Number(inv.amount || 0);
+      } else {
+        weeklySalesMap.set(key, {
+          weekLabel: label,
+          count: 1,
+          totalAmount: Number(inv.amount || 0),
+          sortKey: monday.getTime(),
+        });
+      }
+    }
+
+    // Convertir a array, ordenar por fecha y quedarnos con los que tienen ventas
+    const weeklySales = Array.from(weeklySalesMap.values())
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .map(w => ({
+        week: w.weekLabel,
+        salesCount: w.count,
+        revenue: Math.round(w.totalAmount),
+      }));
+
     const totalWhatsappSent = whatsappConfigs.reduce((sum, config) => sum + (config.messagesSentMonth || 0), 0);
 
     return {
@@ -149,6 +215,7 @@ export class AdminService {
       totalUsers,
       totalProfessionals,
       totalServices,
+      weeklySales,
     };
   }
 

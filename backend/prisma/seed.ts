@@ -1,6 +1,6 @@
 // c:\projects\personal\axenda\backend\prisma\seed.ts
 
-import { PrismaClient, TenantMode, ExceptionType, AuthProvider, Prisma } from '@prisma/client'
+import { PrismaClient, TenantMode, ExceptionType, AuthProvider, Prisma, UserRole } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import * as bcrypt from 'bcrypt'
@@ -231,6 +231,63 @@ async function seedSampleBusiness() {
       }
     }
   })
+
+  // Obtener la suscripción creada
+  const createdSub = await prisma.tenantSubscription.findUnique({
+    where: { tenantId: tenant.id }
+  })
+
+  if (createdSub) {
+    console.log('💰 Creando facturas pagadas de prueba para esta semana y la anterior...')
+    const now = new Date()
+    
+    // Factura 1: Hace 2 días (esta semana)
+    const date1 = new Date()
+    date1.setDate(now.getDate() - 2)
+
+    // Factura 2: Hace 4 días (esta semana)
+    const date2 = new Date()
+    date2.setDate(now.getDate() - 4)
+
+    // Factura 3: Hace 9 días (semana anterior)
+    const date3 = new Date()
+    date3.setDate(now.getDate() - 9)
+
+    await prisma.subscriptionInvoice.createMany({
+      data: [
+        {
+          subscriptionId: createdSub.id,
+          amount: new Prisma.Decimal(12500),
+          currency: 'ARS',
+          status: 'PAID',
+          paymentDate: date1,
+          billingPeriodStart: date1,
+          billingPeriodEnd: new Date(new Date(date1).setMonth(date1.getMonth() + 1)),
+          description: 'Abono mensual Plan Pro - Mayo',
+        },
+        {
+          subscriptionId: createdSub.id,
+          amount: new Prisma.Decimal(12500),
+          currency: 'ARS',
+          status: 'PAID',
+          paymentDate: date2,
+          billingPeriodStart: date2,
+          billingPeriodEnd: new Date(new Date(date2).setMonth(date2.getMonth() + 1)),
+          description: 'Abono mensual Plan Pro - Adicional',
+        },
+        {
+          subscriptionId: createdSub.id,
+          amount: new Prisma.Decimal(12500),
+          currency: 'ARS',
+          status: 'PAID',
+          paymentDate: date3,
+          billingPeriodStart: date3,
+          billingPeriodEnd: new Date(new Date(date3).setMonth(date3.getMonth() + 1)),
+          description: 'Abono mensual Plan Pro - Abril',
+        }
+      ]
+    })
+  }
 
   console.log('✅ Negocio de prueba creado con éxito.')
 }
