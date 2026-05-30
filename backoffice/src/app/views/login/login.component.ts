@@ -36,7 +36,6 @@ import { AuthService } from '../../core/services/auth.service';
               required 
               email 
               class="w-full"
-              placeholder="admin@axenda.com"
             />
           </div>
 
@@ -51,7 +50,6 @@ import { AuthService } from '../../core/services/auth.service';
               styleClass="w-full" 
               inputStyleClass="w-full"
               required
-              placeholder="••••••••"
             ></p-password>
           </div>
 

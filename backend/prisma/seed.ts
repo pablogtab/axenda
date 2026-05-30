@@ -43,7 +43,7 @@ async function seedSubscriptionPlans() {
       code: 'PRO',
       name: 'Pro',
       description: 'Profesional Independiente',
-      priceMonthly: 12500,
+      priceMonthly: 15000,
       priceYearly: 120000,
       maxProfessionals: 1,
       maxBranches: 1,
