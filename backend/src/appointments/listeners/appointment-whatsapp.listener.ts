@@ -62,8 +62,9 @@ export class AppointmentWhatsappListener {
     };
 
     // 4. Determinar la plantilla a usar según la opción de cancelar/modificar turnos
-    // TEMPORAL: Deshabilitado cancelaciones por whatsapp, solo notificacion sin cancelacion
-    const templateName = 'axenda_booking_confirmation_no_cancel';
+    const templateName = tenant.allowReschedule 
+      ? 'axenda_booking_confirmation' 
+      : 'axenda_booking_confirmation_no_cancel';
 
     try {
       await this.whatsappService.sendTemplateMessage(

@@ -55,7 +55,7 @@ describe('AppointmentReminderService', () => {
     expect(prismaMock.appointment.update).not.toHaveBeenCalled();
   });
 
-  it('should send axenda_booking_reminder_no_cancel and mark as sent if appointment is booked >= 3 days in advance and allowReschedule is true (temporarily forced no_cancel)', async () => {
+  it('should send axenda_booking_reminder and mark as sent if appointment is booked >= 3 days in advance and allowReschedule is true', async () => {
     const now = new Date();
     // Start time: 23 hours from now
     const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
@@ -85,7 +85,7 @@ describe('AppointmentReminderService', () => {
     expect(whatsappMock.sendTemplateMessage).toHaveBeenCalledWith(
       'tenant-1',
       '5493511234567',
-      'axenda_booking_reminder_no_cancel',
+      'axenda_booking_reminder',
       expect.objectContaining({
         clientName: 'Juan',
         businessName: 'Barberia',
