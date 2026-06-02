@@ -230,6 +230,7 @@ export class AdminService {
       where.OR = [
         { name: { contains: trimmedSearch, mode: 'insensitive' } },
         { slug: { contains: trimmedSearch, mode: 'insensitive' } },
+        { publicSlug: { contains: trimmedSearch, mode: 'insensitive' } },
         { email: { contains: trimmedSearch, mode: 'insensitive' } },
       ];
     }

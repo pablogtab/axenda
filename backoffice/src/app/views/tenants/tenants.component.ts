@@ -29,12 +29,12 @@ import { AdminService } from '../../core/services/admin.service';
         <div class="table-header-actions">
           <span class="p-input-icon-left search-container">
             <i class="pi pi-search search-icon"></i>
-            <input 
-              type="text" 
-              pInputText 
-              [(ngModel)]="searchQuery" 
-              (input)="onSearch()" 
-              placeholder="Buscar por nombre, email o slug..." 
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              placeholder="Buscar por nombre, email o slug..."
               class="w-full search-input"
             />
           </span>
@@ -42,13 +42,13 @@ import { AdminService } from '../../core/services/admin.service';
         </div>
 
         <!-- Tenants Table -->
-        <p-table 
-          [value]="tenants()" 
-          [lazy]="true" 
-          (onLazyLoad)="loadTenantsLazy($event)" 
-          [paginator]="true" 
-          [rows]="limit()" 
-          [totalRecords]="totalRecords()" 
+        <p-table
+          [value]="tenants()"
+          [lazy]="true"
+          (onLazyLoad)="loadTenantsLazy($event)"
+          [paginator]="true"
+          [rows]="limit()"
+          [totalRecords]="totalRecords()"
           [loading]="isLoading()"
           [rowsPerPageOptions]="[5, 10, 20, 50]"
           styleClass="p-datatable-gridlines mt-4 admin-table"
@@ -63,7 +63,7 @@ import { AdminService } from '../../core/services/admin.service';
               <th style="width: 150px">Acciones</th>
             </tr>
           </ng-template>
-          
+
           <ng-template pTemplate="body" let-tenant>
             <tr>
               <td>
@@ -73,7 +73,7 @@ import { AdminService } from '../../core/services/admin.service';
               <td>
                 <div class="contact-info">
                   <span class="contact-email">{{ tenant.email || 'Sin email' }}</span>
-                  <span class="contact-slug">Slug: <strong>{{ tenant.slug }}</strong></span>
+                  <span class="contact-slug">Slug: <strong>{{ tenant.publicSlug || tenant.slug }}</strong></span>
                 </div>
               </td>
               <td>
@@ -100,16 +100,16 @@ import { AdminService } from '../../core/services/admin.service';
               </td>
               <td>{{ tenant.createdAt | date:'dd/MM/yyyy HH:mm' }} hs</td>
               <td>
-                <p-button 
-                  label="Suscripción" 
-                  icon="pi pi-cog" 
+                <p-button
+                  label="Suscripción"
+                  icon="pi pi-cog"
                   styleClass="p-button-sm p-button-secondary"
                   (click)="openEditSubscription(tenant)"
                 ></p-button>
               </td>
             </tr>
           </ng-template>
-          
+
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="6" class="text-center p-4">No se encontraron negocios registrados.</td>
@@ -119,10 +119,10 @@ import { AdminService } from '../../core/services/admin.service';
       </p-card>
 
       <!-- Edit Subscription Dialog -->
-      <p-dialog 
-        header="Modificar Suscripción Manualmente" 
-        [(visible)]="displayDialog" 
-        [modal]="true" 
+      <p-dialog
+        header="Modificar Suscripción Manualmente"
+        [(visible)]="displayDialog"
+        [modal]="true"
         [style]="{ width: '450px' }"
         styleClass="admin-dialog"
       >
@@ -134,11 +134,11 @@ import { AdminService } from '../../core/services/admin.service';
 
           <div class="form-field">
             <label for="plan">Plan</label>
-            <p-select 
-              id="plan" 
-              [options]="plans" 
-              [(ngModel)]="editData.planCode" 
-              optionLabel="label" 
+            <p-select
+              id="plan"
+              [options]="plans"
+              [(ngModel)]="editData.planCode"
+              optionLabel="label"
               optionValue="value"
               styleClass="w-full"
             ></p-select>
@@ -146,11 +146,11 @@ import { AdminService } from '../../core/services/admin.service';
 
           <div class="form-field">
             <label for="cycle">Ciclo de Facturación</label>
-            <p-select 
-              id="cycle" 
-              [options]="billingCycles" 
-              [(ngModel)]="editData.billingCycle" 
-              optionLabel="label" 
+            <p-select
+              id="cycle"
+              [options]="billingCycles"
+              [(ngModel)]="editData.billingCycle"
+              optionLabel="label"
               optionValue="value"
               styleClass="w-full"
             ></p-select>
@@ -158,11 +158,11 @@ import { AdminService } from '../../core/services/admin.service';
 
           <div class="form-field">
             <label for="status">Estado</label>
-            <p-select 
-              id="status" 
-              [options]="statuses" 
-              [(ngModel)]="editData.status" 
-              optionLabel="label" 
+            <p-select
+              id="status"
+              [options]="statuses"
+              [(ngModel)]="editData.status"
+              optionLabel="label"
               optionValue="value"
               styleClass="w-full"
             ></p-select>
@@ -170,10 +170,10 @@ import { AdminService } from '../../core/services/admin.service';
 
           <div class="form-field">
             <label for="endDate">Fecha de Vencimiento (Opcional)</label>
-            <input 
-              id="endDate" 
-              type="date" 
-              [(ngModel)]="editData.endDate" 
+            <input
+              id="endDate"
+              type="date"
+              [(ngModel)]="editData.endDate"
               class="w-full date-input"
             />
           </div>
@@ -336,10 +336,10 @@ import { AdminService } from '../../core/services/admin.service';
       border-top: none !important;
       color: #94a3b8 !important;
     }
-    ::ng-deep .p-paginator .p-paginator-page, 
-    ::ng-deep .p-paginator .p-paginator-next, 
-    ::ng-deep .p-paginator .p-paginator-last, 
-    ::ng-deep .p-paginator .p-paginator-first, 
+    ::ng-deep .p-paginator .p-paginator-page,
+    ::ng-deep .p-paginator .p-paginator-next,
+    ::ng-deep .p-paginator .p-paginator-last,
+    ::ng-deep .p-paginator .p-paginator-first,
     ::ng-deep .p-paginator .p-paginator-prev {
       color: #94a3b8 !important;
       min-width: 2rem !important;
@@ -509,7 +509,7 @@ export class TenantsComponent implements OnInit {
   loadTenantsLazy(event: any): void {
     const rows = event.rows || 10;
     const pageNum = Math.floor((event.first || 0) / rows) + 1;
-    
+
     this.limit.set(rows);
     this.page.set(pageNum);
     this.loadTenants();
@@ -519,7 +519,7 @@ export class TenantsComponent implements OnInit {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    
+
     this.searchTimeout = setTimeout(() => {
       this.page.set(1);
       this.loadTenants();
@@ -534,14 +534,14 @@ export class TenantsComponent implements OnInit {
 
   openEditSubscription(tenant: any): void {
     this.selectedTenant.set(tenant);
-    
+
     if (tenant.subscription) {
       this.editData = {
         planCode: tenant.subscription.plan.code,
         billingCycle: tenant.subscription.billingCycle,
         status: tenant.subscription.status,
-        endDate: tenant.subscription.endDate 
-          ? new Date(tenant.subscription.endDate).toISOString().split('T')[0] 
+        endDate: tenant.subscription.endDate
+          ? new Date(tenant.subscription.endDate).toISOString().split('T')[0]
           : '',
       };
     } else {
@@ -552,7 +552,7 @@ export class TenantsComponent implements OnInit {
         endDate: '',
       };
     }
-    
+
     this.displayDialog = true;
   }
 
