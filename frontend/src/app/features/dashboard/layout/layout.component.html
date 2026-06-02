@@ -56,6 +56,13 @@
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Clientes</span>
       </a>
 
+      <a routerLink="/dashboard/invitations" 
+         routerLinkActive="active-nav-item" 
+         class="nav-item group">
+        <app-icon name="link" class="nav-icon"></app-icon>
+        <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Invitaciones</span>
+      </a>
+
       <div class="mt-auto pt-6">
         <a routerLink="/dashboard/settings" 
            routerLinkActive="active-nav-item" 

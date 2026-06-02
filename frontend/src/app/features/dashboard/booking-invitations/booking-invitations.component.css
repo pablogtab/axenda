@@ -1,0 +1,11 @@
+/* Custom CSS styles for Booking Invitations */
+.invitation-select {
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+  color: var(--color-text-main);
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+}

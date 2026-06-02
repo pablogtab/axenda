@@ -11,13 +11,14 @@ model Professional {
   allServices  Boolean                 @default(false)
   createdAt    DateTime                @default(now())
   updatedAt    DateTime                @updatedAt
-  appointments Appointment[]
-  availability Availability[]
-  exceptions   AvailabilityException[]
-  branches     ProfessionalBranch[]
-  services     ProfessionalService[]
-  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user         User?                   @relation(fields: [userId], references: [id])
+  appointments       Appointment[]
+  availability       Availability[]
+  exceptions         AvailabilityException[]
+  branches           ProfessionalBranch[]
+  services           ProfessionalService[]
+  bookingInvitations BookingInvitation[]
+  tenant             Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user               User?                   @relation(fields: [userId], references: [id])
 
   @@map("professionals")
 }

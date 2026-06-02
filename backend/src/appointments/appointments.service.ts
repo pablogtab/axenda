@@ -7,6 +7,7 @@ import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointm
 import { CreatePublicAppointmentDto } from './dto/public-appointment.dto'
 import { PhoneUtils } from '../common/utils/phone-utils'
 import { randomUUID } from 'crypto'
+import { BookingInvitationsService } from '../booking-invitations/booking-invitations.service'
 
 @Injectable()
 export class AppointmentsService {
@@ -17,6 +18,7 @@ export class AppointmentsService {
     private readonly engine: AvailabilityEngineService,
     private readonly eventEmitter: EventEmitter2,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly bookingInvitationsService: BookingInvitationsService,
   ) {}
 
   // ─── Consultar Disponibilidad ─────────────────────────────────────────────
@@ -199,10 +201,20 @@ export class AppointmentsService {
       serviceId: dto.serviceId,
       branchId: dto.branchId,
       startTime: start,
+      invitationToken: dto.invitationToken,
     })
 
     if (!isAvailable) {
       throw new BadRequestException('El horario seleccionado ya no está disponible')
+    }
+
+    let invitationId: string | undefined = undefined
+    if (dto.invitationToken) {
+      const invitation = await this.bookingInvitationsService.validateToken(dto.invitationToken)
+      if (invitation.tenantId !== tenantId) {
+        throw new BadRequestException('Invitación inválida para este comercio')
+      }
+      invitationId = invitation.id
     }
 
     // 4. Calcular EndTime
@@ -221,7 +233,8 @@ export class AppointmentsService {
         notes: dto.notes,
         status: 'PENDING',
         bookedVia: 'PUBLIC_LINK',
-        cancelToken: randomUUID()
+        cancelToken: randomUUID(),
+        invitationId,
       },
       include: {
         client: true,
@@ -230,6 +243,10 @@ export class AppointmentsService {
         branch: true
       }
     })
+
+    if (invitationId) {
+      await this.bookingInvitationsService.incrementUses(invitationId)
+    }
 
     // 6. Log inicial
     await this.prisma.appointmentLog.create({

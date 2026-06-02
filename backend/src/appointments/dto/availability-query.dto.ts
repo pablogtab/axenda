@@ -28,4 +28,8 @@ export class GetAvailabilityDto {
   @IsOptional()
   @IsUUID()
   excludeAppointmentId?: string
+
+  @ApiPropertyOptional({ example: 'inv_abc123', description: 'Token de invitación privada para reservar' })
+  @IsOptional()
+  invitationToken?: string
 }

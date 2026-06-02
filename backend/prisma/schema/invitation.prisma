@@ -1,0 +1,25 @@
+model BookingInvitation {
+  id             String        @id @default(uuid())
+  tenantId       String
+  token          String        @unique
+  description    String?
+  active         Boolean       @default(true)
+  maxUses        Int?
+  usesCount      Int           @default(0)
+  expiresAt      DateTime?
+  startDate      DateTime?     @db.Date
+  endDate        DateTime?     @db.Date
+  schedule       Json          // Array de rangos horarios, ej: [{"dayOfWeek": 1, "startTime": "09:00", "endTime": "12:00"}]
+  branchId       String?       // Sucursal específica (opcional)
+  professionalId String?       // Profesional específico (opcional)
+  clientId       String?       // Cliente pre-asociado (opcional)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch         Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  client         Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  appointments   Appointment[]
+
+  @@map("booking_invitations")
+}

@@ -12,6 +12,7 @@ model Client {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   appointments Appointment[]
+  bookingInvitations BookingInvitation[]
   fieldValues  ClientFieldValue[]
   tags         ClientTag[]
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)

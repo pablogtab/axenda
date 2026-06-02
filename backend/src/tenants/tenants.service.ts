@@ -20,7 +20,7 @@ export class TenantsService {
     return tenant
   }
 
-  async findByPublicSlug(publicSlug: string) {
+  async findByPublicSlug(publicSlug: string, invitationToken?: string) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { publicSlug },
       select: {
@@ -82,7 +82,27 @@ export class TenantsService {
         }
       }
     })
-    if (!tenant || !tenant.publicActive) throw new NotFoundException('Negocio no encontrado')
+    
+    if (!tenant) {
+      throw new NotFoundException('Negocio no encontrado');
+    }
+
+    if (!tenant.publicActive) {
+      if (invitationToken) {
+        const invitation = await this.prisma.bookingInvitation.findFirst({
+          where: { token: invitationToken, tenantId: tenant.id, active: true },
+        });
+        if (invitation) {
+          const notExpired = !invitation.expiresAt || new Date() <= invitation.expiresAt;
+          const notMaxed = invitation.maxUses === null || invitation.usesCount < invitation.maxUses;
+          if (notExpired && notMaxed) {
+            return tenant;
+          }
+        }
+      }
+      throw new NotFoundException('Negocio no encontrado');
+    }
+
     return tenant
   }
 
@@ -230,40 +250,40 @@ export class TenantsService {
         }))
       })
 
-      // 5. Cargar servicios por defecto si se solicita
-      if (metadata.loadDefaults) {
-        const defaultServices = this.getDefaultServicesByMode(mode)
+      // 5. Cargar servicios por defecto o crear uno genérico si elige manual
+      const defaultServices = metadata.loadDefaults 
+        ? this.getDefaultServicesByMode(mode)
+        : [{ name: 'Servicio General', duration: 60, price: 0, color: '#6366f1' }]
 
-        if (defaultServices.length > 0) {
-          // Crear categoría "Principales" por defecto
-          const category = await tx.serviceCategory.create({
+      if (defaultServices.length > 0) {
+        // Crear categoría "Principales" por defecto
+        const category = await tx.serviceCategory.create({
+          data: {
+            tenantId,
+            name: 'Servicios Principales',
+          }
+        })
+
+        // Crear los servicios y vincularlos al profesional
+        for (const s of defaultServices) {
+          const service = await tx.service.create({
             data: {
               tenantId,
-              name: 'Servicios Principales',
+              categoryId: category.id,
+              name: s.name,
+              duration: s.duration,
+              price: s.price,
+              color: s.color,
             }
           })
 
-          // Crear los servicios y vincularlos al profesional
-          for (const s of defaultServices) {
-            const service = await tx.service.create({
-              data: {
-                tenantId,
-                categoryId: category.id,
-                name: s.name,
-                duration: s.duration,
-                price: s.price,
-                color: s.color,
-              }
-            })
-
-            // Vincular al profesional
-            await tx.professionalService.create({
-              data: {
-                professionalId: professional.id,
-                serviceId: service.id
-              }
-            })
-          }
+          // Vincular al profesional
+          await tx.professionalService.create({
+            data: {
+              professionalId: professional.id,
+              serviceId: service.id
+            }
+          })
         }
       }
 

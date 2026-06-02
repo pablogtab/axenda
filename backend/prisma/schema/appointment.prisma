@@ -12,6 +12,7 @@ model Appointment {
   internalNotes  String?
   bookedVia      BookingSource     @default(PANEL)
   cancelToken    String?           @unique
+  invitationId   String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   whatsappReminderSent Boolean     @default(false)
@@ -21,6 +22,7 @@ model Appointment {
   professional   Professional      @relation(fields: [professionalId], references: [id])
   service        Service           @relation(fields: [serviceId], references: [id])
   tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitation     BookingInvitation? @relation(fields: [invitationId], references: [id], onDelete: SetNull)
 
   @@map("appointments")
 }

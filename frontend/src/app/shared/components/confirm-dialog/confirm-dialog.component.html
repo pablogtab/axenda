@@ -1,7 +1,7 @@
-<div class="bg-bg-secondary rounded-2xl border border-white/10 shadow-2xl overflow-hidden w-full max-w-sm animate-in fade-in zoom-in duration-300">
+<div class="bg-bg-secondary rounded-2xl border border-border shadow-2xl overflow-hidden w-full max-w-sm animate-in fade-in zoom-in duration-300">
   <div class="p-6 text-center space-y-4">
     <header class="space-y-2">
-      <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center bg-white/5 border border-white/10 mb-4">
+      <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center bg-surface-subtle border border-border mb-4">
         @if (data.type === 'danger') {
           <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
         } @else if (data.type === 'warning') {
@@ -20,7 +20,7 @@
     </div>
 
     <footer class="flex gap-3 pt-2">
-      <button class="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-text-main font-bold hover:bg-white/5 transition-all text-sm" 
+      <button class="flex-1 px-4 py-2.5 rounded-xl border border-border text-text-main font-bold hover:bg-surface-subtle-hover transition-all text-sm" 
               (click)="onCancel()">
         {{ data.cancelText }}
       </button>

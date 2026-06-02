@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { TenantsService } from './tenants.service'
 
@@ -16,7 +16,7 @@ export class PublicTenantsController {
 
   @Get(':slug')
   @ApiOperation({ summary: 'Obtener información pública del negocio por slug' })
-  findBySlug(@Param('slug') slug: string) {
-    return this.tenantsService.findByPublicSlug(slug)
+  findBySlug(@Param('slug') slug: string, @Query('invitation') invitation?: string) {
+    return this.tenantsService.findByPublicSlug(slug, invitation)
   }
 }

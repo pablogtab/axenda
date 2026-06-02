@@ -23,6 +23,8 @@ export class BookingComponent implements OnInit {
   private titleService = inject(Title);
 
   tenant = signal<Tenant | null>(null);
+  invitation = signal<any | null>(null);
+  invitationToken = signal<string | null>(null);
   loading = signal(true);
   error = signal(false);
   success = signal(false);
@@ -42,23 +44,27 @@ export class BookingComponent implements OnInit {
   steps = computed(() => {
     const t = this.tenant();
     if (!t) return [];
+    const inv = this.invitation();
 
     const dynamicSteps = [];
-    
-    // Step: Branch (If enabled and more than 1 branch)
-    if (t.publicShowBranchSelection && t.branches && t.branches.length > 1) {
+
+    // Step: Branch (If enabled, more than 1 branch, and invitation doesn't fix one)
+    if (t.publicShowBranchSelection && t.branches && t.branches.length > 1 && !inv?.branchId) {
       dynamicSteps.push({ id: 'branch', label: 'Sucursal' });
     }
 
     dynamicSteps.push({ id: 'services', label: 'Servicios' });
 
-    // Step: Professional (If enabled)
-    if (t.publicShowProfessionalSelection) {
+    // Step: Professional (If enabled and invitation doesn't fix one)
+    if (t.publicShowProfessionalSelection && !inv?.professionalId) {
       dynamicSteps.push({ id: 'professional', label: 'Profesional' });
     }
 
     dynamicSteps.push({ id: 'schedule', label: 'Horario' });
-    dynamicSteps.push({ id: 'personal', label: 'Tus Datos' });
+
+    if (!inv?.client) {
+      dynamicSteps.push({ id: 'personal', label: 'Tus Datos' });
+    }
 
     return dynamicSteps;
   });
@@ -81,13 +87,21 @@ export class BookingComponent implements OnInit {
   clientPhone = signal('');
 
   availableServices = computed(() => this.tenant()?.services || []);
-  availableBranches = computed(() => this.tenant()?.branches || []);
-  
+  availableBranches = computed(() => {
+    const inv = this.invitation();
+    const branches = this.tenant()?.branches || [];
+    if (inv?.branchId) return branches.filter((b: any) => b.id === inv.branchId);
+    return branches;
+  });
+
   // Profesionales que ofrecen el servicio seleccionado
   availableProfessionals = computed(() => {
     const service = this.selectedService();
+    const inv = this.invitation();
     if (!service || !service.professionals) return [];
-    return service.professionals.map((p: any) => p.professional);
+    let profs = service.professionals.map((p: any) => p.professional);
+    if (inv?.professionalId) profs = profs.filter((p: any) => p.id === inv.professionalId);
+    return profs;
   });
 
   brandStyles = computed(() => {
@@ -155,13 +169,22 @@ export class BookingComponent implements OnInit {
       const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay();
       const prof = this.selectedProfessional();
       const branch = this.selectedBranch();
+      const invitation = this.invitation();
       
       let hasAvailability = false;
       if (prof && branch) {
         // 1. Check weekly schedule
-        const weeklyMatch = prof.availability?.some((a: any) => 
+        let weeklyMatch = prof.availability?.some((a: any) => 
           a.dayOfWeek === dayOfWeek && a.branchId === branch.id
         );
+
+        // Intersect with invitation schedule if present
+        if (weeklyMatch && invitation && invitation.schedule && invitation.schedule.length > 0) {
+          const invDayScheds = invitation.schedule.filter((s: any) => s.dayOfWeek === dayOfWeek);
+          if (invDayScheds.length === 0) {
+            weeklyMatch = false; // No availability on this day allowed by invitation
+          }
+        }
 
         // 2. Check if it's a holiday/leave for this professional
         const isOut = prof.exceptions?.some((ex: any) => {
@@ -172,7 +195,21 @@ export class BookingComponent implements OnInit {
           return d >= exDate && d <= end && (ex.type === 'HOLIDAY' || ex.type === 'LEAVE');
         });
 
-        hasAvailability = !!weeklyMatch && !isOut;
+        // 3. Check invitation date bounds (start/end date)
+        let withinInvitationDateRange = true;
+        if (invitation) {
+          const dStr = this.formatDate(d);
+          if (invitation.startDate) {
+            const invStartStr = new Date(invitation.startDate).toISOString().split('T')[0];
+            if (dStr < invStartStr) withinInvitationDateRange = false;
+          }
+          if (invitation.endDate) {
+            const invEndStr = new Date(invitation.endDate).toISOString().split('T')[0];
+            if (dStr > invEndStr) withinInvitationDateRange = false;
+          }
+        }
+
+        hasAvailability = !!weeklyMatch && !isOut && withinInvitationDateRange;
       }
 
       days.push({
@@ -208,13 +245,30 @@ export class BookingComponent implements OnInit {
   ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('publicSlug');
     const token = this.route.snapshot.paramMap.get('token');
+    const invitationToken = this.route.snapshot.queryParamMap.get('invitation') || null;
 
     if (token) {
       this.token.set(token);
       this.isCancelMode.set(true);
       this.loadAppointment(token);
     } else if (slug) {
-      this.loadTenant(slug);
+      if (invitationToken) {
+        this.invitationToken.set(invitationToken);
+        this.loading.set(true);
+        this.bookingService.validateInvitationToken(invitationToken).subscribe({
+          next: (inv) => {
+            this.invitation.set(inv);
+            this.loadTenant(slug, invitationToken);
+          },
+          error: (err) => {
+            console.error('Error validating invitation token:', err);
+            this.error.set(true);
+            this.loading.set(false);
+          }
+        });
+      } else {
+        this.loadTenant(slug);
+      }
     } else {
       this.router.navigate(['/']);
     }
@@ -290,14 +344,29 @@ export class BookingComponent implements OnInit {
     });
   }
 
-  loadTenant(slug: string) {
-    this.tenantsService.getPublicInfo(slug).subscribe({
+  loadTenant(slug: string, invitationToken?: string) {
+    this.tenantsService.getPublicInfo(slug, invitationToken).subscribe({
       next: (tenant) => {
         this.tenant.set(tenant);
         this.titleService.setTitle(`${tenant.name} - Turnos Online`);
-        if (tenant.branches && tenant.branches.length > 0) {
+
+        const inv = this.invitation();
+
+        // Pre-select branch from invitation or default to first
+        if (inv?.branchId && tenant.branches) {
+          const fixedBranch = tenant.branches.find((b: any) => b.id === inv.branchId);
+          if (fixedBranch) this.selectedBranch.set(fixedBranch);
+        } else if (tenant.branches && tenant.branches.length > 0) {
           this.selectedBranch.set(tenant.branches[0]);
         }
+
+        // Si la invitación tiene un cliente pre-asociado, cargamos sus datos automáticamente
+        if (inv?.client) {
+          this.clientName.set(`${inv.client.firstName} ${inv.client.lastName}`.trim());
+          this.clientEmail.set(inv.client.email || '');
+          this.clientPhone.set(inv.client.phone || '');
+        }
+
         this.loading.set(false);
       },
       error: () => {
@@ -326,13 +395,21 @@ export class BookingComponent implements OnInit {
 
     const appt = this.appointment();
 
-    this.bookingService.getAvailability(slug, {
+    const queryParams: any = {
       professionalId: prof.id,
       serviceId: service.id,
       branchId: branch.id,
-      date: this.formatDate(date),
-      excludeAppointmentId: appt?.id
-    }).subscribe({
+      date: this.formatDate(date)
+    };
+
+    if (appt?.id) {
+      queryParams.excludeAppointmentId = appt.id;
+    }
+    if (this.invitationToken()) {
+      queryParams.invitationToken = this.invitationToken();
+    }
+
+    this.bookingService.getAvailability(slug, queryParams).subscribe({
       next: (slots) => {
         this.availableSlots.set(slots);
         this.loadingSlots.set(false);
@@ -358,7 +435,18 @@ export class BookingComponent implements OnInit {
 
   selectService(service: any) {
     this.selectedService.set(service);
-    
+
+    const inv = this.invitation();
+
+    // Si la invitación fija un profesional, seleccionarlo directamente
+    if (inv?.professionalId && service.professionals?.length > 0) {
+      const fixedProf = service.professionals.find((ps: any) => ps.professional?.id === inv.professionalId);
+      if (fixedProf) {
+        this.selectedProfessional.set(fixedProf.professional);
+        return;
+      }
+    }
+
     // Si no se muestra selección de profesional, asignar el primero automáticamente
     if (!this.tenant()?.publicShowProfessionalSelection && service.professionals?.length > 0) {
       this.selectedProfessional.set(service.professionals[0].professional);
@@ -434,6 +522,7 @@ export class BookingComponent implements OnInit {
       clientName: this.clientName(),
       clientEmail: this.clientEmail(),
       clientPhone: this.clientPhone(),
+      invitationToken: this.invitationToken() || undefined
     };
 
     const slug = tenant.publicSlug || this.route.snapshot.paramMap.get('publicSlug') || '';

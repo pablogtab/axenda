@@ -24,7 +24,7 @@ model Tenant {
   publicMinBookingTime            String                @default("1h")
   cancellationLimit               String                @default("24h")
   onboardingCompleted             Boolean               @default(false)
-  whatsappReminder                Boolean               @default(false)
+  whatsappReminder                Boolean               @default(true)
   confirmEmail                    Boolean               @default(true)
   allowReschedule                  Boolean               @default(true)
   whatsappCancellation            Boolean               @default(true)
@@ -46,6 +46,7 @@ model Tenant {
   whatsappPacks                   TenantWhatsappPack[]
   users                           User[]
   referralUsages                  ReferralUsage[]
+  bookingInvitations              BookingInvitation[]
 
   @@map("tenants")
 }
@@ -59,9 +60,10 @@ model Branch {
   active        Boolean              @default(true)
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
-  appointments  Appointment[]
-  tenant        Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  professionals ProfessionalBranch[]
+  appointments       Appointment[]
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  professionals      ProfessionalBranch[]
+  bookingInvitations BookingInvitation[]
 
   @@map("branches")
 }

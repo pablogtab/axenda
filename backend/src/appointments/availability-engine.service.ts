@@ -1,16 +1,40 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { GetAvailabilityDto } from './dto/availability-query.dto'
+import { BookingInvitationsService } from '../booking-invitations/booking-invitations.service'
 
 @Injectable()
 export class AvailabilityEngineService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bookingInvitationsService: BookingInvitationsService,
+  ) { }
 
   /**
    * Calcula todos los slots potenciales y marca cuáles están disponibles.
    */
   async getFreeSlots(tenantId: string, dto: GetAvailabilityDto): Promise<{ time: string; available: boolean }[]> {
     const { professionalId, serviceId, branchId, date, duration, excludeAppointmentId } = dto
+
+    let invitation: any = null
+    if (dto.invitationToken) {
+      invitation = await this.bookingInvitationsService.validateToken(dto.invitationToken)
+      if (invitation.tenantId !== tenantId) {
+        throw new BadRequestException('Invitación inválida para este comercio')
+      }
+    }
+
+    const offsetMins = -180;
+    if (invitation) {
+      if (invitation.startDate) {
+        const invStartStr = new Date(invitation.startDate).toISOString().split('T')[0]
+        if (date < invStartStr) return []
+      }
+      if (invitation.endDate) {
+        const invEndStr = new Date(invitation.endDate).toISOString().split('T')[0]
+        if (date > invEndStr) return []
+      }
+    }
 
     const service = await this.prisma.service.findFirst({
       where: { id: serviceId, tenantId },
@@ -58,8 +82,6 @@ export class AvailabilityEngineService {
     const isFullDayBlocked = exceptions.some(e => e.type === 'HOLIDAY' || e.type === 'LEAVE' || (e.type === 'BLOCK' && !e.startTime))
     if (isFullDayBlocked) return []
 
-    // Offset para Argentina (UTC-3)
-    const offsetMins = -180;
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
       select: {
@@ -116,10 +138,26 @@ export class AvailabilityEngineService {
 
         const isTooSoon = date === todayStr && current < (currentMinsNow + minBookingMins)
 
-        allSlots.push({
-          time: this.minsToTime(current),
-          available: !hasConflict && !isTooSoon
-        })
+        let allowedByInvitation = true
+        if (invitation && invitation.schedule && (invitation.schedule as any[]).length > 0) {
+          const dayScheds = (invitation.schedule as any[]).filter(s => s.dayOfWeek === dayOfWeek)
+          if (dayScheds.length === 0) {
+            allowedByInvitation = false
+          } else {
+            allowedByInvitation = dayScheds.some(s => {
+              const invStartMins = this.timeToMins(s.startTime)
+              const invEndMins = this.timeToMins(s.endTime)
+              return current >= invStartMins && currentEnd <= invEndMins
+            })
+          }
+        }
+
+        if (allowedByInvitation) {
+          allSlots.push({
+            time: this.minsToTime(current),
+            available: !hasConflict && !isTooSoon
+          })
+        }
         current += step
       }
     }

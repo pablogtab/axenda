@@ -10,6 +10,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 dotenv.config({ path: resolve(__dirname, '../../../.env'), override: true })
+dotenv.config({ path: resolve(__dirname, '../../.env'), override: true })
+dotenv.config({ path: resolve(__dirname, '../.env'), override: true })
 
 const connectionString = process.env.DATABASE_URL
 const pool = new Pool({ connectionString })
@@ -127,8 +129,7 @@ async function seedSampleBusiness() {
       },
       branches: {
         create: [
-          { name: 'Sede Palermo', active: true },
-          { name: 'Sede Belgrano', active: true }
+          { name: 'Sede Palermo', active: true }
         ]
       },
       users: {
@@ -211,7 +212,7 @@ async function seedSampleBusiness() {
   })
 
   console.log('🧔 Creando Profesionales (Messi y Dibu)...')
-  await prisma.professional.create({
+  const messi = await prisma.professional.create({
     data: {
       tenantId: tenant.id,
       firstName: 'Leo',
@@ -229,6 +230,137 @@ async function seedSampleBusiness() {
           branchId: palermoBranch.id
         }))
       }
+    }
+  })
+
+  console.log('👥 Creando Clientes de Prueba...')
+  const clientData = [
+    { firstName: 'Pablo', lastName: 'Taborda', email: 'pablo.g.taborda@gmail.com', phone: '3512187171' },
+    { firstName: 'Juan', lastName: 'Pérez', email: 'juan.perez@example.com', phone: '1122334455' },
+    { firstName: 'María', lastName: 'Rodriguez', email: 'maria.rod@example.com', phone: '1199887766' },
+    { firstName: 'Carlos', lastName: 'Tévez', email: 'carlitos.tevez@example.com', phone: '1155443322' },
+    { firstName: 'Sofía', lastName: 'Martínez', email: 'sofia.martinez@example.com', phone: '3519876543' },
+    { firstName: 'Diego', lastName: 'Maradona', email: 'diego.pelusa@example.com', phone: '1112121212' },
+    { firstName: 'Román', lastName: 'Riquelme', email: 'roman.jrr@example.com', phone: '1110101010' },
+    { firstName: 'Julián', lastName: 'Álvarez', email: 'julian.ara@example.com', phone: '3514455667' },
+    { firstName: 'Antonela', lastName: 'Roccuzzo', email: 'antoroccu@example.com', phone: '3418877665' },
+    { firstName: 'Lautaro', lastName: 'Martínez', email: 'toro.martinez@example.com', phone: '1122223333' }
+  ]
+
+  const createdClients = []
+  for (const c of clientData) {
+    const client = await prisma.client.create({
+      data: {
+        tenantId: tenant.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: c.phone,
+        active: true
+      }
+    })
+    createdClients.push(client)
+  }
+
+  console.log('📅 Creando Turnos de Prueba...')
+  const today = new Date()
+
+  // ayer
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  yesterday.setHours(10, 0, 0, 0)
+
+  // hoy mañana
+  const today11 = new Date(today)
+  today11.setHours(11, 0, 0, 0)
+
+  const today15 = new Date(today)
+  today15.setHours(15, 30, 0, 0)
+
+  // mañana
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+
+  const tomorrow09 = new Date(tomorrow)
+  tomorrow09.setHours(9, 30, 0, 0)
+
+  const tomorrow14 = new Date(tomorrow)
+  tomorrow14.setHours(14, 0, 0, 0)
+
+  // Turno 1: Ayer (Completado)
+  await prisma.appointment.create({
+    data: {
+      tenantId: tenant.id,
+      clientId: createdClients[0].id, // Pablo Taborda
+      professionalId: messi.id,
+      serviceId: corteClasico.id,
+      branchId: palermoBranch.id,
+      startTime: yesterday,
+      endTime: new Date(yesterday.getTime() + corteClasico.duration * 60000),
+      status: 'COMPLETED',
+      bookedVia: 'PANEL',
+      notes: 'Corte clásico de siempre'
+    }
+  })
+
+  // Turno 2: Hoy 11:00 (Confirmado)
+  await prisma.appointment.create({
+    data: {
+      tenantId: tenant.id,
+      clientId: createdClients[1].id, // Juan Pérez
+      professionalId: messi.id,
+      serviceId: corteClasico.id,
+      branchId: palermoBranch.id,
+      startTime: today11,
+      endTime: new Date(today11.getTime() + corteClasico.duration * 60000),
+      status: 'CONFIRMED',
+      bookedVia: 'PUBLIC_LINK',
+      notes: 'Viene por primera vez'
+    }
+  })
+
+  // Turno 3: Hoy 15:30 (Pendiente)
+  await prisma.appointment.create({
+    data: {
+      tenantId: tenant.id,
+      clientId: createdClients[2].id, // María Rodriguez
+      professionalId: messi.id,
+      serviceId: arregloBarba.id,
+      branchId: palermoBranch.id,
+      startTime: today15,
+      endTime: new Date(today15.getTime() + arregloBarba.duration * 60000),
+      status: 'PENDING',
+      bookedVia: 'PUBLIC_LINK',
+    }
+  })
+
+  // Turno 4: Mañana 09:30 (Confirmado)
+  await prisma.appointment.create({
+    data: {
+      tenantId: tenant.id,
+      clientId: createdClients[3].id, // Carlos Tévez
+      professionalId: messi.id,
+      serviceId: corteClasico.id,
+      branchId: palermoBranch.id,
+      startTime: tomorrow09,
+      endTime: new Date(tomorrow09.getTime() + corteClasico.duration * 60000),
+      status: 'CONFIRMED',
+      bookedVia: 'PANEL',
+    }
+  })
+
+  // Turno 5: Mañana 14:00 (Pendiente)
+  await prisma.appointment.create({
+    data: {
+      tenantId: tenant.id,
+      clientId: createdClients[4].id, // Sofía Martínez
+      professionalId: messi.id,
+      serviceId: arregloBarba.id,
+      branchId: palermoBranch.id,
+      startTime: tomorrow14,
+      endTime: new Date(tomorrow14.getTime() + arregloBarba.duration * 60000),
+      status: 'PENDING',
+      bookedVia: 'PUBLIC_LINK',
     }
   })
 

@@ -36,4 +36,9 @@ export class CreatePublicAppointmentDto {
   @IsOptional()
   @IsString()
   notes?: string
+
+  @ApiPropertyOptional({ example: 'inv_abc123', description: 'Token de invitación para reservar' })
+  @IsOptional()
+  @IsString()
+  invitationToken?: string
 }

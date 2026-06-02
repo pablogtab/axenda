@@ -33,6 +33,11 @@ export const dashboardRoutes: Routes = [
     component: ClientsListComponent
   },
   {
+    path: 'invitations',
+    title: 'Axenda - Invitaciones de Reserva',
+    loadComponent: () => import('./booking-invitations/booking-invitations.component').then(m => m.BookingInvitationsComponent)
+  },
+  {
     path: 'settings',
     title: 'Axenda - Configuración',
     component: SettingsComponent

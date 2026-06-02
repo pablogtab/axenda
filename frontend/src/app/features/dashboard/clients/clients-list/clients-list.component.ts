@@ -9,6 +9,9 @@ import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
 import { ClientFieldDefinition, CustomFieldsService } from '@services/custom-fields.service';
+import { BookingInvitationFormComponent } from '../../booking-invitations/components/booking-invitation-form/booking-invitation-form.component';
+import { BookingInvitation } from '@services/booking-invitations.service';
+import { TenantsService } from '@services/tenants.service';
 
 @Component({
   selector: 'app-clients-list',
@@ -23,12 +26,17 @@ export class ClientsListComponent implements OnInit {
   private dialog = inject(DialogService);
   private modal = inject(ModalService);
   private customFieldsService = inject(CustomFieldsService);
+  private tenantsService = inject(TenantsService);
 
   clients = signal<Client[]>([]);
   searchTerm = signal('');
   activeBooleanFieldId = signal<string | null>(null);
   booleanFieldDefinitions = signal<ClientFieldDefinition[]>([]);
   isLoading = signal(true);
+
+  tenantPublicSlug = computed(() => {
+    return this.tenantsService.currentTenant()?.publicSlug || '';
+  });
   
   // Paginación
   currentPage = signal(1);
@@ -190,6 +198,55 @@ export class ClientsListComponent implements OnInit {
         }
       });
     }
+  }
+
+  openInvitationForm(client: Client): void {
+    const dialogRef = this.modal.open(BookingInvitationFormComponent, {
+      data: { client }
+    });
+
+    dialogRef.closed.subscribe(result => {
+      if (result) {
+        this.prefetchCache.clear();
+        this.loadClients();
+      }
+    });
+  }
+
+  getActiveInvitation(client: Client): BookingInvitation | null {
+    if (!client.bookingInvitations || client.bookingInvitations.length === 0) {
+      return null;
+    }
+    const active = client.bookingInvitations.find(inv => {
+      if (!inv.active) return false;
+      if (inv.expiresAt && new Date() > new Date(inv.expiresAt)) return false;
+      if (inv.maxUses !== null && inv.maxUses !== undefined && inv.usesCount >= inv.maxUses) return false;
+      return true;
+    });
+    return active || null;
+  }
+
+  getInvitationLink(token: string): string {
+    const base = window.location.origin;
+    return `${base}/${this.tenantPublicSlug()}?invitation=${token}`;
+  }
+
+  copyInvitationLink(token: string): void {
+    const link = this.getInvitationLink(token);
+    navigator.clipboard.writeText(link).then(() => {
+      this.snackbar.success('Link de invitación copiado al portapapeles');
+    }).catch(err => {
+      console.error('Could not copy link', err);
+      this.snackbar.error('Error al copiar el link');
+    });
+  }
+
+  shareInvitationOnWhatsapp(token: string, phone?: string): void {
+    const link = this.getInvitationLink(token);
+    const message = `¡Hola! Te comparto este link para que puedas agendar tu turno online\n${link}`;
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   getInitials(client: Client): string {

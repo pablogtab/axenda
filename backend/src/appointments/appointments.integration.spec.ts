@@ -737,4 +737,171 @@ describe('Appointments — Integration', () => {
         .expect(403); // Forbidden
     });
   });
+
+  describe('Private Booking Invitations Availability & Flow', () => {
+    let invitationToken: string;
+    let tenantSlug: string;
+    let createdApptId: string | null = null;
+
+    beforeAll(async () => {
+      // Get the actual publicSlug from the DB
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId }
+      });
+      tenantSlug = tenant!.publicSlug;
+      if (!tenantSlug) {
+        tenantSlug = `pub-slug-${Date.now()}`;
+        await prisma.tenant.update({
+          where: { id: tenantId },
+          data: { publicSlug: tenantSlug }
+        });
+      }
+
+      // Create a private booking invitation
+      // Monday is 1, let's allow Monday (which queryDate '2026-06-01' is a Monday)
+      const inv = await prisma.bookingInvitation.create({
+        data: {
+          tenantId,
+          token: 'inv_test_token_123',
+          startDate: new Date('2026-06-01T00:00:00Z'),
+          endDate: new Date('2026-06-02T00:00:00Z'),
+          schedule: [
+            { dayOfWeek: 1, startTime: '10:00', endTime: '12:00' }
+          ]
+        }
+      });
+      invitationToken = inv.token;
+    });
+
+    afterAll(async () => {
+      await prisma.bookingInvitation.deleteMany({
+        where: { token: 'inv_test_token_123' }
+      });
+    });
+
+    it('should filter availability by invitation schedule and dates', async () => {
+      // Query availability with the invitation token on the correct date (Monday 2026-06-01)
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-01&invitationToken=${invitationToken}`,
+        )
+        .expect(200);
+
+      const slots = res.body.data as { time: string; available: boolean }[];
+      const activeTimes = slots.filter(s => s.available).map(s => s.time);
+
+      // Should only return slots between 10:00 and 11:30 (since service duration is 30m, and schedule is 10:00 - 12:00)
+      expect(activeTimes).toContain('10:00');
+      expect(activeTimes).toContain('11:00');
+      expect(activeTimes).toContain('11:30');
+      expect(activeTimes).not.toContain('09:00');
+      expect(activeTimes).not.toContain('12:00');
+    });
+
+    it('should return empty slots if querying date before invitation startDate', async () => {
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-05-31&invitationToken=${invitationToken}`,
+        )
+        .expect(200);
+
+      const slots = res.body.data as { time: string; available: boolean }[];
+      const activeTimes = slots.filter(s => s.available).map(s => s.time);
+      expect(activeTimes.length).toBe(0);
+    });
+
+    it('should return empty slots if querying date after invitation endDate', async () => {
+      const res = await request(app.getHttpServer())
+        .get(
+          `/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-03&invitationToken=${invitationToken}`,
+        )
+        .expect(200);
+
+      const slots = res.body.data as { time: string; available: boolean }[];
+      const activeTimes = slots.filter(s => s.available).map(s => s.time);
+      expect(activeTimes.length).toBe(0);
+    });
+
+    it('should allow booking with valid invitation even if publicActive is false', async () => {
+      // Temporarily disable tenant bookings globally
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { publicActive: false }
+      });
+
+      try {
+        // Querying availability without invitation should throw NotFoundException
+        await request(app.getHttpServer())
+          .get(
+            `/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-01`,
+          )
+          .expect(404);
+
+        // Querying availability WITH invitation should succeed
+        const res = await request(app.getHttpServer())
+          .get(
+            `/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-01&invitationToken=${invitationToken}`,
+          )
+          .expect(200);
+
+        const slots = res.body.data as { time: string; available: boolean }[];
+        const activeTimes = slots.filter(s => s.available).map(s => s.time);
+        expect(activeTimes).toContain('10:00');
+
+        // Booking without invitation should throw NotFoundException
+        const startTime = new Date('2026-06-01T13:00:00Z');
+        await request(app.getHttpServer())
+          .post(`/api/p/${tenantSlug}/appointments/book`)
+          .send({
+            professionalId,
+            serviceId,
+            branchId,
+            startTime: startTime.toISOString(),
+            clientName: 'Invitado Test',
+            clientEmail: 'invitado@test.com',
+            clientPhone: '+5491122334455'
+          })
+          .expect(404);
+
+        // Booking WITH invitation should succeed and increment usesCount
+        const bookRes = await request(app.getHttpServer())
+          .post(`/api/p/${tenantSlug}/appointments/book`)
+          .send({
+            professionalId,
+            serviceId,
+            branchId,
+            startTime: startTime.toISOString(),
+            clientName: 'Invitado Test',
+            clientEmail: 'invitado@test.com',
+            clientPhone: '+5491122334455',
+            invitationToken
+          })
+          .expect(201);
+
+        createdApptId = bookRes.body.data.id;
+
+        const updatedInv = await prisma.bookingInvitation.findUnique({
+          where: { token: invitationToken }
+        });
+        expect(updatedInv?.usesCount).toBe(1);
+
+      } finally {
+        // Restore tenant
+        await prisma.tenant.update({
+          where: { id: tenantId },
+          data: { publicActive: true }
+        });
+        // Clean up created appointment
+        if (createdApptId) {
+          await prisma.appointment.delete({
+            where: { id: createdApptId }
+          }).catch(() => null);
+        }
+        // Clean up created client
+        await prisma.client.deleteMany({
+          where: { email: 'invitado@test.com' }
+        }).catch(() => null);
+      }
+    });
+  });
 })

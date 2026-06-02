@@ -1,8 +1,7 @@
 <div class="snackbar-container">
   @for (snackbar of snackbars(); track snackbar.id) {
     <div 
-      class="snackbar-item glass" 
-      [class]="snackbar.type"
+      [class]="'snackbar-item glass ' + snackbar.type" 
       (click)="remove(snackbar.id)"
     >
       <span class="icon">{{ getIcon(snackbar.type) }}</span>

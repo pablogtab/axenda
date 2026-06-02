@@ -232,7 +232,7 @@
               <div class="weekday">Vie</div>
               <div class="weekday">Sáb</div>
               
-              @for (day of calendarDays(); track day.day + day.month) {
+              @for (day of calendarDays(); track day.day + '-' + day.month + '-' + day.year) {
                 <button 
                   class="day-cell"
                   [class.padding]="day.isPadding"

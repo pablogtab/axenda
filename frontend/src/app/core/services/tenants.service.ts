@@ -90,8 +90,9 @@ export class TenantsService {
     return this.http.get<Tenant>(`${environment.apiUrl}/tenants/me`);
   }
 
-  getPublicInfo(slug: string): Observable<Tenant> {
-    return this.http.get<Tenant>(`${environment.apiUrl}/p/${slug}`);
+  getPublicInfo(slug: string, invitationToken?: string): Observable<Tenant> {
+    const url = invitationToken ? `${environment.apiUrl}/p/${slug}?invitation=${invitationToken}` : `${environment.apiUrl}/p/${slug}`;
+    return this.http.get<Tenant>(url);
   }
 
   checkSlugAvailability(slug: string): Observable<{ available: boolean }> {

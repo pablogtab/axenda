@@ -12,9 +12,10 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module'
 import { WhatsappModule } from '../whatsapp/whatsapp.module'
 import { AppointmentWhatsappListener } from './listeners/appointment-whatsapp.listener'
 import { AppointmentReminderService } from './appointment-reminder.service'
+import { BookingInvitationsModule } from '../booking-invitations/booking-invitations.module'
 
 @Module({
-  imports: [TenantsModule, MailModule, SubscriptionsModule, WhatsappModule],
+  imports: [TenantsModule, MailModule, SubscriptionsModule, WhatsappModule, BookingInvitationsModule],
   controllers: [AppointmentsController, PublicAppointmentsController, PublicAppointmentTokensController],
   providers: [
     AppointmentsService, 

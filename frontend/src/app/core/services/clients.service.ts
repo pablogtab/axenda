@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { ClientFieldValue } from './custom-fields.service';
+import { BookingInvitation } from './booking-invitations.service';
 
 export interface ClientTag {
   id: string;
@@ -22,6 +23,7 @@ export interface Client {
   active: boolean;
   tags?: ClientTag[];
   fieldValues?: ClientFieldValue[];
+  bookingInvitations?: BookingInvitation[];
 }
 
 @Injectable({

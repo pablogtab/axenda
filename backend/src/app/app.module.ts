@@ -24,6 +24,7 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module'
 import { MercadoPagoModule } from '../mercadopago/mercadopago.module'
 import { CustomFieldsModule } from '../custom-fields/custom-fields.module'
 import { AdminModule } from '../admin/admin.module'
+import { BookingInvitationsModule } from '../booking-invitations/booking-invitations.module'
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { AdminModule } from '../admin/admin.module'
     MercadoPagoModule,
     CustomFieldsModule,
     AdminModule,
+    BookingInvitationsModule,
   ],
 
   providers: [

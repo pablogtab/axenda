@@ -55,6 +55,14 @@ export class ClientsService {
               field: true,
             },
           },
+          bookingInvitations: {
+            where: {
+              active: true,
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
         },
         orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
         skip,
@@ -110,6 +118,14 @@ export class ClientsService {
                 },
               },
             },
+          },
+        },
+        bookingInvitations: {
+          where: {
+            active: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },

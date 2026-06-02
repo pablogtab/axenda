@@ -47,8 +47,8 @@
       <app-data-table
         [data]="clients()"
         density="compact"
-        [columns]="['client', 'contact', 'tags', 'active', 'actions']"
-        [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Estado', 'Acciones']">
+        [columns]="['client', 'contact', 'tags', 'invitation', 'actions']"
+        [headers]="['Cliente', 'Contacto', 'Etiquetas', 'Invitación', 'Acciones']">
         
         <!-- Templates as before -->
         <ng-template appTableCell="client" let-client>
@@ -64,14 +64,14 @@
             </div>
           </div>
         </ng-template>
-
+ 
         <ng-template appTableCell="contact" let-client>
           <div class="flex flex-col gap-0">
             <span class="text-[12px] text-text-muted font-medium">{{ client.email || '-' }}</span>
             <span class="text-[10px] text-text-dim">{{ client.phone || '-' }}</span>
           </div>
         </ng-template>
-
+ 
         <ng-template appTableCell="tags" let-client>
           <div class="flex flex-wrap gap-1">
             @for (tag of client.tags; track tag.id) {
@@ -86,13 +86,29 @@
             }
           </div>
         </ng-template>
-
-        <ng-template appTableCell="active" let-client>
-          <span class="status-indicator" [class.active]="client.active">
-            {{ client.active ? 'Activo' : 'Baja' }}
-          </span>
+ 
+        <ng-template appTableCell="invitation" let-client>
+          @let activeInv = getActiveInvitation(client);
+          @if (activeInv) {
+            <div class="flex items-center gap-1.5" (click)="$event.stopPropagation()">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Activa
+              </span>
+              <button class="btn-icon-small !p-1 text-text-muted hover:text-emerald-400 hover:bg-emerald-500/10" title="Copiar Link" (click)="copyInvitationLink(activeInv.token)">
+                <app-icon name="content_copy" class="!text-[13px]"></app-icon>
+              </button>
+              <button class="btn-icon-small !p-1 text-text-muted hover:text-emerald-400 hover:bg-emerald-500/10" title="Compartir por WhatsApp" (click)="shareInvitationOnWhatsapp(activeInv.token, client.phone)">
+                <app-icon name="share" class="!text-[13px]"></app-icon>
+              </button>
+            </div>
+          } @else {
+            <button class="px-2.5 py-1 rounded-lg border border-border text-[11px] font-bold text-text-muted hover:text-text-main hover:bg-surface-subtle hover:border-text-muted/20 transition-all flex items-center gap-1" (click)="openInvitationForm(client); $event.stopPropagation()">
+              <app-icon name="add" class="!text-[12px]"></app-icon>
+              Crear Link
+            </button>
+          }
         </ng-template>
-
+ 
         <ng-template appTableCell="actions" let-client>
           <div class="row-actions">
             <button class="btn-icon-small" title="Ver Turnos">
@@ -106,7 +122,7 @@
             </button>
           </div>
         </ng-template>
-
+ 
       </app-data-table>
 
       @if (clients().length === 0 && !isLoading()) {
