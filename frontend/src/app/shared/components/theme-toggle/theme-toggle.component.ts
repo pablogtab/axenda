@@ -9,7 +9,7 @@ import { IconComponent } from '../icon/icon.component';
   imports: [CommonModule, IconComponent],
   template: `
     <div class="flex items-center gap-3">
-      <span *ngIf="showLabels" class="text-[10px] font-black uppercase tracking-widest text-text-muted select-none">
+      <span *ngIf="showLabels" class="hidden sm:inline-block text-[10px] font-black uppercase tracking-widest text-text-muted select-none whitespace-nowrap">
         {{ themeService.isDark() ? 'Modo Oscuro' : 'Modo Claro' }}
       </span>
 

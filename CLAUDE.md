@@ -88,6 +88,10 @@ Los administradores pueden configurar cómo se comportan y visualizan los servic
 - `showPrice` (Boolean, por defecto `true`): Si es `false`, oculta el precio en las tarjetas y en el total del resumen de reserva.
 - `customPriceLabel` (String, opcional): Si `showPrice` es `false`, este texto se muestra como referencia de precio (ej: *"A convenir"*, *"Consultar"*). Si se deja vacío, no se muestra ninguna referencia.
 - `showDuration` (Boolean, por defecto `true`): Si es `false`, oculta la duración en minutos del servicio en el portal público.
+- `indications` (String, opcional): Indicaciones o requisitos específicos para el cliente antes de asistir al turno (ej: *"Venir con el cabello lavado"*). Se muestra en una alerta destacada en el portal público de reserva.
+- `includes` (Json/Array de Strings, opcional): Listado dinámico de servicios o extras incluidos. Se muestran como chips informativos.
+- `mainImageKey` (String, opcional): Archivo/Key de la foto de portada principal del servicio.
+- `galleryKeys` (Json/Array de Strings, opcional): Archivos/Keys para la galería de imágenes del servicio. Se visualizan en un scroll horizontal con soporte para zoom en pantalla completa.
 
 ### Auto-asignación de Servicios a Profesionales (`allServices`)
 Los profesionales se pueden configurar para que realicen automáticamente todos los servicios de la organización:
@@ -237,7 +241,7 @@ Tablas principales definidas en Prisma:
 | `professionals` | Profesionales que atienden turnos. Almacena biografía, color, foto y flag de auto-asignación de servicios (`allServices`). |
 | `professional_branches` | Tabla pivote que vincula profesionales a una o más sucursales (`Branch`). |
 | `professional_services` | Tabla pivote que vincula qué servicios puede prestar cada profesional. |
-| `services` | Catálogo de servicios. Almacena duración (minutos), precio (`Decimal(10,2)`), color, y flags de vista pública (`isBookablePublic`, `showPrice`, `customPriceLabel`, `showDuration`). |
+| `services` | Catálogo de servicios. Almacena duración (minutos), precio (`Decimal(10,2)`), color, flags de vista pública (`isBookablePublic`, `showPrice`, `customPriceLabel`, `showDuration`), indicaciones (`indications`), servicios incluidos (`includes` JSON), imagen principal (`mainImageKey`) y galería de fotos (`galleryKeys` JSON). |
 | `service_categories` | Agrupación lógica de servicios (ej: "Cortes", "Coloración"). |
 | `availability` | Horarios regulares de atención de un profesional en un día de la semana y sucursal. |
 | `availability_exceptions` | Vacaciones, bloqueos de tiempo o feriados asociados a un profesional. |

@@ -53,7 +53,7 @@ export class ServicesService {
 
   async findAll(tenantId: string) {
     return this.prisma.service.findMany({
-      where: { tenantId },
+      where: { tenantId, active: true },
       include: {
         category: { select: { name: true } },
       },
@@ -96,6 +96,10 @@ export class ServicesService {
           showPrice: dto.showPrice ?? true,
           customPriceLabel: dto.customPriceLabel,
           showDuration: dto.showDuration ?? true,
+          indications: dto.indications,
+          includes: dto.includes ? (dto.includes as any) : undefined,
+          mainImageKey: dto.mainImageKey,
+          galleryKeys: dto.galleryKeys ? (dto.galleryKeys as any) : undefined,
         },
       })
 
@@ -122,9 +126,10 @@ export class ServicesService {
     })
     if (!service) throw new NotFoundException(`Servicio ${id} no encontrado`)
 
-    if (dto.categoryId && dto.categoryId !== service.categoryId) {
+    if (dto.categoryId) {
       await this.validateCategory(tenantId, dto.categoryId)
     }
+    // dto.categoryId === null → quitar categoría; undefined → no tocar
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.service.update({
@@ -163,10 +168,28 @@ export class ServicesService {
     })
     if (!service) throw new NotFoundException(`Servicio ${id} no encontrado`)
 
-    return this.prisma.service.update({
-      where: { id },
-      data: { active: false },
+    // Check if there are appointments associated with this service
+    const hasAppointments = await this.prisma.appointment.findFirst({
+      where: { serviceId: id },
     })
+
+    if (hasAppointments) {
+      // If there are appointments, we soft delete it to preserve history
+      return this.prisma.service.update({
+        where: { id },
+        data: { active: false },
+      })
+    }
+
+    // Otherwise, delete it physically and return the record with active = false for compatibility
+    const deleted = await this.prisma.service.delete({
+      where: { id },
+    })
+
+    return {
+      ...deleted,
+      active: false,
+    }
   }
 
   // ─── Internal helpers ──────────────────────────────────────────────────────

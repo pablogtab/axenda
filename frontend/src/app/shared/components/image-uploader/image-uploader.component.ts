@@ -4,6 +4,13 @@ import { FileUploaderService } from '../../../core/services/file-uploader.servic
 import { finalize } from 'rxjs';
 import { StoragePipe } from '../../pipes/storage.pipe';
 
+interface UploadingFile {
+  name: string;
+  previewUrl: string;
+  progress: number;
+  done: boolean;
+}
+
 @Component({
   selector: 'app-image-uploader',
   standalone: true,
@@ -19,6 +26,8 @@ export class ImageUploaderComponent {
   @Input() label: string = 'Imagen';
   @Input() shape: 'circle' | 'square' = 'square';
   @Input() dimensions: string = 'w-32 h-32';
+  /** Si es true, resetea el uploader tras cada subida y permite múltiples archivos */
+  @Input() resetAfterUpload: boolean = false;
 
   @Output() imageUploaded = new EventEmitter<string>();
 
@@ -26,17 +35,36 @@ export class ImageUploaderComponent {
   private fileUploader = inject(FileUploaderService);
 
   isDragging = false;
+  // Modo single
   isUploading = false;
   uploadProgress = 0;
   previewUrl: string | null = null;
+  // Modo multi (resetAfterUpload)
+  uploadingFiles: UploadingFile[] = [];
 
-  constructor() {}
+  get isMultiMode(): boolean {
+    return this.resetAfterUpload;
+  }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.processFile(file);
+  get isBusy(): boolean {
+    if (this.isMultiMode) {
+      return this.uploadingFiles.some(f => !f.done);
     }
+    return this.isUploading;
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    if (this.isMultiMode) {
+      const files = Array.from(input.files);
+      files.forEach(file => this.processFileMulti(file));
+    } else {
+      this.processFile(input.files[0]);
+    }
+    // Resetear el input para permitir re-selección del mismo archivo
+    input.value = '';
   }
 
   onDragOver(event: DragEvent) {
@@ -52,25 +80,26 @@ export class ImageUploaderComponent {
   onDrop(event: DragEvent) {
     event.preventDefault();
     this.isDragging = false;
-    const file = event.dataTransfer?.files[0];
-    if (file && file.type.startsWith('image/')) {
-      this.processFile(file);
+    const files = Array.from(event.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+
+    if (this.isMultiMode) {
+      files.forEach(file => this.processFileMulti(file));
+    } else {
+      this.processFile(files[0]);
     }
   }
 
+  // ── Modo single (comportamiento original) ──────────────────────────────────
   private processFile(file: File) {
-    // Local preview
     this.previewUrl = URL.createObjectURL(file);
-    
     this.isUploading = true;
     this.uploadProgress = 0;
 
     this.fileUploader.getUploadUrl(this.tenantId, this.category, file).subscribe({
       next: (response) => {
         this.fileUploader.uploadFile(response.uploadUrl, file)
-          .pipe(finalize(() => {
-            this.isUploading = false;
-          }))
+          .pipe(finalize(() => { this.isUploading = false; }))
           .subscribe({
             next: (progress) => {
               this.uploadProgress = progress;
@@ -88,6 +117,47 @@ export class ImageUploaderComponent {
       error: (err) => {
         console.error('Error getting upload URL:', err);
         this.isUploading = false;
+      }
+    });
+  }
+
+  // ── Modo multi (resetAfterUpload) ──────────────────────────────────────────
+  private processFileMulti(file: File) {
+    const entry: UploadingFile = {
+      name: file.name,
+      previewUrl: URL.createObjectURL(file),
+      progress: 0,
+      done: false
+    };
+    this.uploadingFiles = [...this.uploadingFiles, entry];
+    const idx = this.uploadingFiles.length - 1;
+
+    this.fileUploader.getUploadUrl(this.tenantId, this.category, file).subscribe({
+      next: (response) => {
+        this.fileUploader.uploadFile(response.uploadUrl, file)
+          .pipe(finalize(() => {
+            // Limpiar entrada completada después de un breve delay visual
+            setTimeout(() => {
+              this.uploadingFiles = this.uploadingFiles.filter((_, i) => i !== idx);
+            }, 600);
+          }))
+          .subscribe({
+            next: (progress) => {
+              this.uploadingFiles[idx] = { ...this.uploadingFiles[idx], progress };
+              if (progress === 100) {
+                this.uploadingFiles[idx] = { ...this.uploadingFiles[idx], done: true };
+                this.imageUploaded.emit(response.fileKey);
+              }
+            },
+            error: (err) => {
+              console.error('Error uploading file:', err);
+              this.uploadingFiles = this.uploadingFiles.filter((_, i) => i !== idx);
+            }
+          });
+      },
+      error: (err) => {
+        console.error('Error getting upload URL:', err);
+        this.uploadingFiles = this.uploadingFiles.filter((_, i) => i !== idx);
       }
     });
   }

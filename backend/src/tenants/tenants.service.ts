@@ -55,6 +55,10 @@ export class TenantsService {
             customPriceLabel: true,
             showDuration: true,
             isBookablePublic: true,
+            indications: true,
+            includes: true,
+            mainImageKey: true,
+            galleryKeys: true,
             professionals: {
               select: {
                 professionalId: true,

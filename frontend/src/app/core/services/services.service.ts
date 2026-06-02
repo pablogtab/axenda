@@ -17,6 +17,10 @@ export interface BusinessService {
   showPrice?: boolean;
   customPriceLabel?: string;
   showDuration?: boolean;
+  indications?: string;
+  includes?: string[];
+  mainImageKey?: string;
+  galleryKeys?: string[];
 }
 
 export interface ServiceCategory {
@@ -55,5 +59,17 @@ export class ServicesService {
   // Categorías
   findAllCategories(): Observable<ServiceCategory[]> {
     return this.http.get<ServiceCategory[]>(`${this.apiUrl}/categories`);
+  }
+
+  createCategory(name: string): Observable<ServiceCategory> {
+    return this.http.post<ServiceCategory>(`${this.apiUrl}/categories`, { name });
+  }
+
+  updateCategory(id: string, name: string): Observable<ServiceCategory> {
+    return this.http.patch<ServiceCategory>(`${this.apiUrl}/categories/${id}`, { name });
+  }
+
+  deleteCategory(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/categories/${id}`);
   }
 }

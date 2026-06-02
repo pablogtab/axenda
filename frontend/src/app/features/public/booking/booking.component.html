@@ -159,23 +159,94 @@
           @for (service of availableServices(); track service.id) {
             <div class="service-item" 
                  [class.selected]="selectedService()?.id === service.id"
+                 [class.expanded]="expandedServiceId() === service.id"
                  (click)="selectService(service)">
-              <div class="service-info">
-                <div class="service-icon" [style.background-color]="service.color + '20'">
-                  <span [style.color]="service.color">★</span>
+              
+              <div class="service-main-row">
+                <div class="service-info">
+                  <div class="service-icon-wrapper">
+                    @if (service.mainImageKey) {
+                      <img [src]="service.mainImageKey | storage" class="service-image-thumb" alt="Thumbnail">
+                    } @else {
+                      <div class="service-icon" [style.background-color]="(service.color || '#6366f1') + '20'">
+                        <span [style.color]="service.color || '#6366f1'">★</span>
+                      </div>
+                    }
+                  </div>
+                  <div>
+                    <div class="service-name">{{ service.name }}</div>
+                    @if (service.showDuration !== false) {
+                      <div class="service-duration">{{ service.duration }} min</div>
+                    }
+                  </div>
                 </div>
-                <div>
-                  <div class="service-name">{{ service.name }}</div>
-                  @if (service.showDuration !== false) {
-                    <div class="service-duration">{{ service.duration }} min</div>
+                
+                <div class="service-price-and-action">
+                  @if (service.showPrice !== false) {
+                    <div class="service-price">${{ service.price }}</div>
+                  } @else if (service.customPriceLabel) {
+                    <div class="service-price-label">{{ service.customPriceLabel }}</div>
+                  }
+                  
+                  @if (service.description || service.indications || (service.galleryKeys && service.galleryKeys.length > 0)) {
+                    <button class="btn-expand-info" 
+                            [class.active]="expandedServiceId() === service.id"
+                            (click)="toggleExpandService(service.id, $event)">
+                      <app-icon [name]="expandedServiceId() === service.id ? 'expand_less' : 'info'"></app-icon>
+                    </button>
                   }
                 </div>
               </div>
-              @if (service.showPrice !== false) {
-                <div class="service-price">${{ service.price }}</div>
-              } @else if (service.customPriceLabel) {
-                <div class="service-price-label">{{ service.customPriceLabel }}</div>
+
+              <!-- Collapsible Details Panel -->
+              @if (expandedServiceId() === service.id) {
+                <div class="service-details-panel" (click)="$event.stopPropagation()">
+                  @if (service.description) {
+                    <p class="service-details-description">{{ service.description }}</p>
+                  }
+
+                  @if (false && service.includes && service.includes.length > 0) {
+                    <div class="service-includes-section">
+                      <span class="section-title">¿Qué incluye?</span>
+                      <div class="includes-chips">
+                        @for (item of service.includes; track item) {
+                          <span class="include-chip">
+                            <app-icon name="check" class="chip-check-icon"></app-icon>
+                            {{ item }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  @if (service.indications) {
+                    <div class="service-indications-box">
+                      <app-icon name="warning" class="indication-icon"></app-icon>
+                      <div class="indication-content">
+                        <span class="indication-title">Requisitos / Indicaciones</span>
+                        <p class="indication-text">{{ service.indications }}</p>
+                      </div>
+                    </div>
+                  }
+
+                  @if (service.galleryKeys && service.galleryKeys.length > 0) {
+                    <div class="service-gallery-section">
+                      <span class="section-title">Galería de fotos</span>
+                      <div class="gallery-scroll-container">
+                        @for (imgKey of service.galleryKeys; track imgKey) {
+                          <div class="gallery-thumb-wrapper" (click)="openImageZoom(imgKey, $event)">
+                            <img [src]="imgKey | storage" class="gallery-thumb" alt="Gallery image">
+                            <div class="gallery-thumb-hover">
+                              <app-icon name="zoom_in"></app-icon>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
               }
+
             </div>
           }
         </div>
@@ -348,8 +419,16 @@
           </div>
 
           <!-- Servicio -->
-          <div class="summary-item" *ngIf="selectedService()">
-            <div class="summary-icon">✂️</div>
+          <div class="summary-item align-items-center" *ngIf="selectedService()">
+            <div class="summary-service-icon-wrapper">
+              @if (selectedService()!.mainImageKey) {
+                <img [src]="selectedService()!.mainImageKey | storage" class="summary-service-image-thumb" alt="Service thumbnail">
+              } @else {
+                <div class="summary-icon" [style.background-color]="(selectedService()!.color || '#6366f1') + '20'">
+                  <span [style.color]="selectedService()!.color || '#6366f1'">★</span>
+                </div>
+              }
+            </div>
             <div class="flex flex-col">
               <span class="summary-label">Servicio</span>
               <span class="summary-value">{{ selectedService()!.name }}</span>
@@ -488,6 +567,18 @@
       </div>
     </div>
   </ng-template>
+
+  <!-- Fullscreen Image Zoom Overlay -->
+  @if (zoomImageKey()) {
+    <div class="image-zoom-overlay" (click)="closeImageZoom()">
+      <div class="zoom-modal-container" (click)="$event.stopPropagation()">
+        <button class="zoom-close-btn" (click)="closeImageZoom()">
+          <app-icon name="close"></app-icon>
+        </button>
+        <img [src]="zoomImageKey()! | storage" class="zoom-large-image" alt="Zoomed service photo">
+      </div>
+    </div>
+  }
 </div>
 
 <ng-template #loadingOrError>

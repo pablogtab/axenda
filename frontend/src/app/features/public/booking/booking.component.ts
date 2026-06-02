@@ -601,4 +601,25 @@ export class BookingComponent implements OnInit {
     this.slotError.set(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  expandedServiceId = signal<string | null>(null);
+  zoomImageKey = signal<string | null>(null);
+
+  toggleExpandService(serviceId: string, event: Event): void {
+    event.stopPropagation();
+    if (this.expandedServiceId() === serviceId) {
+      this.expandedServiceId.set(null);
+    } else {
+      this.expandedServiceId.set(serviceId);
+    }
+  }
+
+  openImageZoom(key: string, event: Event): void {
+    event.stopPropagation();
+    this.zoomImageKey.set(key);
+  }
+
+  closeImageZoom(): void {
+    this.zoomImageKey.set(null);
+  }
 }
