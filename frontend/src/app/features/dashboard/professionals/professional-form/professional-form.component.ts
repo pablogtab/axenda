@@ -1,7 +1,23 @@
-import { Component, OnInit, inject, signal, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ProfessionalsService, Professional } from '@services/professionals.service';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import {
+  ProfessionalsService,
+  Professional,
+} from '@services/professionals.service';
 import { BranchesService, Branch } from '@services/branches.service';
 import { ServicesService, BusinessService } from '@services/services.service';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
@@ -12,8 +28,338 @@ import { ProfessionalAvailabilityComponent } from '../professional-availability/
 @Component({
   selector: 'app-professional-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ProfessionalAvailabilityComponent],
-  templateUrl: './professional-form.component.html'
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ProfessionalAvailabilityComponent,
+  ],
+  template: `
+    <div class="flex flex-col gap-4 h-[75vh] min-h-[500px]">
+      <header class="flex justify-between items-center flex-shrink-0">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-lg font-bold text-text-main flex items-center gap-2">
+            <span>{{ isEditing ? '✏️' : '✨' }}</span>
+            {{
+              isEditing
+                ? professionalForm.get('firstName')?.value +
+                  ' ' +
+                  professionalForm.get('lastName')?.value
+                : 'Nuevo Profesional'
+            }}
+          </h2>
+          <div class="flex gap-4" *ngIf="isEditing">
+            <button
+              (click)="setTab('basic')"
+              class="text-[10px] font-bold uppercase tracking-widest pb-1 border-b-2 transition-all"
+              [class.text-primary]="activeTab() === 'basic'"
+              [class.border-primary]="activeTab() === 'basic'"
+              [class.text-text-dim]="activeTab() !== 'basic'"
+              [class.border-transparent]="activeTab() !== 'basic'"
+            >
+              Información
+            </button>
+            <button
+              (click)="setTab('availability')"
+              class="text-[10px] font-bold uppercase tracking-widest pb-1 border-b-2 transition-all"
+              [class.text-primary]="activeTab() === 'availability'"
+              [class.border-primary]="activeTab() === 'availability'"
+              [class.text-text-dim]="activeTab() !== 'availability'"
+              [class.border-transparent]="activeTab() !== 'availability'"
+            >
+              Disponibilidad
+            </button>
+          </div>
+        </div>
+        <button
+          (click)="onCancel()"
+          class="text-xs font-bold text-text-dim hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+        >
+          {{ activeTab() === 'basic' ? 'Cancelar' : 'Cerrar' }}
+        </button>
+      </header>
+
+      <div class="flex-1 overflow-hidden">
+        @if (activeTab() === 'basic') {
+          <form
+            [formGroup]="professionalForm"
+            (ngSubmit)="onSubmit()"
+            class="h-full overflow-y-auto pr-2 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 custom-scrollbar"
+          >
+            <!-- Datos Básicos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label
+                  class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1"
+                  >Nombre *</label
+                >
+                <input
+                  type="text"
+                  formControlName="firstName"
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  placeholder="Juan"
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1"
+                  >Apellido *</label
+                >
+                <input
+                  type="text"
+                  formControlName="lastName"
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  placeholder="Pérez"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label
+                  class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1"
+                  >Biografía corta</label
+                >
+                <input
+                  type="text"
+                  formControlName="bio"
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  placeholder="Especialista en..."
+                />
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1"
+                  >Color en Agenda</label
+                >
+                <div
+                  class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-1.5"
+                >
+                  <input
+                    type="color"
+                    formControlName="color"
+                    class="w-8 h-6 bg-transparent border-none cursor-pointer rounded overflow-hidden"
+                  />
+                  <span class="font-mono text-xs font-bold text-text-dim">{{
+                    professionalForm.get('color')?.value
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Selección de Sucursales y Servicios -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Sucursales -->
+              <div class="space-y-2">
+                <h3
+                  class="text-[10px] font-bold text-text-dim uppercase tracking-widest border-b border-white/5 pb-1"
+                >
+                  Sucursales
+                </h3>
+                <div
+                  class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar"
+                >
+                  @for (branch of allBranches(); track branch.id) {
+                    <label
+                      class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
+                      [class.bg-primary/10]="
+                        selectedBranches().includes(branch.id)
+                      "
+                      [class.border-primary/30]="
+                        selectedBranches().includes(branch.id)
+                      "
+                      [class.border-white/5]="
+                        !selectedBranches().includes(branch.id)
+                      "
+                      [class.bg-white/5]="
+                        !selectedBranches().includes(branch.id)
+                      "
+                    >
+                      <span
+                        class="text-[11px] font-medium"
+                        [class.text-primary]="
+                          selectedBranches().includes(branch.id)
+                        "
+                      >
+                        {{ branch.name }}
+                      </span>
+                      <input
+                        type="checkbox"
+                        [checked]="selectedBranches().includes(branch.id)"
+                        (change)="toggleBranch(branch.id)"
+                        class="sr-only"
+                      />
+                      <div
+                        class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
+                        [class.bg-primary]="
+                          selectedBranches().includes(branch.id)
+                        "
+                        [class.border-primary]="
+                          selectedBranches().includes(branch.id)
+                        "
+                      >
+                        @if (selectedBranches().includes(branch.id)) {
+                          <span class="text-[8px] text-white font-bold">✓</span>
+                        }
+                      </div>
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <!-- Servicios -->
+              <div class="space-y-2">
+                <div
+                  class="flex items-center justify-between border-b border-white/5 pb-1"
+                >
+                  <h3
+                    class="text-[10px] font-bold text-text-dim uppercase tracking-widest"
+                  >
+                    Servicios
+                  </h3>
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      formControlName="allServices"
+                      class="w-3.5 h-3.5 rounded border-white/20 bg-white/5 text-accent focus:ring-accent/20 cursor-pointer"
+                    />
+                    <span
+                      class="text-[9px] font-bold text-text-dim uppercase tracking-wider"
+                      >Todos</span
+                    >
+                  </label>
+                </div>
+
+                @if (!professionalForm.get('allServices')?.value) {
+                  <div
+                    class="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200"
+                  >
+                    @for (service of allServices(); track service.id) {
+                      <label
+                        class="flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer"
+                        [class.bg-accent/10]="
+                          selectedServices().includes(service.id)
+                        "
+                        [class.border-accent/30]="
+                          selectedServices().includes(service.id)
+                        "
+                        [class.border-white/5]="
+                          !selectedServices().includes(service.id)
+                        "
+                        [class.bg-white/5]="
+                          !selectedServices().includes(service.id)
+                        "
+                      >
+                        <span
+                          class="text-[11px] font-medium"
+                          [class.text-accent]="
+                            selectedServices().includes(service.id)
+                          "
+                        >
+                          {{ service.name }}
+                        </span>
+                        <input
+                          type="checkbox"
+                          [checked]="selectedServices().includes(service.id)"
+                          (change)="toggleService(service.id)"
+                          class="sr-only"
+                        />
+                        <div
+                          class="w-3.5 h-3.5 rounded border border-white/20 flex items-center justify-center transition-colors"
+                          [class.bg-accent]="
+                            selectedServices().includes(service.id)
+                          "
+                          [class.border-accent]="
+                            selectedServices().includes(service.id)
+                          "
+                        >
+                          @if (selectedServices().includes(service.id)) {
+                            <span class="text-[8px] text-white font-bold"
+                              >✓</span
+                            >
+                          }
+                        </div>
+                      </label>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="p-3 bg-accent/5 border border-accent/10 rounded-xl text-center flex flex-col gap-0.5 animate-in fade-in duration-200"
+                  >
+                    <span
+                      class="text-[10px] text-accent font-bold uppercase tracking-wider"
+                      >Realiza todos los servicios</span
+                    >
+                    <span class="text-[9px] text-text-dim leading-normal"
+                      >Cualquier servicio nuevo o reactivado del catálogo se le
+                      asignará de forma automática.</span
+                    >
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div
+              class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5"
+            >
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-bold text-text-main"
+                  >Profesional activo</span
+                >
+                <span class="text-[10px] text-text-dim"
+                  >Habilitar para recibir turnos</span
+                >
+              </div>
+              <label
+                class="relative inline-flex items-center cursor-pointer scale-90"
+              >
+                <input
+                  type="checkbox"
+                  formControlName="active"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
+                ></div>
+              </label>
+            </div>
+
+            <footer class="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <button
+                type="button"
+                (click)="onCancel()"
+                class="px-6 py-2 text-sm font-bold text-text-dim hover:text-text-main transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                [disabled]="isSubmitting || professionalForm.invalid"
+                class="px-8 py-2 text-sm bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{
+                  isSubmitting
+                    ? 'Guardando...'
+                    : isEditing
+                      ? 'Guardar Cambios'
+                      : 'Crear Profesional'
+                }}
+              </button>
+            </footer>
+          </form>
+        } @else {
+          <div
+            class="h-full animate-in fade-in slide-in-from-right-2 duration-300"
+          >
+            <app-professional-availability
+              [professionalId]="professional()?.id || null"
+              class="h-full block"
+            >
+            </app-professional-availability>
+          </div>
+        }
+      </div>
+    </div>
+  `,
 })
 export class ProfessionalFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -21,7 +367,7 @@ export class ProfessionalFormComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private servicesService = inject(ServicesService);
   private snackbar = inject(SnackbarService);
-  
+
   public dialogRef = inject(DialogRef, { optional: true });
   public dialogData = inject<Professional>(DIALOG_DATA, { optional: true });
 
@@ -69,32 +415,39 @@ export class ProfessionalFormComponent implements OnInit {
       bio: [data?.bio || ''],
       color: [data?.color || '#6366f1'],
       active: [data?.active ?? true],
-      allServices: [data?.allServices ?? false]
+      allServices: [data?.allServices ?? false],
     });
 
     if (this.isEditing && data) {
-      this.selectedBranches.set(data.branches?.filter(b => b.branch.active).map(b => b.branch.id) || []);
-      this.selectedServices.set(data.services?.filter(s => s.service.active).map(s => s.service.id) || []);
+      this.selectedBranches.set(
+        data.branches?.filter((b) => b.branch.active).map((b) => b.branch.id) ||
+          [],
+      );
+      this.selectedServices.set(
+        data.services
+          ?.filter((s) => s.service.active)
+          .map((s) => s.service.id) || [],
+      );
     }
   }
 
   loadOptions(): void {
     forkJoin({
       branches: this.branchesService.findAll(),
-      services: this.servicesService.findAll()
+      services: this.servicesService.findAll(),
     }).subscribe({
       next: (res) => {
         // En el formulario solo mostramos lo que está ACTIVO para asignar
-        this.allBranches.set(res.branches.filter(b => b.active));
-        this.allServices.set(res.services.filter(s => s.active));
-      }
+        this.allBranches.set(res.branches.filter((b) => b.active));
+        this.allServices.set(res.services.filter((s) => s.active));
+      },
     });
   }
 
   toggleBranch(id: string): void {
     const current = this.selectedBranches();
     if (current.includes(id)) {
-      this.selectedBranches.set(current.filter(b => b !== id));
+      this.selectedBranches.set(current.filter((b) => b !== id));
     } else {
       this.selectedBranches.set([...current, id]);
     }
@@ -103,7 +456,7 @@ export class ProfessionalFormComponent implements OnInit {
   toggleService(id: string): void {
     const current = this.selectedServices();
     if (current.includes(id)) {
-      this.selectedServices.set(current.filter(s => s !== id));
+      this.selectedServices.set(current.filter((s) => s !== id));
     } else {
       this.selectedServices.set([...current, id]);
     }
@@ -115,33 +468,46 @@ export class ProfessionalFormComponent implements OnInit {
     this.isSubmitting = true;
     const val = this.professionalForm.value;
 
-    const profId = this.isEditing ? (this.professional()?.id || this.dialogData?.id) : null;
+    const profId = this.isEditing
+      ? this.professional()?.id || this.dialogData?.id
+      : null;
 
-    const request = this.isEditing && profId
-      ? this.professionalsService.update(profId, val)
-      : this.professionalsService.create(val);
+    const request =
+      this.isEditing && profId
+        ? this.professionalsService.update(profId, val)
+        : this.professionalsService.create(val);
 
     request.subscribe({
       next: (prof) => {
         // Actualizar relaciones después de crear/actualizar
         forkJoin({
-          branches: this.professionalsService.setBranches(prof.id, this.selectedBranches()),
-          services: this.professionalsService.setServices(prof.id, this.selectedServices())
+          branches: this.professionalsService.setBranches(
+            prof.id,
+            this.selectedBranches(),
+          ),
+          services: this.professionalsService.setServices(
+            prof.id,
+            this.selectedServices(),
+          ),
         }).subscribe({
           next: () => {
-            this.snackbar.success(this.isEditing ? 'Profesional actualizado' : 'Profesional creado');
+            this.snackbar.success(
+              this.isEditing ? 'Profesional actualizado' : 'Profesional creado',
+            );
             this.emitClose(true);
           },
           error: () => {
-            this.snackbar.error('Profesional guardado, pero hubo un error con las relaciones');
+            this.snackbar.error(
+              'Profesional guardado, pero hubo un error con las relaciones',
+            );
             this.emitClose(true);
-          }
+          },
         });
       },
       error: () => {
         this.snackbar.error('Error al guardar profesional');
         this.isSubmitting = false;
-      }
+      },
     });
   }
 

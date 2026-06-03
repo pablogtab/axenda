@@ -1,15 +1,42 @@
-import { Component, Inject, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  Inject,
+  OnInit,
+  inject,
+  signal,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { DIALOG_DATA, DialogRef, Dialog } from '@angular/cdk/dialog';
-import { AppointmentsService, AppointmentStatus } from '@services/appointments.service';
-import { ProfessionalsService, Professional } from '@services/professionals.service';
+import {
+  AppointmentsService,
+  AppointmentStatus,
+} from '@services/appointments.service';
+import {
+  ProfessionalsService,
+  Professional,
+} from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
-import { CustomFieldsService, ClientFieldDefinition, ClientFieldValue } from '@services/custom-fields.service';
+import {
+  CustomFieldsService,
+  ClientFieldDefinition,
+  ClientFieldValue,
+} from '@services/custom-fields.service';
 import { TenantsService } from '@services/tenants.service';
 import { format } from 'date-fns';
-import { createLocalDate, toLocalDateStr, toLocalTimeStr } from '@core/utils/date-utils';
+import {
+  createLocalDate,
+  toLocalDateStr,
+  toLocalTimeStr,
+} from '@core/utils/date-utils';
 import { forkJoin } from 'rxjs';
 
 export interface AppointmentFormData {
@@ -33,17 +60,417 @@ interface ClientCustomFieldSummaryItem {
 }
 
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
-import { SelectComponent, SelectConfig } from '@shared/components/select/select';
+import {
+  SelectComponent,
+  SelectConfig,
+} from '@shared/components/select/select';
 import { TimeInputComponent } from '@shared/components/time-input/time-input';
-import { getClientSearchConfig, getProfessionalSearchConfig } from '@core/configs/search-configs';
+import {
+  getClientSearchConfig,
+  getProfessionalSearchConfig,
+} from '@core/configs/search-configs';
 import { ClientFormComponent } from '../../clients/client-form/client-form.component';
 
 @Component({
   selector: 'app-appointment-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, SelectComponent, TimeInputComponent],
-  templateUrl: './appointment-form.html',
-  styleUrls: ['./appointment-form.css']
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SearchableSelectComponent,
+    SelectComponent,
+    TimeInputComponent,
+  ],
+  template: `
+    <div
+      class="bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden max-w-lg w-full flex flex-col animate-in fade-in zoom-in duration-200"
+    >
+      <!-- Header -->
+      <header
+        class="px-6 py-4 border-b border-border bg-surface-subtle flex justify-between items-center"
+      >
+        <div>
+          <h2 class="text-xl font-bold text-text-main">
+            {{ isEditMode() ? '📝 Editar Turno' : '📅 Agendar Nuevo Turno' }}
+          </h2>
+          <p class="text-xs text-text-dim mt-1">
+            {{
+              isEditMode()
+                ? 'Modifica los detalles del turno seleccionado'
+                : 'Completa los detalles para reservar la cita'
+            }}
+          </p>
+        </div>
+        <button
+          (click)="close()"
+          class="p-2 hover:bg-surface-subtle-hover rounded-xl transition-all text-text-dim hover:text-text-main"
+        >
+          ✕
+        </button>
+      </header>
+
+      <div class="relative flex-1 overflow-hidden">
+        <!-- Loading Overlay -->
+        @if (isLoadingData()) {
+          <div
+            class="absolute inset-0 z-10 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-300"
+          >
+            <div class="flex flex-col items-center gap-3">
+              <div class="relative">
+                <div
+                  class="h-12 w-12 border-4 border-surface-subtle-hover rounded-full"
+                ></div>
+                <div
+                  class="absolute top-0 left-0 h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"
+                ></div>
+              </div>
+              <p
+                class="text-xs font-bold text-text-main tracking-widest uppercase animate-pulse"
+              >
+                Cargando detalles...
+              </p>
+            </div>
+          </div>
+        }
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="onSubmit()"
+          class="px-6 py-4 space-y-4 overflow-y-auto max-h-[calc(100dvh-150px)] custom-scrollbar"
+          [class.opacity-50]="isLoadingData()"
+          [class.pointer-events-none]="isLoadingData()"
+        >
+          <!-- Sección: Cliente -->
+          <app-searchable-select
+            formControlName="clientId"
+            [config]="clientConfig"
+            (onAdd)="openNewClient($event)"
+          ></app-searchable-select>
+
+          @if (
+            form.get('clientId')?.value &&
+            clientCustomFieldsSummary().length > 0
+          ) {
+            <div class="client-custom-summary">
+              <div class="client-custom-summary__header">
+                <span class="client-custom-summary__title"
+                  >Resumen del cliente</span
+                >
+                <span class="client-custom-summary__badge"
+                  >Campos personalizados</span
+                >
+              </div>
+              <div class="client-custom-summary__grid">
+                @for (item of clientCustomFieldsSummary(); track item.name) {
+                  <div class="client-custom-summary__item">
+                    <span class="client-custom-summary__label">{{
+                      item.name
+                    }}</span>
+                    <span class="client-custom-summary__value">{{
+                      item.value
+                    }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Sección: Servicio y Profesional (Aislados en filas diferentes) -->
+          <app-select
+            formControlName="serviceId"
+            [options]="services()"
+            [config]="serviceConfig"
+          ></app-select>
+
+          <app-searchable-select
+            formControlName="professionalId"
+            [config]="profConfig"
+          ></app-searchable-select>
+
+          <!-- Sección: Fecha y Hora -->
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="col-span-2 md:col-span-1 space-y-2">
+              <label
+                class="text-xs font-bold text-text-dim uppercase tracking-wider"
+                >Fecha</label
+              >
+              <input
+                type="date"
+                formControlName="date"
+                class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none"
+              />
+            </div>
+            <!-- Horas en la misma fila -->
+            <div class="col-span-2 md:col-span-2">
+              <div class="flex gap-3">
+                <div class="flex-1">
+                  <app-time-input
+                    formControlName="time"
+                    label="Hora Inicio"
+                  ></app-time-input>
+                </div>
+                <div class="flex-1">
+                  <app-time-input
+                    formControlName="endTime"
+                    label="Hora Fin"
+                  ></app-time-input>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Estado (Solo en Edición) -->
+          @if (isEditMode()) {
+            <app-select
+              formControlName="status"
+              [options]="statusOptions"
+              [config]="statusConfig"
+            ></app-select>
+
+            @if (
+              form.get('status')?.value === 'CANCELLED' &&
+              tenantsService.currentTenant()?.whatsappCancellation
+            ) {
+              <div
+                class="flex items-center gap-3 p-3.5 rounded-xl bg-primary-glow border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-200"
+              >
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    formControlName="notifyClient"
+                    class="sr-only peer"
+                  />
+                  <div
+                    class="w-9 h-5 bg-text-main/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
+                  ></div>
+                </label>
+                <div
+                  class="flex flex-col gap-0.5 select-none cursor-pointer"
+                  (click)="
+                    form
+                      .get('notifyClient')
+                      ?.setValue(!form.get('notifyClient')?.value)
+                  "
+                >
+                  <span class="text-xs font-bold text-text-main"
+                    >Notificar al cliente por WhatsApp</span
+                  >
+                  <span class="text-[10px] text-text-dim leading-none"
+                    >Envía la plantilla de cancelación automáticamente.</span
+                  >
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Notas -->
+          <div class="space-y-2">
+            <label
+              class="text-xs font-bold text-text-dim uppercase tracking-wider"
+              >Notas del turno</label
+            >
+            <textarea
+              formControlName="notes"
+              rows="2"
+              placeholder="Ej: El cliente llega 5 min tarde..."
+              class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Server Error Message -->
+          @if (serverError()) {
+            <div
+              class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <span class="text-red-500 text-lg">⚠️</span>
+              <div class="flex-1">
+                <p
+                  class="text-xs font-bold text-red-500 uppercase tracking-wider"
+                >
+                  Error al agendar
+                </p>
+                <p class="text-[11px] text-red-400 leading-tight mt-0.5">
+                  {{ serverError() }}
+                </p>
+              </div>
+            </div>
+          }
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <footer
+        class="px-6 py-4 border-t border-border bg-surface-subtle flex justify-end items-center gap-3"
+      >
+        @if (isEditMode() && appointmentData()) {
+          <button
+            type="button"
+            (click)="openCancelPage()"
+            class="mr-auto px-4 py-2 rounded-xl text-xs font-bold text-primary hover:bg-primary/10 border border-primary/20 transition-all flex items-center gap-1"
+          >
+            🔗 Ver Sitio Cliente
+          </button>
+        }
+        <button
+          type="button"
+          (click)="close()"
+          class="px-6 py-2 rounded-xl text-sm font-bold text-text-dim hover:bg-surface-subtle transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="onSubmit()"
+          [disabled]="isSubmitting()"
+          class="px-8 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+        >
+          @if (isSubmitting()) {
+            <div class="flex items-center gap-2">
+              <div
+                class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+              ></div>
+              <span>Agendando...</span>
+            </div>
+          } @else {
+            <span>{{
+              isEditMode() ? 'Actualizar Turno' : 'Confirmar Turno'
+            }}</span>
+          }
+        </button>
+      </footer>
+    </div>
+  `,
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      /* Glassmorphism effect for the whole modal */
+      .bg-bg-primary {
+        background-color: rgba(18, 18, 18, 0.85);
+        backdrop-filter: blur(20px) saturate(180%);
+      }
+
+      /* Animations */
+      @keyframes zoomIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .animate-in {
+        animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+
+      select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 1rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+      }
+
+      option {
+        background-color: #1a1a1a;
+        color: white;
+      }
+
+      .client-custom-summary {
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-subtle);
+        border-radius: 0.9rem;
+        padding: 0.85rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .client-custom-summary__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .client-custom-summary__title {
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-dim);
+      }
+
+      .client-custom-summary__badge {
+        font-size: 0.66rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        border: 1px solid
+          color-mix(in srgb, var(--color-primary) 28%, transparent);
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        border-radius: 999px;
+        padding: 0.15rem 0.5rem;
+      }
+
+      .client-custom-summary__empty {
+        margin: 0;
+        font-size: 0.76rem;
+        color: var(--color-text-dim);
+      }
+
+      .client-custom-summary__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .client-custom-summary__item {
+        border: 1px solid var(--color-border);
+        border-radius: 0.65rem;
+        padding: 0.45rem 0.55rem;
+        background: color-mix(
+          in srgb,
+          var(--color-bg-primary) 30%,
+          transparent
+        );
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .client-custom-summary__label {
+        font-size: 0.66rem;
+        color: var(--color-text-dim);
+      }
+
+      .client-custom-summary__value {
+        font-size: 0.78rem;
+        color: var(--color-text-main);
+        font-weight: 600;
+        line-height: 1.2;
+        word-break: break-word;
+      }
+
+      @media (max-width: 640px) {
+        .client-custom-summary__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    `,
+  ],
 })
 export class AppointmentFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -59,7 +486,7 @@ export class AppointmentFormComponent implements OnInit {
   professionals = signal<Professional[]>([]);
   allServices = signal<BusinessService[]>([]);
   services = signal<BusinessService[]>([]);
-  
+
   isSubmitting = signal(false);
   isEditMode = signal(false);
   isLoadingData = signal(true);
@@ -69,9 +496,9 @@ export class AppointmentFormComponent implements OnInit {
   clientCustomFieldsSummary = signal<ClientCustomFieldSummaryItem[]>([]);
 
   // Configuraciones de los buscadores
-  clientConfig = { 
-    ...getClientSearchConfig(this.clientsService), 
-    addLabel: 'Nuevo Cliente' 
+  clientConfig = {
+    ...getClientSearchConfig(this.clientsService),
+    addLabel: 'Nuevo Cliente',
   };
   profConfig = getProfessionalSearchConfig(this.professionalsService);
 
@@ -80,15 +507,15 @@ export class AppointmentFormComponent implements OnInit {
     placeholder: 'Seleccionar servicio...',
     displayFn: (s) => s.name,
     descriptionFn: (s) => `${s.duration} min - $${s.price}`,
-    valueFn: (s) => s.id
+    valueFn: (s) => s.id,
   };
-  
+
   statusConfig: SelectConfig<any> = {
     label: 'Estado del Turno',
     placeholder: 'Seleccionar estado...',
     displayFn: (s) => s.label,
     valueFn: (s) => s.value,
-    colorFn: (s) => s.color
+    colorFn: (s) => s.color,
   };
 
   statusOptions = [
@@ -96,12 +523,12 @@ export class AppointmentFormComponent implements OnInit {
     { value: 'CONFIRMED', label: 'Confirmado', color: '#60a5fa' },
     { value: 'COMPLETED', label: 'Finalizado', color: '#c084fc' },
     { value: 'NO_SHOW', label: 'No asistió', color: '#f87171' },
-    { value: 'CANCELLED', label: 'Cancelado', color: '#475569' }
+    { value: 'CANCELLED', label: 'Cancelado', color: '#475569' },
   ];
 
   constructor(
     public dialogRef: DialogRef<any>,
-    @Inject(DIALOG_DATA) public data: AppointmentFormData
+    @Inject(DIALOG_DATA) public data: AppointmentFormData,
   ) {
     this.initForm();
   }
@@ -110,10 +537,10 @@ export class AppointmentFormComponent implements OnInit {
     if (this.data.appointmentId) {
       this.isEditMode.set(true);
     }
-    
+
     // Aplicar pre-carga de datos recibidos inmediatamente
     this.patchFormWithInitialData();
-    
+
     this.loadAllData();
   }
 
@@ -121,7 +548,8 @@ export class AppointmentFormComponent implements OnInit {
     const patch: any = {};
     if (this.data.clientId) patch.clientId = this.data.clientId;
     if (this.data.serviceId) patch.serviceId = this.data.serviceId;
-    if (this.data.professionalId) patch.professionalId = this.data.professionalId;
+    if (this.data.professionalId)
+      patch.professionalId = this.data.professionalId;
     if (this.data.branchId) patch.branchId = this.data.branchId;
     if (this.data.date) patch.date = this.data.date;
     if (this.data.startTime) patch.time = this.data.startTime;
@@ -151,18 +579,20 @@ export class AppointmentFormComponent implements OnInit {
       status: [AppointmentStatus.PENDING],
       notes: [''],
       internalNotes: [''],
-      notifyClient: [false]
+      notifyClient: [false],
     });
 
     // Auto-calcular hora de fin al cambiar hora de inicio o servicio
     this.form.get('time')?.valueChanges.subscribe(() => this.updateEndTime());
-    this.form.get('serviceId')?.valueChanges.subscribe(() => this.updateEndTime());
+    this.form
+      .get('serviceId')
+      ?.valueChanges.subscribe(() => this.updateEndTime());
 
-    this.form.get('professionalId')?.valueChanges.subscribe(id => {
+    this.form.get('professionalId')?.valueChanges.subscribe((id) => {
       this.filterServicesByProfessional(id);
     });
 
-    this.form.get('clientId')?.valueChanges.subscribe(clientId => {
+    this.form.get('clientId')?.valueChanges.subscribe((clientId) => {
       this.loadClientCustomFieldsSummary(clientId);
     });
   }
@@ -174,15 +604,18 @@ export class AppointmentFormComponent implements OnInit {
 
     if (!serviceId || !startTime || !date || startTime.length !== 5) return;
 
-    const service = this.services().find(s => s.id === serviceId);
+    const service = this.services().find((s) => s.id === serviceId);
     if (!service) return;
 
     const start = createLocalDate(date, startTime);
     const end = new Date(start.getTime() + service.duration * 60000);
-    
-    this.form.patchValue({
-      endTime: toLocalTimeStr(end)
-    }, { emitEvent: false });
+
+    this.form.patchValue(
+      {
+        endTime: toLocalTimeStr(end),
+      },
+      { emitEvent: false },
+    );
   }
 
   private loadAllData(): void {
@@ -190,22 +623,26 @@ export class AppointmentFormComponent implements OnInit {
 
     const requests: any = {
       profs: this.professionalsService.findAll(this.data.branchId),
-      services: this.servicesService.findAll()
+      services: this.servicesService.findAll(),
     };
 
     if (this.data.appointmentId) {
-      requests.appointment = this.appointmentsService.findOne(this.data.appointmentId);
+      requests.appointment = this.appointmentsService.findOne(
+        this.data.appointmentId,
+      );
     }
 
     forkJoin(requests).subscribe({
       next: (res: any) => {
         const { profs, services, appointment } = res;
-        
+
         // 1. Profesionales
         this.professionals.set(profs.filter((p: Professional) => p.active));
 
         // 2. Servicios
-        const activeServices = services.filter((s: BusinessService) => s.active);
+        const activeServices = services.filter(
+          (s: BusinessService) => s.active,
+        );
         this.allServices.set(activeServices);
 
         // 3. Turno (si estamos editando)
@@ -214,18 +651,21 @@ export class AppointmentFormComponent implements OnInit {
           const startDate = new Date(appointment.startTime);
           const endDate = new Date(appointment.endTime);
 
-          this.form.patchValue({
-            clientId: appointment.client?.id,
-            serviceId: appointment.service?.id,
-            professionalId: appointment.professional?.id,
-            branchId: appointment.branch?.id,
-            date: this.data.date || toLocalDateStr(startDate),
-            time: toLocalTimeStr(startDate),
-            endTime: toLocalTimeStr(endDate),
-            status: appointment.status,
-            notes: appointment.notes,
-            internalNotes: appointment.internalNotes
-          }, { emitEvent: false });
+          this.form.patchValue(
+            {
+              clientId: appointment.client?.id,
+              serviceId: appointment.service?.id,
+              professionalId: appointment.professional?.id,
+              branchId: appointment.branch?.id,
+              date: this.data.date || toLocalDateStr(startDate),
+              time: toLocalTimeStr(startDate),
+              endTime: toLocalTimeStr(endDate),
+              status: appointment.status,
+              notes: appointment.notes,
+              internalNotes: appointment.internalNotes,
+            },
+            { emitEvent: false },
+          );
 
           this.loadClientCustomFieldsSummary(appointment.client?.id);
         } else if (this.data.clientId) {
@@ -245,10 +685,9 @@ export class AppointmentFormComponent implements OnInit {
       error: (err) => {
         console.error('Error cargando datos del turno:', err);
         this.isLoadingData.set(false);
-      }
+      },
     });
   }
-
 
   filterServicesByProfessional(profId: string): void {
     if (!profId) {
@@ -256,14 +695,14 @@ export class AppointmentFormComponent implements OnInit {
       return;
     }
 
-    const prof = this.professionals().find(p => p.id === profId);
-    
+    const prof = this.professionals().find((p) => p.id === profId);
+
     if (!prof) {
       // Si el profesional no está en la lista inicial (ej: se cargó por búsqueda)
       // cargamos sus datos completos para tener sus servicios
-      this.professionalsService.findOne(profId).subscribe(p => {
+      this.professionalsService.findOne(profId).subscribe((p) => {
         // Actualizamos la lista local para futuras referencias
-        this.professionals.update(profs => [...profs, p]);
+        this.professionals.update((profs) => [...profs, p]);
         this.applyServiceFilter(p);
       });
     } else {
@@ -275,14 +714,19 @@ export class AppointmentFormComponent implements OnInit {
     if (!prof.services || prof.services.length === 0) {
       this.services.set([]);
     } else {
-      const allowedIds = prof.services.map(ps => ps.service.id);
-      const filtered = this.allServices().filter(s => allowedIds.includes(s.id));
+      const allowedIds = prof.services.map((ps) => ps.service.id);
+      const filtered = this.allServices().filter((s) =>
+        allowedIds.includes(s.id),
+      );
       this.services.set(filtered);
     }
 
     // Validar si el servicio actual sigue siendo válido
     const currentServiceId = this.form.get('serviceId')?.value;
-    if (currentServiceId && !this.services().some(s => s.id === currentServiceId)) {
+    if (
+      currentServiceId &&
+      !this.services().some((s) => s.id === currentServiceId)
+    ) {
       this.form.patchValue({ serviceId: '' });
     }
   }
@@ -291,7 +735,7 @@ export class AppointmentFormComponent implements OnInit {
     if (this.form.invalid) {
       console.warn('Formulario inválido:', this.form.value);
       // Log de errores por campo
-      Object.keys(this.form.controls).forEach(key => {
+      Object.keys(this.form.controls).forEach((key) => {
         const controlErrors = this.form.get(key)?.errors;
         if (controlErrors) console.log(`Error en ${key}:`, controlErrors);
       });
@@ -300,7 +744,7 @@ export class AppointmentFormComponent implements OnInit {
 
     this.isSubmitting.set(true);
     const val = this.form.value;
-    
+
     const start = createLocalDate(val.date, val.time);
     const end = createLocalDate(val.date, val.endTime);
 
@@ -313,7 +757,7 @@ export class AppointmentFormComponent implements OnInit {
       status: val.status,
       notes: val.notes,
       internalNotes: val.internalNotes,
-      notifyClient: val.notifyClient
+      notifyClient: val.notifyClient,
     };
 
     const request = this.isEditMode()
@@ -329,7 +773,7 @@ export class AppointmentFormComponent implements OnInit {
       error: (err) => {
         this.isSubmitting.set(false);
         console.error('Error al guardar turno:', err);
-        
+
         // Extraer mensaje de error del backend
         const message = err.error?.message;
         if (Array.isArray(message)) {
@@ -337,9 +781,11 @@ export class AppointmentFormComponent implements OnInit {
         } else if (typeof message === 'string') {
           this.serverError.set(message);
         } else {
-          this.serverError.set('Error inesperado: Verifica los datos e intenta nuevamente.');
+          this.serverError.set(
+            'Error inesperado: Verifica los datos e intenta nuevamente.',
+          );
         }
-      }
+      },
     });
   }
 
@@ -361,7 +807,7 @@ export class AppointmentFormComponent implements OnInit {
     const lastName = parts.slice(1).join(' ');
 
     const dialogRef = this.dialog.open(ClientFormComponent, {
-      data: { firstName, lastName }
+      data: { firstName, lastName },
     });
 
     dialogRef.closed.subscribe((result: any) => {
@@ -381,12 +827,14 @@ export class AppointmentFormComponent implements OnInit {
     this.isLoadingClientSummary.set(true);
     this.customFieldsService.getClientValues(clientId).subscribe({
       next: ({ definitions, values }) => {
-        const valuesMap = new Map<string, ClientFieldValue>(values.map(v => [v.fieldId, v]));
+        const valuesMap = new Map<string, ClientFieldValue>(
+          values.map((v) => [v.fieldId, v]),
+        );
 
         const summary = definitions
           .slice()
           .sort((a, b) => a.order - b.order)
-          .map(def => {
+          .map((def) => {
             const rawValue = valuesMap.get(def.id)?.value;
             const formatted = this.formatCustomFieldValue(def, rawValue);
             return {
@@ -394,7 +842,9 @@ export class AppointmentFormComponent implements OnInit {
               value: formatted,
             };
           })
-          .filter(item => item.value !== null) as ClientCustomFieldSummaryItem[];
+          .filter(
+            (item) => item.value !== null,
+          ) as ClientCustomFieldSummaryItem[];
 
         this.clientCustomFieldsSummary.set(summary);
         this.isLoadingClientSummary.set(false);
@@ -406,7 +856,10 @@ export class AppointmentFormComponent implements OnInit {
     });
   }
 
-  private formatCustomFieldValue(definition: ClientFieldDefinition, rawValue?: string | null): string | null {
+  private formatCustomFieldValue(
+    definition: ClientFieldDefinition,
+    rawValue?: string | null,
+  ): string | null {
     if (rawValue === null || rawValue === undefined || rawValue === '') {
       return null;
     }
@@ -424,7 +877,7 @@ export class AppointmentFormComponent implements OnInit {
         return format(date, 'dd/MM/yyyy');
       }
       case 'SELECT': {
-        const option = definition.list?.options?.find(o => o.id === rawValue);
+        const option = definition.list?.options?.find((o) => o.id === rawValue);
         return option?.label ?? rawValue;
       }
       default:

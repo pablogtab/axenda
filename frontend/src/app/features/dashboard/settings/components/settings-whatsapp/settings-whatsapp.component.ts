@@ -1,7 +1,11 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { WhatsappService, WhatsappConfig, WhatsappTemplate } from '../../../../../core/services/whatsapp.service';
+import {
+  WhatsappService,
+  WhatsappConfig,
+  WhatsappTemplate,
+} from '../../../../../core/services/whatsapp.service';
 import { SubscriptionService } from '../../../../../core/services/subscription.service';
 import { SnackbarService } from '../../../../../core/services/snackbar.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
@@ -10,7 +14,514 @@ import { IconComponent } from '@shared/components/icon/icon.component';
   selector: 'app-settings-whatsapp',
   standalone: true,
   imports: [CommonModule, RouterModule, IconComponent],
-  templateUrl: './settings-whatsapp.component.html',
+  template: `
+    <div
+      class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 p-6"
+    >
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+          <app-icon name="chat" class="text-[#25D366] text-base"></app-icon>
+          WhatsApp Business
+        </h2>
+        <div
+          class="px-3 py-1 rounded-full bg-[#25D366]/10 text-[#25D366] text-[10px] font-black uppercase tracking-wider border border-[#25D366]/20"
+        >
+          Servicio Axenda
+        </div>
+      </div>
+
+      <!-- Main Info Row -->
+      <!-- Usage & Plan Info -->
+      <div class="glass p-8 rounded-[2.5rem] border border-border">
+        <div
+          class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6"
+        >
+          <div>
+            <h4
+              class="text-xs font-black text-text-dim uppercase tracking-widest"
+            >
+              Uso del Mes
+            </h4>
+            <p class="text-xs text-text-muted mt-1">
+              Monitorea el consumo de mensajes de tu cuenta.
+            </p>
+          </div>
+          <button
+            *ngIf="(subService.limits()?.maxWhatsapp ?? 0) > 0"
+            routerLink="/dashboard/subscription/buy-packs"
+            class="px-4 py-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start md:self-auto shadow-sm"
+          >
+            <app-icon name="add" class="text-sm"></app-icon> Comprar Extras
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <!-- Bars & Config Info (Left Column: 7/12) -->
+          <div class="md:col-span-7 space-y-6">
+            <!-- Bar 1: Plan Messages (solo si el plan incluye mensajes) -->
+            <ng-container
+              *ngIf="
+                (subService.limits()?.maxWhatsapp ?? 0) > 0;
+                else starterNoMessages
+              "
+            >
+              <div class="space-y-2">
+                <div
+                  class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider"
+                >
+                  <span class="text-text-muted flex items-center gap-1">
+                    <app-icon
+                      name="chat"
+                      class="text-[#25D366] text-xs"
+                    ></app-icon>
+                    Mensajes de Plan
+                  </span>
+                  <span class="text-text-main font-black">
+                    {{ subService.usage()?.whatsappMonth || 0 }} /
+                    {{
+                      subService.limits()?.maxWhatsapp === 999999
+                        ? '∞'
+                        : subService.limits()?.maxWhatsapp || 0
+                    }}
+                  </span>
+                </div>
+                <div
+                  class="h-2 w-full bg-surface-subtle rounded-full overflow-hidden p-[2px] relative"
+                >
+                  <div
+                    class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.5)] transition-all duration-1000"
+                    [style.width.%]="
+                      subService.limits()?.maxWhatsapp === 999999
+                        ? 0
+                        : ((subService.usage()?.whatsappMonth || 0) /
+                              subService.limits()!.maxWhatsapp) *
+                              100 >
+                            100
+                          ? 100
+                          : ((subService.usage()?.whatsappMonth || 0) /
+                              subService.limits()!.maxWhatsapp) *
+                            100
+                    "
+                  ></div>
+                </div>
+                <div
+                  class="flex justify-between text-[9px] text-text-dim font-bold uppercase tracking-wider mt-1.5"
+                >
+                  <span></span>
+                  <span *ngIf="nextResetDate()"
+                    >Próximo reinicio:
+                    {{ nextResetDate() | date: 'dd/MM/yyyy' }}</span
+                  >
+                </div>
+              </div>
+
+              <!-- Bar 2: Extra Messages (Only if has purchased extras) -->
+              <div
+                class="space-y-2 pt-2 border-t border-border/10 animate-in fade-in duration-300"
+                *ngIf="subService.usage()?.extraWhatsappTotal"
+              >
+                <div
+                  class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider"
+                >
+                  <span class="text-text-muted flex items-center gap-1">
+                    <app-icon
+                      name="add_circle"
+                      class="text-[#25D366] text-xs"
+                    ></app-icon>
+                    Mensajes Extras Comprados
+                  </span>
+                  <span class="text-text-main font-black">
+                    {{
+                      (subService.usage()?.extraWhatsappTotal || 0) -
+                        (subService.usage()?.extraWhatsappBalance || 0)
+                    }}
+                    / {{ subService.usage()?.extraWhatsappTotal }}
+                  </span>
+                </div>
+                <div
+                  class="h-2 w-full bg-surface-subtle rounded-full overflow-hidden p-[2px] relative"
+                >
+                  <div
+                    class="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full shadow-[0_0_10px_rgba(37,211,102,0.5)] transition-all duration-1000"
+                    [style.width.%]="
+                      subService.usage()?.extraWhatsappTotal
+                        ? (((subService.usage()?.extraWhatsappTotal || 0) -
+                            (subService.usage()?.extraWhatsappBalance || 0)) /
+                            subService.usage()?.extraWhatsappTotal) *
+                          100
+                        : 0
+                    "
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Info Card -->
+              <div
+                class="p-4 rounded-2xl bg-surface-subtle/50 border border-border/50"
+              >
+                <div class="flex items-start gap-3">
+                  <app-icon
+                    name="info"
+                    class="text-primary text-base mt-0.5"
+                  ></app-icon>
+                  <div class="space-y-1">
+                    <p class="text-[11px] text-text-muted leading-relaxed">
+                      Tu plan <b>{{ subService.plan()?.name }}</b> incluye
+                      <b>{{
+                        subService.limits()?.maxWhatsapp === 999999
+                          ? '∞'
+                          : subService.limits()?.maxWhatsapp
+                      }}</b>
+                      mensajes mensuales.
+                    </p>
+                    <p class="text-[11px] text-text-dim leading-relaxed">
+                      Una vez agotado el límite de tu plan, los mensajes se
+                      descuentan automáticamente del saldo extra disponible (los
+                      packs expiran a los 3 meses).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Starter: no incluye mensajes WhatsApp -->
+            <ng-template #starterNoMessages>
+              <div
+                class="p-5 rounded-2xl bg-surface-subtle/40 border border-border/40 flex items-start gap-3"
+              >
+                <app-icon
+                  name="lock"
+                  class="text-text-dim text-base mt-0.5 shrink-0"
+                ></app-icon>
+                <div class="space-y-2">
+                  <p class="text-[12px] text-text-muted leading-relaxed">
+                    Tu plan
+                    <b class="text-text-main">{{ subService.plan()?.name }}</b>
+                    no incluye mensajes de WhatsApp.
+                  </p>
+                  <p class="text-[11px] text-text-dim leading-relaxed">
+                    Actualizá a un plan superior para habilitar el envío
+                    automático de confirmaciones y recordatorios a tus clientes.
+                  </p>
+                  <button
+                    routerLink="/dashboard/settings"
+                    [queryParams]="{ section: 'billing' }"
+                    class="mt-1 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <app-icon name="upgrade" class="text-xs"></app-icon> Ver
+                    planes
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Active Packs Detail (Right Column: 5/12, only shown if has active packs) -->
+          <div
+            class="md:col-span-5 border-t md:border-t-0 md:border-l border-border/20 pt-6 md:pt-0 md:pl-8 space-y-3 h-full flex flex-col justify-start"
+            *ngIf="subService.status()?.activePacks?.length"
+          >
+            <h5
+              class="text-[10px] font-black text-text-dim uppercase tracking-wider mb-2"
+            >
+              Detalle de Packs Activos
+            </h5>
+            <div class="space-y-2 max-h-[160px] overflow-y-auto pr-1 flex-1">
+              <div
+                *ngFor="let pack of subService.status()?.activePacks"
+                class="flex justify-between items-center text-[11px] bg-surface-subtle/30 p-3 rounded-xl border border-border/30 hover:border-border/50 transition-all"
+              >
+                <div class="flex items-center gap-2">
+                  <app-icon
+                    name="inventory_2"
+                    class="text-[#25D366] text-xs"
+                  ></app-icon>
+                  <span class="font-semibold text-text-muted"
+                    >Pack {{ pack.quantity }} msgs</span
+                  >
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="font-bold text-text-main"
+                    >{{ pack.remaining }} / {{ pack.quantity }} restantes</span
+                  >
+                  <span class="text-[9px] text-text-dim"
+                    >Vence: {{ pack.expiresAt | date: 'dd/MM/yyyy' }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Templates Selection & Preview Section -->
+      <div class="glass p-8 rounded-[2.5rem] border border-border space-y-6">
+        <div>
+          <h3 class="text-xl font-black text-text-main tracking-tight">
+            Plantillas de Mensajes
+          </h3>
+          <p class="text-xs text-text-muted mt-1">
+            Selecciona una plantilla para previsualizar exactamente cómo la
+            recibirán tus clientes.
+          </p>
+        </div>
+
+        <div
+          *ngIf="loading()"
+          class="py-12 flex flex-col items-center justify-center gap-3 text-text-muted"
+        >
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+          ></div>
+          <p class="text-xs font-bold">Cargando plantillas...</p>
+        </div>
+
+        <!-- Main Interactive Grid -->
+        <div
+          *ngIf="!loading() && templates().length > 0"
+          class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+        >
+          <!-- Templates List Selection (Left column: 5/12) -->
+          <div class="lg:col-span-6 space-y-3">
+            <h4
+              class="text-xs font-black text-text-dim uppercase tracking-wider mb-4"
+            >
+              Plantillas Disponibles
+            </h4>
+
+            <div
+              *ngFor="let template of templates()"
+              (click)="selectTemplate(template)"
+              class="p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-4 hover:bg-surface-subtle/50"
+              [class.bg-primary/5]="selectedTemplate()?.id === template.id"
+              [class.border-primary/30]="selectedTemplate()?.id === template.id"
+              [class.bg-surface-subtle/20]="
+                selectedTemplate()?.id !== template.id
+              "
+              [class.border-border]="selectedTemplate()?.id !== template.id"
+            >
+              <div
+                class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                [class.bg-primary/10]="selectedTemplate()?.id === template.id"
+                [class.border-primary/20]="
+                  selectedTemplate()?.id === template.id
+                "
+                [class.bg-surface-subtle]="
+                  selectedTemplate()?.id !== template.id
+                "
+                [class.border-border]="selectedTemplate()?.id !== template.id"
+              >
+                <app-icon
+                  [name]="getFriendlyIcon(template.name)"
+                  [class.text-primary]="selectedTemplate()?.id === template.id"
+                  [class.text-text-muted]="
+                    selectedTemplate()?.id !== template.id
+                  "
+                  class="text-base"
+                ></app-icon>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center gap-2">
+                  <p
+                    class="text-sm font-bold truncate"
+                    [class.text-text-main]="
+                      selectedTemplate()?.id === template.id
+                    "
+                    [class.text-text-muted]="
+                      selectedTemplate()?.id !== template.id
+                    "
+                  >
+                    {{ getFriendlyName(template.name) }}
+                  </p>
+
+                  <span
+                    class="shrink-0 px-2 py-0.5 rounded text-[8px] font-bold uppercase"
+                    [class.bg-[#25D366]/10]="template.status === 'APPROVED'"
+                    [class.text-[#25D366]]="template.status === 'APPROVED'"
+                    [class.bg-yellow-500/10]="template.status === 'PENDING'"
+                    [class.text-yellow-500]="template.status === 'PENDING'"
+                  >
+                    {{
+                      template.status === 'APPROVED' ? 'Aprobada' : 'Pendiente'
+                    }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-text-dim mt-1 leading-relaxed">
+                  {{ getFriendlyDescription(template.name) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smartphone Preview Mockup (Right column: 6/12) -->
+          <div class="lg:col-span-6 flex justify-center">
+            <!-- Smartphone Container -->
+            <div
+              class="w-full max-w-[340px] rounded-[3.25rem] border-[10px] border-[#1e222b] bg-[#0c1317] shadow-2xl relative overflow-hidden flex flex-col aspect-[9/18.5] min-h-[580px] shrink-0"
+            >
+              <!-- Smartphone Notch / Camera Cutout -->
+              <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1e222b] rounded-b-2xl z-50 flex items-center justify-center"
+              >
+                <div
+                  class="w-3 h-3 rounded-full bg-[#101216] border border-[#2f3542]"
+                ></div>
+              </div>
+
+              <!-- Smartphone Status Bar -->
+              <div
+                class="px-6 pt-1 pb-1 bg-[#1f2c34] flex justify-between items-center text-[10px] font-semibold text-white/80 z-20 select-none"
+              >
+                <span>17:45</span>
+                <div class="flex items-center gap-1.5">
+                  <app-icon name="wifi" class="text-[10px]"></app-icon>
+                  <app-icon
+                    name="signal_cellular_4_bar"
+                    class="text-[10px]"
+                  ></app-icon>
+                  <app-icon name="battery_full" class="text-[10px]"></app-icon>
+                </div>
+              </div>
+
+              <!-- WhatsApp Header -->
+              <div
+                class="px-4 py-3 bg-[#1f2c34] border-b border-[#2a3942] flex items-center gap-2.5 z-20 shadow-md"
+              >
+                <app-icon
+                  name="arrow_back"
+                  class="text-white text-base cursor-pointer"
+                ></app-icon>
+
+                <!-- Avatar -->
+                <div
+                  class="w-9 h-9 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center text-white shrink-0 relative"
+                >
+                  <app-icon
+                    name="chat"
+                    class="text-base text-[#25D366]"
+                  ></app-icon>
+                  <span
+                    class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#25D366] border-2 border-[#1f2c34]"
+                  ></span>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs font-bold text-white truncate"
+                      >Axenda</span
+                    >
+                    <app-icon
+                      name="verified"
+                      class="text-[10px] text-[#53bdeb]"
+                    ></app-icon>
+                  </div>
+                  <span class="text-[9px] text-white/60 block -mt-0.5"
+                    >Cuenta oficial</span
+                  >
+                </div>
+
+                <!-- Header Action Icons -->
+                <div class="flex items-center gap-3 text-white/90">
+                  <app-icon name="videocam" class="text-base"></app-icon>
+                  <app-icon name="call" class="text-sm"></app-icon>
+                  <app-icon name="more_vert" class="text-base"></app-icon>
+                </div>
+              </div>
+
+              <!-- WhatsApp Chat Window / Background Wallpaper -->
+              <div
+                class="flex-1 p-4 overflow-y-auto flex flex-col justify-end gap-4 relative"
+                style="background-color: #0b141a; background-image: radial-gradient(rgba(32,44,51,0.6) 1px, transparent 0); background-size: 16px 16px;"
+              >
+                <!-- Date Divider -->
+                <div
+                  class="self-center px-3 py-1 rounded-lg bg-[#182229] border border-[#222d34] text-[9px] font-semibold text-[#8696a0] uppercase tracking-wider mb-2 shadow-sm"
+                >
+                  Hoy
+                </div>
+
+                <!-- WhatsApp Message Bubble (Left/Incoming) -->
+                <div
+                  *ngIf="selectedTemplate()"
+                  class="flex flex-col max-w-[85%] self-start animate-in fade-in slide-in-from-bottom-2 duration-300"
+                >
+                  <!-- Bubble Container -->
+                  <div
+                    class="rounded-2xl rounded-tl-none bg-[#202c33] border border-[#2c373d] p-3 shadow-lg relative flex flex-col"
+                  >
+                    <!-- Message Text (Markdown translated to HTML) -->
+                    <div
+                      [innerHTML]="getFormattedHtml(selectedTemplate()!.body)"
+                      class="text-[11px] text-[#e9edef] font-sans leading-relaxed break-words whitespace-pre-line"
+                    ></div>
+
+                    <!-- Time & Double Check -->
+                    <div
+                      class="flex items-center gap-1 self-end mt-1.5 text-[8px] text-[#8696a0]"
+                    >
+                      <span>17:45</span>
+                    </div>
+
+                    <!-- Simulated URL Button if present -->
+                    <div
+                      *ngIf="
+                        selectedTemplate()!.buttons &&
+                        selectedTemplate()!.buttons.length > 0
+                      "
+                      class="mt-3 pt-2 border-t border-[#2a3942] flex flex-col gap-1 -mx-3 -mb-3 rounded-b-2xl overflow-hidden bg-[#1f2c34]"
+                    >
+                      <div
+                        *ngFor="let btn of selectedTemplate()!.buttons"
+                        class="py-2.5 flex items-center justify-center gap-1.5 text-center text-[#53bdeb] text-[11px] font-semibold hover:bg-[#202c33]/60 cursor-pointer transition-all"
+                      >
+                        <app-icon
+                          name="open_in_new"
+                          class="text-[10px]"
+                        ></app-icon>
+                        {{ btn.text }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Simulated WhatsApp Keyboard / Input Area -->
+              <div
+                class="p-2 bg-[#1f2c34]/50 border-t border-[#2a3942]/40 flex items-center gap-2 z-20"
+              >
+                <!-- Text Box -->
+                <div
+                  class="flex-1 h-9 rounded-full bg-[#2a3942] border border-[#37454f] px-3 flex items-center gap-2 text-white/50 text-[11px]"
+                >
+                  <app-icon
+                    name="sentiment_satisfied"
+                    class="text-sm text-white/40"
+                  ></app-icon>
+                  <span class="flex-1">Mensaje</span>
+                  <app-icon
+                    name="attach_file"
+                    class="text-sm text-white/40 rotate-45"
+                  ></app-icon>
+                  <app-icon
+                    name="photo_camera"
+                    class="text-sm text-white/40"
+                  ></app-icon>
+                </div>
+                <!-- Mic Icon Button -->
+                <div
+                  class="w-9 h-9 rounded-full bg-[#00a884] flex items-center justify-center text-white shrink-0 shadow-md"
+                >
+                  <app-icon name="mic" class="text-sm"></app-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
 })
 export class SettingsWhatsappComponent implements OnInit {
   private whatsappService = inject(WhatsappService);
@@ -25,7 +536,7 @@ export class SettingsWhatsappComponent implements OnInit {
   nextResetDate = computed(() => {
     const configVal = this.config();
     if (!configVal || !configVal.lastResetDate) return null;
-    
+
     const date = new Date(configVal.lastResetDate);
     date.setMonth(date.getMonth() + 1);
     return date;
@@ -42,7 +553,7 @@ export class SettingsWhatsappComponent implements OnInit {
       next: (config) => {
         this.config.set(config);
       },
-      error: () => {}
+      error: () => {},
     });
   }
 
@@ -50,19 +561,22 @@ export class SettingsWhatsappComponent implements OnInit {
     this.whatsappService.getTemplates().subscribe({
       next: (templates) => {
         // Filter out no-cancel templates to only show high-level actions
-        const visibleTemplates = templates.filter(t => 
-          t.name === 'axenda_booking_confirmation' ||
-          t.name === 'axenda_booking_reminder' ||
-          t.name === 'axenda_booking_cancellation'
+        const visibleTemplates = templates.filter(
+          (t) =>
+            t.name === 'axenda_booking_confirmation' ||
+            t.name === 'axenda_booking_reminder' ||
+            t.name === 'axenda_booking_cancellation',
         );
-        
+
         // Sort: confirmation first, then reminder, then cancellation
         const orderMap: Record<string, number> = {
           axenda_booking_confirmation: 1,
           axenda_booking_reminder: 2,
-          axenda_booking_cancellation: 3
+          axenda_booking_cancellation: 3,
         };
-        visibleTemplates.sort((a, b) => (orderMap[a.name] || 99) - (orderMap[b.name] || 99));
+        visibleTemplates.sort(
+          (a, b) => (orderMap[a.name] || 99) - (orderMap[b.name] || 99),
+        );
 
         this.templates.set(visibleTemplates);
         if (visibleTemplates.length > 0) {
@@ -72,7 +586,7 @@ export class SettingsWhatsappComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -88,9 +602,9 @@ export class SettingsWhatsappComponent implements OnInit {
       appointmentDate: '28/05',
       appointmentTime: '15:30 hs',
       branchAddress: 'Av. Corrientes 1234, CABA',
-      cancelLink: 'https://axenda.ar/booking/cancel/mock-id'
+      cancelLink: 'https://axenda.ar/booking/cancel/mock-id',
     };
-    
+
     // Replace template variables
     let text = body.replace(/{{(\w+)}}/g, (match, key) => {
       return mockValues[key] || match;
@@ -109,16 +623,19 @@ export class SettingsWhatsappComponent implements OnInit {
     const names: Record<string, string> = {
       axenda_booking_confirmation: 'Confirmación de Reserva',
       axenda_booking_reminder: 'Recordatorio de Turno',
-      axenda_booking_cancellation: 'Cancelación de Turno'
+      axenda_booking_cancellation: 'Cancelación de Turno',
     };
     return names[name] || name;
   }
 
   getFriendlyDescription(name: string): string {
     const desc: Record<string, string> = {
-      axenda_booking_confirmation: 'Enviado automáticamente al agendar un turno desde la web pública.',
-      axenda_booking_reminder: 'Recordatorio automático enviado al cliente 24 horas antes del turno.',
-      axenda_booking_cancellation: 'Notificación enviada cuando cancelas la reserva desde el panel de administración.'
+      axenda_booking_confirmation:
+        'Enviado automáticamente al agendar un turno desde la web pública.',
+      axenda_booking_reminder:
+        'Recordatorio automático enviado al cliente 24 horas antes del turno.',
+      axenda_booking_cancellation:
+        'Notificación enviada cuando cancelas la reserva desde el panel de administración.',
     };
     return desc[name] || '';
   }

@@ -6,8 +6,134 @@ import { SnackbarService, SnackbarMessage } from '@services/snackbar.service';
   selector: 'app-snackbar',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './snackbar.component.html',
-  styleUrl: './snackbar.component.css'
+  template: `
+    <div class="snackbar-container">
+      @for (snackbar of snackbars(); track snackbar.id) {
+        <div
+          [class]="'snackbar-item glass ' + snackbar.type"
+          (click)="remove(snackbar.id)"
+        >
+          <span class="icon">{{ getIcon(snackbar.type) }}</span>
+          <span class="message">{{ snackbar.message }}</span>
+          <button class="btn-close">×</button>
+        </div>
+      }
+    </div>
+  `,
+  styles: [
+    `
+      .snackbar-container {
+        position: fixed;
+        bottom: 2rem;
+        left: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .snackbar-item {
+        pointer-events: auto;
+        min-width: 300px;
+        max-width: 450px;
+        padding: 1rem 1.2rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid var(--color-glass-border);
+      }
+
+      .snackbar-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+      }
+
+      :host-context(.dark) .snackbar-item {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      :host-context(.dark) .snackbar-item:hover {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+      }
+
+      .snackbar-item.glass {
+        background: var(--color-glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+
+      .message {
+        flex: 1;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--color-text-main);
+      }
+
+      .icon {
+        font-size: 1.2rem;
+      }
+
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: var(--color-text-dim);
+        cursor: pointer;
+        transition:
+          color 0.2s,
+          transform 0.2s;
+      }
+
+      .btn-close:hover {
+        color: var(--color-text-main);
+        transform: scale(1.15);
+      }
+
+      /* Tipos */
+      .success {
+        border-left: 5px solid var(--color-success);
+      }
+      .error {
+        border-left: 5px solid var(--color-error);
+      }
+      .warning {
+        border-left: 5px solid var(--color-warning);
+      }
+      .info {
+        border-left: 5px solid var(--color-primary);
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Adaptación para pantallas pequeñas */
+      @media (max-width: 600px) {
+        .snackbar-container {
+          left: 1rem;
+          right: 1rem;
+          bottom: 1rem;
+        }
+        .snackbar-item {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+    `,
+  ],
 })
 export class SnackbarComponent {
   private snackbarService = inject(SnackbarService);
@@ -19,11 +145,16 @@ export class SnackbarComponent {
 
   getIcon(type: string): string {
     switch (type) {
-      case 'success': return '✅';
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      default: return '🔔';
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
+      default:
+        return '🔔';
     }
   }
 }

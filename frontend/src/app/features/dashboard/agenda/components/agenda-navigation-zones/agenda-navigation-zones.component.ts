@@ -1,4 +1,15 @@
-import { Component, EventEmitter, Input, Output, inject, OnDestroy, HostListener, OnInit, effect, ElementRef } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  inject,
+  OnDestroy,
+  HostListener,
+  OnInit,
+  effect,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgendaService } from '../../agenda.service';
 import { SidebarService } from '@core/services/sidebar.service';
@@ -7,19 +18,203 @@ import { SidebarService } from '@core/services/sidebar.service';
   selector: 'app-agenda-navigation-zones',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: 'agenda-navigation-zones.component.html',
-  styleUrls: ['./agenda-navigation-zones.component.css'],
-  styles: [`
-    :host {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 50;
-    }
-    .day-change-zone {
-      pointer-events: auto;
-    }
-  `]
+  template: `
+    <div
+      class="day-change-zone left-zone"
+      [style.left]="offsetLeft"
+      [class.visible]="
+        agendaService.isDragging() && !agendaService.isNavigating()
+      "
+      [class.navigating]="
+        activeDir === 'prev' &&
+        (agendaService.isDragging() || !sidebarService.isMobile())
+      "
+      (click)="navigate.emit('prev')"
+    >
+      <div class="zone-content">
+        <span class="text-2xl">‹</span>
+        <span
+          class="text-[10px] uppercase font-bold vertical-text text-center"
+          >{{ prevLabel }}</span
+        >
+      </div>
+    </div>
+
+    <!-- Zona Derecha -->
+    <div
+      class="day-change-zone right-zone"
+      [class.visible]="
+        agendaService.isDragging() && !agendaService.isNavigating()
+      "
+      [class.navigating]="
+        activeDir === 'next' &&
+        (agendaService.isDragging() || !sidebarService.isMobile())
+      "
+      (click)="navigate.emit('next')"
+    >
+      <div class="zone-content">
+        <span class="text-2xl">›</span>
+        <span
+          class="text-[10px] uppercase font-bold vertical-text text-center"
+          >{{ nextLabel }}</span
+        >
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      .day-change-zone {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto;
+        opacity: 0;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        backdrop-filter: blur(0px);
+      }
+
+      @media (max-width: 640px) {
+        .day-change-zone {
+          width: 20px;
+        }
+      }
+
+      .day-change-zone.visible,
+      .day-change-zone.navigating,
+      .day-change-zone:hover {
+        opacity: 1;
+        width: 80px;
+      }
+
+      @media (max-width: 640px) {
+        .day-change-zone.visible,
+        .day-change-zone.navigating,
+        .day-change-zone:hover {
+          width: 40px;
+        }
+      }
+
+      .day-change-zone.navigating {
+        backdrop-filter: blur(8px);
+      }
+
+      .left-zone {
+        left: 0;
+        background: linear-gradient(
+          to right,
+          rgba(99, 102, 241, 0.25),
+          transparent
+        );
+        border-left: 4px solid rgba(99, 102, 241, 0.5);
+      }
+
+      .right-zone {
+        right: 0;
+        background: linear-gradient(
+          to left,
+          rgba(99, 102, 241, 0.25),
+          transparent
+        );
+        border-right: 4px solid rgba(99, 102, 241, 0.5);
+      }
+
+      .day-change-zone:hover,
+      .day-change-zone.navigating {
+        backdrop-filter: blur(8px);
+      }
+
+      .left-zone:hover,
+      .left-zone.navigating {
+        background: linear-gradient(
+          to right,
+          rgba(99, 102, 241, 0.45),
+          transparent
+        );
+      }
+
+      .right-zone:hover,
+      .right-zone.navigating {
+        background: linear-gradient(
+          to left,
+          rgba(99, 102, 241, 0.45),
+          transparent
+        );
+      }
+      .zone-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        color: #6366f1;
+        filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+        transition: all 0.3s ease;
+        opacity: 0.6;
+        pointer-events: auto;
+      }
+
+      @media (max-width: 640px) {
+        .zone-content {
+          gap: 4px;
+        }
+        .zone-content .text-2xl {
+          font-size: 1.25rem;
+        }
+        .zone-content span:last-child {
+          font-size: 8px !important;
+        }
+      }
+
+      .day-change-zone:hover .zone-content,
+      .day-change-zone.navigating .zone-content {
+        transform: scale(1.2);
+        color: white;
+        opacity: 1;
+      }
+
+      .vertical-text {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        letter-spacing: 2px;
+      }
+
+      @media (max-width: 640px) {
+        .vertical-text {
+          letter-spacing: 1px;
+        }
+      }
+
+      @keyframes pulse-zone {
+        0% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 0.8;
+        }
+        100% {
+          opacity: 0.4;
+        }
+      }
+
+      .day-change-zone.visible:not(:hover) .zone-content {
+        animation: pulse-zone 2s infinite ease-in-out;
+      }
+      :host {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 50;
+      }
+      .day-change-zone {
+        pointer-events: auto;
+      }
+    `,
+  ],
 })
 export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
   @Input() prevLabel = 'Anterior';
@@ -47,7 +242,8 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       const dragging = this.agendaService.isDragging();
 
       if (!dragging) {
-        if (this.activeDir && !this.agendaService.isNavigating()) this.onZoneLeave();
+        if (this.activeDir && !this.agendaService.isNavigating())
+          this.onZoneLeave();
         return;
       }
 
@@ -68,29 +264,33 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.clearTimer();
   }
 
   // --- Lógica de Swipe para Mobile ---
-  
+
   @HostListener('document:touchstart', ['$event'])
   onTouchStart(event: TouchEvent): void {
     if (!this.sidebarService.isMobile() || this.disabled) return;
-    
+
     // Ignorar si el evento viene de un modal/overlay
     const target = event.target as HTMLElement;
     if (target?.closest('.cdk-overlay-container')) return;
     if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
-    
+
     const touch = event.touches[0];
     const rect = this.el.nativeElement.getBoundingClientRect();
 
     // Solo capturar si el touch empieza dentro del área de la agenda
-    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
-        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+    if (
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom
+    ) {
       this.touchStartX = touch.clientX;
       this.touchStartY = touch.clientY;
       this.touchStartTime = Date.now();
@@ -101,10 +301,15 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
 
   @HostListener('document:touchmove', ['$event'])
   onTouchMove(event: TouchEvent): void {
-    if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) return;
+    if (
+      !this.sidebarService.isMobile() ||
+      this.disabled ||
+      this.touchStartX === 0
+    )
+      return;
     if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
-    
-    // Si se inicia un arrastre de turno, invalidamos el inicio del swipe para evitar 
+
+    // Si se inicia un arrastre de turno, invalidamos el inicio del swipe para evitar
     // que al soltar el turno se interprete como una navegación lateral.
     if (this.agendaService.isDragging()) {
       this.touchStartX = 0;
@@ -117,7 +322,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     const absX = Math.abs(deltaX);
 
     const duration = Date.now() - this.touchStartTime;
-    const dynamicThreshold = 30 + (duration * 5);
+    const dynamicThreshold = 30 + duration * 5;
 
     // Feedback visual preventivo si el movimiento es horizontal y suficientemente rápido
     if (absX > dynamicThreshold) {
@@ -129,14 +334,18 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
 
   @HostListener('document:touchend', ['$event'])
   onTouchEnd(event: TouchEvent): void {
-    if (!this.sidebarService.isMobile() || this.disabled || this.touchStartX === 0) {
+    if (
+      !this.sidebarService.isMobile() ||
+      this.disabled ||
+      this.touchStartX === 0
+    ) {
       this.touchStartX = 0;
       this.activeDir = null;
       return;
     }
-    
+
     if (!this.sidebarService.isCollapsed()) return; // Ignorar si el sidebar está abierto
-    
+
     if (this.agendaService.isDragging()) {
       this.touchStartX = 0;
       return;
@@ -152,7 +361,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     // Calculamos el umbral dinámico usando una recta: d = m*t + b
     // Queremos que para un t pequeño (flick rápido), baste con poca distancia (~60px)
     // Pero si el tiempo t aumenta, la distancia requerida crece para evitar gestos lentos.
-    const minRequiredDistance = 60 + (duration * 0.2); 
+    const minRequiredDistance = 60 + duration * 0.2;
 
     // Umbral: Distancia dinámica, claramente horizontal y tiempo máximo razonable
     if (absX > minRequiredDistance && absX > absY * 1.5 && duration < 700) {
@@ -160,7 +369,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
       this.activeDir = dir;
       this.navigate.emit(dir);
       this.agendaService.triggerNavigationFeedback();
-      
+
       // Mantener el feedback visual durante la transición
       setTimeout(() => {
         this.activeDir = null;
@@ -168,7 +377,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
     } else {
       this.activeDir = null;
     }
-    
+
     this.touchStartX = 0;
   }
 
@@ -176,7 +385,7 @@ export class AgendaNavigationZonesComponent implements OnInit, OnDestroy {
 
   onZoneEnter(dir: 'prev' | 'next'): void {
     if (this.activeDir === dir) return;
-    
+
     this.clearTimer();
     if (!this.agendaService.isDragging()) return;
 
