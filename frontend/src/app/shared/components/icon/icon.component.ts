@@ -3,7 +3,7 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'app-icon',
   standalone: true,
-  template: `{{ name }}`,
+  template: `<span class="notranslate" translate="no">{{ name }}</span>`,
   host: {
     '[class.material-symbols-rounded]': 'variant === "rounded"',
     '[class.material-symbols-outlined]': 'variant === "outlined"',
