@@ -7,8 +7,11 @@ import { LoadingBarComponent } from './shared/components/loading-bar/loading-bar
   standalone: true,
   imports: [RouterModule, RouterOutlet, SnackbarComponent, LoadingBarComponent],
   selector: 'app-root',
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  template: `
+    <app-loading-bar></app-loading-bar>
+    <router-outlet></router-outlet>
+    <app-snackbar></app-snackbar>
+  `,
 })
 export class AppComponent {
   title = 'web';
