@@ -14,6 +14,11 @@ export const appRoutes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) 
   },
+  {
+    path: 'login/auth-bridge',
+    title: 'Axenda - Acceso Delegado',
+    loadComponent: () => import('./features/auth/impersonate/impersonate.component').then(m => m.ImpersonateComponent)
+  },
   { 
     path: 'register', 
     title: 'Axenda - Crear Cuenta',

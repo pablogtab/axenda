@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, NotFoundException, BadRequestExcepti
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { SubscriptionStatus, SubscriptionBillingCycle } from '@prisma/client';
+import { SubscriptionStatus, SubscriptionBillingCycle, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -121,8 +121,21 @@ export class AdminService {
     ]);
 
     // Calculate MRR (Monthly Recurring Revenue)
+    // Solo cuenta tenants con al menos una factura pagada para excluir suscripciones ajustadas manualmente.
+    const paidTenantIdsRows = await this.prisma.subscriptionInvoice.findMany({
+      where: { status: 'PAID' },
+      select: { tenantId: true },
+      distinct: ['tenantId'],
+    });
+    const paidTenantIds = paidTenantIdsRows.map((row) => row.tenantId);
+
     const activeSubscriptions = await this.prisma.tenantSubscription.findMany({
-      where: { status: 'ACTIVE' },
+      where: {
+        status: 'ACTIVE',
+        tenantId: {
+          in: paidTenantIds,
+        },
+      },
       include: { plan: true },
     });
 
@@ -302,6 +315,104 @@ export class AdminService {
     });
 
     return updatedSub;
+  }
+
+  async impersonateTenant(tenantId: string, userId?: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } })
+    if (!tenant) {
+      throw new NotFoundException('Negocio no encontrado.')
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: { tenantId, active: true },
+      select: {
+        id: true,
+        tenantId: true,
+        role: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    if (users.length === 0) {
+      throw new BadRequestException('El tenant no tiene usuarios activos para apersonarse.')
+    }
+
+    const selectedById = userId ? users.find((u) => u.id === userId) : undefined
+    if (userId && !selectedById) {
+      throw new NotFoundException('El usuario seleccionado no existe o no está activo en este tenant.')
+    }
+
+    const rolePriority: UserRole[] = [
+      UserRole.ADMIN,
+      UserRole.MANAGER,
+      UserRole.RECEPTIONIST,
+      UserRole.PROFESSIONAL,
+    ]
+
+    const selectedByRole = rolePriority
+      .map((role) => users.find((u) => u.role === role))
+      .find(Boolean)
+
+    const targetUser = selectedById ?? selectedByRole ?? users[0]
+
+    const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET')
+    const refreshExpiresIn = this.config.get<string>('JWT_REFRESH_EXPIRES_IN', '7d')
+    const accessTokenExpiresIn = this.config.get<string>('JWT_EXPIRES_IN', '15m')
+    const payload = {
+      sub: targetUser.id,
+      tenantId: targetUser.tenantId,
+      role: targetUser.role,
+    }
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync({ ...payload, jti: crypto.randomUUID() }),
+      this.jwtService.signAsync({ ...payload, jti: crypto.randomUUID() } as any, {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
+      } as any),
+    ])
+
+    const expiresAt = this._parseExpiry(accessTokenExpiresIn)
+    const refreshExpiresAt = this._parseExpiry(refreshExpiresIn)
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: targetUser.id,
+        token: refreshToken,
+        expiresAt: refreshExpiresAt,
+      },
+    })
+
+    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:4200').replace(/\/$/, '')
+    const params = new URLSearchParams({
+      accessToken,
+      refreshToken,
+      expiresAt: expiresAt.toISOString(),
+      refreshExpiresAt: refreshExpiresAt.toISOString(),
+    })
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresAt: expiresAt.toISOString(),
+      refreshExpiresAt: refreshExpiresAt.toISOString(),
+      redirectUrl: `${frontendUrl}/login/auth-bridge?${params.toString()}`,
+      targetUser: {
+        id: targetUser.id,
+        email: targetUser.email,
+        firstName: targetUser.firstName,
+        lastName: targetUser.lastName,
+        role: targetUser.role,
+      },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+      },
+    }
   }
 
   // ─── Coupons (ReferralCode) ──────────────────────────────────────────────────

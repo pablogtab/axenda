@@ -97,6 +97,11 @@ export class AuthService {
     return now.getTime() > (expiryDate.getTime() - 60000);
   }
 
+  applyExternalSession(data: AuthData): void {
+    this.handleAuthentication(data);
+    this.isLoggedInSubject.next(true);
+  }
+
   private handleAuthentication(data: AuthData): void {
     this.storage.set(this.ACCESS_TOKEN_KEY, data.accessToken);
     this.storage.set(this.REFRESH_TOKEN_KEY, data.refreshToken);

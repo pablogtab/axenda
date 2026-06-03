@@ -21,7 +21,7 @@ export class AdminService {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
-    
+
     if (search) {
       params = params.set('search', search);
     }
@@ -36,6 +36,12 @@ export class AdminService {
     endDate: string | null;
   }): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/tenants/${tenantId}/subscription`, subscriptionData);
+  }
+
+  impersonateTenant(tenantId: string, userId?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tenants/${tenantId}/session-proxy`, {
+      userId,
+    });
   }
 
   searchUsers(search: string): Observable<any> {

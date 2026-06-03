@@ -86,6 +86,15 @@ export class AdminController {
     return this.adminService.overrideSubscription(tenantId, body);
   }
 
+  @Post('tenants/:id/session-proxy')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Apersonarse como un usuario de un tenant' })
+  impersonateTenant(@Param('id') tenantId: string, @Body() body?: { userId?: string }) {
+    return this.adminService.impersonateTenant(tenantId, body?.userId)
+  }
+
   // ─── Users Lookup (SUPER_ADMIN only) ────────────────────────────────────────
   @Get('users')
   @UseGuards(JwtAuthGuard, RolesGuard)

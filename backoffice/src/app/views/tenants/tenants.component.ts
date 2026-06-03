@@ -100,12 +100,21 @@ import { AdminService } from '../../core/services/admin.service';
               </td>
               <td>{{ tenant.createdAt | date:'dd/MM/yyyy HH:mm' }} hs</td>
               <td>
-                <p-button
-                  label="Suscripción"
-                  icon="pi pi-cog"
-                  styleClass="p-button-sm p-button-secondary"
-                  (click)="openEditSubscription(tenant)"
-                ></p-button>
+                <div class="row-actions">
+                  <p-button
+                    label="Suscripción"
+                    icon="pi pi-cog"
+                    styleClass="p-button-sm p-button-secondary"
+                    (click)="openEditSubscription(tenant)"
+                  ></p-button>
+                  <p-button
+                    label="Apersonarme"
+                    icon="pi pi-sign-in"
+                    styleClass="p-button-sm p-button-success"
+                    [loading]="impersonatingTenantId() === tenant.id"
+                    (click)="impersonateTenant(tenant)"
+                  ></p-button>
+                </div>
               </td>
             </tr>
           </ng-template>
@@ -330,6 +339,12 @@ import { AdminService } from '../../core/services/admin.service';
       font-size: 0.825rem;
       color: #94a3b8;
     }
+    .row-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
     ::ng-deep .p-paginator {
       background-color: #0f172a !important;
       border: 1px solid #334155 !important;
@@ -452,6 +467,7 @@ export class TenantsComponent implements OnInit {
   displayDialog = false;
   selectedTenant = signal<any | null>(null);
   isSaving = signal<boolean>(false);
+  impersonatingTenantId = signal<string | null>(null);
 
   // Form selections
   plans = [
@@ -582,6 +598,31 @@ export class TenantsComponent implements OnInit {
       error: (err) => {
         this.isSaving.set(false);
         console.error('Error saving subscription override', err);
+      },
+    });
+  }
+
+  impersonateTenant(tenant: any): void {
+    if (!tenant?.id) return;
+
+    this.impersonatingTenantId.set(tenant.id);
+    this.adminService.impersonateTenant(tenant.id).subscribe({
+      next: (res) => {
+        this.impersonatingTenantId.set(null);
+        const redirectUrl = res?.data?.redirectUrl;
+        if (!redirectUrl) {
+          console.error('No se recibió redirectUrl para impersonación');
+          return;
+        }
+
+        const popup = window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+        if (!popup) {
+          window.location.href = redirectUrl;
+        }
+      },
+      error: (err) => {
+        this.impersonatingTenantId.set(null);
+        console.error('Error impersonando tenant', err);
       },
     });
   }
