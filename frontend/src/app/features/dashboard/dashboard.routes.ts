@@ -43,6 +43,11 @@ export const dashboardRoutes: Routes = [
     component: SettingsComponent
   },
   {
+    path: 'help',
+    title: 'Axenda - Centro de Ayuda',
+    loadComponent: () => import('./help/help.component').then(m => m.HelpComponent)
+  },
+  {
     path: 'subscription/plans',
     title: 'Axenda - Planes y Precios',
     loadComponent: () => import('./subscription/subscription-plans.component').then(m => m.SubscriptionPlansComponent)

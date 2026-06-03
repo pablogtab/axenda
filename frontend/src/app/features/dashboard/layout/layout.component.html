@@ -63,6 +63,13 @@
         <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Invitaciones</span>
       </a>
 
+      <a routerLink="/dashboard/help" 
+         routerLinkActive="active-nav-item" 
+         class="nav-item group">
+        <app-icon name="help" class="nav-icon"></app-icon>
+        <span *ngIf="!sidebarService.isCollapsed()" class="nav-label">Centro de Ayuda</span>
+      </a>
+
       <div class="mt-auto pt-6">
         <a routerLink="/dashboard/settings" 
            routerLinkActive="active-nav-item" 
