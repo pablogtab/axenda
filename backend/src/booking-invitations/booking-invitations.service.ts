@@ -71,7 +71,7 @@ export class BookingInvitationsService {
   /**
    * Valida públicamente un token de invitación y retorna su información
    */
-  async validateToken(token: string) {
+  async validateToken(token: string, excludeAppointmentId?: string) {
     const invitation = await this.prisma.bookingInvitation.findUnique({
       where: { token },
       include: {
@@ -92,6 +92,9 @@ export class BookingInvitationsService {
         client: {
           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
         },
+        appointments: excludeAppointmentId ? {
+          where: { id: excludeAppointmentId }
+        } : undefined
       },
     });
 
@@ -107,7 +110,12 @@ export class BookingInvitationsService {
       throw new BadRequestException('Este link de invitación no está disponible.');
     }
 
-    if (invitation.maxUses !== null && invitation.usesCount >= invitation.maxUses) {
+    let usesCount = invitation.usesCount;
+    if (excludeAppointmentId && invitation.appointments && invitation.appointments.length > 0) {
+      usesCount = Math.max(0, usesCount - 1);
+    }
+
+    if (invitation.maxUses !== null && usesCount >= invitation.maxUses) {
       throw new BadRequestException('Este link de invitación no está disponible.');
     }
 

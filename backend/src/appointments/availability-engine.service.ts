@@ -18,7 +18,7 @@ export class AvailabilityEngineService {
 
     let invitation: any = null
     if (dto.invitationToken) {
-      invitation = await this.bookingInvitationsService.validateToken(dto.invitationToken)
+      invitation = await this.bookingInvitationsService.validateToken(dto.invitationToken, dto.excludeAppointmentId)
       if (invitation.tenantId !== tenantId) {
         throw new BadRequestException('Invitación inválida para este comercio')
       }

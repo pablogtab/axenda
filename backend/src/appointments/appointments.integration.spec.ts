@@ -973,5 +973,67 @@ describe('Appointments — Integration', () => {
         await prisma.bookingInvitation.delete({ where: { id: testInvitation.id } }).catch(() => null);
       }
     });
+
+    it('should allow rescheduling an invitation-based appointment even if invitation has maxUses=1 and is fully used', async () => {
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { cancellationLimit: '24h' }
+      });
+
+      const testInvitation = await prisma.bookingInvitation.create({
+        data: {
+          tenantId,
+          token: 'inv_max_uses_resched_test',
+          startDate: new Date('2026-06-08T00:00:00Z'),
+          endDate: new Date('2026-06-09T00:00:00Z'),
+          maxUses: 1,
+          usesCount: 1,
+          schedule: [
+            { dayOfWeek: 1, startTime: '10:00', endTime: '12:00' }
+          ]
+        }
+      });
+
+      const startTime = new Date('2026-06-08T13:00:00Z'); // 10:00 local (Argentina offset is -3h => 13:00 UTC)
+      const cancelToken = `inv-cancel-max-${Date.now()}`;
+      
+      const appt = await prisma.appointment.create({
+        data: {
+          tenantId,
+          clientId,
+          professionalId,
+          serviceId,
+          branchId,
+          startTime: startTime,
+          endTime: new Date(startTime.getTime() + 30 * 60000),
+          status: 'PENDING',
+          cancelToken,
+          invitationId: testInvitation.id
+        }
+      });
+
+      try {
+        const availRes = await request(app.getHttpServer())
+          .get(`/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-08&excludeAppointmentId=${appt.id}&invitationToken=${testInvitation.token}`)
+          .expect(200);
+
+        const slots = availRes.body.data as { time: string; available: boolean }[];
+        const activeTimes = slots.filter(s => s.available).map(s => s.time);
+        expect(activeTimes).toContain('10:00');
+
+        const goodTime = new Date('2026-06-08T14:00:00Z'); // 11:00 local
+        await request(app.getHttpServer())
+          .post(`/api/public/appointments/${cancelToken}/reschedule`)
+          .send({ startTime: goodTime.toISOString() })
+          .expect(200);
+
+        const updatedAppt = await prisma.appointment.findUnique({ where: { id: appt.id } });
+        expect(new Date(updatedAppt!.startTime).toISOString()).toBe(goodTime.toISOString());
+
+      } finally {
+        await prisma.appointment.delete({ where: { id: appt.id } }).catch(() => null);
+        await prisma.bookingInvitation.delete({ where: { id: testInvitation.id } }).catch(() => null);
+      }
+    });
   });
 })
