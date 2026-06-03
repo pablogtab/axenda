@@ -309,9 +309,9 @@
                   [class.padding]="day.isPadding"
                   [class.today]="day.isToday"
                   [class.selected]="selectedDate()?.getTime() === day.date?.getTime()"
-                  [class.unavailable]="!day.hasAvailability && !day.isPadding && !day.isPast"
+                  [class.unavailable]="!isDayAvailable(day) && !day.isPadding && !day.isPast"
                   [class.past]="day.isPast"
-                  [disabled]="day.isPadding || day.isPast || (!day.hasAvailability && !day.isPadding)"
+                  [disabled]="day.isPadding || day.isPast || (!isDayAvailable(day) && !day.isPadding)"
                   (click)="day.date && selectDate(day.date)">
                   {{ day.day }}
                 </button>

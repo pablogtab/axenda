@@ -340,9 +340,21 @@ export class HelpComponent {
           description: 'Asigna qué profesionales de tu equipo están habilitados para realizar este servicio.',
           items: [
             'En el formulario del servicio, tilda las casillas de los **Profesionales correspondientes**.',
-            'Opcionalmente, sube una imagen de referencia y agrega indicaciones especiales para el cliente.',
             'Presiona `Guardar`.'
           ]
+        },
+        {
+          id: 'avanzado-servicios',
+          title: 'Imágenes y Ajustes Avanzados',
+          description: 'Personaliza la ficha del servicio subiendo fotos de tu trabajo y ajustando las políticas de reserva.',
+          items: [
+            'Sube hasta **5 imágenes** para crear una galería de fotos. La imagen seleccionada con una estrella actuará como la **Foto de Portada**.',
+            'Define si deseas mostrar u ocultar la **Duración** y el **Precio** en el sitio de reservas público utilizando los interruptores correspondientes.',
+            'Completa el campo **Etiqueta de Precio Personalizada** si quieres mostrar textos alternativos como `A consultar` o `Desde $1500` en lugar de una tarifa fija.',
+            'Redacta las **Indicaciones para el Cliente** que se le mostrarán en pantalla antes de confirmar su turno (ej: `Asistir sin maquillaje`).',
+            'Completa la lista de **Servicio Incluye** para detallar detalladamente qué insumos o etapas abarca la tarifa establecida.'
+          ],
+          tip: 'Puedes cambiar el orden de las fotos de tu galería arrastrándolas libremente (_drag & drop_).'
         }
       ]
     },
@@ -499,16 +511,6 @@ export class HelpComponent {
             'Enciende el switch de **Recordatorios de WhatsApp**.',
             'El sistema despachará los mensajes de forma automática _24 horas_ antes del inicio del turno.'
           ]
-        },
-        {
-          id: 'integracion-meta',
-          title: 'Tu Propia Cuenta de WhatsApp',
-          description: 'Configura tu propia cuenta de **WhatsApp Business API** de Meta para realizar los envíos desde tu número.',
-          items: [
-            'En la pestaña **Notificaciones**, ve a la sección de integración comercial.',
-            'Ingresa el **ID de Cuenta**, el **ID del Teléfono** y tu **Token de Acceso Permanente** de Meta.'
-          ],
-          tip: 'Puedes adquirir packs de mensajes extras desde la sección de **Suscripción** si agotas tu cupo mensual.'
         }
       ]
     }

@@ -80,6 +80,7 @@ export class BookingComponent implements OnInit {
 
   loadingSlots = signal(false);
   slotError = signal<string | null>(null);
+  checkedAvailability = signal<Record<string, boolean>>({});
 
   // Client Info State
   clientName = signal('');
@@ -135,6 +136,23 @@ export class BookingComponent implements OnInit {
 
       if (date && service && branch && prof && tenant && (this.currentStepId() === 'schedule' || this.isRescheduling())) {
         this.loadAvailability();
+      }
+    });
+
+    effect(() => {
+      const days = this.calendarDays();
+      const service = this.selectedService();
+      const branch = this.selectedBranch();
+      const prof = this.selectedProfessional();
+      const tenant = this.tenant();
+
+      const stepId = this.currentStepId();
+      const isResched = this.isRescheduling();
+
+      if (days.length > 0 && service && branch && prof && tenant && (stepId === 'schedule' || isResched)) {
+        setTimeout(() => {
+          this.checkMonthAvailability(days, service, branch, prof, tenant);
+        });
       }
     });
   }
@@ -425,6 +443,59 @@ export class BookingComponent implements OnInit {
         this.loadingSlots.set(false);
       }
     });
+  }
+
+  checkMonthAvailability(days: any[], service: any, branch: any, prof: any, tenant: any) {
+    const slug = tenant.publicSlug || this.route.snapshot.paramMap.get('publicSlug') || '';
+    const daysToCheck = days.filter(d => d.hasAvailability && !d.isPadding && !d.isPast);
+    
+    // Clear previous check results
+    this.checkedAvailability.set({});
+
+    const appt = this.appointment();
+    const invitationToken = this.invitationToken();
+
+    daysToCheck.forEach(day => {
+      const dateStr = this.formatDate(day.date);
+      const queryParams: any = {
+        professionalId: prof.id,
+        serviceId: service.id,
+        branchId: branch.id,
+        date: dateStr
+      };
+
+      if (appt?.id) {
+        queryParams.excludeAppointmentId = appt.id;
+      }
+      if (invitationToken) {
+        queryParams.invitationToken = invitationToken;
+      }
+
+      this.bookingService.getAvailability(slug, queryParams).subscribe({
+        next: (slots) => {
+          const hasAnySlot = slots && slots.some((s: any) => s.available);
+          this.checkedAvailability.update(prev => ({
+            ...prev,
+            [dateStr]: hasAnySlot
+          }));
+        },
+        error: (err) => {
+          console.error(`Error checking availability for ${dateStr}:`, err);
+        }
+      });
+    });
+  }
+
+  isDayAvailable(day: any): boolean {
+    if (day.isPadding || day.isPast) return false;
+    if (!day.hasAvailability) return false;
+    
+    const dateStr = this.formatDate(day.date);
+    const checked = this.checkedAvailability()[dateStr];
+    if (checked === false) {
+      return false; // Checked and verified as no available slots
+    }
+    return true; // Default to true if not checked yet or if it has slots
   }
 
   private formatDate(date: Date): string {
