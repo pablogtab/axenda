@@ -605,23 +605,25 @@ export class TenantsComponent implements OnInit {
   impersonateTenant(tenant: any): void {
     if (!tenant?.id) return;
 
+    // Abrir ventana en blanco sincrónicamente (evita bloqueo de popup del browser)
+    const newWindow = window.open('', '_blank');
+    if (!newWindow) return;
+
     this.impersonatingTenantId.set(tenant.id);
     this.adminService.impersonateTenant(tenant.id).subscribe({
       next: (res) => {
         this.impersonatingTenantId.set(null);
         const redirectUrl = res?.data?.redirectUrl;
         if (!redirectUrl) {
+          newWindow.close();
           console.error('No se recibió redirectUrl para impersonación');
           return;
         }
-
-        const popup = window.open(redirectUrl, '_blank', 'noopener,noreferrer');
-        if (!popup) {
-          window.location.href = redirectUrl;
-        }
+        newWindow.location.href = redirectUrl;
       },
       error: (err) => {
         this.impersonatingTenantId.set(null);
+        newWindow.close();
         console.error('Error impersonando tenant', err);
       },
     });
