@@ -122,8 +122,14 @@ export class AdminService {
 
     // Calculate MRR (Monthly Recurring Revenue)
     // Solo cuenta tenants con al menos una factura pagada para excluir suscripciones ajustadas manualmente.
-    const paidTenantIdsRows = await this.prisma.subscriptionInvoice.findMany({
-      where: { status: 'PAID' },
+    const paidTenantIdsRows = await this.prisma.tenantSubscription.findMany({
+      where: {
+        invoices: {
+          some: {
+            status: 'PAID',
+          },
+        },
+      },
       select: { tenantId: true },
       distinct: ['tenantId'],
     });

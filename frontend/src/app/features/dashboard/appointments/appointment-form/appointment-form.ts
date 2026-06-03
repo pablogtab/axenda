@@ -6,6 +6,7 @@ import { AppointmentsService, AppointmentStatus } from '@services/appointments.s
 import { ProfessionalsService, Professional } from '@services/professionals.service';
 import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
+import { CustomFieldsService, ClientFieldDefinition, ClientFieldValue } from '@services/custom-fields.service';
 import { TenantsService } from '@services/tenants.service';
 import { format } from 'date-fns';
 import { createLocalDate, toLocalDateStr, toLocalTimeStr } from '@core/utils/date-utils';
@@ -24,6 +25,11 @@ export interface AppointmentFormData {
   status?: AppointmentStatus;
   notes?: string;
   internalNotes?: string;
+}
+
+interface ClientCustomFieldSummaryItem {
+  name: string;
+  value: string;
 }
 
 import { SearchableSelectComponent } from '@shared/components/searchable-select/searchable-select';
@@ -45,6 +51,7 @@ export class AppointmentFormComponent implements OnInit {
   private professionalsService = inject(ProfessionalsService);
   private servicesService = inject(ServicesService);
   private clientsService = inject(ClientsService);
+  private customFieldsService = inject(CustomFieldsService);
   private dialog = inject(Dialog);
   public tenantsService = inject(TenantsService);
 
@@ -56,8 +63,10 @@ export class AppointmentFormComponent implements OnInit {
   isSubmitting = signal(false);
   isEditMode = signal(false);
   isLoadingData = signal(true);
+  isLoadingClientSummary = signal(false);
   serverError = signal<string | null>(null);
   appointmentData = signal<any | null>(null);
+  clientCustomFieldsSummary = signal<ClientCustomFieldSummaryItem[]>([]);
 
   // Configuraciones de los buscadores
   clientConfig = { 
@@ -152,6 +161,10 @@ export class AppointmentFormComponent implements OnInit {
     this.form.get('professionalId')?.valueChanges.subscribe(id => {
       this.filterServicesByProfessional(id);
     });
+
+    this.form.get('clientId')?.valueChanges.subscribe(clientId => {
+      this.loadClientCustomFieldsSummary(clientId);
+    });
   }
 
   private updateEndTime(): void {
@@ -213,6 +226,10 @@ export class AppointmentFormComponent implements OnInit {
             notes: appointment.notes,
             internalNotes: appointment.internalNotes
           }, { emitEvent: false });
+
+          this.loadClientCustomFieldsSummary(appointment.client?.id);
+        } else if (this.data.clientId) {
+          this.loadClientCustomFieldsSummary(this.data.clientId);
         }
 
         // 4. Filtrar servicios por profesional inicial
@@ -352,5 +369,66 @@ export class AppointmentFormComponent implements OnInit {
         this.form.patchValue({ clientId: result.id });
       }
     });
+  }
+
+  private loadClientCustomFieldsSummary(clientId?: string): void {
+    if (!clientId) {
+      this.clientCustomFieldsSummary.set([]);
+      this.isLoadingClientSummary.set(false);
+      return;
+    }
+
+    this.isLoadingClientSummary.set(true);
+    this.customFieldsService.getClientValues(clientId).subscribe({
+      next: ({ definitions, values }) => {
+        const valuesMap = new Map<string, ClientFieldValue>(values.map(v => [v.fieldId, v]));
+
+        const summary = definitions
+          .slice()
+          .sort((a, b) => a.order - b.order)
+          .map(def => {
+            const rawValue = valuesMap.get(def.id)?.value;
+            const formatted = this.formatCustomFieldValue(def, rawValue);
+            return {
+              name: def.name,
+              value: formatted,
+            };
+          })
+          .filter(item => item.value !== null) as ClientCustomFieldSummaryItem[];
+
+        this.clientCustomFieldsSummary.set(summary);
+        this.isLoadingClientSummary.set(false);
+      },
+      error: () => {
+        this.clientCustomFieldsSummary.set([]);
+        this.isLoadingClientSummary.set(false);
+      },
+    });
+  }
+
+  private formatCustomFieldValue(definition: ClientFieldDefinition, rawValue?: string | null): string | null {
+    if (rawValue === null || rawValue === undefined || rawValue === '') {
+      return null;
+    }
+
+    switch (definition.type) {
+      case 'BOOLEAN': {
+        const normalized = rawValue.toString().trim().toLowerCase();
+        if (normalized === 'true' || normalized === '1') return 'Si';
+        if (normalized === 'false' || normalized === '0') return 'No';
+        return rawValue;
+      }
+      case 'DATE': {
+        const date = new Date(rawValue);
+        if (isNaN(date.getTime())) return rawValue;
+        return format(date, 'dd/MM/yyyy');
+      }
+      case 'SELECT': {
+        const option = definition.list?.options?.find(o => o.id === rawValue);
+        return option?.label ?? rawValue;
+      }
+      default:
+        return rawValue;
+    }
   }
 }
