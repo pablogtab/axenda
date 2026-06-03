@@ -1,0 +1,278 @@
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { SidebarService } from '../../core/services/sidebar.service';
+import { TenantsService } from '../../core/services/tenants.service';
+import { SubscriptionService } from '../../core/services/subscription.service';
+import { ThemeService } from '../../core/services/theme.service';
+import { TrialBannerComponent } from '../../shared/components/trial-banner.component';
+import { IconComponent } from '@shared/components/icon.component';
+
+@Component({
+  selector: 'app-layout',
+  standalone: true,
+  imports: [CommonModule, RouterModule, TrialBannerComponent, IconComponent],
+  template: `
+    <div class="flex h-dvh bg-bg-primary overflow-hidden relative font-sans">
+      <!-- Mobile Backdrop -->
+      <div
+        *ngIf="!sidebarService.isCollapsed() && sidebarService.isMobile()"
+        (click)="sidebarService.toggle()"
+        class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] lg:hidden transition-opacity duration-500"
+      ></div>
+
+      <!-- Sidebar -->
+      <aside
+        [class.w-[240px]]="!sidebarService.isCollapsed()"
+        [class.w-0]="sidebarService.isCollapsed()"
+        [class.border-r-0]="sidebarService.isCollapsed()"
+        [class.-translate-x-full]="
+          sidebarService.isCollapsed() && sidebarService.isMobile()
+        "
+        class="flex flex-col border-r border-border glass z-[110] transition-all duration-500 cubic-bezier-sidebar lg:translate-x-0 fixed lg:static h-full shrink-0 overflow-hidden"
+        [class.py-4]="!sidebarService.isCollapsed()"
+        [class.px-1]="!sidebarService.isCollapsed()"
+        [class.p-0]="sidebarService.isCollapsed()"
+      >
+        <!-- Logo Section -->
+        <div
+          class="mb-8 px-2 flex items-center gap-0 overflow-hidden group cursor-pointer"
+          routerLink="/dashboard/home"
+        >
+          <div class="relative">
+            <img
+              src="assets/logo.svg"
+              alt="Axenda Logo"
+              class="w-10 h-10 shrink-0 transition-transform group-hover:scale-110 duration-500"
+            />
+            <div
+              class="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700"
+            ></div>
+          </div>
+          <h2
+            *ngIf="!sidebarService.isCollapsed()"
+            class="text-3xl font-black tracking-tighter text-gradient whitespace-nowrap -ml-1 select-none"
+          >
+            xenda
+          </h2>
+        </div>
+
+        <!-- Navigation -->
+        <nav
+          class="flex-1 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar px-1"
+        >
+          <a
+            routerLink="/dashboard/home"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="home" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Inicio</span
+            >
+          </a>
+
+          <a
+            routerLink="/dashboard/agenda"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="calendar_month" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Agenda</span
+            >
+          </a>
+
+          <a
+            routerLink="/dashboard/appointments"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="format_list_bulleted" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Lista de Turnos</span
+            >
+          </a>
+
+          <a
+            routerLink="/dashboard/clients"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="group" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Clientes</span
+            >
+          </a>
+
+          <a
+            routerLink="/dashboard/invitations"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="link" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Invitaciones</span
+            >
+          </a>
+
+          <a
+            routerLink="/dashboard/help"
+            routerLinkActive="active-nav-item"
+            class="nav-item group"
+          >
+            <app-icon name="help" class="nav-icon"></app-icon>
+            <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+              >Centro de Ayuda</span
+            >
+          </a>
+
+          <div class="mt-auto pt-6">
+            <a
+              routerLink="/dashboard/settings"
+              routerLinkActive="active-nav-item"
+              class="nav-item group"
+            >
+              <app-icon name="settings" class="nav-icon"></app-icon>
+              <span *ngIf="!sidebarService.isCollapsed()" class="nav-label"
+                >Configuración</span
+              >
+            </a>
+          </div>
+
+          <!-- Trial Sidebar Indicator -->
+          <div
+            *ngIf="
+              subService.isTrial() &&
+              !subService.bannerVisible() &&
+              !sidebarService.isCollapsed()
+            "
+            class="mt-4 p-3 rounded-2xl bg-primary-glow border border-primary/20 relative overflow-hidden group animate-in fade-in slide-in-from-left-4 duration-500"
+          >
+            <div class="relative z-10">
+              <div class="flex items-center gap-2 mb-2">
+                <app-icon
+                  name="auto_awesome"
+                  class="text-primary text-sm"
+                ></app-icon>
+                <span
+                  class="text-[10px] font-black text-primary uppercase tracking-[0.2em]"
+                  >Axenda Pro</span
+                >
+              </div>
+              <p class="text-[11px] text-text-muted leading-tight mb-3">
+                Te quedan
+                <span class="text-text-main font-bold"
+                  >{{ subService.trialDaysRemaining() }} días</span
+                >
+                de prueba.
+              </p>
+              <button
+                [routerLink]="['/dashboard/settings']"
+                [queryParams]="{ section: 'billing' }"
+                class="w-full py-2 bg-primary hover:bg-primary-hover text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+              >
+                Ver Planes
+              </button>
+            </div>
+            <!-- Glow background -->
+            <div
+              class="absolute -right-4 -bottom-4 w-12 h-12 bg-primary-glow blur-xl rounded-full group-hover:scale-150 transition-transform duration-700"
+            ></div>
+          </div>
+        </nav>
+
+        <!-- Logout Section -->
+        <div class="mt-6 pt-4 border-t border-border">
+          <button
+            (click)="logout()"
+            class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-400/70 font-bold transition-all hover:bg-red-500/10 hover:text-red-400 group overflow-hidden"
+          >
+            <app-icon
+              name="logout"
+              class="text-lg transition-transform group-hover:-translate-x-1"
+            ></app-icon>
+            <span
+              *ngIf="!sidebarService.isCollapsed()"
+              class="whitespace-nowrap text-sm"
+              >Cerrar Sesión</span
+            >
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col min-w-0 relative bg-bg-primary">
+        <app-trial-banner />
+        <!-- Mobile Header -->
+        <header
+          *ngIf="sidebarService.isMobile() && !isAgendaView()"
+          class="flex items-center px-2 py-2 border-b border-border glass shrink-0 z-50"
+        >
+          <div class="flex items-center gap-3">
+            <button
+              (click)="sidebarService.toggle()"
+              class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-subtle text-text-main transition-colors"
+            >
+              <app-icon name="menu"></app-icon>
+            </button>
+            <div class="flex items-center gap-0" routerLink="/dashboard/home">
+              <img src="assets/logo.svg" alt="Axenda Logo" class="w-7 h-7" />
+              <h2
+                class="text-lg font-black tracking-tighter text-gradient -ml-0.5"
+              >
+                xenda
+              </h2>
+            </div>
+          </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+    </div>
+  `,
+  styles: [
+    `
+      /* Refactored to Tailwind CSS */
+    `,
+  ],
+})
+export class LayoutComponent implements OnInit {
+  private authService = inject(AuthService);
+  private tenantsService = inject(TenantsService);
+  public router = inject(Router);
+  public sidebarService = inject(SidebarService);
+  public subService = inject(SubscriptionService);
+  public themeService = inject(ThemeService);
+
+  ngOnInit(): void {
+    // Cargar información de suscripción
+    this.subService.loadStatus();
+
+    this.tenantsService.getMe().subscribe({
+      next: (tenant) => {
+        this.tenantsService.setTenant(tenant);
+      },
+      error: (err) => {
+        console.error('Error loading tenant info', err);
+        // If we can't load tenant, maybe token is invalid
+        if (err.status === 401) {
+          this.authService.logout();
+        }
+      },
+    });
+  }
+
+  isAgendaView(): boolean {
+    return this.router.url.includes('/dashboard/agenda');
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+}

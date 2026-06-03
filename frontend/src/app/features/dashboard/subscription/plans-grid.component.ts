@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { SnackbarService } from '@core/services/snackbar.service';
-import { IconComponent } from '@shared/components/icon/icon.component';
+import { IconComponent } from '@shared/components/icon.component';
 
 @Component({
   selector: 'app-plans-grid',

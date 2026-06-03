@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
-import { SnackbarComponent } from './shared/components/snackbar/snackbar.component';
-import { LoadingBarComponent } from './shared/components/loading-bar/loading-bar.component';
+import { SnackbarComponent } from './shared/components/snackbar.component';
+import { LoadingBarComponent } from './shared/components/loading-bar.component';
 
 @Component({
   standalone: true,

@@ -16,25 +16,25 @@ import {
   catchError,
   tap,
 } from 'rxjs';
-import { SelectConfig } from '../../../shared/components/select/select';
+import { SelectConfig } from '../../../shared/components/select';
 
-import { ProfessionalsListComponent } from '../professionals/professionals-list/professionals-list.component';
-import { BranchesListComponent } from '../branches/branches-list/branches-list.component';
-import { ServicesListComponent } from '../services/services-list/services-list.component';
+import { ProfessionalsListComponent } from '../professionals/professionals-list.component';
+import { BranchesListComponent } from '../branches/branches-list.component';
+import { ServicesListComponent } from '../services/services-list.component';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 
 // Sub-components
-import { SettingsGeneralComponent } from './components/settings-general/settings-general.component';
-import { SettingsAppearanceComponent } from './components/settings-appearance/settings-appearance.component';
-import { SettingsBookingComponent } from './components/settings-booking/settings-booking.component';
-import { SettingsNotificationsComponent } from './components/settings-notifications/settings-notifications.component';
-import { SettingsBillingComponent } from './components/settings-billing/settings-billing.component';
-import { SettingsWhatsappComponent } from './components/settings-whatsapp/settings-whatsapp.component';
-import { SettingsCustomFieldsComponent } from './components/settings-custom-fields/settings-custom-fields.component';
-import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
-import { QrDialogComponent } from '../../../shared/components/qr-dialog/qr-dialog.component';
-import { IconComponent } from '@shared/components/icon/icon.component';
+import { SettingsGeneralComponent } from './components/settings-general.component';
+import { SettingsAppearanceComponent } from './components/settings-appearance.component';
+import { SettingsBookingComponent } from './components/settings-booking.component';
+import { SettingsNotificationsComponent } from './components/settings-notifications.component';
+import { SettingsBillingComponent } from './components/settings-billing.component';
+import { SettingsWhatsappComponent } from './components/settings-whatsapp.component';
+import { SettingsCustomFieldsComponent } from './components/settings-custom-fields.component';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle.component';
+import { QrDialogComponent } from '../../../shared/components/qr-dialog.component';
+import { IconComponent } from '@shared/components/icon.component';
 
 @Component({
   selector: 'app-settings',

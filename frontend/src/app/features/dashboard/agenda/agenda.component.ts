@@ -36,17 +36,17 @@ import {
   Appointment,
 } from '@services/appointments.service';
 
-import { AppointmentFormComponent } from '../appointments/appointment-form/appointment-form';
-import { AgendaDayViewComponent } from './views/agenda-day-view/agenda-day-view.component';
-import { AgendaMonthViewComponent } from './views/agenda-month-view/agenda-month-view.component';
+import { AppointmentFormComponent } from '../appointments/appointment-form';
+import { AgendaDayViewComponent } from './views/agenda-day-view.component';
+import { AgendaMonthViewComponent } from './views/agenda-month-view.component';
 import { AgendaViewType } from './agenda.types';
-import { AgendaSettingsComponent } from './components/agenda-settings/agenda-settings.component';
-import { AgendaWeekViewComponent } from './views/agenda-week-view/agenda-week-view.component';
+import { AgendaSettingsComponent } from './components/agenda-settings.component';
+import { AgendaWeekViewComponent } from './views/agenda-week-view.component';
 import { AgendaService } from './agenda.service';
-import { AgendaAppointmentCardComponent } from './components/agenda-appointment-card/agenda-appointment-card.component';
-import { AgendaActionSelectorComponent } from './components/agenda-action-selector/agenda-action-selector.component';
-import { ProfessionalExceptionFormComponent } from '../professionals/professional-exception-form/professional-exception-form';
-import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones/agenda-navigation-zones.component';
+import { AgendaAppointmentCardComponent } from './components/agenda-appointment-card.component';
+import { AgendaActionSelectorComponent } from './components/agenda-action-selector.component';
+import { ProfessionalExceptionFormComponent } from '../professionals/professional-exception-form';
+import { AgendaNavigationZonesComponent } from './components/agenda-navigation-zones.component';
 
 @Component({
   selector: 'app-agenda',
