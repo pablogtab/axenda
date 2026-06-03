@@ -40,27 +40,20 @@
         (onAdd)="openNewClient($event)"
       ></app-searchable-select>
 
-      @if (form.get('clientId')?.value) {
+      @if (form.get('clientId')?.value && clientCustomFieldsSummary().length > 0) {
         <div class="client-custom-summary">
           <div class="client-custom-summary__header">
             <span class="client-custom-summary__title">Resumen del cliente</span>
             <span class="client-custom-summary__badge">Campos personalizados</span>
           </div>
-
-          @if (isLoadingClientSummary()) {
-            <p class="client-custom-summary__empty">Cargando campos personalizados...</p>
-          } @else if (clientCustomFieldsSummary().length === 0) {
-            <p class="client-custom-summary__empty">Este cliente no tiene campos personalizados cargados.</p>
-          } @else {
-            <div class="client-custom-summary__grid">
-              @for (item of clientCustomFieldsSummary(); track item.name) {
-                <div class="client-custom-summary__item">
-                  <span class="client-custom-summary__label">{{ item.name }}</span>
-                  <span class="client-custom-summary__value">{{ item.value }}</span>
-                </div>
-              }
-            </div>
-          }
+          <div class="client-custom-summary__grid">
+            @for (item of clientCustomFieldsSummary(); track item.name) {
+              <div class="client-custom-summary__item">
+                <span class="client-custom-summary__label">{{ item.name }}</span>
+                <span class="client-custom-summary__value">{{ item.value }}</span>
+              </div>
+            }
+          </div>
         </div>
       }
   
