@@ -6,6 +6,7 @@ import { AppointmentsService, Appointment } from '@services/appointments.service
 import { AvailabilityException, Professional } from '@services/professionals.service';
 import { UserConfigurationService } from '@services/user-configuration.service';
 import { SnackbarService } from '@services/snackbar.service';
+import { DialogService } from '@services/dialog.service';
 import { startOfLocalDate, endOfLocalDate, createLocalDate, toLocalDateStr, parseISODateToLocal } from '@core/utils/date-utils';
 import { AgendaZoomDirective } from '../../directives/agenda-zoom.directive';
 import { AgendaTimeIndicatorComponent } from '../../components/agenda-time-indicator/agenda-time-indicator.component';
@@ -44,6 +45,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
   private appointmentsService = inject(AppointmentsService);
   private userConfig = inject(UserConfigurationService);
   private snackbarService = inject(SnackbarService);
+  private dialogService = inject(DialogService);
   private el = inject(ElementRef);
   public agendaService = inject(AgendaService);
   public sidebarService = inject(SidebarService);
@@ -184,16 +186,19 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         const appDate = new Date(app.startTime);
-        const startStr = format(appDate, 'HH:mm');
-        const startIndex = slots.findIndex(s => s === startStr);
         const duration = (new Date(app.endTime).getTime() - appDate.getTime()) / (1000 * 60);
 
         const dayStr = toLocalDateStr(appDate);
         const dayIndex = days.findIndex(d => toLocalDateStr(d) === dayStr);
 
+        const startHourVal = this.startHour();
+        const appHour = appDate.getHours();
+        const appMin = appDate.getMinutes();
+        const minutesOffset = (appHour * 60 + appMin) - (startHourVal * 60);
+
         return {
           ...app,
-          top: startIndex !== -1 ? startIndex * height : 0,
+          top: (minutesOffset * height) / 15,
           height: (duration * height) / 15,
           dayIndex: dayIndex
         } as AppointmentUI;
@@ -485,7 +490,7 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  private handleDropAction(): void {
+  private async handleDropAction(): Promise<void> {
     if (this.dragCancelled) {
       this.dragCancelled = false;
       this.onDragEnd();
@@ -506,9 +511,19 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     const newDate = this.weekDaysSignal()[targetDayIndex];
 
     if (!this.availabilityMap()[`${targetDayIndex}-${newTimeStr}`]) {
-      this.handleFailedDrop(app);
-      this.onDragEnd();
-      return;
+      const confirmed = await this.dialogService.confirm({
+        title: 'Horario no disponible',
+        message: 'El profesional no está disponible en este horario. ¿Deseas agendar el turno de todas formas?',
+        confirmText: 'Agendar de todas formas',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
+
+      if (!confirmed) {
+        this.revertDrop(app);
+        this.onDragEnd();
+        return;
+      }
     }
 
     const originalDuration = new Date(app.endTime).getTime() - new Date(app.startTime).getTime();
@@ -623,12 +638,16 @@ export class AgendaWeekViewComponent implements OnChanges, OnInit, OnDestroy {
     this.loadAppointments();
   }
 
-  private handleFailedDrop(app: Appointment): void {
-    this.snackbarService.warning('El profesional no está disponible en este horario.');
+  private revertDrop(app: Appointment): void {
     if (this.originalDate && this.originalDate.getTime() !== this.weekDaysSignal()[0]?.getTime()) {
       this.dateChange.emit(this.originalDate);
     }
     this.refreshUI(app);
+  }
+
+  private handleFailedDrop(app: Appointment): void {
+    this.snackbarService.warning('El profesional no está disponible en este horario.');
+    this.revertDrop(app);
   }
 
   private refreshUI(app: Appointment): void {

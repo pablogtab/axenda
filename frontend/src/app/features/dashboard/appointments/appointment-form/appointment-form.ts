@@ -142,7 +142,7 @@ export class AppointmentFormComponent implements OnInit {
       status: [AppointmentStatus.PENDING],
       notes: [''],
       internalNotes: [''],
-      notifyClient: [true]
+      notifyClient: [false]
     });
 
     // Auto-calcular hora de fin al cambiar hora de inicio o servicio

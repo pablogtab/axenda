@@ -25,7 +25,7 @@ export class CancelAppointmentDialogComponent implements OnInit {
   public dialogRef = inject(DialogRef<{ confirm: boolean; notify: boolean }>);
   public data: CancelAppointmentDialogData = inject(DIALOG_DATA) || { clientName: 'el cliente', hasPhone: false };
 
-  notifyClient = true;
+  notifyClient = false;
 
   ngOnInit() {
     if (!this.data.hasPhone) {
