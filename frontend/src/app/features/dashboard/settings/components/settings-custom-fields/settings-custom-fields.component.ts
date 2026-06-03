@@ -129,7 +129,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
   }
 
   canCreateMoreDefinitions(): boolean {
-    return this.definitions().length < 4;
+    return this.definitions().length < 10;
   }
 
   setTab(tab: 'fields' | 'lists'): void {

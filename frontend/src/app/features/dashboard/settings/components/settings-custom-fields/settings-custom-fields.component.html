@@ -29,9 +29,9 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-base font-bold text-text-main">Clientes</h3>
-        <p class="text-xs text-text-dim mt-1">Define hasta 4 campos para complementar el perfil del cliente.</p>
+        <p class="text-xs text-text-dim mt-1">Define hasta 10 campos para complementar el perfil del cliente.</p>
       </div>
-      <span class="text-xs text-text-dim">{{ definitions().length }}/4</span>
+      <span class="text-xs text-text-dim">{{ definitions().length }}/10</span>
     </div>
 
     @if (definitions().length === 0 || showCreateDefinitionForm()) {
@@ -133,7 +133,7 @@
     }
 
     @if (!canCreateMoreDefinitions()) {
-      <p class="text-xs text-warning mt-3">Ya alcanzaste el limite de 4 campos.</p>
+      <p class="text-xs text-warning mt-3">Ya alcanzaste el limite de 10 campos.</p>
     }
 
     @if (definitions().length >= 2) {

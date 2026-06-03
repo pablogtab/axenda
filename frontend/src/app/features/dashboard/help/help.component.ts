@@ -403,7 +403,7 @@ export class HelpComponent {
             'Usa el arrastre (_drag & drop_) para reordenar los campos según su importancia.',
             'Completa los valores de estos campos editando la ficha de cualquier cliente en el **CRM**.'
           ],
-          tip: 'Puedes crear un máximo de `4 campos personalizados` para mantener la interfaz de carga limpia y ágil.'
+          tip: 'Puedes crear un máximo de `10 campos personalizados` para mantener la interfaz de carga limpia y ágil.'
         }
       ]
     },

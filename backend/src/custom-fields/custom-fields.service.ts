@@ -36,11 +36,11 @@ export class CustomFieldsService {
       orderBy: { order: 'asc' },
     })
 
-    if (current.length >= 4) {
-      throw new BadRequestException('Solo puedes crear hasta 4 campos personalizados')
+    if (current.length >= 10) {
+      throw new BadRequestException('Solo puedes crear hasta 10 campos personalizados')
     }
 
-    const nextOrder = [0, 1, 2, 3].find((index) => !current.some((definition) => definition.order === index))
+    const nextOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].find((index) => !current.some((definition) => definition.order === index))
     if (nextOrder === undefined) {
       throw new BadRequestException('No hay posiciones disponibles para nuevos campos')
     }
