@@ -39,8 +39,9 @@ export class AppointmentMailListener {
     
     // Formatear fechas para Argentina por defecto o local
     const dateObj = new Date(appointment.startTime);
-    const date = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const time = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) + ' hs';
+    const tz = tenant?.timezone || 'America/Argentina/Buenos_Aires';
+    const date = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: tz });
+    const time = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: tz }) + ' hs';
     
     const priceNumber = service.price ? Number(service.price) : 0;
     const priceFormatted = priceNumber > 0 ? `$ ${priceNumber.toLocaleString('es-ES')}` : 'Gratis';

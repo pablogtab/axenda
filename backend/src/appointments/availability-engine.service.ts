@@ -22,6 +22,14 @@ export class AvailabilityEngineService {
       if (invitation.tenantId !== tenantId) {
         throw new BadRequestException('Invitación inválida para este comercio')
       }
+    } else if (dto.excludeAppointmentId) {
+      const app = await this.prisma.appointment.findUnique({
+        where: { id: dto.excludeAppointmentId },
+        include: { invitation: true }
+      })
+      if (app?.invitation) {
+        invitation = app.invitation
+      }
     }
 
     const offsetMins = -180;

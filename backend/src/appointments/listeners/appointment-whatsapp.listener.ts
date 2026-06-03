@@ -43,8 +43,9 @@ export class AppointmentWhatsappListener {
 
     // 2. Formatear fecha y hora para el mensaje
     const dateObj = new Date(appointment.startTime);
-    const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' });
-    const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs';
+    const tz = tenant?.timezone || 'America/Argentina/Buenos_Aires';
+    const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric', timeZone: tz });
+    const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: tz }) + ' hs';
 
     const branchAddress = branch?.address || tenant.address || 'Dirección del negocio';
     const profName = `${professional.firstName} ${professional.lastName || ''}`.trim();
@@ -115,8 +116,9 @@ export class AppointmentWhatsappListener {
 
     // 2. Formatear fecha y hora para el mensaje
     const dateObj = new Date(appointment.startTime);
-    const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' });
-    const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs';
+    const tz = tenant?.timezone || 'America/Argentina/Buenos_Aires';
+    const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric', timeZone: tz });
+    const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: tz }) + ' hs';
 
     const profName = `${professional.firstName} ${professional.lastName || ''}`.trim();
 

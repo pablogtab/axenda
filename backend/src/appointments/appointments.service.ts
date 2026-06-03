@@ -361,6 +361,7 @@ export class AppointmentsService {
         },
         service: true,
         branch: true,
+        invitation: true,
         tenant: {
           select: {
             id: true,
@@ -410,6 +411,7 @@ export class AppointmentsService {
           },
           service: true,
           branch: true,
+          invitation: true,
           tenant: {
             select: {
               id: true,

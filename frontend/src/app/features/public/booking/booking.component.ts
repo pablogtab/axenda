@@ -326,6 +326,11 @@ export class BookingComponent implements OnInit {
         this.tenant.set(appt.tenant);
         this.titleService.setTitle(`Gestionar Turno - ${appt.tenant.name}`);
         
+        if (appt.invitation) {
+          this.invitation.set(appt.invitation);
+          this.invitationToken.set(appt.invitation.token);
+        }
+
         // Preload values for scheduling
         this.selectedBranch.set(appt.branch);
         this.selectedService.set(appt.service);

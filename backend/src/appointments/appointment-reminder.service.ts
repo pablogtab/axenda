@@ -80,8 +80,9 @@ export class AppointmentReminderService {
 
         // 3. Formatear datos para el mensaje de WhatsApp
         const dateObj = new Date(appointment.startTime);
-        const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' });
-        const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs';
+        const tz = tenant?.timezone || 'America/Argentina/Buenos_Aires';
+        const dateStr = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric', timeZone: tz });
+        const timeStr = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: tz }) + ' hs';
 
         const branchAddress = appointment.branch?.address || tenant.address || 'Dirección del negocio';
         const profName = `${appointment.professional?.firstName || ''} ${appointment.professional?.lastName || ''}`.trim();
