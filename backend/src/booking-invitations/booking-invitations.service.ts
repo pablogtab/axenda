@@ -40,8 +40,24 @@ export class BookingInvitationsService {
    * Lista todas las invitaciones de un tenant
    */
   async findAll(tenantId: string) {
+    // 1. Query only the IDs of the top 15 active/non-exhausted invitations via raw SQL
+    const idsResult = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM booking_invitations
+      WHERE "tenantId" = ${tenantId}
+        AND ("maxUses" IS NULL OR "usesCount" < "maxUses")
+      ORDER BY "createdAt" DESC
+      LIMIT 15
+    `;
+
+    const ids = idsResult.map(r => r.id);
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // 2. Fetch full records and relations for exactly those 15 IDs
     return this.prisma.bookingInvitation.findMany({
-      where: { tenantId },
+      where: { id: { in: ids } },
       include: {
         branch: { select: { name: true } },
         professional: { select: { firstName: true, lastName: true } },
