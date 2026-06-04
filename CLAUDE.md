@@ -292,13 +292,10 @@ docker compose up -d postgres redis
 Copiar el archivo `.env.example` del backend como `.env` en la raíz del proyecto y en el directorio `backend/` y completar las variables necesarias (`DATABASE_URL`, `JWT_SECRET`, `WPP_DEFAULT_PHONE_ID`, etc.).
 
 ### 3. Ejecutar en Modo Desarrollo (Simultáneo)
-Desde la raíz del proyecto, ejecuta el comando que levanta frontend y backend de manera concurrente:
+Desde la raíz del proyecto, ejecuta el comando que levanta frontend, backend y el panel de administración de manera concurrente:
 ```bash
-# Levantar Frontend y Backend principal
+# Levantar Frontend, Backend y Admin Backoffice
 npm run dev
-
-# Levantar Backoffice administrativo (en otra terminal)
-npm run start:backoffice
 ```
 - **API Backend:** http://localhost:3000/api
 - **Documentación Swagger:** http://localhost:3000/api/docs
