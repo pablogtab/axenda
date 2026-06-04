@@ -180,30 +180,34 @@ axenda/
 │       ├── users/                      # ABM de usuarios internos
 │       └── whatsapp/                   # Envío de mensajes de WhatsApp y plantillas
 │
-├── frontend/                           # Angular standalone app
+├── frontend/                           # Aplicación Angular standalone
 │   └── src/
 │       ├── index.html
 │       ├── main.ts
-│       ├── styles.css                  # Tailwind CSS v4, variables de tema y utilidades (@utility)
+│       ├── styles.css                  # Tailwind CSS v4, variables de tema y utilidades
 │       └── app/
 │           ├── app.config.ts
 │           ├── app.routes.ts           # Enrutador principal
-│           ├── core/                   # Interceptores, guards, servicios principales (Auth, Clients, etc.)
-│           ├── shared/                 # Componentes reusables (icon, dialogs, etc.)
+│           ├── core/                   # Interceptores, guards, servicios globales
+│           ├── shared/                 # Componentes y directivas UI reusables (flateados)
 │           └── features/
-│               ├── auth/               # Pantallas de login, registro, recuperación
-│               ├── landing/            # Página principal de Axenda
-│               ├── pricing-comparison/ # Tabla de precios
-│               ├── onboarding/         # Flujo de configuración inicial (getting-started)
-│               ├── public/             # Portal público de reservas (:publicSlug)
-│               └── dashboard/          # Panel de administración interna
-│                   ├── home/           # Dashboard principal
-│                   ├── agenda/         # Agenda interactiva (Calendario drag & drop y vistas alternativas)
-│                   │   └── views/
-│                   │       └── agenda-list-view/  # Vista de lista interactiva con filtros, agrupamiento y acciones rápidas
-│                   ├── clients/        # CRM de clientes
-│                   ├── settings/       # Configuración agrupada por pestañas (profesionales, servicios, etc.)
-│                   └── subscription/   # Visualización de plan y pasarela de pago
+│               ├── auth/               # Login, registro, impersonate (archivos planos)
+│               ├── dashboard/          # Panel de administración interna
+│               │   ├── agenda/         # Vistas (day, week, month, list) y componentes de agenda (planos)
+│               │   ├── appointments/   # Formulario de citas (plano)
+│               │   ├── booking-invitations/ # Invitaciones de reserva
+│               │   ├── branches/       # Lista y formulario de sucursales (planos)
+│               │   ├── clients/        # Lista y formulario de CRM (planos)
+│               │   ├── professionals/  # Lista, formulario y disponibilidad (planos)
+│               │   ├── services/       # Lista y formulario de catálogo (planos)
+│               │   ├── settings/       # Configuración general y subcomponentes de ajustes (planos)
+│               │   └── subscription/   # Visualización de planes
+│               ├── landing.component.ts # Página principal (plana)
+│               ├── onboarding/         # getting-started (plano)
+│               ├── pricing-comparison.component.ts # Precios
+│               ├── privacy.component.ts # Privacidad
+│               ├── public/             # Portal público de reservas (booking, payment-success)
+│               └── terms.component.ts  # Términos y condiciones
 │
 ├── backoffice/                         # Panel administrativo separado (Angular 21 + PrimeNG)
 │   ├── src/
