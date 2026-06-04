@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "backoffice": {
+    "admin_backoffice": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:class": {
@@ -87,10 +87,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "backoffice:build:production"
+              "buildTarget": "admin_backoffice:build:production"
             },
             "development": {
-              "buildTarget": "backoffice:build:development"
+              "buildTarget": "admin_backoffice:build:development"
             }
           },
           "defaultConfiguration": "development"

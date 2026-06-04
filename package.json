@@ -6,11 +6,11 @@
   "workspaces": [
     "frontend",
     "backend",
-    "backoffice"
+    "admin_backoffice"
   ],
   "scripts": {
     "start:frontend": "npm run start --workspace=frontend",
-    "start:backoffice": "npm run start --workspace=backoffice",
+    "start:backoffice": "npm run start --workspace=admin_backoffice",
     "start:mobile": "npm run start:mobile --workspace=frontend",
     "start:backend": "npm run dev --workspace=backend",
     "build:frontend": "npm run build --workspace=frontend",

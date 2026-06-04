@@ -15,7 +15,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
-      backoffice: ${{ steps.filter.outputs.backoffice }}
+      backoffice: ${{ steps.filter.outputs.admin_backoffice }}
       services: ${{ steps.set-matrix.outputs.services }}
     steps:
       - name: Checkout repository
@@ -35,8 +35,8 @@ jobs:
             frontend:
               - 'frontend/**'
               - '.github/workflows/deploy.yml'
-            backoffice:
-              - 'backoffice/**'
+            admin_backoffice:
+              - 'admin_backoffice/**'
               - '.github/workflows/deploy.yml'
 
       - name: Generate matrix
@@ -49,7 +49,7 @@ jobs:
           if [ "${{ steps.filter.outputs.frontend }}" = "true" ]; then
             SERVICES=$(echo $SERVICES | jq -c '. + ["frontend"]')
           fi
-          if [ "${{ steps.filter.outputs.backoffice }}" = "true" ]; then
+          if [ "${{ steps.filter.outputs.admin_backoffice }}" = "true" ]; then
             SERVICES=$(echo $SERVICES | jq -c '. + ["backoffice"]')
           fi
           echo "services=$SERVICES" >> $GITHUB_OUTPUT
@@ -89,7 +89,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ matrix.service }}
+          context: ./${{ matrix.service == 'backoffice' && 'admin_backoffice' || matrix.service }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

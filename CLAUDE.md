@@ -209,7 +209,7 @@ axenda/
 │               ├── public/             # Portal público de reservas (booking, payment-success)
 │               └── terms.component.ts  # Términos y condiciones
 │
-├── backoffice/                         # Panel administrativo separado (Angular 21 + PrimeNG)
+├── admin_backoffice/                   # Panel administrativo separado (Angular 21 + PrimeNG)
 │   ├── src/
 │   │   ├── index.html                  # Contiene la clase dark-theme para activar PrimeNG Dark Mode
 │   │   ├── main.ts                     # Carga de polyfills (zone.js) e inicio

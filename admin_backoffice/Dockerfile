@@ -1,4 +1,4 @@
-# backoffice/Dockerfile
+# admin_backoffice/Dockerfile
 # --- Stage 1: Build ---
 FROM node:20-alpine AS build
 
@@ -19,7 +19,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copiamos los archivos estáticos generados por Angular
-COPY --from=build /app/dist/backoffice/browser /usr/share/nginx/html
+COPY --from=build /app/dist/admin_backoffice/browser /usr/share/nginx/html
 
 # Copiamos nuestra configuración personalizada de Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
