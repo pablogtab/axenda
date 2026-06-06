@@ -137,31 +137,97 @@ import { SubscriptionService } from '@core/services/subscription.service';
               class="relative animate-in fade-in slide-in-from-right duration-1000"
             >
               <div class="relative float-animation">
-                <!-- Asset Request: Hero Video/Image -->
-                <div class="asset-request mb-6">
-                  <app-icon
-                    name="movie"
-                    class="text-primary text-3xl"
-                  ></app-icon>
-                  <p class="asset-request-text">
-                    [SOLICITUD: Video demo de la plataforma o imagen premium del
-                    dashboard]
-                  </p>
-                </div>
-
                 <div
                   class="rounded-3xl p-3 bg-gradient-to-br from-surface-subtle to-transparent border border-border shadow-2xl backdrop-blur-3xl"
                 >
                   <div
-                    class="rounded-2xl overflow-hidden bg-[#0c0d18] relative aspect-video"
+                    class="rounded-2xl overflow-hidden bg-bg-secondary border border-border relative aspect-video"
                   >
-                    <img
-                      src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200"
-                      alt="Dashboard Preview"
-                      class="w-full h-full object-cover opacity-60"
-                    />
+                    <div class="absolute inset-0 p-4 md:p-5 flex flex-col gap-3">
+                      <div class="grid grid-cols-3 gap-2">
+                        <div
+                          class="rounded-xl bg-surface-subtle border border-border px-3 py-2"
+                        >
+                          <p class="text-[10px] uppercase tracking-wider text-text-dim">
+                            Turnos Hoy
+                          </p>
+                          <p class="text-sm font-semibold text-text-main">24</p>
+                        </div>
+                        <div
+                          class="rounded-xl bg-surface-subtle border border-border px-3 py-2"
+                        >
+                          <p class="text-[10px] uppercase tracking-wider text-text-dim">
+                            Confirmados
+                          </p>
+                          <p class="text-sm font-semibold text-success">19</p>
+                        </div>
+                        <div
+                          class="rounded-xl bg-surface-subtle border border-border px-3 py-2"
+                        >
+                          <p class="text-[10px] uppercase tracking-wider text-text-dim">
+                            Facturado
+                          </p>
+                          <p class="text-sm font-semibold text-primary">$ 248k</p>
+                        </div>
+                      </div>
+
+                      <div
+                        class="flex-1 rounded-xl border border-border bg-bg-primary/40 p-3 space-y-2"
+                      >
+                        <div
+                          class="flex items-center justify-between rounded-lg bg-bg-secondary/65 border border-border/70 px-3 py-2"
+                        >
+                          <div>
+                            <p class="text-[11px] font-semibold text-text-main">
+                              10:30 · Corte + Barba
+                            </p>
+                            <p class="text-[10px] text-text-dim">
+                              Lucas Medina · Profesional: Mateo
+                            </p>
+                          </div>
+                          <span
+                            class="text-[9px] px-2 py-1 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-300/20"
+                            >Confirmado</span
+                          >
+                        </div>
+
+                        <div
+                          class="flex items-center justify-between rounded-lg bg-bg-secondary/65 border border-border/70 px-3 py-2"
+                        >
+                          <div>
+                            <p class="text-[11px] font-semibold text-text-main">
+                              11:15 · Color + Lavado
+                            </p>
+                            <p class="text-[10px] text-text-dim">
+                              Julieta Paz · Profesional: Sol
+                            </p>
+                          </div>
+                          <span
+                            class="text-[9px] px-2 py-1 rounded-full bg-amber-300/20 text-amber-200 border border-amber-200/20"
+                            >En espera</span
+                          >
+                        </div>
+
+                        <div
+                          class="flex items-center justify-between rounded-lg bg-bg-secondary/65 border border-border/70 px-3 py-2"
+                        >
+                          <div>
+                            <p class="text-[11px] font-semibold text-text-main">
+                              12:00 · Consulta inicial
+                            </p>
+                            <p class="text-[10px] text-text-dim">
+                              Daniela Suárez · Sala 2
+                            </p>
+                          </div>
+                          <span
+                            class="text-[9px] px-2 py-1 rounded-full bg-sky-300/20 text-sky-200 border border-sky-200/20"
+                            >Pagado</span
+                          >
+                        </div>
+                      </div>
+                    </div>
                     <div
-                      class="absolute inset-0 bg-gradient-to-t from-[#0c0d18] via-transparent to-transparent"
+                      class="absolute inset-0 bg-linear-to-t from-bg-secondary/90 via-transparent to-transparent"
                     ></div>
                   </div>
                 </div>
@@ -921,14 +987,6 @@ import { SubscriptionService } from '@core/services/subscription.service';
     .landing-shell ::selection {
       background-color: var(--color-primary);
       color: white;
-    }
-
-    .asset-request {
-      @apply bg-primary-glow border border-dashed border-primary/30 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3;
-    }
-
-    .asset-request-text {
-      @apply text-primary text-xs font-bold uppercase tracking-widest;
     }
 
     /* Explicit Grid Fallbacks */
