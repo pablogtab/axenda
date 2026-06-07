@@ -53,6 +53,29 @@ import { IconComponent } from '@shared/components/icon.component';
           }
         </div>
         <h1 class="business-name">{{ tenant()!.name }}</h1>
+
+        @if (tenant()?.phone || tenant()?.email || tenant()?.address) {
+          <div class="business-contact-info">
+            @if (tenant()?.phone) {
+              <a [href]="'tel:' + tenant()!.phone" class="contact-item cursor-pointer">
+                <app-icon name="call" style="font-variation-settings: 'FILL' 1, 'wght' 500, 'opsz' 20"></app-icon>
+                <span>{{ tenant()!.phone }}</span>
+              </a>
+            }
+            @if (tenant()?.email) {
+              <a [href]="'mailto:' + tenant()!.email" class="contact-item cursor-pointer">
+                <app-icon name="mail" style="font-variation-settings: 'FILL' 1, 'wght' 500, 'opsz' 20"></app-icon>
+                <span>{{ tenant()!.email }}</span>
+              </a>
+            }
+            @if (tenant()?.address) {
+              <div class="contact-item">
+                <app-icon name="pin_drop" style="font-variation-settings: 'FILL' 1, 'wght' 500, 'opsz' 20"></app-icon>
+                <span>{{ tenant()!.address }}</span>
+              </div>
+            }
+          </div>
+        }
       </section>
 
       <!-- Stepper Nav (Only show if not success and not cancel mode) -->
@@ -1164,6 +1187,60 @@ import { IconComponent } from '@shared/components/icon.component';
         font-size: 2.25rem;
         font-weight: 800;
         letter-spacing: -0.04em;
+      }
+
+      .business-contact-info {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        max-width: 600px;
+        padding: 0 1rem;
+      }
+
+      .contact-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: color-mix(in srgb, var(--booking-surface), transparent 30%);
+        border: 1px solid var(--booking-border);
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--booking-text-muted);
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: default;
+      }
+
+      a.contact-item {
+        cursor: pointer;
+      }
+
+      a.contact-item:hover {
+        border-color: var(--booking-primary);
+        color: var(--booking-text-main);
+        background: var(--booking-primary-soft);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      a.contact-item:active {
+        transform: scale(0.95);
+      }
+
+      .contact-item app-icon {
+        font-size: 1.125rem;
+        display: flex;
+        align-items: center;
+        color: var(--booking-primary);
+        transition: color 0.3s ease;
+      }
+
+      a.contact-item:hover app-icon {
+        color: var(--booking-primary-hover);
       }
 
       /* Stepper */

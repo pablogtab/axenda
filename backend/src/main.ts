@@ -27,6 +27,10 @@ async function bootstrap() {
         process.env['BACKOFFICE_URL'],
       ].filter(Boolean) as string[];
 
+  logger.log(`CORS allowedOrigins: ${JSON.stringify(allowedOrigins)}`)
+  logger.log(`NODE_ENV: ${process.env['NODE_ENV']}`)
+  logger.log(`FRONTEND_URL: ${process.env['FRONTEND_URL']}`)
+
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

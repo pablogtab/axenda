@@ -237,7 +237,7 @@ interface GroupedData {
                     class="border-b border-border bg-surface-subtle/50 text-[10px] uppercase font-black tracking-wider text-text-muted"
                   >
                     <th class="py-3.5 px-4 font-black rounded-tl-2xl">
-                      Hora / Sede
+                      Fecha y Hora / Sede
                     </th>
                     <th class="py-3.5 px-4 font-black">Cliente</th>
                     <th class="py-3.5 px-4 font-black">Profesional</th>
@@ -258,6 +258,9 @@ interface GroupedData {
                   >
                     <!-- Time & Branch -->
                     <td class="py-3.5 px-4">
+                      <div *ngIf="groupBy() !== 'date'" class="text-[10px] text-primary font-extrabold uppercase tracking-wider mb-0.5">
+                        {{ app.startTime | date: "EEEE dd/MM" : '' : 'es' | titlecase }}
+                      </div>
                       <div class="font-bold text-text-main text-sm">
                         {{ app.startTime | date: 'HH:mm' }} -
                         {{ app.endTime | date: 'HH:mm' }}
@@ -413,6 +416,9 @@ interface GroupedData {
                     <span
                       class="text-[10px] font-black text-primary uppercase tracking-widest block"
                     >
+                      <span *ngIf="groupBy() !== 'date'">
+                        {{ app.startTime | date: "EEEE dd/MM" : '' : 'es' | titlecase }} · 
+                      </span>
                       {{ app.startTime | date: 'HH:mm' }} -
                       {{ app.endTime | date: 'HH:mm' }}
                     </span>

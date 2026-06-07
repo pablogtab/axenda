@@ -55,10 +55,10 @@ describe('AppointmentReminderService', () => {
     expect(prismaMock.appointment.update).not.toHaveBeenCalled();
   });
 
-  it('should send axenda_booking_reminder and mark as sent if appointment is booked >= 3 days in advance and allowReschedule is true', async () => {
-    const now = new Date();
-    // Start time: 23 hours from now
-    const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+  it('should send axenda_booking_reminder and mark as sent if appointment is booked >= 1 day in advance and allowReschedule is true', async () => {
+    const now = new Date('2026-06-07T12:00:00Z');
+    // Start time: 10 hours from now (within 12h window)
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
     // Created: 4 days ago
     const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
 
@@ -69,7 +69,7 @@ describe('AppointmentReminderService', () => {
       createdAt,
       cancelToken: 'cancel-token-1',
       client: { firstName: 'Juan', phone: '5493511234567' },
-      tenant: { name: 'Barberia', allowReschedule: true, address: 'Centro 123' },
+      tenant: { name: 'Barberia', allowReschedule: true, address: 'Centro 123', timezone: 'UTC' },
       professional: { firstName: 'Leo', lastName: 'Messi' },
       service: { name: 'Corte de Pelo' },
       branch: { address: 'Sede Centro' },
@@ -79,7 +79,7 @@ describe('AppointmentReminderService', () => {
     prismaMock.appointment.update.mockResolvedValue({});
     whatsappMock.sendTemplateMessage.mockResolvedValue({});
 
-    await service.handleSendReminders();
+    await service.handleSendReminders(now);
 
     // Verify WhatsApp template message was sent
     expect(whatsappMock.sendTemplateMessage).toHaveBeenCalledWith(
@@ -104,8 +104,8 @@ describe('AppointmentReminderService', () => {
   });
 
   it('should send axenda_booking_reminder_no_cancel if allowReschedule is false', async () => {
-    const now = new Date();
-    const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const now = new Date('2026-06-07T12:00:00Z');
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
     const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
 
     const mockAppointment = {
@@ -115,7 +115,7 @@ describe('AppointmentReminderService', () => {
       createdAt,
       cancelToken: 'cancel-token-2',
       client: { firstName: 'Juan', phone: '5493511234567' },
-      tenant: { name: 'Barberia', allowReschedule: false, address: 'Centro 123' },
+      tenant: { name: 'Barberia', allowReschedule: false, address: 'Centro 123', timezone: 'UTC' },
       professional: { firstName: 'Leo', lastName: '' },
       service: { name: 'Corte de Pelo' },
       branch: null,
@@ -125,7 +125,7 @@ describe('AppointmentReminderService', () => {
     prismaMock.appointment.update.mockResolvedValue({});
     whatsappMock.sendTemplateMessage.mockResolvedValue({});
 
-    await service.handleSendReminders();
+    await service.handleSendReminders(now);
 
     expect(whatsappMock.sendTemplateMessage).toHaveBeenCalledWith(
       'tenant-1',
@@ -144,12 +144,12 @@ describe('AppointmentReminderService', () => {
     });
   });
 
-  it('should skip sending reminder but mark as sent if appointment is booked < 3 days in advance', async () => {
-    const now = new Date();
-    // Start time: 23 hours from now
-    const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
-    // Created: 1 day ago (less than 3 days)
-    const createdAt = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+  it('should skip sending reminder but mark as sent if appointment is booked < 1 day in advance', async () => {
+    const now = new Date('2026-06-07T12:00:00Z');
+    // Start time: 10 hours from now
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+    // Created: 2 hours ago (less than 1 day difference)
+    const createdAt = new Date(now.getTime() - 2 * 60 * 60 * 1000);
 
     const mockAppointment = {
       id: 'appt-3',
@@ -157,13 +157,13 @@ describe('AppointmentReminderService', () => {
       startTime,
       createdAt,
       client: { firstName: 'Juan', phone: '5493511234567' },
-      tenant: { name: 'Barberia', allowReschedule: true },
+      tenant: { name: 'Barberia', allowReschedule: true, timezone: 'UTC' },
     };
 
     prismaMock.appointment.findMany.mockResolvedValue([mockAppointment]);
     prismaMock.appointment.update.mockResolvedValue({});
 
-    await service.handleSendReminders();
+    await service.handleSendReminders(now);
 
     // Verification: WhatsApp was NOT sent, but DB state is updated
     expect(whatsappMock.sendTemplateMessage).not.toHaveBeenCalled();
@@ -174,8 +174,8 @@ describe('AppointmentReminderService', () => {
   });
 
   it('should skip sending reminder but mark as sent if client phone is missing', async () => {
-    const now = new Date();
-    const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const now = new Date('2026-06-07T12:00:00Z');
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
     const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
 
     const mockAppointment = {
@@ -184,13 +184,13 @@ describe('AppointmentReminderService', () => {
       startTime,
       createdAt,
       client: { firstName: 'Juan', phone: null },
-      tenant: { name: 'Barberia', allowReschedule: true },
+      tenant: { name: 'Barberia', allowReschedule: true, timezone: 'UTC' },
     };
 
     prismaMock.appointment.findMany.mockResolvedValue([mockAppointment]);
     prismaMock.appointment.update.mockResolvedValue({});
 
-    await service.handleSendReminders();
+    await service.handleSendReminders(now);
 
     expect(whatsappMock.sendTemplateMessage).not.toHaveBeenCalled();
     expect(prismaMock.appointment.update).toHaveBeenCalledWith({
@@ -200,8 +200,8 @@ describe('AppointmentReminderService', () => {
   });
 
   it('should mark as sent even if whatsapp service throws an exception', async () => {
-    const now = new Date();
-    const startTime = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const now = new Date('2026-06-07T12:00:00Z');
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
     const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
 
     const mockAppointment = {
@@ -210,19 +210,66 @@ describe('AppointmentReminderService', () => {
       startTime,
       createdAt,
       client: { firstName: 'Juan', phone: '5493511234567' },
-      tenant: { name: 'Barberia', allowReschedule: true },
+      tenant: { name: 'Barberia', allowReschedule: true, timezone: 'UTC' },
     };
 
     prismaMock.appointment.findMany.mockResolvedValue([mockAppointment]);
     prismaMock.appointment.update.mockResolvedValue({});
     whatsappMock.sendTemplateMessage.mockRejectedValue(new Error('Meta API Down'));
 
-    await service.handleSendReminders();
+    await service.handleSendReminders(now);
 
     expect(whatsappMock.sendTemplateMessage).toHaveBeenCalled();
     expect(prismaMock.appointment.update).toHaveBeenCalledWith({
       where: { id: 'appt-5' },
       data: { whatsappReminderSent: true },
     });
+  });
+
+  it('should skip sending reminder and NOT mark as sent if it is quiet hours', async () => {
+    const now = new Date('2026-06-07T23:00:00Z'); // 23:00 / 11:00 PM (quiet hours)
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+    const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
+
+    const mockAppointment = {
+      id: 'appt-6',
+      tenantId: 'tenant-1',
+      startTime,
+      createdAt,
+      client: { firstName: 'Juan', phone: '5493511234567' },
+      tenant: { name: 'Barberia', allowReschedule: true, timezone: 'UTC' },
+    };
+
+    prismaMock.appointment.findMany.mockResolvedValue([mockAppointment]);
+    prismaMock.appointment.update.mockResolvedValue({});
+
+    await service.handleSendReminders(now);
+
+    expect(whatsappMock.sendTemplateMessage).not.toHaveBeenCalled();
+    expect(prismaMock.appointment.update).not.toHaveBeenCalled();
+  });
+
+  it('should handle quiet hours correctly in America/Argentina/Buenos_Aires timezone', async () => {
+    // 01:00 AM UTC on June 8th is 10:00 PM (22:00) on June 7th in Argentina (UTC-3)
+    const now = new Date('2026-06-08T01:00:00Z');
+    const startTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+    const createdAt = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
+
+    const mockAppointment = {
+      id: 'appt-7',
+      tenantId: 'tenant-1',
+      startTime,
+      createdAt,
+      client: { firstName: 'Juan', phone: '5493511234567' },
+      tenant: { name: 'Barberia', allowReschedule: true, timezone: 'America/Argentina/Buenos_Aires' },
+    };
+
+    prismaMock.appointment.findMany.mockResolvedValue([mockAppointment]);
+    prismaMock.appointment.update.mockResolvedValue({});
+
+    await service.handleSendReminders(now);
+
+    expect(whatsappMock.sendTemplateMessage).not.toHaveBeenCalled();
+    expect(prismaMock.appointment.update).not.toHaveBeenCalled();
   });
 });
