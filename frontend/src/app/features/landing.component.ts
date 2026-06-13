@@ -4,28 +4,28 @@ import {
   signal,
   inject,
   computed,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ThemeToggleComponent } from '../shared/components/theme-toggle.component';
 import { IconComponent } from '@shared/components/icon.component';
 import { SubscriptionService } from '@core/services/subscription.service';
-import { ThemeService } from '@core/services/theme.service';
 
 interface LandingScreen {
   id: string;
   label: string;
-  file: string;
+  /** Nombre base del asset sin prefijo (ej. `home` → desktop-home.png / mobile-home.png). */
+  key: string;
   caption: string;
   audience?: string;
-  /** Muestra la captura dentro del mockup de celular (vista del cliente). */
-  phoneMockup?: boolean;
+  /** Mockup de celular en mobile y desktop (vista del cliente). */
+  phoneMockupAlways?: boolean;
 }
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule, ThemeToggleComponent, IconComponent],
+  imports: [CommonModule, RouterModule, IconComponent],
   template: `
     <div class="landing-page">
       <!-- Navbar -->
@@ -44,7 +44,6 @@ interface LandingScreen {
           </nav>
 
           <div class="landing-nav-actions">
-            <app-theme-toggle class="hidden sm:block" />
             <a routerLink="/login" class="landing-link-login">Ingresar</a>
             <a routerLink="/register" class="btn-primary !py-2 !px-4 !text-sm"
               >Registrate gratis</a
@@ -99,9 +98,9 @@ interface LandingScreen {
                 <div class="phone-mockup-bezel">
                   <div class="phone-mockup-notch" aria-hidden="true"></div>
                   <img
-                    [src]="landingImgSrc('mobile-hero-agenda')"
-                    (error)="onLandingImgError($event, 'mobile-hero-agenda')"
-                    alt="Agenda de Axenda — vista del negocio"
+                    [src]="heroImgSrc('home')"
+                    (error)="onLandingImgError($event, 'mobile-home')"
+                    alt="Panel de inicio de Axenda — vista del negocio"
                     class="phone-mockup-img"
                   />
                 </div>
@@ -112,7 +111,7 @@ interface LandingScreen {
                 <div class="phone-mockup-bezel">
                   <div class="phone-mockup-notch" aria-hidden="true"></div>
                   <img
-                    [src]="landingImgSrc('mobile-portal-reserva')"
+                    [src]="heroImgSrc('portal-reserva')"
                     (error)="onLandingImgError($event, 'mobile-portal-reserva')"
                     alt="Portal de reservas de Axenda — vista del cliente"
                     class="phone-mockup-img"
@@ -170,13 +169,13 @@ interface LandingScreen {
 
           <div class="landing-screens-stage">
             @if (activeScreen(); as screen) {
-              @if (screen.phoneMockup) {
+              @if (showScreenPhoneMockup(screen)) {
                 <div class="phone-mockup phone-mockup-gallery">
                   <div class="phone-mockup-bezel">
                     <div class="phone-mockup-notch" aria-hidden="true"></div>
                     <img
-                      [src]="landingImgSrc(screen.file)"
-                      (error)="onLandingImgError($event, screen.file)"
+                      [src]="screenImgSrc(screen)"
+                      (error)="onScreenImgError($event, screen)"
                       [alt]="screen.caption"
                       class="phone-mockup-img"
                     />
@@ -189,8 +188,8 @@ interface LandingScreen {
                   </div>
                   <div class="showcase-frame-body">
                     <img
-                      [src]="landingImgSrc(screen.file)"
-                      (error)="onLandingImgError($event, screen.file)"
+                      [src]="screenImgSrc(screen)"
+                      (error)="onScreenImgError($event, screen)"
                       [alt]="screen.caption"
                       class="showcase-img"
                     />
@@ -204,13 +203,6 @@ interface LandingScreen {
                 <p class="landing-screen-audience">{{ screen.audience }}</p>
               }
             }
-          </div>
-
-          <div class="landing-demo-cta">
-            <a [href]="demoBookingUrl" class="btn-primary !px-8">
-              Probar reserva en vivo
-            </a>
-            <span class="text-sm text-text-dim">{{ demoPublicSlug }} · sin registrarte</span>
           </div>
         </div>
       </section>
@@ -348,9 +340,6 @@ interface LandingScreen {
               <a routerLink="/register" class="btn-primary !px-10"
                 >Crear cuenta gratis</a
               >
-              <a [href]="demoBookingUrl" class="btn-secondary !px-10 border border-border"
-                >Probar reserva en vivo</a
-              >
             </div>
           </div>
         </div>
@@ -375,7 +364,6 @@ interface LandingScreen {
               <li><a href="#funciones">Funciones</a></li>
               <li><a href="#pantallas">Pantallas</a></li>
               <li><a href="#precios">Precios</a></li>
-              <li><a [href]="demoBookingUrl">Demo de reserva</a></li>
             </ul>
           </div>
           <div>
@@ -398,7 +386,24 @@ interface LandingScreen {
     .landing-page {
       min-height: 100vh;
       background: #ffffff;
-      color: var(--color-text-main);
+      color: #0f172a;
+
+      /* Siempre modo claro: la landing no depende del tema global. */
+      --color-bg-primary: #f1f5f9;
+      --color-bg-secondary: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-hover: #f8fafc;
+      --color-primary: #6366f1;
+      --color-primary-dark: #4338ca;
+      --color-primary-hover: #4f46e5;
+      --color-primary-glow: rgba(99, 102, 241, 0.15);
+      --color-accent: #a855f7;
+      --color-text-main: #0f172a;
+      --color-text-muted: #334155;
+      --color-text-dim: #64748b;
+      --color-border: rgba(15, 23, 42, 0.08);
+      --color-glass-bg: rgba(255, 255, 255, 0.85);
+      --color-glass-border: rgba(15, 23, 42, 0.08);
     }
 
     .landing-container {
@@ -488,7 +493,7 @@ interface LandingScreen {
     }
 
     .phone-mockup-gallery .phone-mockup-bezel {
-      width: 260px;
+      width: min(280px, 78vw);
     }
 
     @media (min-width: 768px) {
@@ -580,7 +585,7 @@ interface LandingScreen {
     }
 
     .landing-hero-copy h1 {
-      @apply text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold leading-[1.1] tracking-tight mb-6;
+      @apply text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold leading-[1.1] tracking-tight mb-6 text-slate-900;
     }
 
     .landing-lead {
@@ -609,7 +614,7 @@ interface LandingScreen {
     }
 
     .landing-section-title {
-      @apply text-2xl md:text-4xl font-extrabold tracking-tight mb-3;
+      @apply text-2xl md:text-4xl font-extrabold tracking-tight mb-3 text-slate-900;
     }
 
     .landing-section-sub {
@@ -658,10 +663,6 @@ interface LandingScreen {
       @apply flex flex-col items-center w-full;
     }
 
-    .landing-demo-cta {
-      @apply flex flex-col items-center gap-3 mt-12;
-    }
-
     /* Features */
     .landing-features {
       @apply py-16 md:py-20 bg-slate-50/50;
@@ -680,7 +681,7 @@ interface LandingScreen {
     }
 
     .landing-feature-card h3 {
-      @apply font-bold text-lg mb-2;
+      @apply font-bold text-lg mb-2 text-slate-900;
     }
 
     .landing-feature-card p {
@@ -705,7 +706,7 @@ interface LandingScreen {
     }
 
     .landing-step-card h3 {
-      @apply font-bold text-lg mb-2;
+      @apply font-bold text-lg mb-2 text-slate-900;
     }
 
     .landing-step-card p {
@@ -738,11 +739,11 @@ interface LandingScreen {
     }
 
     .landing-price-card h3 {
-      @apply text-2xl font-bold mb-2;
+      @apply text-2xl font-bold mb-2 text-slate-900;
     }
 
     .landing-price-amount {
-      @apply text-4xl font-extrabold mb-1;
+      @apply text-4xl font-extrabold mb-1 text-slate-900;
     }
 
     .landing-price-amount small {
@@ -781,7 +782,7 @@ interface LandingScreen {
     }
 
     .landing-final-box h2 {
-      @apply text-3xl md:text-4xl font-extrabold mb-4;
+      @apply text-3xl md:text-4xl font-extrabold mb-4 text-slate-900;
     }
 
     .landing-final-box p {
@@ -820,11 +821,10 @@ interface LandingScreen {
 })
 export class LandingComponent implements OnInit {
   private subscriptionService = inject(SubscriptionService);
-  private themeService = inject(ThemeService);
+  private destroyRef = inject(DestroyRef);
 
-  /** Slug del negocio demo sembrado en desarrollo (Barbería Axenda). */
-  readonly demoPublicSlug = 'barberia-axenda';
-  readonly demoBookingUrl = `/${this.demoPublicSlug}`;
+  /** Galería en mockup de celular (< md); showcase de escritorio en pantallas grandes. */
+  isMobileViewport = signal(false);
 
   currentYear = new Date().getFullYear();
   activeScreenId = signal('home');
@@ -838,52 +838,52 @@ export class LandingComponent implements OnInit {
     {
       id: 'home',
       label: 'Inicio',
-      file: 'mobile-home',
+      key: 'home',
       caption: 'Resumen del día: turnos, métricas y accesos rápidos.',
       audience: 'Panel del negocio',
     },
     {
       id: 'agenda-dia',
       label: 'Agenda',
-      file: 'mobile-agenda-dia',
+      key: 'agenda-dia',
       caption: 'Vista diaria con turnos del día, ideal para el equipo.',
       audience: 'Panel del negocio',
     },
     {
       id: 'lista-turnos',
       label: 'Lista',
-      file: 'mobile-lista-turnos',
+      key: 'lista-turnos',
       caption: 'Listado con búsqueda, filtros y cambio de estado con un toque.',
       audience: 'Panel del negocio',
     },
     {
       id: 'nuevo-turno',
       label: 'Nuevo turno',
-      file: 'mobile-nuevo-turno',
+      key: 'nuevo-turno',
       caption: 'Cargá un turno en segundos mientras atendés al cliente.',
       audience: 'Panel del negocio',
     },
     {
       id: 'clientes',
       label: 'Clientes',
-      file: 'mobile-clientes',
+      key: 'clientes',
       caption: 'Ficha del cliente, contacto e historial al alcance de la mano.',
       audience: 'Panel del negocio',
     },
     {
       id: 'config-publica',
       label: 'Sitio público',
-      file: 'mobile-config-publica',
+      key: 'config-publica',
       caption: 'Personalizá colores, logo, QR y reglas de reserva online.',
       audience: 'Panel del negocio',
     },
     {
       id: 'portal-reserva',
       label: 'Reserva cliente',
-      file: 'mobile-portal-reserva',
+      key: 'portal-reserva',
       caption: 'Así reserva tu cliente online, sin llamarte ni escribirte.',
       audience: 'Vista del cliente',
-      phoneMockup: true,
+      phoneMockupAlways: true,
     },
   ];
 
@@ -964,16 +964,60 @@ export class LandingComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.themeService.isDark.set(false);
     this.loadPlans();
+    this.watchMobileViewport();
+  }
+
+  private watchMobileViewport(): void {
+    if (typeof window === 'undefined') return;
+
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => this.isMobileViewport.set(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    this.destroyRef.onDestroy(() => mq.removeEventListener('change', update));
+  }
+
+  /** Hero: siempre mockup de celular → capturas mobile-*. */
+  heroImgSrc(key: string): string {
+    return this.landingImgSrc(`mobile-${key}`);
+  }
+
+  showScreenPhoneMockup(screen: LandingScreen): boolean {
+    return this.isMobileViewport() || !!screen.phoneMockupAlways;
+  }
+
+  screenAssetPrefix(screen: LandingScreen): 'mobile' | 'desktop' {
+    if (screen.phoneMockupAlways) return 'mobile';
+    return this.isMobileViewport() ? 'mobile' : 'desktop';
+  }
+
+  /** Galería: mobile-* en celular (o siempre para reserva cliente), desktop-* en PC. */
+  screenImgSrc(screen: LandingScreen): string {
+    return this.landingImgSrc(`${this.screenAssetPrefix(screen)}-${screen.key}`);
   }
 
   landingImgSrc(file: string): string {
     return `/assets/landing/${file}.png`;
   }
 
+  onScreenImgError(event: Event, screen: LandingScreen): void {
+    this.onLandingImgError(
+      event,
+      `${this.screenAssetPrefix(screen)}-${screen.key}`,
+    );
+  }
+
   onLandingImgError(event: Event, file: string): void {
     const img = event.target as HTMLImageElement;
+
+    // Si falta mobile-*, usar desktop-* temporalmente hasta que suban las capturas.
+    if (file.startsWith('mobile-') && !img.dataset['desktopFallback']) {
+      img.dataset['desktopFallback'] = 'true';
+      img.src = this.landingImgSrc(`desktop-${file.slice('mobile-'.length)}`);
+      return;
+    }
+
     const fallback = `/assets/landing/${file}.svg`;
     if (!img.src.endsWith('.svg')) {
       img.src = fallback;
