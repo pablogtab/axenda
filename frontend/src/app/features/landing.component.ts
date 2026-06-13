@@ -4,7 +4,6 @@ import {
   signal,
   inject,
   computed,
-  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -169,30 +168,53 @@ interface LandingScreen {
 
           <div class="landing-screens-stage">
             @if (activeScreen(); as screen) {
-              @if (showScreenPhoneMockup(screen)) {
+              <!-- Celular (< md): mockup + captura mobile en todos los tabs -->
+              <div class="md:hidden">
                 <div class="phone-mockup phone-mockup-gallery">
                   <div class="phone-mockup-bezel">
                     <div class="phone-mockup-notch" aria-hidden="true"></div>
                     <img
-                      [src]="screenImgSrc(screen)"
-                      (error)="onScreenImgError($event, screen)"
+                      [src]="mobileScreenImgSrc(screen)"
+                      (error)="onLandingImgError($event, 'mobile-' + screen.key)"
                       [alt]="screen.caption"
                       class="phone-mockup-img"
                     />
                   </div>
                 </div>
-              } @else {
-                <div class="showcase-frame">
-                  <div class="showcase-frame-bar">
-                    <span></span><span></span><span></span>
+              </div>
+
+              <!-- PC (≥ md): showcase + captura desktop (excepto reserva cliente) -->
+              @if (!screen.phoneMockupAlways) {
+                <div class="hidden md:block w-full">
+                  <div class="showcase-frame">
+                    <div class="showcase-frame-bar">
+                      <span></span><span></span><span></span>
+                    </div>
+                    <div class="showcase-frame-body">
+                      <img
+                        [src]="desktopScreenImgSrc(screen)"
+                        (error)="onLandingImgError($event, 'desktop-' + screen.key)"
+                        [alt]="screen.caption"
+                        class="showcase-img"
+                      />
+                    </div>
                   </div>
-                  <div class="showcase-frame-body">
-                    <img
-                      [src]="screenImgSrc(screen)"
-                      (error)="onScreenImgError($event, screen)"
-                      [alt]="screen.caption"
-                      class="showcase-img"
-                    />
+                </div>
+              }
+
+              <!-- PC (≥ md): reserva cliente siempre en mockup de celular -->
+              @if (screen.phoneMockupAlways) {
+                <div class="hidden md:flex md:justify-center w-full">
+                  <div class="phone-mockup phone-mockup-gallery">
+                    <div class="phone-mockup-bezel">
+                      <div class="phone-mockup-notch" aria-hidden="true"></div>
+                      <img
+                        [src]="mobileScreenImgSrc(screen)"
+                        (error)="onLandingImgError($event, 'mobile-' + screen.key)"
+                        [alt]="screen.caption"
+                        class="phone-mockup-img"
+                      />
+                    </div>
                   </div>
                 </div>
               }
@@ -821,10 +843,6 @@ interface LandingScreen {
 })
 export class LandingComponent implements OnInit {
   private subscriptionService = inject(SubscriptionService);
-  private destroyRef = inject(DestroyRef);
-
-  /** Galería en mockup de celular (< md); showcase de escritorio en pantallas grandes. */
-  isMobileViewport = signal(false);
 
   currentYear = new Date().getFullYear();
   activeScreenId = signal('home');
@@ -965,17 +983,6 @@ export class LandingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPlans();
-    this.watchMobileViewport();
-  }
-
-  private watchMobileViewport(): void {
-    if (typeof window === 'undefined') return;
-
-    const mq = window.matchMedia('(max-width: 767px)');
-    const update = () => this.isMobileViewport.set(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    this.destroyRef.onDestroy(() => mq.removeEventListener('change', update));
   }
 
   /** Hero: siempre mockup de celular → capturas mobile-*. */
@@ -983,35 +990,22 @@ export class LandingComponent implements OnInit {
     return this.landingImgSrc(`mobile-${key}`);
   }
 
-  showScreenPhoneMockup(screen: LandingScreen): boolean {
-    return this.isMobileViewport() || !!screen.phoneMockupAlways;
+  mobileScreenImgSrc(screen: LandingScreen): string {
+    return this.landingImgSrc(`mobile-${screen.key}`);
   }
 
-  screenAssetPrefix(screen: LandingScreen): 'mobile' | 'desktop' {
-    if (screen.phoneMockupAlways) return 'mobile';
-    return this.isMobileViewport() ? 'mobile' : 'desktop';
-  }
-
-  /** Galería: mobile-* en celular (o siempre para reserva cliente), desktop-* en PC. */
-  screenImgSrc(screen: LandingScreen): string {
-    return this.landingImgSrc(`${this.screenAssetPrefix(screen)}-${screen.key}`);
+  desktopScreenImgSrc(screen: LandingScreen): string {
+    return this.landingImgSrc(`desktop-${screen.key}`);
   }
 
   landingImgSrc(file: string): string {
     return `/assets/landing/${file}.png`;
   }
 
-  onScreenImgError(event: Event, screen: LandingScreen): void {
-    this.onLandingImgError(
-      event,
-      `${this.screenAssetPrefix(screen)}-${screen.key}`,
-    );
-  }
-
   onLandingImgError(event: Event, file: string): void {
     const img = event.target as HTMLImageElement;
 
-    // Si falta mobile-*, usar desktop-* temporalmente hasta que suban las capturas.
+    // Si falta mobile-*, usar desktop-* como respaldo temporal.
     if (file.startsWith('mobile-') && !img.dataset['desktopFallback']) {
       img.dataset['desktopFallback'] = 'true';
       img.src = this.landingImgSrc(`desktop-${file.slice('mobile-'.length)}`);
