@@ -1008,7 +1008,35 @@ export class LandingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPlans();
+    this.preloadImages();
   }
+
+  preloadImages(): void {
+    if (typeof window === 'undefined') return;
+
+    // Defer preloading to avoid blocking initial render and LCP
+    const defer = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1000));
+
+    defer(() => {
+      const isDesktop = window.innerWidth >= 768;
+
+      this.screens.forEach((screen) => {
+        // Preload mobile image (used in mobile gallery, and also in desktop mockup for customer booking)
+        this.preloadImage(this.mobileScreenImgSrc(screen));
+
+        // Preload desktop image only if the user is on a desktop device and screen layout requires it
+        if (isDesktop && !screen.phoneMockupAlways) {
+          this.preloadImage(this.desktopScreenImgSrc(screen));
+        }
+      });
+    });
+  }
+
+  private preloadImage(src: string): void {
+    const img = new Image();
+    img.src = src;
+  }
+
 
   /** Hero: siempre mockup de celular → capturas mobile-*. */
   heroImgSrc(key: string): string {
