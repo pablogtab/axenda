@@ -3067,7 +3067,8 @@ export class BookingComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.router.navigate(['/']);
+        this.error.set(true);
+        this.loading.set(false);
       },
     });
   }

@@ -30,11 +30,7 @@ export class ThemeService {
     if (saved) {
       return saved === 'dark';
     }
-    // Si no hay preferencia guardada, usar la del sistema operativo (OS) del usuario
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    // Si no se puede determinar, usar claro por defecto
+    // Sin preferencia guardada: modo claro por defecto
     return false;
   }
 

@@ -15,9 +15,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Exclude auth endpoints from adding the token or handling refresh logic
   const isAuthRequest = req.url.includes('/auth/');
-  
+  const isPublicRequest =
+    req.url.includes('/p/') || req.url.includes('/public/');
+
   let authReq = req;
-  if (token && !isAuthRequest) {
+  if (token && !isAuthRequest && !isPublicRequest) {
     authReq = addToken(req, token);
   }
 

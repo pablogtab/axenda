@@ -39,11 +39,11 @@
         }, true);
 
         try {
-          const theme = localStorage.getItem('axenda-theme') || 'dark';
+          const theme = localStorage.getItem('axenda-theme') || 'light';
           document.documentElement.classList.add(theme);
         } catch (e) {
           console.error('Theme initialization failed', e);
-          document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('light');
         }
       })();
     </script>
