@@ -98,7 +98,7 @@ interface LandingScreen {
                   <div class="phone-mockup-notch" aria-hidden="true"></div>
                   <img
                     [src]="heroImgSrc('home')"
-                    (error)="onLandingImgError($event, 'mobile-home')"
+                    (error)="onMobileImgError($event, 'home')"
                     alt="Panel de inicio de Axenda — vista del negocio"
                     class="phone-mockup-img"
                   />
@@ -111,7 +111,7 @@ interface LandingScreen {
                   <div class="phone-mockup-notch" aria-hidden="true"></div>
                   <img
                     [src]="heroImgSrc('portal-reserva')"
-                    (error)="onLandingImgError($event, 'mobile-portal-reserva')"
+                    (error)="onMobileImgError($event, 'portal-reserva')"
                     alt="Portal de reservas de Axenda — vista del cliente"
                     class="phone-mockup-img"
                   />
@@ -169,13 +169,13 @@ interface LandingScreen {
           <div class="landing-screens-stage">
             @if (activeScreen(); as screen) {
               <!-- Celular (< md): mockup + captura mobile en todos los tabs -->
-              <div class="md:hidden">
+              <div class="landing-gallery-mobile">
                 <div class="phone-mockup phone-mockup-gallery">
                   <div class="phone-mockup-bezel">
                     <div class="phone-mockup-notch" aria-hidden="true"></div>
                     <img
                       [src]="mobileScreenImgSrc(screen)"
-                      (error)="onLandingImgError($event, 'mobile-' + screen.key)"
+                      (error)="onMobileImgError($event, screen.key)"
                       [alt]="screen.caption"
                       class="phone-mockup-img"
                     />
@@ -185,7 +185,7 @@ interface LandingScreen {
 
               <!-- PC (≥ md): showcase + captura desktop (excepto reserva cliente) -->
               @if (!screen.phoneMockupAlways) {
-                <div class="hidden md:block w-full">
+                <div class="landing-gallery-desktop">
                   <div class="showcase-frame">
                     <div class="showcase-frame-bar">
                       <span></span><span></span><span></span>
@@ -193,7 +193,7 @@ interface LandingScreen {
                     <div class="showcase-frame-body">
                       <img
                         [src]="desktopScreenImgSrc(screen)"
-                        (error)="onLandingImgError($event, 'desktop-' + screen.key)"
+                        (error)="onDesktopImgError($event, screen.key)"
                         [alt]="screen.caption"
                         class="showcase-img"
                       />
@@ -204,13 +204,13 @@ interface LandingScreen {
 
               <!-- PC (≥ md): reserva cliente siempre en mockup de celular -->
               @if (screen.phoneMockupAlways) {
-                <div class="hidden md:flex md:justify-center w-full">
+                <div class="landing-gallery-desktop landing-gallery-desktop--phone">
                   <div class="phone-mockup phone-mockup-gallery">
                     <div class="phone-mockup-bezel">
                       <div class="phone-mockup-notch" aria-hidden="true"></div>
                       <img
                         [src]="mobileScreenImgSrc(screen)"
-                        (error)="onLandingImgError($event, 'mobile-' + screen.key)"
+                        (error)="onMobileImgError($event, screen.key)"
                         [alt]="screen.caption"
                         class="phone-mockup-img"
                       />
@@ -685,6 +685,31 @@ interface LandingScreen {
       @apply flex flex-col items-center w-full;
     }
 
+    .landing-gallery-mobile {
+      display: block;
+      width: 100%;
+    }
+
+    .landing-gallery-desktop {
+      display: none;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .landing-gallery-mobile {
+        display: none;
+      }
+
+      .landing-gallery-desktop {
+        display: block;
+      }
+
+      .landing-gallery-desktop--phone {
+        display: flex;
+        justify-content: center;
+      }
+    }
+
     /* Features */
     .landing-features {
       @apply py-16 md:py-20 bg-slate-50/50;
@@ -1002,17 +1027,17 @@ export class LandingComponent implements OnInit {
     return `/assets/landing/${file}.png`;
   }
 
-  onLandingImgError(event: Event, file: string): void {
+  onMobileImgError(event: Event, key: string): void {
     const img = event.target as HTMLImageElement;
-
-    // Si falta mobile-*, usar desktop-* como respaldo temporal.
-    if (file.startsWith('mobile-') && !img.dataset['desktopFallback']) {
-      img.dataset['desktopFallback'] = 'true';
-      img.src = this.landingImgSrc(`desktop-${file.slice('mobile-'.length)}`);
-      return;
+    const fallback = `/assets/landing/mobile-${key}.svg`;
+    if (!img.src.endsWith('.svg')) {
+      img.src = fallback;
     }
+  }
 
-    const fallback = `/assets/landing/${file}.svg`;
+  onDesktopImgError(event: Event, key: string): void {
+    const img = event.target as HTMLImageElement;
+    const fallback = `/assets/landing/desktop-${key}.svg`;
     if (!img.src.endsWith('.svg')) {
       img.src = fallback;
     }
