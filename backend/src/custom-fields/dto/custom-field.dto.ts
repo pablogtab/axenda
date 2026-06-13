@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { CustomFieldType } from '@prisma/client'
+import { CustomFieldType, CustomFieldEntity } from '@prisma/client'
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator'
 
-export class CreateClientFieldDefinitionDto {
+export class CreateCustomFieldDefinitionDto {
   @ApiProperty({ example: '¿Recibe recordatorios?' })
   @IsString()
   name: string
@@ -10,6 +10,11 @@ export class CreateClientFieldDefinitionDto {
   @ApiProperty({ enum: CustomFieldType, example: CustomFieldType.BOOLEAN })
   @IsEnum(CustomFieldType)
   type: CustomFieldType
+
+  @ApiPropertyOptional({ enum: CustomFieldEntity, example: CustomFieldEntity.CLIENT })
+  @IsOptional()
+  @IsEnum(CustomFieldEntity)
+  entityType?: CustomFieldEntity
 
   @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000' })
   @IsOptional()
@@ -21,13 +26,18 @@ export class CreateClientFieldDefinitionDto {
   @IsBoolean()
   required?: boolean
 
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showInPublicView?: boolean
+
   @ApiPropertyOptional({ example: 'true', nullable: true })
   @IsOptional()
   @IsString()
   defaultValue?: string
 }
 
-export class UpdateClientFieldDefinitionDto {
+export class UpdateCustomFieldDefinitionDto {
   @ApiPropertyOptional({ example: '¿Acepta promociones?' })
   @IsOptional()
   @IsString()
@@ -37,6 +47,11 @@ export class UpdateClientFieldDefinitionDto {
   @IsOptional()
   @IsEnum(CustomFieldType)
   type?: CustomFieldType
+
+  @ApiPropertyOptional({ enum: CustomFieldEntity, example: CustomFieldEntity.CLIENT })
+  @IsOptional()
+  @IsEnum(CustomFieldEntity)
+  entityType?: CustomFieldEntity
 
   @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000', nullable: true })
   @IsOptional()
@@ -48,38 +63,43 @@ export class UpdateClientFieldDefinitionDto {
   @IsBoolean()
   required?: boolean
 
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  showInPublicView?: boolean
+
   @ApiPropertyOptional({ example: 'true', nullable: true })
   @IsOptional()
   @IsString()
   defaultValue?: string
 
-  @ApiPropertyOptional({ example: 2, minimum: 0, maximum: 3 })
+  @ApiPropertyOptional({ example: 2, minimum: 0, maximum: 9 })
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Max(3)
+  @Max(9)
   order?: number
 }
 
-export class CreateClientFieldListDto {
+export class CreateCustomFieldListDto {
   @ApiProperty({ example: 'Nivel de fidelidad' })
   @IsString()
   name: string
 }
 
-export class UpdateClientFieldListDto {
+export class UpdateCustomFieldListDto {
   @ApiProperty({ example: 'Nivel de membresía' })
   @IsString()
   name: string
 }
 
-export class CreateClientFieldListOptionDto {
+export class CreateCustomFieldListOptionDto {
   @ApiProperty({ example: 'VIP' })
   @IsString()
   label: string
 }
 
-export class UpdateClientFieldListOptionDto {
+export class UpdateCustomFieldListOptionDto {
   @ApiProperty({ example: 'Frecuente' })
   @IsString()
   label: string

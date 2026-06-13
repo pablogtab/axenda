@@ -5,56 +5,64 @@ import { environment } from '@env/environment';
 
 export type CustomFieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'BOOLEAN';
 
-export interface ClientFieldListOption {
+export interface CustomFieldListOption {
   id: string;
   label: string;
   order: number;
 }
 
-export interface ClientFieldList {
+export interface CustomFieldList {
   id: string;
   name: string;
-  options: ClientFieldListOption[];
+  options: CustomFieldListOption[];
 }
 
-export interface ClientFieldDefinition {
+export interface CustomFieldDefinition {
   id: string;
   name: string;
   type: CustomFieldType;
+  entityType?: 'CLIENT' | 'APPOINTMENT';
   required: boolean;
+  showInPublicView?: boolean;
   order: number;
   defaultValue?: string | null;
   listId?: string | null;
-  list?: ClientFieldList | null;
+  list?: CustomFieldList | null;
 }
 
-export interface ClientFieldValue {
+export interface CustomFieldValue {
   id: string;
   fieldId: string;
-  clientId: string;
+  clientId?: string | null;
+  appointmentId?: string | null;
   value?: string | null;
 }
 
 @Injectable({
   providedIn: 'root',
-})
+  })
 export class CustomFieldsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/custom-fields`;
   private clientsApiUrl = `${environment.apiUrl}/clients`;
+  private appointmentsApiUrl = `${environment.apiUrl}/appointments`;
 
-  getDefinitions(): Observable<ClientFieldDefinition[]> {
-    return this.http.get<ClientFieldDefinition[]>(`${this.apiUrl}/definitions`);
+  getDefinitions(entityType: 'CLIENT' | 'APPOINTMENT' = 'CLIENT'): Observable<CustomFieldDefinition[]> {
+    return this.http.get<CustomFieldDefinition[]>(`${this.apiUrl}/definitions`, {
+      params: { entityType },
+    });
   }
 
   createDefinition(dto: {
     name: string;
     type: CustomFieldType;
+    entityType?: 'CLIENT' | 'APPOINTMENT';
     listId?: string;
     required?: boolean;
+    showInPublicView?: boolean;
     defaultValue?: string;
-  }): Observable<ClientFieldDefinition> {
-    return this.http.post<ClientFieldDefinition>(`${this.apiUrl}/definitions`, dto);
+  }): Observable<CustomFieldDefinition> {
+    return this.http.post<CustomFieldDefinition>(`${this.apiUrl}/definitions`, dto);
   }
 
   updateDefinition(
@@ -62,54 +70,66 @@ export class CustomFieldsService {
     dto: {
       name?: string;
       type?: CustomFieldType;
+      entityType?: 'CLIENT' | 'APPOINTMENT';
       listId?: string;
       required?: boolean;
+      showInPublicView?: boolean;
       order?: number;
       defaultValue?: string;
     },
-  ): Observable<ClientFieldDefinition> {
-    return this.http.patch<ClientFieldDefinition>(`${this.apiUrl}/definitions/${id}`, dto);
+  ): Observable<CustomFieldDefinition> {
+    return this.http.patch<CustomFieldDefinition>(`${this.apiUrl}/definitions/${id}`, dto);
   }
 
   deleteDefinition(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.apiUrl}/definitions/${id}`);
   }
 
-  getLists(): Observable<ClientFieldList[]> {
-    return this.http.get<ClientFieldList[]>(`${this.apiUrl}/lists`);
+  getLists(): Observable<CustomFieldList[]> {
+    return this.http.get<CustomFieldList[]>(`${this.apiUrl}/lists`);
   }
 
-  createList(dto: { name: string }): Observable<ClientFieldList> {
-    return this.http.post<ClientFieldList>(`${this.apiUrl}/lists`, dto);
+  createList(dto: { name: string }): Observable<CustomFieldList> {
+    return this.http.post<CustomFieldList>(`${this.apiUrl}/lists`, dto);
   }
 
-  updateList(id: string, dto: { name: string }): Observable<ClientFieldList> {
-    return this.http.patch<ClientFieldList>(`${this.apiUrl}/lists/${id}`, dto);
+  updateList(id: string, dto: { name: string }): Observable<CustomFieldList> {
+    return this.http.patch<CustomFieldList>(`${this.apiUrl}/lists/${id}`, dto);
   }
 
   deleteList(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.apiUrl}/lists/${id}`);
   }
 
-  addOption(listId: string, dto: { label: string }): Observable<ClientFieldListOption> {
-    return this.http.post<ClientFieldListOption>(`${this.apiUrl}/lists/${listId}/options`, dto);
+  addOption(listId: string, dto: { label: string }): Observable<CustomFieldListOption> {
+    return this.http.post<CustomFieldListOption>(`${this.apiUrl}/lists/${listId}/options`, dto);
   }
 
-  updateOption(listId: string, optionId: string, dto: { label: string }): Observable<ClientFieldListOption> {
-    return this.http.patch<ClientFieldListOption>(`${this.apiUrl}/lists/${listId}/options/${optionId}`, dto);
+  updateOption(listId: string, optionId: string, dto: { label: string }): Observable<CustomFieldListOption> {
+    return this.http.patch<CustomFieldListOption>(`${this.apiUrl}/lists/${listId}/options/${optionId}`, dto);
   }
 
   removeOption(listId: string, optionId: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.apiUrl}/lists/${listId}/options/${optionId}`);
   }
 
-  getClientValues(clientId: string): Observable<{ definitions: ClientFieldDefinition[]; values: ClientFieldValue[] }> {
-    return this.http.get<{ definitions: ClientFieldDefinition[]; values: ClientFieldValue[] }>(
+  getClientValues(clientId: string): Observable<{ definitions: CustomFieldDefinition[]; values: CustomFieldValue[] }> {
+    return this.http.get<{ definitions: CustomFieldDefinition[]; values: CustomFieldValue[] }>(
       `${this.clientsApiUrl}/${clientId}/custom-fields`,
     );
   }
 
   saveClientValues(clientId: string, values: Array<{ fieldId: string; value?: string }>): Observable<{ success: boolean }> {
     return this.http.put<{ success: boolean }>(`${this.clientsApiUrl}/${clientId}/custom-fields`, { values });
+  }
+
+  getAppointmentValues(appointmentId: string): Observable<{ definitions: CustomFieldDefinition[]; values: CustomFieldValue[] }> {
+    return this.http.get<{ definitions: CustomFieldDefinition[]; values: CustomFieldValue[] }>(
+      `${this.appointmentsApiUrl}/${appointmentId}/custom-fields`,
+    );
+  }
+
+  saveAppointmentValues(appointmentId: string, values: Array<{ fieldId: string; value?: string }>): Observable<{ success: boolean }> {
+    return this.http.put<{ success: boolean }>(`${this.appointmentsApiUrl}/${appointmentId}/custom-fields`, { values });
   }
 }

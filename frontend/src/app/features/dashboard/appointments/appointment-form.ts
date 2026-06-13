@@ -10,6 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -27,10 +28,12 @@ import { ServicesService, BusinessService } from '@services/services.service';
 import { ClientsService } from '@services/clients.service';
 import {
   CustomFieldsService,
-  ClientFieldDefinition,
-  ClientFieldValue,
+  CustomFieldDefinition,
+  CustomFieldValue,
+  CustomFieldType,
 } from '@services/custom-fields.service';
 import { TenantsService } from '@services/tenants.service';
+import { SnackbarService } from '@services/snackbar.service';
 import { format } from 'date-fns';
 import {
   createLocalDate,
@@ -274,6 +277,90 @@ import { ClientFormComponent } from '../clients/client-form.component';
             ></textarea>
           </div>
 
+          <!-- Campos Personalizados del Turno -->
+          @if (isLoadingCustomFields()) {
+            <div class="py-2 text-xs text-text-dim">
+              Cargando campos personalizados del turno...
+            </div>
+          }
+
+          @if (customFieldDefinitions().length > 0) {
+            <div [formGroup]="customFieldsForm" class="space-y-3 pt-2">
+              <div class="flex items-center gap-3">
+                <div class="h-px flex-1 bg-border"></div>
+                <h3
+                  class="text-xs font-bold text-text-dim uppercase tracking-wider whitespace-nowrap"
+                >
+                  Campos del turno
+                </h3>
+                <div class="h-px flex-1 bg-border"></div>
+              </div>
+
+              @for (definition of customFieldDefinitions(); track definition.id) {
+                <div class="space-y-2 py-1">
+                  <label
+                    class="text-xs font-bold text-text-dim uppercase tracking-wider"
+                    [for]="customControlName(definition.id)"
+                  >
+                    {{ definition.name }}
+                    @if (definition.required) {
+                      <span class="text-error">*</span>
+                    }
+                  </label>
+
+                  @if (isSelectField(definition)) {
+                    <select
+                      [id]="customControlName(definition.id)"
+                      [formControlName]="customControlName(definition.id)"
+                      class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                    >
+                      <option value="">Seleccionar opción...</option>
+                      @for (
+                        option of getSelectOptions(definition);
+                        track option.id
+                      ) {
+                        <option [value]="option.id">{{ option.label }}</option>
+                      }
+                    </select>
+                  } @else if (definition.type === 'BOOLEAN') {
+                    <label
+                      class="inline-flex items-center gap-2 text-sm text-text-main cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        [id]="customControlName(definition.id)"
+                        [formControlName]="customControlName(definition.id)"
+                        class="w-4 h-4 rounded border-border bg-surface-subtle text-primary focus:ring-primary/20 cursor-pointer"
+                      />
+                      Sí
+                    </label>
+                  } @else {
+                    <input
+                      [id]="customControlName(definition.id)"
+                      [type]="getInputType(definition.type)"
+                      [formControlName]="customControlName(definition.id)"
+                      class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2 text-sm text-text-main focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                      [placeholder]="
+                        definition.type === 'DATE' ? '' : 'Ingresa un valor'
+                      "
+                    />
+                  }
+
+                  @if (
+                    customFieldsForm.get(customControlName(definition.id))
+                      ?.touched &&
+                    customFieldsForm.get(customControlName(definition.id))
+                      ?.invalid
+                  ) {
+                    <span class="text-[10px] text-error font-medium block ml-1"
+                      >Campo obligatorio</span
+                    >
+                  }
+                </div>
+              }
+            </div>
+          }
+
           <!-- Server Error Message -->
           @if (serverError()) {
             <div
@@ -478,6 +565,11 @@ export class AppointmentFormComponent implements OnInit {
   private customFieldsService = inject(CustomFieldsService);
   private dialog = inject(Dialog);
   public tenantsService = inject(TenantsService);
+  private snackbar = inject(SnackbarService);
+
+  isLoadingCustomFields = signal(false);
+  customFieldDefinitions = signal<CustomFieldDefinition[]>([]);
+  customFieldsForm = this.fb.group({});
 
   form!: FormGroup;
   professionals = signal<Professional[]>([]);
@@ -665,8 +757,12 @@ export class AppointmentFormComponent implements OnInit {
           );
 
           this.loadClientCustomFieldsSummary(appointment.client?.id);
-        } else if (this.data.clientId) {
-          this.loadClientCustomFieldsSummary(this.data.clientId);
+          this.loadAppointmentCustomFields(appointment);
+        } else {
+          if (this.data.clientId) {
+            this.loadClientCustomFieldsSummary(this.data.clientId);
+          }
+          this.loadAppointmentCustomFields();
         }
 
         // 4. Filtrar servicios por profesional inicial
@@ -729,13 +825,10 @@ export class AppointmentFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.customFieldsForm.invalid) {
       console.warn('Formulario inválido:', this.form.value);
-      // Log de errores por campo
-      Object.keys(this.form.controls).forEach((key) => {
-        const controlErrors = this.form.get(key)?.errors;
-        if (controlErrors) console.log(`Error en ${key}:`, controlErrors);
-      });
+      this.form.markAllAsTouched();
+      this.customFieldsForm.markAllAsTouched();
       return;
     }
 
@@ -744,6 +837,8 @@ export class AppointmentFormComponent implements OnInit {
 
     const start = createLocalDate(val.date, val.time);
     const end = createLocalDate(val.date, val.endTime);
+
+    const customFieldsPayload = this.buildCustomFieldPayload();
 
     const payload = {
       clientId: val.clientId,
@@ -755,6 +850,7 @@ export class AppointmentFormComponent implements OnInit {
       notes: val.notes,
       internalNotes: val.internalNotes,
       notifyClient: val.notifyClient,
+      customFields: customFieldsPayload,
     };
 
     const request = this.isEditMode()
@@ -824,7 +920,7 @@ export class AppointmentFormComponent implements OnInit {
     this.isLoadingClientSummary.set(true);
     this.customFieldsService.getClientValues(clientId).subscribe({
       next: ({ definitions, values }) => {
-        const valuesMap = new Map<string, ClientFieldValue>(
+        const valuesMap = new Map<string, CustomFieldValue>(
           values.map((v) => [v.fieldId, v]),
         );
 
@@ -854,7 +950,7 @@ export class AppointmentFormComponent implements OnInit {
   }
 
   private formatCustomFieldValue(
-    definition: ClientFieldDefinition,
+    definition: CustomFieldDefinition,
     rawValue?: string | null,
   ): string | null {
     if (rawValue === null || rawValue === undefined || rawValue === '') {
@@ -880,5 +976,111 @@ export class AppointmentFormComponent implements OnInit {
       default:
         return rawValue;
     }
+  }
+
+  customControlName(fieldId: string): string {
+    return `field_${fieldId}`;
+  }
+
+  isSelectField(definition: CustomFieldDefinition): boolean {
+    return definition.type === 'SELECT';
+  }
+
+  getSelectOptions(definition: CustomFieldDefinition): any[] {
+    return definition.list?.options ?? [];
+  }
+
+  getInputType(type: CustomFieldType): string {
+    if (type === 'DATE') return 'date';
+    if (type === 'NUMBER') return 'number';
+    return 'text';
+  }
+
+  private loadAppointmentCustomFields(appointment?: any): void {
+    this.isLoadingCustomFields.set(true);
+    this.customFieldsService.getDefinitions('APPOINTMENT').subscribe({
+      next: (definitions) => {
+        this.customFieldDefinitions.set(definitions);
+
+        const existingMap = new Map<string, string>(
+          (appointment?.fieldValues || []).map((item: any) => [item.fieldId, item.value ?? '']),
+        );
+
+        for (const definition of definitions) {
+          const controlName = this.customControlName(definition.id);
+          const initialValue = appointment
+            ? existingMap.get(definition.id)
+            : (definition.defaultValue ?? '');
+          const normalizedValue = this.parseIncomingValue(
+            definition.type,
+            initialValue,
+          );
+          const validators =
+            definition.required && definition.type !== 'BOOLEAN'
+              ? [Validators.required]
+              : [];
+          this.customFieldsForm.addControl(
+            controlName,
+            new FormControl(normalizedValue, validators),
+          );
+        }
+
+        this.isLoadingCustomFields.set(false);
+      },
+      error: () => {
+        this.isLoadingCustomFields.set(false);
+        this.snackbar.error('No se pudieron cargar los campos personalizados del turno');
+      },
+    });
+  }
+
+  private buildCustomFieldPayload(): Array<{
+    fieldId: string;
+    value?: string;
+  }> {
+    const payload: Array<{ fieldId: string; value?: string }> = [];
+
+    for (const definition of this.customFieldDefinitions()) {
+      const controlName = this.customControlName(definition.id);
+      const rawValue = this.customFieldsForm.get(controlName)?.value;
+      const normalized = this.normalizeOutgoingValue(definition.type, rawValue);
+      payload.push({ fieldId: definition.id, value: normalized });
+    }
+
+    return payload;
+  }
+
+  private parseIncomingValue(
+    type: CustomFieldType,
+    rawValue?: string | null,
+  ): unknown {
+    if (rawValue === undefined || rawValue === null || rawValue === '') {
+      return type === 'BOOLEAN' ? false : '';
+    }
+
+    if (type === 'BOOLEAN') {
+      return rawValue === 'true';
+    }
+
+    if (type === 'NUMBER') {
+      return Number(rawValue);
+    }
+
+    return rawValue;
+  }
+
+  private normalizeOutgoingValue(
+    type: CustomFieldType,
+    rawValue: unknown,
+  ): string | undefined {
+    if (type === 'BOOLEAN') {
+      return rawValue ? 'true' : 'false';
+    }
+
+    if (rawValue === undefined || rawValue === null || rawValue === '') {
+      return undefined;
+    }
+
+    return String(rawValue);
   }
 }

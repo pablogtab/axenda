@@ -45,6 +45,7 @@ export interface Appointment {
     id: string;
     name: string;
   };
+  fieldValues?: any[];
 }
 
 @Injectable({

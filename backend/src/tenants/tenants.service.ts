@@ -43,6 +43,32 @@ export class TenantsService {
         publicShowProfessionalSelection: true,
         publicActive: true,
         cancellationLimit: true,
+        customFieldDefinitions: {
+          where: { entityType: 'APPOINTMENT', showInPublicView: true },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            required: true,
+            order: true,
+            defaultValue: true,
+            listId: true,
+            list: {
+              select: {
+                id: true,
+                name: true,
+                options: {
+                  orderBy: { order: 'asc' },
+                  select: {
+                    id: true,
+                    label: true,
+                    order: true
+                  }
+                }
+              }
+            }
+          }
+        },
         services: {
           where: { active: true, isBookablePublic: true },
           select: {

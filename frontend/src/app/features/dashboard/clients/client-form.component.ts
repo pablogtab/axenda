@@ -10,8 +10,8 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { Client, ClientsService } from '@services/clients.service';
 import { SnackbarService } from '@services/snackbar.service';
 import {
-  ClientFieldDefinition,
-  ClientFieldListOption,
+  CustomFieldDefinition,
+  CustomFieldListOption,
   CustomFieldType,
   CustomFieldsService,
 } from '@services/custom-fields.service';
@@ -331,7 +331,7 @@ export class ClientFormComponent implements OnInit {
   currentClientId: string | null = this.data?.id || null;
   isSubmitting = false;
   isLoadingCustomFields = false;
-  customFieldDefinitions = signal<ClientFieldDefinition[]>([]);
+  customFieldDefinitions = signal<CustomFieldDefinition[]>([]);
   customFieldsForm = this.fb.group({});
 
   ngOnInit(): void {
@@ -342,11 +342,11 @@ export class ClientFormComponent implements OnInit {
     return `field_${fieldId}`;
   }
 
-  isSelectField(definition: ClientFieldDefinition): boolean {
+  isSelectField(definition: CustomFieldDefinition): boolean {
     return definition.type === 'SELECT';
   }
 
-  getSelectOptions(definition: ClientFieldDefinition): ClientFieldListOption[] {
+  getSelectOptions(definition: CustomFieldDefinition): CustomFieldListOption[] {
     return definition.list?.options ?? [];
   }
 
@@ -362,7 +362,7 @@ export class ClientFormComponent implements OnInit {
     const values$ = this.currentClientId
       ? this.customFieldsService.getClientValues(this.currentClientId)
       : of({
-          definitions: [] as ClientFieldDefinition[],
+          definitions: [] as CustomFieldDefinition[],
           values: [] as Array<{ fieldId: string; value?: string | null }>,
         });
 

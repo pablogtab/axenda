@@ -384,9 +384,9 @@ export class SettingsComponent implements OnInit {
     },
     {
       id: 'custom-fields',
-      title: 'Clientes',
-      icon: 'contacts',
-      description: 'Campos personalizados para el CRM',
+      title: 'Campos Personalizados',
+      icon: 'tune',
+      description: 'Campos para clientes y turnos',
     },
     {
       id: 'whatsapp',

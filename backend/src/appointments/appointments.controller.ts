@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -14,7 +15,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { UserRole } from '@prisma/client'
 import { AppointmentsService } from './appointments.service'
-import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
+import { CreateAppointmentDto, SaveAppointmentCustomFieldsDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
 import { GetAvailabilityDto } from './dto/availability-query.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator'
@@ -96,5 +97,23 @@ export class AppointmentsController {
     @Query('notifyClient') notifyClient?: string,
   ) {
     return this.appointmentsService.cancel(user.tenantId, id, user.sub, notifyClient !== 'false')
+  }
+
+  @Get(':id/custom-fields')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST, UserRole.PROFESSIONAL)
+  @ApiOperation({ summary: 'Obtener definiciones y valores de campos personalizados del turno' })
+  getCustomFields(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.appointmentsService.getCustomFields(user.tenantId, id)
+  }
+
+  @Put(':id/custom-fields')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST)
+  @ApiOperation({ summary: 'Guardar valores de campos personalizados del turno' })
+  saveCustomFields(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: SaveAppointmentCustomFieldsDto,
+  ) {
+    return this.appointmentsService.saveCustomFields(user.tenantId, id, dto)
   }
 }

@@ -37,6 +37,7 @@ export interface Tenant {
   cancellationLimit?: string;
   services?: any[];
   branches?: any[];
+  customFieldDefinitions?: any[];
 }
 
 export interface UpdateTenantDto {

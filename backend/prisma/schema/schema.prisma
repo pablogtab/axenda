@@ -55,6 +55,11 @@ enum AuthProvider {
   GOOGLE
 }
 
+enum CustomFieldEntity {
+  CLIENT
+  APPOINTMENT
+}
+
 enum CustomFieldType {
   TEXT
   NUMBER

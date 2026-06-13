@@ -911,20 +911,35 @@ describe('Appointments — Integration', () => {
         data: { cancellationLimit: '24h' }
       });
 
-      // Create an invitation for a future Monday (e.g., 2026-06-08)
+      // Calculate next Monday in the future
+      const futureMonday = new Date();
+      futureMonday.setDate(futureMonday.getDate() + ((1 + 7 - futureMonday.getDay()) % 7 || 7));
+      
+      const invStartDate = new Date(futureMonday);
+      invStartDate.setUTCHours(0, 0, 0, 0);
+
+      const invEndDate = new Date(futureMonday);
+      invEndDate.setDate(invEndDate.getDate() + 1);
+      invEndDate.setUTCHours(0, 0, 0, 0);
+
+      const dateStr = invStartDate.toISOString().split('T')[0];
+
+      const startTime = new Date(invStartDate);
+      startTime.setUTCHours(13, 0, 0, 0); // 10:00 local (Argentina offset is -3h => 13:00 UTC)
+
+      // Create an invitation for a future Monday
       const testInvitation = await prisma.bookingInvitation.create({
         data: {
           tenantId,
           token: 'inv_resched_test_token',
-          startDate: new Date('2026-06-08T00:00:00Z'),
-          endDate: new Date('2026-06-09T00:00:00Z'),
+          startDate: invStartDate,
+          endDate: invEndDate,
           schedule: [
             { dayOfWeek: 1, startTime: '10:00', endTime: '12:00' }
           ]
         }
       });
 
-      const startTime = new Date('2026-06-08T13:00:00Z'); // 10:00 local (Argentina offset is -3h => 13:00 UTC)
       const cancelToken = `inv-cancel-${Date.now()}`;
       
       const appt = await prisma.appointment.create({
@@ -944,7 +959,7 @@ describe('Appointments — Integration', () => {
 
       try {
         const availRes = await request(app.getHttpServer())
-          .get(`/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-08&excludeAppointmentId=${appt.id}`)
+          .get(`/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${dateStr}&excludeAppointmentId=${appt.id}`)
           .expect(200);
 
         const slots = availRes.body.data as { time: string; available: boolean }[];
@@ -953,17 +968,19 @@ describe('Appointments — Integration', () => {
         expect(activeTimes).toContain('10:00');
         expect(activeTimes).not.toContain('09:00');
 
-        const badTime = new Date('2026-06-08T12:00:00Z'); // 09:00 local
+        const badTime = new Date(invStartDate);
+        badTime.setUTCHours(12, 0, 0, 0); // 09:00 local
         await request(app.getHttpServer())
           .post(`/api/public/appointments/${cancelToken}/reschedule`)
           .send({ startTime: badTime.toISOString() })
           .expect(400);
 
-        const goodTime = new Date('2026-06-08T14:00:00Z'); // 11:00 local
-        await request(app.getHttpServer())
+        const goodTime = new Date(invStartDate);
+        goodTime.setUTCHours(14, 0, 0, 0); // 11:00 local
+        const res = await request(app.getHttpServer())
           .post(`/api/public/appointments/${cancelToken}/reschedule`)
-          .send({ startTime: goodTime.toISOString() })
-          .expect(200);
+          .send({ startTime: goodTime.toISOString() });
+        expect(res.status).toBe(200);
 
         const updatedAppt = await prisma.appointment.findUnique({ where: { id: appt.id } });
         expect(new Date(updatedAppt!.startTime).toISOString()).toBe(goodTime.toISOString());
@@ -980,12 +997,28 @@ describe('Appointments — Integration', () => {
         data: { cancellationLimit: '24h' }
       });
 
+      // Calculate next Monday in the future
+      const futureMonday = new Date();
+      futureMonday.setDate(futureMonday.getDate() + ((1 + 7 - futureMonday.getDay()) % 7 || 7));
+      
+      const invStartDate = new Date(futureMonday);
+      invStartDate.setUTCHours(0, 0, 0, 0);
+
+      const invEndDate = new Date(futureMonday);
+      invEndDate.setDate(invEndDate.getDate() + 1);
+      invEndDate.setUTCHours(0, 0, 0, 0);
+
+      const dateStr = invStartDate.toISOString().split('T')[0];
+
+      const startTime = new Date(invStartDate);
+      startTime.setUTCHours(13, 0, 0, 0); // 10:00 local (Argentina offset is -3h => 13:00 UTC)
+
       const testInvitation = await prisma.bookingInvitation.create({
         data: {
           tenantId,
           token: 'inv_max_uses_resched_test',
-          startDate: new Date('2026-06-08T00:00:00Z'),
-          endDate: new Date('2026-06-09T00:00:00Z'),
+          startDate: invStartDate,
+          endDate: invEndDate,
           maxUses: 1,
           usesCount: 1,
           schedule: [
@@ -994,7 +1027,6 @@ describe('Appointments — Integration', () => {
         }
       });
 
-      const startTime = new Date('2026-06-08T13:00:00Z'); // 10:00 local (Argentina offset is -3h => 13:00 UTC)
       const cancelToken = `inv-cancel-max-${Date.now()}`;
       
       const appt = await prisma.appointment.create({
@@ -1014,14 +1046,15 @@ describe('Appointments — Integration', () => {
 
       try {
         const availRes = await request(app.getHttpServer())
-          .get(`/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=2026-06-08&excludeAppointmentId=${appt.id}&invitationToken=${testInvitation.token}`)
+          .get(`/api/p/${tenantSlug}/appointments/availability?professionalId=${professionalId}&serviceId=${serviceId}&branchId=${branchId}&date=${dateStr}&excludeAppointmentId=${appt.id}&invitationToken=${testInvitation.token}`)
           .expect(200);
 
         const slots = availRes.body.data as { time: string; available: boolean }[];
         const activeTimes = slots.filter(s => s.available).map(s => s.time);
         expect(activeTimes).toContain('10:00');
 
-        const goodTime = new Date('2026-06-08T14:00:00Z'); // 11:00 local
+        const goodTime = new Date(invStartDate);
+        goodTime.setUTCHours(14, 0, 0, 0); // 11:00 local
         await request(app.getHttpServer())
           .post(`/api/public/appointments/${cancelToken}/reschedule`)
           .send({ startTime: goodTime.toISOString() })

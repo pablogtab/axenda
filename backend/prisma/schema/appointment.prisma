@@ -17,6 +17,7 @@ model Appointment {
   updatedAt      DateTime          @updatedAt
   whatsappReminderSent Boolean     @default(false)
   logs           AppointmentLog[]
+  fieldValues    CustomFieldValue[]
   branch         Branch            @relation(fields: [branchId], references: [id])
   client         Client            @relation(fields: [clientId], references: [id])
   professional   Professional      @relation(fields: [professionalId], references: [id])

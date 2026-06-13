@@ -203,8 +203,8 @@ export class ClientsService {
     await this.findOrFail(tenantId, clientId)
 
     const [definitions, values] = await Promise.all([
-      this.prisma.clientFieldDefinition.findMany({
-        where: { tenantId },
+      this.prisma.customFieldDefinition.findMany({
+        where: { tenantId, entityType: 'CLIENT' },
         include: {
           list: {
             include: {
@@ -216,7 +216,7 @@ export class ClientsService {
         },
         orderBy: { order: 'asc' },
       }),
-      this.prisma.clientFieldValue.findMany({
+      this.prisma.customFieldValue.findMany({
         where: { clientId },
       }),
     ])
@@ -230,8 +230,8 @@ export class ClientsService {
   async saveCustomFields(tenantId: string, clientId: string, dto: SaveClientCustomFieldsDto) {
     await this.findOrFail(tenantId, clientId)
 
-    const definitions = await this.prisma.clientFieldDefinition.findMany({
-      where: { tenantId },
+    const definitions = await this.prisma.customFieldDefinition.findMany({
+      where: { tenantId, entityType: 'CLIENT' },
       include: {
         list: {
           include: {
@@ -267,7 +267,7 @@ export class ClientsService {
       for (const input of dto.values) {
         const value = input.value?.trim()
         if (!value) {
-          await tx.clientFieldValue.deleteMany({
+          await tx.customFieldValue.deleteMany({
             where: {
               clientId,
               fieldId: input.fieldId,
@@ -276,7 +276,7 @@ export class ClientsService {
           continue
         }
 
-        await tx.clientFieldValue.upsert({
+        await tx.customFieldValue.upsert({
           where: {
             clientId_fieldId: {
               clientId,

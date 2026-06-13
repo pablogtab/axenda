@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsArray, IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator'
+import { UpsertAppointmentCustomFieldValueDto } from './appointment.dto'
 
 export class CreatePublicAppointmentDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -41,4 +43,11 @@ export class CreatePublicAppointmentDto {
   @IsOptional()
   @IsString()
   invitationToken?: string
+
+  @ApiPropertyOptional({ type: [UpsertAppointmentCustomFieldValueDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpsertAppointmentCustomFieldValueDto)
+  customFields?: UpsertAppointmentCustomFieldValueDto[]
 }

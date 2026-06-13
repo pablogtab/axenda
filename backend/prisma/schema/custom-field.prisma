@@ -1,0 +1,56 @@
+model CustomFieldDefinition {
+  id               String            @id @default(uuid())
+  tenantId         String
+  entityType       CustomFieldEntity @default(CLIENT)
+  name             String
+  type             CustomFieldType
+  defaultValue     String?
+  listId           String?
+  order            Int
+  required         Boolean           @default(false)
+  showInPublicView Boolean           @default(true)
+  list             CustomFieldList?  @relation(fields: [listId], references: [id], onDelete: SetNull)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values           CustomFieldValue[]
+
+  @@unique([tenantId, entityType, order])
+  @@map("custom_field_definitions")
+}
+
+model CustomFieldList {
+  id       String                  @id @default(uuid())
+  tenantId String
+  name     String
+  fields   CustomFieldDefinition[]
+  options  CustomFieldListOption[]
+  tenant   Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("custom_field_lists")
+}
+
+model CustomFieldListOption {
+  id     String          @id @default(uuid())
+  listId String
+  label  String
+  order  Int
+  list   CustomFieldList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, order])
+  @@map("custom_field_list_options")
+}
+
+model CustomFieldValue {
+  id            String                @id @default(uuid())
+  fieldId       String
+  clientId      String?
+  appointmentId String?
+  value         String?
+  
+  client        Client?               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  appointment   Appointment?          @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  field         CustomFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, fieldId])
+  @@unique([appointmentId, fieldId])
+  @@map("custom_field_values")
+}

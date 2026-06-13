@@ -27,6 +27,7 @@ import { CancelAppointmentDialogComponent } from '@shared/components/cancel-appo
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { IconComponent } from '@shared/components/icon.component';
+import { createLocalDate } from '@core/utils/date-utils';
 
 interface GroupedData {
   key: string;
@@ -276,10 +277,31 @@ interface GroupedData {
                       </div>
                     </td>
 
-                    <!-- Client Details -->
                     <td class="py-3.5 px-4">
-                      <div class="font-bold text-text-main text-sm">
-                        {{ app.client.firstName }} {{ app.client.lastName }}
+                      <div class="flex items-center gap-2">
+                        <div class="font-bold text-text-main text-sm">
+                          {{ app.client.firstName }} {{ app.client.lastName }}
+                        </div>
+                        
+                        <!-- Indicador de Campos Personalizados en Hover -->
+                        <div *ngIf="hasCustomFields(app)" class="relative group">
+                          <span class="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-help">
+                            <app-icon name="assignment" class="!text-[11px]"></app-icon>
+                          </span>
+                          
+                          <!-- Tooltip box -->
+                          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-surface-subtle/95 backdrop-blur-md border border-border rounded-xl shadow-2xl p-3 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div class="text-[10px] font-black uppercase tracking-wider text-text-dim mb-2 border-b border-border/40 pb-1 text-left">
+                              Datos Adicionales
+                            </div>
+                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                              <div *ngFor="let fv of getActiveFieldValues(app)" class="flex flex-col text-left">
+                                <span class="text-[9px] font-bold text-text-muted uppercase tracking-tight">{{ fv.field?.name }}</span>
+                                <span class="text-xs font-bold text-text-main mt-0.5">{{ formatCustomFieldValue(fv) }}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div
                         class="text-[10px] text-text-dim flex flex-col gap-0.5 mt-0.5 font-medium"
@@ -519,6 +541,17 @@ interface GroupedData {
                   </div>
                 </div>
 
+                <!-- Custom Fields Mobile List -->
+                <div *ngIf="hasCustomFields(app)" class="border-t border-border/40 pt-2.5 text-[10px] space-y-1">
+                  <div class="text-[8px] font-black uppercase tracking-wider text-text-dim">Datos Adicionales</div>
+                  <div class="grid grid-cols-2 gap-2 mt-1">
+                    <div *ngFor="let fv of getActiveFieldValues(app)" class="flex flex-col">
+                      <span class="text-[8px] font-bold text-text-muted uppercase tracking-tight">{{ fv.field?.name }}</span>
+                      <span class="text-[10px] font-bold text-text-main mt-0.5">{{ formatCustomFieldValue(fv) }}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Card Actions -->
                 <div class="flex justify-between items-center mt-1">
                   <span
@@ -685,6 +718,9 @@ export class AgendaListViewComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Invalidate appointments cache to get fresh custom fields
+    this.appointmentsService.invalidateCache();
+
     // Cargar configuración persistida de estados
     this.selectedStatuses.set(this.userConfig.agendaSelectedStatuses());
 
@@ -752,10 +788,12 @@ export class AgendaListViewComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    const startISO = new Date(
-      this.localStartDate() + 'T00:00:00',
-    ).toISOString();
-    const endISO = new Date(this.localEndDate() + 'T23:59:59').toISOString();
+    const startDate = createLocalDate(this.localStartDate());
+    const endDate = createLocalDate(this.localEndDate());
+    endDate.setHours(23, 59, 59, 999);
+
+    const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
 
     this.appointmentsService
       .findAll({
@@ -1027,5 +1065,20 @@ export class AgendaListViewComponent implements OnInit {
         bg: 'rgba(255,255,255,0.1)',
       }
     );
+  }
+
+  hasCustomFields(app: Appointment): boolean {
+    return !!app.fieldValues && app.fieldValues.some(fv => fv.value !== undefined && fv.value !== null && fv.value.trim() !== '');
+  }
+
+  getActiveFieldValues(app: Appointment): any[] {
+    return (app.fieldValues || []).filter(fv => fv.value !== undefined && fv.value !== null && fv.value.trim() !== '');
+  }
+
+  formatCustomFieldValue(fv: any): string {
+    if (fv.field?.type === 'BOOLEAN') {
+      return fv.value === 'true' ? 'Sí' : 'No';
+    }
+    return fv.value || '';
   }
 }

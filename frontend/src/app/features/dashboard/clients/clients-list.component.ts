@@ -16,7 +16,7 @@ import { DialogService } from '@services/dialog.service';
 import { ModalService } from '@services/modal.service';
 import { IconComponent } from '@shared/components/icon.component';
 import {
-  ClientFieldDefinition,
+  CustomFieldDefinition,
   CustomFieldsService,
 } from '@services/custom-fields.service';
 import { BookingInvitationFormComponent } from '../booking-invitations/components/booking-invitation-form.component';
@@ -310,7 +310,7 @@ export class ClientsListComponent implements OnInit {
   clients = signal<Client[]>([]);
   searchTerm = signal('');
   activeBooleanFieldId = signal<string | null>(null);
-  booleanFieldDefinitions = signal<ClientFieldDefinition[]>([]);
+  booleanFieldDefinitions = signal<CustomFieldDefinition[]>([]);
   isLoading = signal(true);
 
   tenantPublicSlug = computed(() => {

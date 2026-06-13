@@ -3,11 +3,12 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { AvailabilityEngineService } from './availability-engine.service'
-import { CreateAppointmentDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
+import { CreateAppointmentDto, SaveAppointmentCustomFieldsDto, UpdateAppointmentStatusDto } from './dto/appointment.dto'
 import { CreatePublicAppointmentDto } from './dto/public-appointment.dto'
 import { PhoneUtils } from '../common/utils/phone-utils'
 import { randomUUID } from 'crypto'
 import { BookingInvitationsService } from '../booking-invitations/booking-invitations.service'
+import { CustomFieldType } from '@prisma/client'
 
 @Injectable()
 export class AppointmentsService {
@@ -64,7 +65,12 @@ export class AppointmentsService {
         client: true,
         professional: true,
         service: true,
-        branch: true
+        branch: true,
+        fieldValues: {
+          include: {
+            field: true
+          }
+        }
       },
       orderBy: { startTime: 'asc' },
     })
@@ -77,7 +83,22 @@ export class AppointmentsService {
         client: true,
         professional: true,
         service: true,
-        branch: true
+        branch: true,
+        fieldValues: {
+          include: {
+            field: {
+              include: {
+                list: {
+                  include: {
+                    options: {
+                      orderBy: { order: 'asc' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       }
     })
     if (!appointment) throw new NotFoundException(`Turno ${id} no encontrado`)
@@ -113,39 +134,50 @@ export class AppointmentsService {
     const start = new Date(dto.startTime)
     const end = new Date(start.getTime() + service.duration * 60000)
 
-    // 5. Crear turno
-    const appointment = await this.prisma.appointment.create({
-      data: {
-        tenantId,
-        clientId: dto.clientId,
-        professionalId: dto.professionalId,
-        serviceId: dto.serviceId,
-        branchId: dto.branchId,
-        startTime: start,
-        endTime: end,
-        notes: dto.notes,
-        status: 'PENDING',
-        bookedVia: 'PANEL',
-        cancelToken: randomUUID()
-      },
-      include: {
-        client: true,
-        professional: true,
-        service: true,
-        branch: true
+    // Crear turno y guardar campos personalizados en una transacción
+    const appointment = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.appointment.create({
+        data: {
+          tenantId,
+          clientId: dto.clientId,
+          professionalId: dto.professionalId,
+          serviceId: dto.serviceId,
+          branchId: dto.branchId,
+          startTime: start,
+          endTime: end,
+          notes: dto.notes,
+          status: 'PENDING',
+          bookedVia: 'PANEL',
+          cancelToken: randomUUID()
+        },
+        include: {
+          client: true,
+          professional: true,
+          service: true,
+          branch: true,
+          fieldValues: {
+            include: {
+              field: true
+            }
+          }
+        }
+      })
+
+      if (dto.customFields && dto.customFields.length > 0) {
+        await this.saveCustomFieldsTx(tx, tenantId, app.id, dto.customFields)
       }
-    })
 
+      // 6. Log inicial
+      await tx.appointmentLog.create({
+        data: {
+          appointmentId: app.id,
+          changedBy: userId,
+          newStatus: 'PENDING',
+          notes: 'Turno creado desde administración'
+        }
+      })
 
-
-    // 6. Log inicial
-    await this.prisma.appointmentLog.create({
-      data: {
-        appointmentId: appointment.id,
-        changedBy: userId,
-        newStatus: 'PENDING',
-        notes: 'Turno creado desde administración'
-      }
+      return app
     })
 
     // 7. Disparar evento para WhatsApp/Mail
@@ -220,41 +252,54 @@ export class AppointmentsService {
     // 4. Calcular EndTime
     const end = new Date(start.getTime() + service.duration * 60000)
 
-    // 5. Crear turno
-    const appointment = await this.prisma.appointment.create({
-      data: {
-        tenantId,
-        clientId: client.id,
-        professionalId: dto.professionalId,
-        serviceId: dto.serviceId,
-        branchId: dto.branchId,
-        startTime: start,
-        endTime: end,
-        notes: dto.notes,
-        status: 'PENDING',
-        bookedVia: 'PUBLIC_LINK',
-        cancelToken: randomUUID(),
-        invitationId,
-      },
-      include: {
-        client: true,
-        professional: true,
-        service: true,
-        branch: true
-      }
-    })
+    // Crear turno y guardar campos personalizados en una transacción
+    const appointment = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.appointment.create({
+        data: {
+          tenantId,
+          clientId: client.id,
+          professionalId: dto.professionalId,
+          serviceId: dto.serviceId,
+          branchId: dto.branchId,
+          startTime: start,
+          endTime: end,
+          notes: dto.notes,
+          status: 'PENDING',
+          bookedVia: 'PUBLIC_LINK',
+          cancelToken: randomUUID(),
+          invitationId,
+        },
+        include: {
+          client: true,
+          professional: true,
+          service: true,
+          branch: true,
+          fieldValues: {
+            include: {
+              field: true
+            }
+          }
+        }
+      })
 
-    if (invitationId) {
-      await this.bookingInvitationsService.incrementUses(invitationId)
-    }
-
-    // 6. Log inicial
-    await this.prisma.appointmentLog.create({
-      data: {
-        appointmentId: appointment.id,
-        newStatus: 'PENDING',
-        notes: 'Turno reservado desde página pública'
+      if (dto.customFields && dto.customFields.length > 0) {
+        await this.saveCustomFieldsTx(tx, tenantId, app.id, dto.customFields)
       }
+
+      if (invitationId) {
+        await this.bookingInvitationsService.incrementUses(invitationId)
+      }
+
+      // 6. Log inicial
+      await tx.appointmentLog.create({
+        data: {
+          appointmentId: app.id,
+          newStatus: 'PENDING',
+          notes: 'Turno reservado desde página pública'
+        }
+      })
+
+      return app
     })
 
     // 7. Disparar evento para WhatsApp/Mail
@@ -295,8 +340,6 @@ export class AppointmentsService {
   async update(tenantId: string, id: string, userId: string, dto: CreateAppointmentDto) {
     const appointment = await this.findOne(tenantId, id)
     
-    // Si se cambia horario o profesional, validar disponibilidad
-    // (Simplificado: asumimos que se puede siempre que sea el mismo o haya lugar)
     const start = new Date(dto.startTime)
     const service = await this.prisma.service.findFirst({ where: { id: dto.serviceId, tenantId } })
     const end = new Date(start.getTime() + service.duration * 60000)
@@ -317,6 +360,10 @@ export class AppointmentsService {
         },
         include: { client: true, professional: true, service: true, branch: true }
       })
+
+      if (dto.customFields) {
+        await this.saveCustomFieldsTx(tx, tenantId, id, dto.customFields)
+      }
 
       await tx.appointmentLog.create({
         data: {
@@ -362,6 +409,21 @@ export class AppointmentsService {
         service: true,
         branch: true,
         invitation: true,
+        fieldValues: {
+          include: {
+            field: {
+              include: {
+                list: {
+                  include: {
+                    options: {
+                      orderBy: { order: 'asc' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         tenant: {
           select: {
             id: true,
@@ -412,6 +474,21 @@ export class AppointmentsService {
           service: true,
           branch: true,
           invitation: true,
+          fieldValues: {
+            include: {
+              field: {
+                include: {
+                  list: {
+                    include: {
+                      options: {
+                        orderBy: { order: 'asc' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           tenant: {
             select: {
               id: true,
@@ -570,5 +647,192 @@ export class AppointmentsService {
     this.eventEmitter.emit('appointment.created', updated);
 
     return updated;
+  }
+
+  // ─── Campos Personalizados de Turnos ──────────────────────────────────────
+
+  async getCustomFields(tenantId: string, appointmentId: string) {
+    await this.findOne(tenantId, appointmentId)
+
+    const [definitions, values] = await Promise.all([
+      this.prisma.customFieldDefinition.findMany({
+        where: { tenantId, entityType: 'APPOINTMENT' },
+        include: {
+          list: {
+            include: {
+              options: {
+                orderBy: { order: 'asc' },
+              },
+            },
+          },
+        },
+        orderBy: { order: 'asc' },
+      }),
+      this.prisma.customFieldValue.findMany({
+        where: { appointmentId },
+      }),
+    ])
+
+    return {
+      definitions,
+      values,
+    }
+  }
+
+  async saveCustomFields(tenantId: string, appointmentId: string, dto: SaveAppointmentCustomFieldsDto) {
+    await this.findOne(tenantId, appointmentId)
+
+    const definitions = await this.prisma.customFieldDefinition.findMany({
+      where: { tenantId, entityType: 'APPOINTMENT' },
+      include: {
+        list: {
+          include: {
+            options: true,
+          },
+        },
+      },
+    })
+
+    const definitionMap = new Map(definitions.map((definition) => [definition.id, definition]))
+    const payloadMap = new Map(dto.values.map((value) => [value.fieldId, value.value]))
+
+    for (const input of dto.values) {
+      const definition = definitionMap.get(input.fieldId)
+      if (!definition) {
+        throw new BadRequestException(`El campo ${input.fieldId} no pertenece al tenant`) 
+      }
+      this.validateCustomFieldValue(definition.type, input.value, definition.list?.options.map((opt) => opt.id) ?? [])
+    }
+
+    for (const definition of definitions) {
+      if (!definition.required) {
+        continue
+      }
+
+      const value = payloadMap.get(definition.id)
+      if (value === undefined || value === null || value === '') {
+        throw new BadRequestException(`El campo "${definition.name}" es obligatorio`)
+      }
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const input of dto.values) {
+        const value = input.value?.trim()
+        if (!value) {
+          await tx.customFieldValue.deleteMany({
+            where: {
+              appointmentId,
+              fieldId: input.fieldId,
+            },
+          })
+          continue
+        }
+
+        await tx.customFieldValue.upsert({
+          where: {
+            appointmentId_fieldId: {
+              appointmentId,
+              fieldId: input.fieldId,
+            },
+          },
+          create: {
+            appointmentId,
+            fieldId: input.fieldId,
+            value,
+          },
+          update: {
+            value,
+          },
+        })
+      }
+    })
+
+    return { success: true }
+  }
+
+  private async saveCustomFieldsTx(
+    tx: any,
+    tenantId: string,
+    appointmentId: string,
+    customFields: Array<{ fieldId: string; value?: string }>
+  ) {
+    const definitions = await tx.customFieldDefinition.findMany({
+      where: { tenantId, entityType: 'APPOINTMENT' },
+      include: { list: { include: { options: true } } }
+    })
+
+    const definitionMap = new Map<string, any>(definitions.map((definition) => [definition.id, definition]))
+    const payloadMap = new Map(customFields.map((value) => [value.fieldId, value.value]))
+
+    for (const input of customFields) {
+      const definition = definitionMap.get(input.fieldId)
+      if (!definition) {
+        throw new BadRequestException(`El campo ${input.fieldId} no pertenece al tenant`) 
+      }
+      this.validateCustomFieldValue(definition.type, input.value, definition.list?.options.map((opt) => opt.id) ?? [])
+    }
+
+    for (const definition of definitions) {
+      if (!definition.required) {
+        continue
+      }
+
+      const value = payloadMap.get(definition.id)
+      if (value === undefined || value === null || value === '') {
+        throw new BadRequestException(`El campo "${definition.name}" es obligatorio`)
+      }
+    }
+
+    for (const input of customFields) {
+      const value = input.value?.trim()
+      if (!value) {
+        await tx.customFieldValue.deleteMany({
+          where: {
+            appointmentId,
+            fieldId: input.fieldId,
+          },
+        })
+        continue
+      }
+
+      await tx.customFieldValue.upsert({
+        where: {
+          appointmentId_fieldId: {
+            appointmentId,
+            fieldId: input.fieldId,
+          },
+        },
+        create: {
+          appointmentId,
+          fieldId: input.fieldId,
+          value,
+        },
+        update: {
+          value,
+        },
+      })
+    }
+  }
+
+  private validateCustomFieldValue(type: CustomFieldType, value: string | undefined, optionIds: string[]) {
+    if (value === undefined || value === null || value === '') {
+      return
+    }
+
+    if (type === CustomFieldType.BOOLEAN && value !== 'true' && value !== 'false') {
+      throw new BadRequestException('El valor booleano debe ser true o false')
+    }
+
+    if (type === CustomFieldType.NUMBER && Number.isNaN(Number(value))) {
+      throw new BadRequestException('El valor del campo numérico no es válido')
+    }
+
+    if (type === CustomFieldType.DATE && Number.isNaN(Date.parse(value))) {
+      throw new BadRequestException('El valor del campo fecha no es válido')
+    }
+
+    if (type === CustomFieldType.SELECT && optionIds.length > 0 && !optionIds.includes(value)) {
+      throw new BadRequestException('La opción seleccionada no pertenece a la lista del campo')
+    }
   }
 }

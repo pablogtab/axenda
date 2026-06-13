@@ -12,8 +12,8 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import {
-  ClientFieldDefinition,
-  ClientFieldList,
+  CustomFieldDefinition,
+  CustomFieldList,
   CustomFieldType,
   CustomFieldsService,
 } from '@services/custom-fields.service';
@@ -29,15 +29,27 @@ import { IconComponent } from '@shared/components/icon.component';
       <div class="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          (click)="setTab('fields')"
+          (click)="setTab('fields-clients')"
           class="px-4 py-2 rounded-xl text-xs font-semibold border transition-all"
-          [class.border-primary]="activeTab() === 'fields'"
-          [class.text-primary]="activeTab() === 'fields'"
-          [class.bg-primary/10]="activeTab() === 'fields'"
-          [class.border-border]="activeTab() !== 'fields'"
-          [class.text-text-muted]="activeTab() !== 'fields'"
+          [class.border-primary]="activeTab() === 'fields-clients'"
+          [class.text-primary]="activeTab() === 'fields-clients'"
+          [class.bg-primary/10]="activeTab() === 'fields-clients'"
+          [class.border-border]="activeTab() !== 'fields-clients'"
+          [class.text-text-muted]="activeTab() !== 'fields-clients'"
         >
-          Campos
+          Campos de Clientes
+        </button>
+        <button
+          type="button"
+          (click)="setTab('fields-appointments')"
+          class="px-4 py-2 rounded-xl text-xs font-semibold border transition-all"
+          [class.border-primary]="activeTab() === 'fields-appointments'"
+          [class.text-primary]="activeTab() === 'fields-appointments'"
+          [class.bg-primary/10]="activeTab() === 'fields-appointments'"
+          [class.border-border]="activeTab() !== 'fields-appointments'"
+          [class.text-text-muted]="activeTab() !== 'fields-appointments'"
+        >
+          Campos de Turnos
         </button>
         <button
           type="button"
@@ -49,17 +61,23 @@ import { IconComponent } from '@shared/components/icon.component';
           [class.border-border]="activeTab() !== 'lists'"
           [class.text-text-muted]="activeTab() !== 'lists'"
         >
-          Listas personalizadas
+          Listas de opciones
         </button>
       </div>
 
-      @if (activeTab() === 'fields') {
+      @if (activeTab() === 'fields-clients' || activeTab() === 'fields-appointments') {
         <section class="card-glass p-5 md:p-6 border border-border rounded-2xl">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="text-base font-bold text-text-main">Clientes</h3>
+              <h3 class="text-base font-bold text-text-main">
+                {{ activeTab() === 'fields-clients' ? 'Campos de Clientes' : 'Campos de Turnos' }}
+              </h3>
               <p class="text-xs text-text-dim mt-1">
-                Define hasta 10 campos para complementar el perfil del cliente.
+                {{
+                  activeTab() === 'fields-clients'
+                    ? 'Define hasta 10 campos para complementar el perfil del cliente.'
+                    : 'Define hasta 10 campos para complementar la información del turno.'
+                }}
               </p>
             </div>
             <span class="text-xs text-text-dim"
@@ -77,119 +95,139 @@ import { IconComponent } from '@shared/components/icon.component';
                   formControlName="name"
                   type="text"
                   class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2.5 text-sm text-text-main"
-                  placeholder="Ej: Obra Social"
+                  placeholder="Ej: Obra Social o Motivo de consulta"
                 />
               </label>
 
-              <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-                <label class="block lg:col-span-3">
-                  <span class="text-xs text-text-dim block mb-1.5">Tipo</span>
-                  <select
-                    formControlName="type"
-                    class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main"
-                  >
-                    @for (type of types; track type.value) {
-                      <option [value]="type.value">{{ type.label }}</option>
-                    }
-                  </select>
-                </label>
-
-                <label
-                  class="block lg:col-span-5"
-                  [class.opacity-40]="
-                    !isSelectType(definitionForm.get('type')?.value || 'TEXT')
-                  "
-                >
-                  <span class="text-xs text-text-dim block mb-1.5"
-                    >Lista (si el tipo es SELECT)</span
-                  >
-                  <select
-                    formControlName="listId"
-                    [disabled]="
-                      !isSelectType(definitionForm.get('type')?.value || 'TEXT')
-                    "
-                    class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main disabled:opacity-60"
-                  >
-                    <option value="">Seleccionar</option>
-                    @for (list of lists(); track list.id) {
-                      <option [value]="list.id">{{ list.name }}</option>
-                    }
-                  </select>
-                </label>
-
-                <label class="block lg:col-span-4">
-                  <span class="text-xs text-text-dim block mb-1.5"
-                    >Valor por defecto</span
-                  >
-                  @if (definitionForm.get('type')?.value === 'BOOLEAN') {
+              <div class="grid grid-cols-1 grid-flow-row gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+                  <label class="block lg:col-span-3">
+                    <span class="text-xs text-text-dim block mb-1.5">Tipo</span>
                     <select
-                      formControlName="defaultValue"
+                      formControlName="type"
                       class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main"
                     >
-                      <option value="">Sin valor por defecto</option>
-                      <option value="true">SI</option>
-                      <option value="false">NO</option>
-                    </select>
-                  } @else if (definitionForm.get('type')?.value === 'SELECT') {
-                    <select
-                      formControlName="defaultValue"
-                      [disabled]="!definitionForm.get('listId')?.value"
-                      class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main disabled:opacity-60"
-                    >
-                      <option value="">Sin valor por defecto</option>
-                      @for (
-                        option of getDefaultOptionsForList(
-                          definitionForm.get('listId')?.value || ''
-                        );
-                        track option.id
-                      ) {
-                        <option [value]="option.id">{{ option.label }}</option>
+                      @for (type of types; track type.value) {
+                        <option [value]="type.value">{{ type.label }}</option>
                       }
                     </select>
-                  } @else {
-                    <input
-                      formControlName="defaultValue"
-                      [type]="
-                        getDefaultValueInputType(
-                          definitionForm.get('type')?.value || 'TEXT'
-                        )
+                  </label>
+
+                  <label
+                    class="block lg:col-span-5"
+                    [class.opacity-40]="
+                      !isSelectType(definitionForm.get('type')?.value || 'TEXT')
+                    "
+                  >
+                    <span class="text-xs text-text-dim block mb-1.5"
+                      >Lista (si el tipo es SELECT)</span
+                    >
+                    <select
+                      formControlName="listId"
+                      [disabled]="
+                        !isSelectType(definitionForm.get('type')?.value || 'TEXT')
                       "
-                      class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main"
-                      placeholder="Opcional"
-                    />
-                  }
-                </label>
+                      class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main disabled:opacity-60"
+                    >
+                      <option value="">Seleccionar</option>
+                      @for (list of lists(); track list.id) {
+                        <option [value]="list.id">{{ list.name }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <label class="block lg:col-span-4">
+                    <span class="text-xs text-text-dim block mb-1.5"
+                      >Valor por defecto</span
+                    >
+                    @if (definitionForm.get('type')?.value === 'BOOLEAN') {
+                      <select
+                        formControlName="defaultValue"
+                        class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main"
+                      >
+                        <option value="">Sin valor por defecto</option>
+                        <option value="true">SI</option>
+                        <option value="false">NO</option>
+                      </select>
+                    } @else if (definitionForm.get('type')?.value === 'SELECT') {
+                      <select
+                        formControlName="defaultValue"
+                        [disabled]="!definitionForm.get('listId')?.value"
+                        class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main disabled:opacity-60"
+                      >
+                        <option value="">Sin valor por defecto</option>
+                        @for (
+                          option of getDefaultOptionsForList(
+                            definitionForm.get('listId')?.value || ''
+                          );
+                          track option.id
+                        ) {
+                          <option [value]="option.id">{{ option.label }}</option>
+                        }
+                      </select>
+                    } @else {
+                      <input
+                        formControlName="defaultValue"
+                        [type]="
+                          getDefaultValueInputType(
+                            definitionForm.get('type')?.value || 'TEXT'
+                          )
+                        "
+                        class="w-full bg-surface-subtle border border-border rounded-xl px-3 py-2.5 text-sm text-text-main"
+                        placeholder="Opcional"
+                      />
+                    }
+                  </label>
+                </div>
 
                 <div
-                  class="lg:col-span-12 flex flex-wrap items-center lg:justify-end gap-3"
+                  class="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-3"
                 >
-                  <label
-                    class="inline-flex items-center gap-2 text-xs text-text-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      formControlName="required"
-                      class="w-4 h-4"
-                    />
-                    Obligatorio
-                  </label>
-                  <button
-                    type="button"
-                    (click)="createDefinition()"
-                    [disabled]="!canCreateMoreDefinitions()"
-                    class="btn-primary !px-4 !py-2.5 text-xs disabled:opacity-50"
-                  >
-                    Crear campo
-                  </button>
-                  @if (definitions().length > 0) {
+                  <div class="flex items-center gap-4">
+                    <label
+                      class="inline-flex items-center gap-2 text-xs text-text-muted cursor-pointer select-none"
+                    >
+                      <input
+                        type="checkbox"
+                        formControlName="required"
+                        class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
+                      />
+                      Obligatorio
+                    </label>
+
+                    @if (activeTab() === 'fields-appointments') {
+                      <label
+                        class="inline-flex items-center gap-2 text-xs text-text-muted cursor-pointer select-none"
+                      >
+                        <input
+                          type="checkbox"
+                          formControlName="showInPublicView"
+                          class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
+                        />
+                        Mostrar y rellenar en portal público
+                      </label>
+                    }
+                  </div>
+
+                  <div class="flex items-center gap-3">
                     <button
                       type="button"
-                      (click)="closeCreateDefinitionForm()"
-                      class="px-3 py-2.5 text-xs rounded-xl border border-border text-text-muted hover:text-text-main"
+                      (click)="createDefinition()"
+                      [disabled]="!canCreateMoreDefinitions()"
+                      class="btn-primary !px-4 !py-2.5 text-xs disabled:opacity-50"
                     >
-                      Cancelar
+                      Crear campo
                     </button>
-                  }
+                    @if (definitions().length > 0) {
+                      <button
+                        type="button"
+                        (click)="closeCreateDefinitionForm()"
+                        class="px-3 py-2.5 text-xs rounded-xl border border-border text-text-muted hover:text-text-main"
+                      >
+                        Cancelar
+                      </button>
+                    }
+                  </div>
                 </div>
               </div>
             </form>
@@ -210,7 +248,7 @@ import { IconComponent } from '@shared/components/icon.component';
 
           @if (!canCreateMoreDefinitions()) {
             <p class="text-xs text-warning mt-3">
-              Ya alcanzaste el limite de 10 campos.
+              Ya alcanzaste el límite de 10 campos.
             </p>
           }
 
@@ -344,32 +382,50 @@ import { IconComponent } from '@shared/components/icon.component';
                       </label>
 
                       <div
-                        class="lg:col-span-12 flex items-center justify-end gap-2"
+                        class="lg:col-span-12 flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-2"
                       >
-                        <label
-                          class="inline-flex items-center gap-1 text-xs text-text-muted mr-2"
-                        >
-                          <input
-                            type="checkbox"
-                            formControlName="required"
-                            class="w-4 h-4"
-                          />
-                          Obligatorio
-                        </label>
-                        <button
-                          type="button"
-                          (click)="cancelEditDefinition()"
-                          class="px-3 py-2 text-xs rounded-xl border border-border"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          type="button"
-                          (click)="saveEditDefinition(definition)"
-                          class="btn-primary !px-3 !py-2 text-xs"
-                        >
-                          Guardar
-                        </button>
+                        <div class="flex items-center gap-4">
+                          <label
+                            class="inline-flex items-center gap-1 text-xs text-text-muted cursor-pointer select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              formControlName="required"
+                              class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
+                            />
+                            Obligatorio
+                          </label>
+
+                          @if (activeTab() === 'fields-appointments') {
+                            <label
+                              class="inline-flex items-center gap-1 text-xs text-text-muted cursor-pointer select-none"
+                            >
+                              <input
+                                type="checkbox"
+                                formControlName="showInPublicView"
+                                class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
+                              />
+                              Mostrar en portal público
+                            </label>
+                          }
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button"
+                            (click)="cancelEditDefinition()"
+                            class="px-3 py-2 text-xs rounded-xl border border-border"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            (click)="saveEditDefinition(definition)"
+                            class="btn-primary !px-3 !py-2 text-xs"
+                          >
+                            Guardar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </form>
@@ -379,26 +435,19 @@ import { IconComponent } from '@shared/components/icon.component';
                       <p class="text-sm font-semibold text-text-main">
                         {{ definition.name }}
                       </p>
-                      <p class="text-xs text-text-dim">
-                        Tipo:
-                        {{
-                          definition.type === 'BOOLEAN'
-                            ? '(SI/NO)'
-                            : definition.type
-                        }}
+                      <p class="text-xs text-text-dim flex flex-wrap items-center gap-x-2">
+                        <span>Tipo: {{ definition.type === 'BOOLEAN' ? '(SI/NO)' : definition.type }}</span>
                         @if (definition.defaultValue) {
-                          <span
-                            >• Defecto:
-                            {{ formatDefinitionDefaultValue(definition) }}</span
-                          >
+                          <span>• Defecto: {{ formatDefinitionDefaultValue(definition) }}</span>
                         }
                         @if (definition.required) {
-                          <span class="text-warning">• Obligatorio</span>
+                          <span class="text-error font-medium">• Obligatorio</span>
                         }
-                        @if (
-                          definition.type === 'SELECT' && definition.list?.name
-                        ) {
+                        @if (definition.type === 'SELECT' && definition.list?.name) {
                           <span>• Lista: {{ definition.list?.name }}</span>
+                        }
+                        @if (definition.entityType === 'APPOINTMENT') {
+                          <span class="text-primary font-medium">• Portal: {{ definition.showInPublicView ? 'Visible' : 'Oculto' }}</span>
                         }
                       </p>
                     </div>
@@ -444,10 +493,10 @@ import { IconComponent } from '@shared/components/icon.component';
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-base font-bold text-text-main">
-                Listas personalizadas
+                Listas de opciones
               </h3>
               <p class="text-xs text-text-dim mt-1">
-                Organiza opciones extensas sin saturar la pantalla.
+                Crea listas de valores para los campos de tipo Lista (SELECT) de tus Clientes o Turnos.
               </p>
             </div>
             <span class="text-xs text-text-dim"
@@ -468,7 +517,7 @@ import { IconComponent } from '@shared/components/icon.component';
                   formControlName="name"
                   type="text"
                   class="w-full bg-surface-subtle border border-border rounded-xl px-4 py-2.5 text-sm text-text-main"
-                  placeholder="Ej: Obras sociales"
+                  placeholder="Ej: Obras sociales o Motivo de visitas"
                 />
               </label>
               <div class="lg:col-span-3 lg:justify-end flex items-center gap-2">
@@ -804,22 +853,22 @@ export class SettingsCustomFieldsComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   loading = signal(true);
-  definitions = signal<ClientFieldDefinition[]>([]);
-  lists = signal<ClientFieldList[]>([]);
+  definitions = signal<CustomFieldDefinition[]>([]);
+  lists = signal<CustomFieldList[]>([]);
   editingDefinitionId = signal<string | null>(null);
   editingListId = signal<string | null>(null);
   selectedListId = signal<string | null>(null);
   isReorderingDefinitions = signal(false);
   showCreateDefinitionForm = signal(false);
   showCreateListForm = signal(false);
-  activeTab = signal<'fields' | 'lists'>('fields');
+  activeTab = signal<'fields-clients' | 'fields-appointments' | 'lists'>('fields-clients');
   optionSearchTerms = signal<Record<string, string>>({});
   optionCurrentPage = signal<Record<string, number>>({});
   readonly optionPageSize = 10;
 
   readonly types: Array<{ label: string; value: CustomFieldType }> = [
     { label: 'Texto', value: 'TEXT' },
-    { label: 'Numero', value: 'NUMBER' },
+    { label: 'Número', value: 'NUMBER' },
     { label: 'Fecha', value: 'DATE' },
     { label: 'Lista', value: 'SELECT' },
     { label: 'Si/No', value: 'BOOLEAN' },
@@ -831,6 +880,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     listId: [''],
     defaultValue: [''],
     required: [false],
+    showInPublicView: [true],
   });
 
   editDefinitionForm = this.fb.nonNullable.group({
@@ -839,6 +889,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     listId: [''],
     defaultValue: [''],
     required: [false],
+    showInPublicView: [true],
   });
 
   listForm = this.fb.nonNullable.group({
@@ -883,7 +934,9 @@ export class SettingsCustomFieldsComponent implements OnInit {
 
   reload(): void {
     this.loading.set(true);
-    this.customFieldsService.getDefinitions().subscribe({
+    const entityType = this.activeTab() === 'fields-appointments' ? 'APPOINTMENT' : 'CLIENT';
+    
+    this.customFieldsService.getDefinitions(entityType).subscribe({
       next: (definitions) => {
         this.definitions.set(definitions);
         this.customFieldsService.getLists().subscribe({
@@ -918,8 +971,11 @@ export class SettingsCustomFieldsComponent implements OnInit {
     return this.definitions().length < 10;
   }
 
-  setTab(tab: 'fields' | 'lists'): void {
+  setTab(tab: 'fields-clients' | 'fields-appointments' | 'lists'): void {
     this.activeTab.set(tab);
+    if (tab === 'fields-clients' || tab === 'fields-appointments') {
+      this.reload();
+    }
   }
 
   selectList(listId: string): void {
@@ -929,7 +985,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     }
   }
 
-  getSelectedList(): ClientFieldList | null {
+  getSelectedList(): CustomFieldList | null {
     const selectedId = this.selectedListId();
     if (!selectedId) {
       return null;
@@ -944,10 +1000,13 @@ export class SettingsCustomFieldsComponent implements OnInit {
     }
 
     const form = this.definitionForm.getRawValue();
+    const entityType = this.activeTab() === 'fields-appointments' ? 'APPOINTMENT' : 'CLIENT';
+    
     this.customFieldsService
       .createDefinition({
         name: form.name,
         type: form.type,
+        entityType,
         listId: form.type === 'SELECT' ? form.listId || undefined : undefined,
         defaultValue: this.normalizeDefaultValueForApi(
           form.type,
@@ -955,6 +1014,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
           form.listId,
         ),
         required: form.required,
+        showInPublicView: entityType === 'APPOINTMENT' ? form.showInPublicView : true,
       })
       .subscribe({
         next: () => {
@@ -965,6 +1025,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
             listId: '',
             defaultValue: '',
             required: false,
+            showInPublicView: true,
           });
           this.showCreateDefinitionForm.set(false);
           this.reload();
@@ -993,11 +1054,12 @@ export class SettingsCustomFieldsComponent implements OnInit {
       listId: '',
       defaultValue: '',
       required: false,
+      showInPublicView: true,
     });
     this.showCreateDefinitionForm.set(false);
   }
 
-  startEditDefinition(definition: ClientFieldDefinition): void {
+  startEditDefinition(definition: CustomFieldDefinition): void {
     this.editingDefinitionId.set(definition.id);
     this.editDefinitionForm.reset({
       name: definition.name,
@@ -1005,6 +1067,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
       listId: definition.listId || '',
       defaultValue: definition.defaultValue || '',
       required: definition.required,
+      showInPublicView: definition.showInPublicView ?? true,
     });
   }
 
@@ -1012,7 +1075,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     this.editingDefinitionId.set(null);
   }
 
-  saveEditDefinition(definition: ClientFieldDefinition): void {
+  saveEditDefinition(definition: CustomFieldDefinition): void {
     if (this.editDefinitionForm.invalid) {
       this.editDefinitionForm.markAllAsTouched();
       return;
@@ -1030,6 +1093,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
           form.listId,
         ),
         required: form.required,
+        showInPublicView: definition.entityType === 'APPOINTMENT' ? form.showInPublicView : true,
       })
       .subscribe({
         next: () => {
@@ -1087,7 +1151,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     this.showCreateListForm.set(false);
   }
 
-  startEditList(list: ClientFieldList): void {
+  startEditList(list: CustomFieldList): void {
     this.editingListId.set(list.id);
     this.editListForm.reset({ name: list.name });
   }
@@ -1096,7 +1160,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     this.editingListId.set(null);
   }
 
-  saveEditList(list: ClientFieldList): void {
+  saveEditList(list: CustomFieldList): void {
     if (this.editListForm.invalid) {
       this.editListForm.markAllAsTouched();
       return;
@@ -1153,7 +1217,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
         this.reload();
       },
       error: () => {
-        this.snackbar.error('No se pudo agregar la opcion');
+        this.snackbar.error('No se pudo agregar la opción');
       },
     });
   }
@@ -1175,7 +1239,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     return this.optionCurrentPage()[listId] ?? 1;
   }
 
-  getFilteredOptions(list: ClientFieldList) {
+  getFilteredOptions(list: CustomFieldList) {
     const term = (this.optionSearchTerms()[list.id] ?? '').trim().toLowerCase();
     if (!term) {
       return list.options;
@@ -1185,7 +1249,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     );
   }
 
-  getPagedOptions(list: ClientFieldList) {
+  getPagedOptions(list: CustomFieldList) {
     const filtered = this.getFilteredOptions(list);
     const page = this.getOptionCurrentPage(list.id);
     const start = (page - 1) * this.optionPageSize;
@@ -1202,7 +1266,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
   }
 
   updateOption(listId: string, optionId: string, currentLabel: string): void {
-    const label = window.prompt('Nuevo nombre de la opcion', currentLabel);
+    const label = window.prompt('Nuevo nombre de la opción', currentLabel);
     if (label === null) return;
     const nextLabel = label.trim();
     if (!nextLabel) return;
@@ -1214,7 +1278,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
           this.reload();
         },
         error: () => {
-          this.snackbar.error('No se pudo actualizar la opcion');
+          this.snackbar.error('No se pudo actualizar la opción');
         },
       });
   }
@@ -1225,7 +1289,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
         this.reload();
       },
       error: () => {
-        this.snackbar.error('No se pudo eliminar la opcion');
+        this.snackbar.error('No se pudo eliminar la opción');
       },
     });
   }
@@ -1234,7 +1298,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     return type === 'SELECT';
   }
 
-  onDefinitionDrop(event: CdkDragDrop<ClientFieldDefinition[]>): void {
+  onDefinitionDrop(event: CdkDragDrop<CustomFieldDefinition[]>): void {
     if (
       event.previousIndex === event.currentIndex ||
       this.isReorderingDefinitions()
@@ -1285,7 +1349,7 @@ export class SettingsCustomFieldsComponent implements OnInit {
     return this.lists().find((list) => list.id === listId)?.options ?? [];
   }
 
-  formatDefinitionDefaultValue(definition: ClientFieldDefinition): string {
+  formatDefinitionDefaultValue(definition: CustomFieldDefinition): string {
     if (!definition.defaultValue) {
       return '';
     }

@@ -1,6 +1,26 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { AppointmentStatus } from '@prisma/client'
-import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsArray, IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator'
+
+export class UpsertAppointmentCustomFieldValueDto {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
+  fieldId: string
+
+  @ApiPropertyOptional({ example: 'true', nullable: true })
+  @IsOptional()
+  @IsString()
+  value?: string
+}
+
+export class SaveAppointmentCustomFieldsDto {
+  @ApiProperty({ type: [UpsertAppointmentCustomFieldValueDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpsertAppointmentCustomFieldValueDto)
+  values: UpsertAppointmentCustomFieldValueDto[]
+}
 
 export class CreateAppointmentDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -42,6 +62,13 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsBoolean()
   notifyClient?: boolean
+
+  @ApiPropertyOptional({ type: [UpsertAppointmentCustomFieldValueDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpsertAppointmentCustomFieldValueDto)
+  customFields?: UpsertAppointmentCustomFieldValueDto[]
 }
 
 export class UpdateAppointmentStatusDto {

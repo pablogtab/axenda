@@ -1,22 +1,22 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { CustomFieldType } from '@prisma/client'
+import { CustomFieldType, CustomFieldEntity } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import {
-  CreateClientFieldDefinitionDto,
-  CreateClientFieldListDto,
-  CreateClientFieldListOptionDto,
-  UpdateClientFieldDefinitionDto,
-  UpdateClientFieldListDto,
-  UpdateClientFieldListOptionDto,
+  CreateCustomFieldDefinitionDto,
+  CreateCustomFieldListDto,
+  CreateCustomFieldListOptionDto,
+  UpdateCustomFieldDefinitionDto,
+  UpdateCustomFieldListDto,
+  UpdateCustomFieldListOptionDto,
 } from './dto/custom-field.dto'
 
 @Injectable()
 export class CustomFieldsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getDefinitions(tenantId: string) {
-    return this.prisma.clientFieldDefinition.findMany({
-      where: { tenantId },
+  async getDefinitions(tenantId: string, entityType: CustomFieldEntity = 'CLIENT') {
+    return this.prisma.customFieldDefinition.findMany({
+      where: { tenantId, entityType },
       include: {
         list: {
           include: {
@@ -30,14 +30,15 @@ export class CustomFieldsService {
     })
   }
 
-  async createDefinition(tenantId: string, dto: CreateClientFieldDefinitionDto) {
-    const current = await this.prisma.clientFieldDefinition.findMany({
-      where: { tenantId },
+  async createDefinition(tenantId: string, dto: CreateCustomFieldDefinitionDto) {
+    const entityType = dto.entityType || CustomFieldEntity.CLIENT
+    const current = await this.prisma.customFieldDefinition.findMany({
+      where: { tenantId, entityType },
       orderBy: { order: 'asc' },
     })
 
     if (current.length >= 10) {
-      throw new BadRequestException('Solo puedes crear hasta 10 campos personalizados')
+      throw new BadRequestException('Solo puedes crear hasta 10 campos personalizados por entidad')
     }
 
     const nextOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].find((index) => !current.some((definition) => definition.order === index))
@@ -48,15 +49,17 @@ export class CustomFieldsService {
     const listId = await this.normalizeAndValidateList(tenantId, dto.type, dto.listId)
     const defaultValue = await this.normalizeDefaultValue(tenantId, dto.type, listId, dto.defaultValue)
 
-    return this.prisma.clientFieldDefinition.create({
+    return this.prisma.customFieldDefinition.create({
       data: {
         tenantId,
+        entityType,
         name: dto.name,
         type: dto.type,
         defaultValue,
         listId,
         order: nextOrder,
         required: dto.required ?? false,
+        showInPublicView: dto.showInPublicView ?? true,
       },
       include: {
         list: {
@@ -70,8 +73,8 @@ export class CustomFieldsService {
     })
   }
 
-  async updateDefinition(tenantId: string, id: string, dto: UpdateClientFieldDefinitionDto) {
-    const definition = await this.prisma.clientFieldDefinition.findFirst({
+  async updateDefinition(tenantId: string, id: string, dto: UpdateCustomFieldDefinitionDto) {
+    const definition = await this.prisma.customFieldDefinition.findFirst({
       where: { id, tenantId },
     })
     if (!definition) {
@@ -84,28 +87,29 @@ export class CustomFieldsService {
     const nextDefaultValue = await this.normalizeDefaultValue(tenantId, nextType, nextListId, rawDefaultValue)
 
     if (dto.order !== undefined && dto.order !== definition.order) {
-      const target = await this.prisma.clientFieldDefinition.findFirst({
+      const target = await this.prisma.customFieldDefinition.findFirst({
         where: {
           tenantId,
+          entityType: definition.entityType,
           order: dto.order,
         },
       })
 
       await this.prisma.$transaction(async (tx) => {
-        // Usamos un valor temporal para evitar colisión del unique (tenantId, order)
-        await tx.clientFieldDefinition.update({
+        // Usamos un valor temporal para evitar colisión del unique (tenantId, entityType, order)
+        await tx.customFieldDefinition.update({
           where: { id },
           data: { order: -1 },
         })
 
         if (target) {
-          await tx.clientFieldDefinition.update({
+          await tx.customFieldDefinition.update({
             where: { id: target.id },
             data: { order: definition.order },
           })
         }
 
-        await tx.clientFieldDefinition.update({
+        await tx.customFieldDefinition.update({
           where: { id },
           data: {
             name: dto.name,
@@ -113,12 +117,13 @@ export class CustomFieldsService {
             listId: nextListId,
             defaultValue: nextDefaultValue,
             required: dto.required,
+            showInPublicView: dto.showInPublicView,
             order: dto.order,
           },
         })
       })
 
-      return this.prisma.clientFieldDefinition.findUnique({
+      return this.prisma.customFieldDefinition.findUnique({
         where: { id },
         include: {
           list: {
@@ -132,7 +137,7 @@ export class CustomFieldsService {
       })
     }
 
-    return this.prisma.clientFieldDefinition.update({
+    return this.prisma.customFieldDefinition.update({
       where: { id },
       data: {
         name: dto.name,
@@ -140,6 +145,7 @@ export class CustomFieldsService {
         listId: nextListId,
         defaultValue: nextDefaultValue,
         required: dto.required,
+        showInPublicView: dto.showInPublicView,
       },
       include: {
         list: {
@@ -154,7 +160,7 @@ export class CustomFieldsService {
   }
 
   async deleteDefinition(tenantId: string, id: string) {
-    const deleted = await this.prisma.clientFieldDefinition.deleteMany({
+    const deleted = await this.prisma.customFieldDefinition.deleteMany({
       where: { id, tenantId },
     })
 
@@ -166,7 +172,7 @@ export class CustomFieldsService {
   }
 
   async getLists(tenantId: string) {
-    return this.prisma.clientFieldList.findMany({
+    return this.prisma.customFieldList.findMany({
       where: { tenantId },
       include: {
         options: {
@@ -177,8 +183,8 @@ export class CustomFieldsService {
     })
   }
 
-  async createList(tenantId: string, dto: CreateClientFieldListDto) {
-    return this.prisma.clientFieldList.create({
+  async createList(tenantId: string, dto: CreateCustomFieldListDto) {
+    return this.prisma.customFieldList.create({
       data: {
         tenantId,
         name: dto.name,
@@ -191,15 +197,15 @@ export class CustomFieldsService {
     })
   }
 
-  async updateList(tenantId: string, id: string, dto: UpdateClientFieldListDto) {
-    const list = await this.prisma.clientFieldList.findFirst({
+  async updateList(tenantId: string, id: string, dto: UpdateCustomFieldListDto) {
+    const list = await this.prisma.customFieldList.findFirst({
       where: { id, tenantId },
     })
     if (!list) {
       throw new NotFoundException(`Lista ${id} no encontrada`)
     }
 
-    return this.prisma.clientFieldList.update({
+    return this.prisma.customFieldList.update({
       where: { id },
       data: { name: dto.name },
       include: {
@@ -211,19 +217,19 @@ export class CustomFieldsService {
   }
 
   async deleteList(tenantId: string, id: string) {
-    const list = await this.prisma.clientFieldList.findFirst({
+    const list = await this.prisma.customFieldList.findFirst({
       where: { id, tenantId },
     })
     if (!list) {
       throw new NotFoundException(`Lista ${id} no encontrada`)
     }
 
-    await this.prisma.clientFieldList.delete({ where: { id } })
+    await this.prisma.customFieldList.delete({ where: { id } })
     return { success: true }
   }
 
-  async addOption(tenantId: string, listId: string, dto: CreateClientFieldListOptionDto) {
-    const list = await this.prisma.clientFieldList.findFirst({
+  async addOption(tenantId: string, listId: string, dto: CreateCustomFieldListOptionDto) {
+    const list = await this.prisma.customFieldList.findFirst({
       where: { id: listId, tenantId },
       include: {
         options: {
@@ -238,7 +244,7 @@ export class CustomFieldsService {
 
     const nextOrder = (list.options[0]?.order ?? -1) + 1
 
-    return this.prisma.clientFieldListOption.create({
+    return this.prisma.customFieldListOption.create({
       data: {
         listId,
         label: dto.label,
@@ -251,9 +257,9 @@ export class CustomFieldsService {
     tenantId: string,
     listId: string,
     optionId: string,
-    dto: UpdateClientFieldListOptionDto,
+    dto: UpdateCustomFieldListOptionDto,
   ) {
-    const option = await this.prisma.clientFieldListOption.findFirst({
+    const option = await this.prisma.customFieldListOption.findFirst({
       where: {
         id: optionId,
         listId,
@@ -265,14 +271,14 @@ export class CustomFieldsService {
       throw new NotFoundException(`Opción ${optionId} no encontrada`)
     }
 
-    return this.prisma.clientFieldListOption.update({
+    return this.prisma.customFieldListOption.update({
       where: { id: optionId },
       data: { label: dto.label },
     })
   }
 
   async deleteOption(tenantId: string, listId: string, optionId: string) {
-    const deleted = await this.prisma.clientFieldListOption.deleteMany({
+    const deleted = await this.prisma.customFieldListOption.deleteMany({
       where: {
         id: optionId,
         listId,
@@ -296,7 +302,7 @@ export class CustomFieldsService {
       throw new BadRequestException('Los campos de tipo SELECT requieren listId')
     }
 
-    const list = await this.prisma.clientFieldList.findFirst({
+    const list = await this.prisma.customFieldList.findFirst({
       where: { id: listId, tenantId },
     })
 
@@ -344,7 +350,7 @@ export class CustomFieldsService {
         throw new BadRequestException('Los campos de tipo SELECT requieren listId')
       }
 
-      const option = await this.prisma.clientFieldListOption.findFirst({
+      const option = await this.prisma.customFieldListOption.findFirst({
         where: {
           id: normalized,
           listId,

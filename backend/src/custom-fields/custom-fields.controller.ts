@@ -8,22 +8,23 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { UserRole } from '@prisma/client'
+import { UserRole, CustomFieldEntity } from '@prisma/client'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { Roles } from '../common/decorators/roles.decorator'
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface'
 import { CustomFieldsService } from './custom-fields.service'
 import {
-  CreateClientFieldDefinitionDto,
-  CreateClientFieldListDto,
-  CreateClientFieldListOptionDto,
-  UpdateClientFieldDefinitionDto,
-  UpdateClientFieldListDto,
-  UpdateClientFieldListOptionDto,
+  CreateCustomFieldDefinitionDto,
+  CreateCustomFieldListDto,
+  CreateCustomFieldListOptionDto,
+  UpdateCustomFieldDefinitionDto,
+  UpdateCustomFieldListDto,
+  UpdateCustomFieldListOptionDto,
 } from './dto/custom-field.dto'
 
 @ApiTags('Custom Fields')
@@ -36,13 +37,16 @@ export class CustomFieldsController {
 
   @Get('definitions')
   @ApiOperation({ summary: 'Listar definiciones de campos personalizados del tenant' })
-  getDefinitions(@CurrentUser() user: AuthenticatedUser) {
-    return this.customFieldsService.getDefinitions(user.tenantId)
+  getDefinitions(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('entityType') entityType?: CustomFieldEntity,
+  ) {
+    return this.customFieldsService.getDefinitions(user.tenantId, entityType)
   }
 
   @Post('definitions')
-  @ApiOperation({ summary: 'Crear definición de campo personalizado (máximo 4)' })
-  createDefinition(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateClientFieldDefinitionDto) {
+  @ApiOperation({ summary: 'Crear definición de campo personalizado' })
+  createDefinition(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateCustomFieldDefinitionDto) {
     return this.customFieldsService.createDefinition(user.tenantId, dto)
   }
 
@@ -51,7 +55,7 @@ export class CustomFieldsController {
   updateDefinition(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() dto: UpdateClientFieldDefinitionDto,
+    @Body() dto: UpdateCustomFieldDefinitionDto,
   ) {
     return this.customFieldsService.updateDefinition(user.tenantId, id, dto)
   }
@@ -71,7 +75,7 @@ export class CustomFieldsController {
 
   @Post('lists')
   @ApiOperation({ summary: 'Crear lista personalizada' })
-  createList(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateClientFieldListDto) {
+  createList(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateCustomFieldListDto) {
     return this.customFieldsService.createList(user.tenantId, dto)
   }
 
@@ -80,7 +84,7 @@ export class CustomFieldsController {
   updateList(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() dto: UpdateClientFieldListDto,
+    @Body() dto: UpdateCustomFieldListDto,
   ) {
     return this.customFieldsService.updateList(user.tenantId, id, dto)
   }
@@ -97,7 +101,7 @@ export class CustomFieldsController {
   addOption(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() dto: CreateClientFieldListOptionDto,
+    @Body() dto: CreateCustomFieldListOptionDto,
   ) {
     return this.customFieldsService.addOption(user.tenantId, id, dto)
   }
@@ -108,7 +112,7 @@ export class CustomFieldsController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Param('optId') optId: string,
-    @Body() dto: UpdateClientFieldListOptionDto,
+    @Body() dto: UpdateCustomFieldListOptionDto,
   ) {
     return this.customFieldsService.updateOption(user.tenantId, id, optId, dto)
   }

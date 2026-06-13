@@ -13,7 +13,7 @@ model Client {
   updatedAt    DateTime      @updatedAt
   appointments Appointment[]
   bookingInvitations BookingInvitation[]
-  fieldValues  ClientFieldValue[]
+  fieldValues  CustomFieldValue[]
   tags         ClientTag[]
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -29,55 +29,4 @@ model ClientTag {
   client   Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@map("client_tags")
-}
-
-model ClientFieldDefinition {
-  id       String           @id @default(uuid())
-  tenantId String
-  name     String
-  type     CustomFieldType
-  defaultValue String?
-  listId   String?
-  order    Int
-  required Boolean          @default(false)
-  list     ClientFieldList? @relation(fields: [listId], references: [id], onDelete: SetNull)
-  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  values   ClientFieldValue[]
-
-  @@unique([tenantId, order])
-  @@map("client_field_definitions")
-}
-
-model ClientFieldList {
-  id       String                  @id @default(uuid())
-  tenantId String
-  name     String
-  fields   ClientFieldDefinition[]
-  options  ClientFieldListOption[]
-  tenant   Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@map("client_field_lists")
-}
-
-model ClientFieldListOption {
-  id     String          @id @default(uuid())
-  listId String
-  label  String
-  order  Int
-  list   ClientFieldList @relation(fields: [listId], references: [id], onDelete: Cascade)
-
-  @@unique([listId, order])
-  @@map("client_field_list_options")
-}
-
-model ClientFieldValue {
-  id       String                @id @default(uuid())
-  clientId String
-  fieldId  String
-  value    String?
-  client   Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  field    ClientFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-
-  @@unique([clientId, fieldId])
-  @@map("client_field_values")
 }

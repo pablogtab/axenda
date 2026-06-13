@@ -720,6 +720,69 @@ import { IconComponent } from '@shared/components/icon.component';
                   />
                 </div>
               </div>
+
+              <!-- Campos Personalizados -->
+              <ng-container *ngIf="tenant()?.customFieldDefinitions?.length">
+                <div class="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800/50">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">Información Adicional</h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div *ngFor="let definition of tenant()!.customFieldDefinitions" 
+                         class="input-group" 
+                         [class.col-span-2]="definition.type === 'TEXT' || definition.type === 'BOOLEAN'">
+                      
+                      <!-- Text, Number, Date Fields -->
+                      <ng-container *ngIf="definition.type === 'TEXT' || definition.type === 'NUMBER' || definition.type === 'DATE'">
+                        <label>
+                          {{ definition.name }}
+                          <span *ngIf="definition.required" class="text-red-500">*</span>
+                        </label>
+                        <input
+                          [type]="getInputType(definition.type)"
+                          [ngModel]="getCustomFieldValue(definition.id)"
+                          (ngModelChange)="setCustomFieldValue(definition.id, $event)"
+                          [placeholder]="definition.name"
+                          [required]="definition.required"
+                        />
+                      </ng-container>
+
+                      <!-- Select Fields -->
+                      <ng-container *ngIf="definition.type === 'SELECT'">
+                        <label>
+                          {{ definition.name }}
+                          <span *ngIf="definition.required" class="text-red-500">*</span>
+                        </label>
+                        <select
+                          [ngModel]="getCustomFieldValue(definition.id)"
+                          (ngModelChange)="setCustomFieldValue(definition.id, $event)"
+                          [required]="definition.required"
+                        >
+                          <option value="">Seleccione una opción...</option>
+                          <option *ngFor="let option of definition.list?.options" [value]="option.label">
+                            {{ option.label }}
+                          </option>
+                        </select>
+                      </ng-container>
+
+                      <!-- Boolean Fields -->
+                      <ng-container *ngIf="definition.type === 'BOOLEAN'">
+                        <div class="checkbox-group">
+                          <input
+                            type="checkbox"
+                            [id]="'custom_field_' + definition.id"
+                            [ngModel]="getCustomFieldValue(definition.id) === 'true'"
+                            (ngModelChange)="setCustomFieldValue(definition.id, $event ? 'true' : 'false')"
+                          />
+                          <label [attr.for]="'custom_field_' + definition.id">
+                            {{ definition.name }}
+                            <span *ngIf="definition.required" class="required">*</span>
+                          </label>
+                        </div>
+                      </ng-container>
+
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
             </div>
             <div class="step-footer">
               <button class="btn-back" (click)="prevStep()">Volver</button>
@@ -1965,6 +2028,60 @@ import { IconComponent } from '@shared/components/icon.component';
         box-shadow: 0 0 0 4px var(--booking-primary-soft);
       }
 
+      .input-group select {
+        padding: 1.25rem;
+        background: var(--booking-bg);
+        border: 1px solid var(--booking-border);
+        border-radius: 12px;
+        color: var(--booking-text-main);
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 1.25rem center;
+        background-size: 1.25rem;
+      }
+
+      .input-group select:focus {
+        border-color: var(--booking-primary);
+        box-shadow: 0 0 0 4px var(--booking-primary-soft);
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        user-select: none;
+        padding-top: 0.5rem;
+      }
+      
+      .checkbox-group input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 6px;
+        border: 1px solid var(--booking-border);
+        background: var(--booking-bg);
+        accent-color: var(--booking-primary);
+        cursor: pointer;
+      }
+
+      .checkbox-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--booking-text-main);
+        cursor: pointer;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+      }
+
+      .checkbox-group label span.required {
+        color: #ef4444;
+        margin-left: 0.125rem;
+      }
+
       /* Summary Card */
       .summary-card {
         background: var(--booking-surface);
@@ -2718,6 +2835,23 @@ export class BookingComponent implements OnInit {
   clientEmail = signal('');
   clientPhone = signal('');
 
+  // Custom Fields State
+  customFieldValues = signal<Record<string, string>>({});
+
+  getCustomFieldValue(fieldId: string): string {
+    return this.customFieldValues()[fieldId] ?? '';
+  }
+
+  setCustomFieldValue(fieldId: string, value: string) {
+    this.customFieldValues.update((prev) => ({ ...prev, [fieldId]: value }));
+  }
+
+  getInputType(type: string): string {
+    if (type === 'DATE') return 'date';
+    if (type === 'NUMBER') return 'number';
+    return 'text';
+  }
+
   availableServices = computed(() => this.tenant()?.services || []);
   availableBranches = computed(() => {
     const inv = this.invitation();
@@ -3043,6 +3177,19 @@ export class BookingComponent implements OnInit {
         this.tenant.set(tenant);
         this.titleService.setTitle(`${tenant.name} - Turnos Online`);
 
+        // Initialize custom fields with default values
+        const initialCustomValues: Record<string, string> = {};
+        if (tenant.customFieldDefinitions) {
+          for (const def of tenant.customFieldDefinitions) {
+            if (def.defaultValue !== undefined && def.defaultValue !== null) {
+              initialCustomValues[def.id] = def.defaultValue;
+            } else if (def.type === 'BOOLEAN') {
+              initialCustomValues[def.id] = 'false';
+            }
+          }
+        }
+        this.customFieldValues.set(initialCustomValues);
+
         const inv = this.invitation();
 
         // Pre-select branch from invitation or default to first
@@ -3230,12 +3377,30 @@ export class BookingComponent implements OnInit {
     if (stepId === 'professional') return !!this.selectedProfessional();
     if (stepId === 'schedule')
       return !!this.selectedDate() && !!this.selectedTime();
-    if (stepId === 'personal')
-      return (
+    if (stepId === 'personal') {
+      const basicFieldsValid =
         !!this.clientName().trim() &&
         !!this.clientEmail().trim() &&
-        !!this.clientPhone().trim()
-      );
+        !!this.clientPhone().trim();
+      if (!basicFieldsValid) return false;
+
+      // Validate required custom fields
+      const definitions = this.tenant()?.customFieldDefinitions || [];
+      const values = this.customFieldValues();
+      for (const def of definitions) {
+        if (def.required) {
+          const val = values[def.id];
+          if (def.type === 'BOOLEAN') {
+            if (val !== 'true') return false;
+          } else {
+            if (val === undefined || val === null || String(val).trim() === '') {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }
     return true;
   }
 
@@ -3300,6 +3465,12 @@ export class BookingComponent implements OnInit {
       clientEmail: this.clientEmail(),
       clientPhone: this.clientPhone(),
       invitationToken: this.invitationToken() || undefined,
+      customFields: Object.entries(this.customFieldValues())
+        .filter(([_, value]) => value !== undefined && value !== null && value !== '')
+        .map(([fieldId, value]) => ({
+          fieldId,
+          value,
+        })),
     };
 
     const slug =
