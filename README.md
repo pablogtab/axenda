@@ -1,46 +1,79 @@
-# Axenda - Plataforma de Gestión de Turnos Premium
+# Axenda
 
-Axenda es una solución integral para la gestión de turnos y agendas, diseñada con un enfoque en la experiencia de usuario (UX) y una estética moderna y profesional.
+**Appointment scheduling and client management for service businesses.**
 
-## 🚀 Funcionalidades Principales
+Axenda brings calendars, professionals, clients, and services into one workspace. Its multi-tenant structure supports separate businesses and locations, with a booking portal for their customers and a backoffice for platform administration.
 
-### 📅 Agenda Interactiva
-- **Vistas Flexibles**: Visualización diaria y semanal con soporte para múltiples profesionales.
-- **Drag & Drop**: Reprogramación rápida de turnos simplemente arrastrando las citas.
-- **Zonas de Navegación**: Navegación táctil intuitiva entre días y semanas.
+![Axenda appointment calendar](frontend/src/assets/landing/desktop-agenda-dia.png)
 
-### 👤 Gestión de Clientes (CRM)
-- **Carga Rápida**: Creación de clientes "on-the-fly" directamente desde el modal de agendamiento.
-- **Historial**: Seguimiento detallado de citas y preferencias.
+*Calendar preview from the application's existing landing-page assets.*
 
-### 🛠️ Configuración de Negocio
-- **Multi-Tenant**: Soporte para múltiples negocios con sucursales independientes.
-- **Gestión de Equipo**: Perfiles de profesionales con horarios y servicios específicos vinculados.
-- **Catálogo de Servicios**: Configuración granular de duración, precios y categorías.
+## Features
 
-## 🎨 Diseño y UX
-- **Estética Premium**: Interfaz moderna basada en "Glassmorphism" con modo oscuro.
-- **Optimización Mobile**: Diseñado para ser utilizado cómodamente desde smartphones y tablets.
-- **Foco en el Detalle**: Micro-animaciones, validaciones en tiempo real y transiciones suaves.
+- Daily and weekly scheduling, with multiple professionals and drag-and-drop rescheduling.
+- Client records and appointment history.
+- Business locations, professional availability, and service catalogs.
+- A public booking portal for customers.
+- Responsive interfaces for desktop and mobile.
+- Separate business and platform administration applications.
 
-## 🛠️ Stack Tecnológico
-- **Frontend**: Angular 18 (Signals, Standalone Components, CDK).
-- **Backend**: NestJS, Prisma ORM, PostgreSQL.
-- **Styling**: Tailwind CSS.
+## Technology
 
-## 🛠️ Instalación y Desarrollo
+| Layer | Tools |
+| --- | --- |
+| Business interface | Angular, Angular CDK, Tailwind CSS |
+| Platform backoffice | Angular |
+| API | NestJS, TypeScript |
+| Persistence | PostgreSQL, Prisma |
+| Supporting services | Redis |
+| Delivery | Docker, GitHub Actions |
 
-### Requisitos
-- Node.js v18+
-- Docker (para la base de datos)
+## Repository structure
 
-### Pasos
-1. Clonar el repositorio.
-2. Levantar la base de datos: `docker-compose up -d`.
-3. Instalar dependencias: `npm install`.
-4. Iniciar servicios:
-   - Backend: `npm run start:backend`
-   - Frontend: `npm run start:frontend`
+```text
+frontend/         Business application and customer booking portal
+backend/          API, database schema, migrations, and business logic
+admin_backoffice/ Platform administration application
+```
 
----
-*Desarrollado con ❤️ para maximizar la productividad de tu negocio.*
+## Local development
+
+Use a Node.js release supported by Angular 21 (Node 22.12+ is a suitable baseline), npm, and Docker Compose. These commands use the development services, not the production Compose stack.
+
+```sh
+npm install
+cp backend/.env.example backend/.env
+```
+
+Set `DATABASE_URL`, PostgreSQL credentials, and JWT secrets in `backend/.env`. Use the same PostgreSQL credentials for Compose. Configure provider-specific settings for integrations you want to run.
+
+```sh
+docker compose --env-file backend/.env -f docker-compose.dev.yml up -d
+cd backend
+npx prisma generate
+npx prisma migrate deploy
+cd ..
+```
+
+Start the API and business interface in separate terminals:
+
+```sh
+npm run start:backend
+npm run start:frontend
+```
+
+The default development endpoints are `http://localhost:3000/api` and `http://localhost:4200`. To run the platform administration interface, use `npm run start:backoffice`.
+
+The database seed is a separate, optional step. Review `backend/prisma/seed.ts` and administrator creation before using it against any shared environment.
+
+## Build and tests
+
+```sh
+npm run build:backend
+npm run build:frontend
+npm test
+```
+
+## Deployment
+
+`docker-compose.yml` and `.github/workflows/deploy.yml` describe the production container setup. Deployment requires environment configuration, registry access, and an existing Docker network. Keep environment files and credentials outside version control.
